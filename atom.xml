@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>jinlid&#39;s blog</title>
+  
+  
+  <link href="https://jinlid.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://jinlid.github.io/"/>
+  <updated>2021-12-12T16:40:45.335Z</updated>
+  <id>https://jinlid.github.io/</id>
+  
+  <author>
+    <name>JINLID</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="https://jinlid.github.io/2021/12/03/%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/"/>
+    <id>https://jinlid.github.io/2021/12/03/%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</id>
+    <published>2021-12-03T15:05:31.217Z</published>
+    <updated>2021-12-12T16:40:45.335Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;查询优化&quot;&gt;&lt;a href=&quot;#查询优化&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Linux一些命令</title>
+    <link href="https://jinlid.github.io/2021/09/15/Linux%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4/"/>
+    <id>https://jinlid.github.io/2021/09/15/Linux%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-12-12T16:19:11.009Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Linux网络命令&quot;&gt;&lt;a href=&quot;#Linux网络命令&quot; class=&quot;headerlink&quot; title=&quot;Linux网络命令&quot;&gt;&lt;/a&gt;Linux网络命令&lt;/h1&gt;&lt;h3 id=&quot;1-配置IP地址&quot;&gt;&lt;a href=&quot;#1-配置IP地址&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="Linux" scheme="https://jinlid.github.io/categories/Linux/"/>
+    
+    
+    <category term="挂载" scheme="https://jinlid.github.io/tags/%E6%8C%82%E8%BD%BD/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iptables</title>
+    <link href="https://jinlid.github.io/2021/09/15/iptables/"/>
+    <id>https://jinlid.github.io/2021/09/15/iptables/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-12-12T16:40:31.362Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;1-iptables&quot;&gt;&lt;a href=&quot;#1-iptables&quot; class=&quot;headerlink&quot; title=&quot;1 iptables&quot;&gt;&lt;/a&gt;1 iptables&lt;/h1&gt;&lt;h2 id=&quot;1-1-介绍&quot;&gt;&lt;a href=&quot;#1-1-介绍&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="Linux" scheme="https://jinlid.github.io/categories/Linux/"/>
+    
+    
+    <category term="iptables" scheme="https://jinlid.github.io/tags/iptables/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>opengauss安装</title>
+    <link href="https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/"/>
+    <id>https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-12-13T00:12:00.156Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;安装概述&quot;&gt;&lt;a href=&quot;#安装概述&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="数据库" scheme="https://jinlid.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>selenium介绍</title>
+    <link href="https://jinlid.github.io/2021/09/15/selenium%E4%BB%8B%E7%BB%8D/"/>
+    <id>https://jinlid.github.io/2021/09/15/selenium%E4%BB%8B%E7%BB%8D/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-10-15T16:03:54.561Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;
+&lt;h4 id=&quot;1-安装&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="selenium" scheme="https://jinlid.github.io/categories/selenium/"/>
+    
+    
+    <category term="python模块" scheme="https://jinlid.github.io/tags/python%E6%A8%A1%E5%9D%97/"/>
+    
+    <category term="自动化" scheme="https://jinlid.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>python常用模块</title>
+    <link href="https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/"/>
+    <id>https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-12-12T16:20:41.972Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;1-os&quot;&gt;&lt;a href=&quot;#1-os&quot; class=&quot;headerlink&quot; title=&quot;1 os&quot;&gt;&lt;/a&gt;1</summary>
+        
+      
+    
+    
+    
+    <category term="python" scheme="https://jinlid.github.io/categories/python/"/>
+    
+    
+    <category term="python模块" scheme="https://jinlid.github.io/tags/python%E6%A8%A1%E5%9D%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Django开发</title>
+    <link href="https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/"/>
+    <id>https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2021-10-17T06:23:53.261Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Django作为Web框架，需要一种很便利得方法动态地生成HTML网页，因此有了模板这个概念。模板包含所需HTML的部分代码以及一些特殊语法，特殊语法用于描述如何将视图传递的数据动态插入HTML网页中。&lt;/p&gt;
+&lt;p&gt;[TOC]&lt;/p&gt;
+&lt;h1</summary>
+        
+      
+    
+    
+    
+    <category term="python" scheme="https://jinlid.github.io/categories/python/"/>
+    
+    
+    <category term="web开发" scheme="https://jinlid.github.io/tags/web%E5%BC%80%E5%8F%91/"/>
+    
+    <category term="Django" scheme="https://jinlid.github.io/tags/Django/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>进程和内存架构</title>
+    <link href="https://jinlid.github.io/2021/08/13/2.%E8%BF%9B%E7%A8%8B%E5%92%8C%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84/"/>
+    <id>https://jinlid.github.io/2021/08/13/2.%E8%BF%9B%E7%A8%8B%E5%92%8C%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T14:42:46.914Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-2-章-进程和内存架构&quot;&gt;&lt;a href=&quot;#第-2-章-进程和内存架构&quot; class=&quot;headerlink&quot; title=&quot;第 2 章  进程和内存架构&quot;&gt;&lt;/a&gt;第 2 章 </summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>仅堆元组和仅索引扫描</title>
+    <link href="https://jinlid.github.io/2021/08/13/7.%E4%BB%85%E5%A0%86%E5%85%83%E7%BB%84%E5%92%8C%E4%BB%85%E7%B4%A2%E5%BC%95%E6%89%AB%E6%8F%8F/"/>
+    <id>https://jinlid.github.io/2021/08/13/7.%E4%BB%85%E5%A0%86%E5%85%83%E7%BB%84%E5%92%8C%E4%BB%85%E7%B4%A2%E5%BC%95%E6%89%AB%E6%8F%8F/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T15:26:57.357Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-7-章-仅堆元组和仅索引扫描&quot;&gt;&lt;a href=&quot;#第-7-章-仅堆元组和仅索引扫描&quot; class=&quot;headerlink&quot; title=&quot;第 7 章  仅堆元组和仅索引扫描&quot;&gt;&lt;/a&gt;第 7 章 </summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Docker介绍及常用命令</title>
+    <link href="https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
+    <id>https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-12-12T16:38:31.479Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;1-安装docker&quot;&gt;&lt;a href=&quot;#1-安装docker&quot; class=&quot;headerlink&quot; title=&quot;1 安装docker&quot;&gt;&lt;/a&gt;1 安装docker&lt;/h2&gt;&lt;p&gt;卸载旧版本&lt;/p&gt;
+&lt;figure class=&quot;highlight</summary>
+        
+      
+    
+    
+    
+    <category term="docker" scheme="https://jinlid.github.io/categories/docker/"/>
+    
+    
+    <category term="docker" scheme="https://jinlid.github.io/tags/docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Docker部署数据库</title>
+    <link href="https://jinlid.github.io/2021/08/13/Docker%E9%83%A8%E7%BD%B2%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    <id>https://jinlid.github.io/2021/08/13/Docker%E9%83%A8%E7%BD%B2%E6%95%B0%E6%8D%AE%E5%BA%93/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-12-12T16:37:03.543Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;1-docker部署PostgreSQL&quot;&gt;&lt;a href=&quot;#1-docker部署PostgreSQL&quot; class=&quot;headerlink&quot; title=&quot;1 docker部署PostgreSQL&quot;&gt;&lt;/a&gt;1</summary>
+        
+      
+    
+    
+    
+    <category term="docker" scheme="https://jinlid.github.io/categories/docker/"/>
+    
+    
+    <category term="docker" scheme="https://jinlid.github.io/tags/docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>nginx介绍</title>
+    <link href="https://jinlid.github.io/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/"/>
+    <id>https://jinlid.github.io/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-10-15T16:09:30.100Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;1-nginx介绍&quot;&gt;&lt;a href=&quot;#1-nginx介绍&quot; class=&quot;headerlink&quot; title=&quot;1 nginx介绍&quot;&gt;&lt;/a&gt;1 nginx介绍&lt;/h1&gt;&lt;h3 id=&quot;1-1-什么是nginx&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="nginx" scheme="https://jinlid.github.io/categories/nginx/"/>
+    
+    
+    <category term="服务器" scheme="https://jinlid.github.io/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/"/>
+    
+    <category term="web开发" scheme="https://jinlid.github.io/tags/web%E5%BC%80%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>TOAST介绍</title>
+    <link href="https://jinlid.github.io/2021/08/13/TOAST%E4%BB%8B%E7%BB%8D/"/>
+    <id>https://jinlid.github.io/2021/08/13/TOAST%E4%BB%8B%E7%BB%8D/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T14:07:03.454Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h4 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h4&gt;&lt;p&gt;TOAST是“The Oversized-Attribute Storage</summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一文学会使用pip</title>
+    <link href="https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/"/>
+    <id>https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-12-12T16:36:23.185Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;pip介绍&quot;&gt;&lt;a href=&quot;#pip介绍&quot; class=&quot;headerlink&quot; title=&quot;pip介绍&quot;&gt;&lt;/a&gt;pip介绍&lt;/h2&gt;&lt;p&gt;pip的全称：package installer for python，是</summary>
+        
+      
+    
+    
+    
+    <category term="python" scheme="https://jinlid.github.io/categories/python/"/>
+    
+    
+    <category term="pip" scheme="https://jinlid.github.io/tags/pip/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>数据库集群、数据库和表</title>
+    <link href="https://jinlid.github.io/2021/08/13/1.%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9B%86%E7%BE%A4%E3%80%81%E6%95%B0%E6%8D%AE%E5%BA%93%E5%92%8C%E8%A1%A8/"/>
+    <id>https://jinlid.github.io/2021/08/13/1.%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9B%86%E7%BE%A4%E3%80%81%E6%95%B0%E6%8D%AE%E5%BA%93%E5%92%8C%E8%A1%A8/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T14:40:23.463Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-1-章-数据库集群、数据库和表&quot;&gt;&lt;a href=&quot;#第-1-章-数据库集群、数据库和表&quot; class=&quot;headerlink&quot; title=&quot;第 1 章  数据库集群、数据库和表&quot;&gt;&lt;/a&gt;第 1 章 </summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>vacuum进程</title>
+    <link href="https://jinlid.github.io/2021/08/13/6.vacuum%E8%BF%9B%E7%A8%8B/"/>
+    <id>https://jinlid.github.io/2021/08/13/6.vacuum%E8%BF%9B%E7%A8%8B/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T14:51:58.642Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-6-章-vacuum进程&quot;&gt;&lt;a href=&quot;#第-6-章-vacuum进程&quot; class=&quot;headerlink&quot; title=&quot;第 6 章  vacuum进程&quot;&gt;&lt;/a&gt;第 6 章  vacuum进程&lt;/h1&gt;&lt;p&gt;Vacuum 处理是一个维护过程，便于</summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>缓冲区管理器</title>
+    <link href="https://jinlid.github.io/2021/08/13/8.%E7%BC%93%E5%86%B2%E5%8C%BA%E7%AE%A1%E7%90%86%E5%99%A8/"/>
+    <id>https://jinlid.github.io/2021/08/13/8.%E7%BC%93%E5%86%B2%E5%8C%BA%E7%AE%A1%E7%90%86%E5%99%A8/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T15:28:03.302Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-8-章-缓冲区管理器&quot;&gt;&lt;a href=&quot;#第-8-章-缓冲区管理器&quot; class=&quot;headerlink&quot; title=&quot;第 8 章  缓冲区管理器&quot;&gt;&lt;/a&gt;第 8 章 </summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>预写日志——WAL</title>
+    <link href="https://jinlid.github.io/2021/08/13/9.%E9%A2%84%E5%86%99%E6%97%A5%E5%BF%97%E2%80%94%E2%80%94WAL/"/>
+    <id>https://jinlid.github.io/2021/08/13/9.%E9%A2%84%E5%86%99%E6%97%A5%E5%BF%97%E2%80%94%E2%80%94WAL/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T15:30:25.372Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-9-章-预写日志——WAL&quot;&gt;&lt;a href=&quot;#第-9-章-预写日志——WAL&quot; class=&quot;headerlink&quot; title=&quot;第 9 章 预写日志——WAL&quot;&gt;&lt;/a&gt;第 9 章</summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>并发控制</title>
+    <link href="https://jinlid.github.io/2021/08/13/5.%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/"/>
+    <id>https://jinlid.github.io/2021/08/13/5.%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</id>
+    <published>2021-08-12T16:00:00.000Z</published>
+    <updated>2021-11-22T14:49:10.859Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;第-5-章-并发控制&quot;&gt;&lt;a href=&quot;#第-5-章-并发控制&quot; class=&quot;headerlink&quot; title=&quot;第 5 章  并发控制&quot;&gt;&lt;/a&gt;第 5 章 </summary>
+        
+      
+    
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    
+    
+    <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>PgBouncer连接池工具</title>
+    <link href="https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/"/>
+    <id>https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/</id>
+    <published>2021-07-10T16:00:00.000Z</published>
+    <updated>2021-10-15T16:33:59.784Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;PgBouncer介绍&quot;&gt;&lt;a href=&quot;#PgBouncer介绍&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="PostgreSQL" scheme="https://jinlid.github.io/categories/PostgreSQL/"/>
+    
+    
+    <category term="pg工具" scheme="https://jinlid.github.io/tags/pg%E5%B7%A5%E5%85%B7/"/>
+    
+  </entry>
+  
+</feed>
