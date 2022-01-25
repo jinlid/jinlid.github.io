@@ -502,7 +502,7 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /home/postgres/pgbouncer/etc/</span><br><span class="line"></span><br><span class="line">mkdir -p /home/postgres/pgbouncer/<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
 
 <p>配置文件修改如下：</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#/home/postgres/pgbouncer/etc/pgbouncer.ini</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[databases]</span></span><br><span class="line"></span><br><span class="line"><span class="meta">*</span> = <span class="string">host=127.0.0.1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">port</span>=<span class="string">5432</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_size</span>=<span class="string">50</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[pgbouncer]</span></span><br><span class="line"></span><br><span class="line"><span class="attr">reserve_pool_size</span>=<span class="string">14</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logfile</span> = <span class="string">/home/postgres/pgbouncer/log/pgbouncer.log</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pidfile</span> = <span class="string">/home/postgres/pgbouncer/pgbouncer.pid</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_addr</span> = <span class="string">0.0.0.0</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_port</span> = <span class="string">4001</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_dir</span> = <span class="string">/home/postgres/pgbouncer</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_mode</span> = <span class="string">0700</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_type</span> = <span class="string">md5</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_file</span> = <span class="string">/home/postgres/pgbouncer/etc/userlist.txt</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_user</span> = <span class="string">jinliauth_query = select i_usename,i_passwd from get_shadow($1)</span></span><br><span class="line"></span><br><span class="line"><span class="attr">admin_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">stats_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_mode</span> = <span class="string">transaction</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_reset_query</span> = <span class="string">DISCARD ALL</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_check_query</span> = <span class="string">select 1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">max_client_conn</span> = <span class="string">100</span></span><br><span class="line"></span><br><span class="line"><span class="attr">default_pool_size</span> = <span class="string">20</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#/home/postgres/pgbouncer/etc/pgbouncer.ini</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[databases]</span></span><br><span class="line"></span><br><span class="line"><span class="meta">*</span> = <span class="string">host=127.0.0.1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">port</span>=<span class="string">5432</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_size</span>=<span class="string">50</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[pgbouncer]</span></span><br><span class="line"></span><br><span class="line"><span class="attr">reserve_pool_size</span>=<span class="string">14</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logfile</span> = <span class="string">/home/postgres/pgbouncer/log/pgbouncer.log</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pidfile</span> = <span class="string">/home/postgres/pgbouncer/pgbouncer.pid</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_addr</span> = <span class="string">0.0.0.0</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_port</span> = <span class="string">4001</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_dir</span> = <span class="string">/home/postgres/pgbouncer</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_mode</span> = <span class="string">0700</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_type</span> = <span class="string">md5</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_file</span> = <span class="string">/home/postgres/pgbouncer/etc/userlist.txt</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_user</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_query</span> = <span class="string">select i_usename,i_passwd from get_shadow($1)</span></span><br><span class="line"></span><br><span class="line"><span class="attr">admin_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">stats_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_mode</span> = <span class="string">transaction</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_reset_query</span> = <span class="string">DISCARD ALL</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_check_query</span> = <span class="string">select 1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">max_client_conn</span> = <span class="string">100</span></span><br><span class="line"></span><br><span class="line"><span class="attr">default_pool_size</span> = <span class="string">20</span></span><br></pre></td></tr></table></figure>
 
 <p>然后将需要用到的用户密码配置到userlist.txt文件中</p>
 <figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#userlist.txt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&quot;jinli&quot;</span> <span class="string">&quot;jinli&quot;</span></span><br></pre></td></tr></table></figure>
@@ -770,13 +770,13 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/08/13/5.%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/">
+                <a href="/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="并发控制">
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="一文学会使用pip">
                         
-                        <span class="card-title">并发控制</span>
+                        <span class="card-title">一文学会使用pip</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -793,8 +793,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/python/" class="post-category">
+                                    python
                                 </a>
                             
                             
@@ -804,8 +804,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/pip/">
+                        <span class="chip bg-color">pip</span>
                     </a>
                     
                 </div>
@@ -819,13 +819,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/07/11/PostgreSQL%E5%87%BD%E6%95%B0/">
+                <a href="/2021/07/11/pgbench%E5%8E%8B%E6%B5%8B%E5%B7%A5%E5%85%B7/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="PostgreSQL函数">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="pgbench压测工具">
                         
-                        <span class="card-title">PostgreSQL函数</span>
+                        <span class="card-title">pgbench压测工具</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -853,8 +853,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%87%BD%E6%95%B0/">
-                        <span class="chip bg-color">函数</span>
+                    <a href="/tags/pg%E5%B7%A5%E5%85%B7/">
+                        <span class="chip bg-color">pg工具</span>
                     </a>
                     
                 </div>
@@ -996,7 +996,7 @@
         <div class="col s12 m8 l8 copy-right">
             Copyright&nbsp;&copy;
             
-                <span id="year">2021</span>
+                <span id="year">2021-2022</span>
             
             <a href="/about" target="_blank">JINLID</a>
             |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>

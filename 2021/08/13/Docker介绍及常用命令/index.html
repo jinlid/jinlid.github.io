@@ -604,7 +604,77 @@
 <h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a><strong>删除容器</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm 容器名</span><br></pre></td></tr></table></figure>
 
 <p>如果删除一个正在运行的容器，可以添加-f参数。Docker会发送SIGKILL信号给容器。</p>
+<h2 id="4-部署数据库"><a href="#4-部署数据库" class="headerlink" title="4 部署数据库"></a>4 部署数据库</h2><h3 id="4-1-docker部署PostgreSQL"><a href="#4-1-docker部署PostgreSQL" class="headerlink" title="4.1 docker部署PostgreSQL"></a>4.1 docker部署PostgreSQL</h3><p>Postgresql镜像地址<a target="_blank" rel="noopener" href="https://hub.docker.com/_/postgres?tab=tags">https://hub.docker.com/_/postgres?tab=tags</a></p>
+<p> <img src="https://img2020.cnblogs.com/blog/2047469/202101/2047469-20210124233231929-274649859.png" alt="img"></p>
+<p>快速部署</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name pg92 -e POSTGRES_PASSWORD=jinli@123 -e POSTGRES_USER=jinli -v /usr/<span class="built_in">local</span>/pg92/data:/var/lib/postgresql/data -p 5492:5432 -d postgres:9.2.21</span><br></pre></td></tr></table></figure>
 
+<ul>
+<li>-name 容器名称，我这里定义为pg92</li>
+<li>POSTGRES_PASSWORD 数据库用户密码</li>
+<li>POSTGRES_USER 数据库用户名</li>
+<li>-v 将主机的目录与容器的目录映射起来</li>
+<li>-p 5492:5432 由于宿主机端口5432已占用，这里将容器的5432端口映射到主机的5492端口</li>
+<li>postgres:9.2.21 docker hub镜像版本号</li>
+</ul>
+<p>进入Postgres容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it pg92 bash</span><br></pre></td></tr></table></figure>
+
+<p>查看主机5492端口已被监听</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@jinli81 ~]<span class="comment"># netstat -apn|grep 5492</span></span><br><span class="line">tcp6       0      0 :::5492                 :::*                    LISTEN      6744/docker-proxy   </span><br></pre></td></tr></table></figure>
+
+<p>使用navicat连接测试</p>
+<p> <img src="https://img2020.cnblogs.com/blog/2047469/202101/2047469-20210125000152855-912296788.png" alt="img"></p>
+<h3 id="4-2-docker部署MySQL"><a href="#4-2-docker部署MySQL" class="headerlink" title="4.2 docker部署MySQL"></a>4.2 docker部署MySQL</h3><p>MySQL镜像地址<a target="_blank" rel="noopener" href="https://hub.docker.com/_/mysql?tab=tags">https://hub.docker.com/_/mysql?tab=tags</a></p>
+<p> <img src="https://img2020.cnblogs.com/blog/2047469/202006/2047469-20200618114154200-1416621102.png" alt="img"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -itd --name mysql57 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7.30</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>-name 容器名称，我这里定义为mysql57</li>
+<li>MYSQL_ROOT_PASSWORD数据库用户密码</li>
+<li>-p 3307:3306 由于宿主机端口3306 已占用，这里将容器的3306端口映射到主机的3307端口</li>
+<li>mysql:5.7.30 docker hub镜像版本号</li>
+</ul>
+<p>进入mysql容器</p>
+<blockquote>
+<p>docker exec -it mysql57 bash<br>root@ff4a7d8ab34e:/# mysql -p123456<br>mysql: [Warning] Using a password on the command line interface can be insecure.<br>Welcome to the MySQL monitor. Commands end with ; or \g.<br>Your MySQL connection id is 4<br>Server version: 5.7.30 MySQL Community Server (GPL)</p>
+<p>Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.</p>
+<p>Oracle is a registered trademark of Oracle Corporation and/or its<br>affiliates. Other names may be trademarks of their respective<br>owners.</p>
+<p>Type ‘help;’ or ‘\h’ for help. Type ‘\c’ to clear the current input statement.</p>
+<p>mysql&gt; \q<br>Bye</p>
+</blockquote>
+<p>查看主机3307端口已被监听</p>
+<blockquote>
+<p>[root@jinli81 ~]netstat -apn|grep 3307<br>tcp 0 0 0.0.0.0:3307 0.0.0.0:* LISTEN 8910/docker-proxy<br>tcp6 0 0 :::3307 :::* LISTEN 8915/docker-proxy</p>
+</blockquote>
+<h3 id="4-3-docker部署opengauss"><a href="#4-3-docker部署opengauss" class="headerlink" title="4.3 docker部署opengauss"></a>4.3 docker部署opengauss</h3><p>下载二进制包到/opt/software/</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://opengauss.obs.cn-south-1.myhuaweicloud.com/1.1.0/x86/openGauss-1.1.0-CentOS-64bit-all.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>下载源码软件到/opt/software/</p>
+<p>地址：<a target="_blank" rel="noopener" href="https://gitee.com/opengauss/openGauss-server/tree/master/docker/dockerfiles">https://gitee.com/opengauss/openGauss-server/tree/master/docker/dockerfiles</a></p>
+<p>解压二进制包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tar -xf openGauss-1.1.0-CentOS-64bit-all.tar.gz</span></span><br><span class="line"><span class="comment"># ll /opt/software/</span></span><br><span class="line">openGauss-server-master.zip <span class="comment"># 源码包</span></span><br><span class="line">openGauss-2.0.0-CentOS-64bit.tar.bz2 <span class="comment"># 二进制包</span></span><br><span class="line"><span class="comment"># unzip openGauss-server-master.zip # 源码包解压文件</span></span><br><span class="line"><span class="comment"># mv openGauss-1.1.0-CentOS-64bit.tar.bz2 openGauss-server-master/docker/dockerfiles/1.1.0/</span></span><br></pre></td></tr></table></figure>
+
+<p>启动docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure>
+
+<p>修改md5校验文件内容</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss-server-master/docker/dockerfiles/1.1.0/</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;9d713a83d613c4de248882b7df5472e7 openGauss-1.1.0-CentOS-64bit.tar.bz2&quot;</span> &gt; md5_file_amd64</span><br></pre></td></tr></table></figure>
+
+<p>构建opengauss镜像</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh /opt/software/openGauss-server-master/docker/dockerfiles/buildDockerImage.sh -v 1.1.0</span><br></pre></td></tr></table></figure>
+
+<p>查看构建的opengauss相关镜像</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker images</span></span><br><span class="line">REPOSITORY   TAG        IMAGE ID       CREATED          SIZE</span><br><span class="line">opengauss    1.1.0      371bb14eed42   47 seconds ago   651MB</span><br><span class="line">centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB</span><br></pre></td></tr></table></figure>
+
+<p>创建并启动容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name opengauss-1.1.0 --privileged=<span class="literal">true</span> -d -e GS_PASSWORD=Enmo@123 -p 21600:5432  opengauss:1.1.0</span><br></pre></td></tr></table></figure>
+
+<p>外部连接数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gsql -d postgres -U gaussdb -W<span class="string">&#x27;Enmo@123&#x27;</span> -h your-host-ip -p21600</span><br></pre></td></tr></table></figure>
+
+<p>数据库持久化</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker run --name opengauss --privileged=<span class="literal">true</span> -d -e GS_PASSWORD=Enmo@123 -v /opengauss:/var/lib/opengauss opengauss:1.1.0</span><br></pre></td></tr></table></figure>
                 
             </div>
             <hr/>
@@ -845,13 +915,13 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/08/13/7.%E4%BB%85%E5%A0%86%E5%85%83%E7%BB%84%E5%92%8C%E4%BB%85%E7%B4%A2%E5%BC%95%E6%89%AB%E6%8F%8F/">
+                <a href="/2021/09/15/postgresql/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="postgresql数据库进程">
                         
-                        <span class="card-title">仅堆元组和仅索引扫描</span>
+                        <span class="card-title">postgresql数据库进程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -862,7 +932,7 @@
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            <i class="far fa-clock fa-fw icon-date"></i>2021-09-15
                         </span>
                         <span class="publish-author">
                             
@@ -879,8 +949,12 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/postgresql%E6%A8%A1%E5%9D%97/">
+                        <span class="chip bg-color">postgresql模块</span>
+                    </a>
+                    
+                    <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
+                        <span class="chip bg-color">数据库</span>
                     </a>
                     
                 </div>
@@ -894,13 +968,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/08/13/Docker%E9%83%A8%E7%BD%B2%E6%95%B0%E6%8D%AE%E5%BA%93/">
+                <a href="/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="Docker部署数据库">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="nginx介绍">
                         
-                        <span class="card-title">Docker部署数据库</span>
+                        <span class="card-title">nginx介绍</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -917,8 +991,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/docker/" class="post-category">
-                                    docker
+                            <a href="/categories/nginx/" class="post-category">
+                                    nginx
                                 </a>
                             
                             
@@ -928,8 +1002,12 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/docker/">
-                        <span class="chip bg-color">docker</span>
+                    <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                        <span class="chip bg-color">服务器</span>
+                    </a>
+                    
+                    <a href="/tags/web%E5%BC%80%E5%8F%91/">
+                        <span class="chip bg-color">web开发</span>
                     </a>
                     
                 </div>
@@ -1071,7 +1149,7 @@
         <div class="col s12 m8 l8 copy-right">
             Copyright&nbsp;&copy;
             
-                <span id="year">2021</span>
+                <span id="year">2021-2022</span>
             
             <a href="/about" target="_blank">JINLID</a>
             |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
