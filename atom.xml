@@ -67,6 +67,31 @@
   </entry>
   
   <entry>
+    <title>JDBC编程</title>
+    <link href="https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/"/>
+    <id>https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2022-01-25T04:06:16.808Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h3 id=&quot;1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot;&gt;&lt;a href=&quot;#1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="java" scheme="https://jinlid.github.io/categories/java/"/>
+    
+    
+    <category term="jdbc" scheme="https://jinlid.github.io/tags/jdbc/"/>
+    
+  </entry>
+  
+  <entry>
     <title>opengauss安装</title>
     <link href="https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/"/>
     <id>https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/</id>
@@ -88,6 +113,34 @@
     
     
     <category term="postgresql" scheme="https://jinlid.github.io/tags/postgresql/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>selenium自动化测试介绍</title>
+    <link href="https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/"/>
+    <id>https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/</id>
+    <published>2021-09-14T16:00:00.000Z</published>
+    <updated>2022-01-23T14:56:37.413Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;
+&lt;h4 id=&quot;1-安装&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="selenium" scheme="https://jinlid.github.io/categories/selenium/"/>
+    
+    
+    <category term="python模块" scheme="https://jinlid.github.io/tags/python%E6%A8%A1%E5%9D%97/"/>
+    
+    <category term="自动化" scheme="https://jinlid.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/"/>
     
   </entry>
   
@@ -142,59 +195,6 @@
     <category term="web开发" scheme="https://jinlid.github.io/tags/web%E5%BC%80%E5%8F%91/"/>
     
     <category term="Django" scheme="https://jinlid.github.io/tags/Django/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>JDBC编程</title>
-    <link href="https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/"/>
-    <id>https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/</id>
-    <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-01-25T04:06:16.808Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;h3 id=&quot;1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot;&gt;&lt;a href=&quot;#1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot; class=&quot;headerlink&quot;</summary>
-        
-      
-    
-    
-    
-    <category term="java" scheme="https://jinlid.github.io/categories/java/"/>
-    
-    
-    <category term="jdbc" scheme="https://jinlid.github.io/tags/jdbc/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>selenium自动化测试介绍</title>
-    <link href="https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/"/>
-    <id>https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/</id>
-    <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-01-23T14:56:37.413Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;
-&lt;h4 id=&quot;1-安装&quot;&gt;&lt;a</summary>
-        
-      
-    
-    
-    
-    <category term="selenium" scheme="https://jinlid.github.io/categories/selenium/"/>
-    
-    
-    <category term="python模块" scheme="https://jinlid.github.io/tags/python%E6%A8%A1%E5%9D%97/"/>
-    
-    <category term="自动化" scheme="https://jinlid.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/"/>
     
   </entry>
   
