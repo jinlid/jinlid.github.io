@@ -31,7 +31,7 @@
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -443,8 +443,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/PostgreSQL/" class="post-category">
-                                PostgreSQL
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
                             </a>
                         
                     </div>
@@ -478,35 +478,118 @@
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a><strong>背景</strong></h2><p>常用数据库的基准测试最关键的衡量指标有：吞吐量（Throughput）、响应时间（RT）或延迟（Latency）和并发量。<br>吞吐量是衡量数据库的单位时间内的事务处理能力，常用的单位是TPS（每秒事务数）。<br>响应时间或延迟，描述操作过程里用来响应服务的时间，根据不同的应用可以使用分钟、秒、毫秒、微秒作为单位。通常还会根据响应时间的最大值、最小值以及平均值做分组统计，例如90%的运行周期内的响应时间是1毫秒，10%的运行周期内的响应时间是5毫秒，这样可以得出相对客观的测试结果。<br>并发量是指同时工作的连接数。<br>在不同的测试场景，需要关注的指标也会不同，分析测试结果时，吞吐量、响应时间、并发量是必须关注的三个基本要素。</p>
+<span id="more"></span>
+
 <h2 id="pgbench介绍"><a href="#pgbench介绍" class="headerlink" title="pgbench介绍"></a><strong>pgbench介绍</strong></h2><p>pgbench是一个基准测试工具，可以执行内置的测试脚本，也可以自定义脚本文件。pgbench运行结束后，会输出一份测试结果的报告：<br>transaction type行记录本次测试所使用的测试类型；<br>scaling factor记录pgbench在初始化时设置的数据量的比例因子；<br>query mode是测试时指定的查询类型，包括simple查询协议、extended查询协议或prepared查询协议；<br>number of clients是测试时指定的客户端数量；<br>number of threads是测试时指定的每个客户端的线程数；<br>number of transactions per client是测试时指定的每个客户端运行的事务数；<br>number of transaction actually processed是测试结束时实际完成的事务数和计划完成的事务数，实际完成的事务数应该和计划完成的事务数相等，如果有事务执行失败，则只会显示实际完成的事务数;<br>latency average是测试过程中的平均响应时间；<br>tps=（including connections establishing和excluding connections establishing）值分别是包含和不包含建立连接开销的TPS值。</p>
 <h2 id="pgbench使用"><a href="#pgbench使用" class="headerlink" title="pgbench使用"></a><strong>pgbench使用</strong></h2><h3 id="1，初始化数据"><a href="#1，初始化数据" class="headerlink" title="1，初始化数据"></a><strong>1，初始化数据</strong></h3><p>pgbench内嵌脚本需要4张表：pgbench_branches、pgbench_tellers、pgbench_accounts和pgbench_history。<br>使用pgbench初始化测试数据，pgbench会自动去创建这些表并生成测试数据。在初始化过程中，如果数据库中存在和这些表同名的数据，pgbench会删除这些表重新进行初始化。<br>pgbench初始化测试数据的命令如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -i -s 2 -F 80 -h 127.0.0.1 -p 5432 -U jinli -d postgres</span></span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_history&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_tellers&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_accounts&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_branches&quot;</span> does not exist, skipping</span><br><span class="line">creating tables...</span><br><span class="line">100000 of 200000 tuples (50%) <span class="keyword">done</span> (elapsed 0.05 s, remaining 0.05 s)</span><br><span class="line">200000 of 200000 tuples (100%) <span class="keyword">done</span> (elapsed 0.10 s, remaining 0.00 s)</span><br><span class="line">vacuum...</span><br><span class="line"><span class="built_in">set</span> primary keys...</span><br><span class="line"><span class="keyword">done</span>.</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -i -s 2 -F 80 -h 127.0.0.1 -p 5432 -U jinli -d postgres</span>
+NOTICE:  table <span class="token string">"pgbench_history"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_tellers"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_accounts"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_branches"</span> does not exist, skipping
+creating tables<span class="token punctuation">..</span>.
+100000 of 200000 tuples <span class="token punctuation">(</span>50%<span class="token punctuation">)</span> <span class="token keyword">done</span> <span class="token punctuation">(</span>elapsed 0.05 s, remaining 0.05 s<span class="token punctuation">)</span>
+200000 of 200000 tuples <span class="token punctuation">(</span>100%<span class="token punctuation">)</span> <span class="token keyword">done</span> <span class="token punctuation">(</span>elapsed 0.10 s, remaining 0.00 s<span class="token punctuation">)</span>
+vacuum<span class="token punctuation">..</span>.
+<span class="token keyword">set</span> primary keys<span class="token punctuation">..</span>.
+done.
+</code></pre>
 <h3 id="2，内置脚本测试"><a href="#2，内置脚本测试" class="headerlink" title="2，内置脚本测试"></a><strong>2，内置脚本测试</strong></h3><p>pgbench的内置脚本有tcp-like、tcp-update和select-only三种。可以通过以下命令查看当前版本的pgbench包含哪些集成的测试脚本。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -b list</span></span><br><span class="line">Available <span class="built_in">builtin</span> scripts:</span><br><span class="line">    tpcb-like</span><br><span class="line">    simple-update</span><br><span class="line">    select-only</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -b list</span>
+Available <span class="token function">builtin</span> scripts:
+    tpcb-like
+    simple-update
+    select-only
+</code></pre>
 <p>tpcb-like执行的脚本是一个包含SELECT、UPDATE、INSERT的事务：<br>simple-update执行的脚本如下：<br>select-only执行的脚本如下：<br>可以使用下列参数设置内置脚本测试的方式：<br>-b, –builtin=NAME[@W]<br>NAME参数指定使用哪一种脚本进行测试，默认使用tpcb-like这一种测试脚本。<br>例如使用simple-update进行测试，代码如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -b simple-update -h 127.0.0.1 -p 5432 -U jinli postgres</span></span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: &lt;<span class="built_in">builtin</span>: simple update&gt;</span><br><span class="line">scaling factor: 2</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 1</span><br><span class="line">number of threads: 1</span><br><span class="line">number of transactions per client: 10</span><br><span class="line">number of transactions actually processed: 10/10</span><br><span class="line">latency average = 1.977 ms</span><br><span class="line">tps = 505.842481 (including connections establishing)</span><br><span class="line">tps = 707.113562 (excluding connections establishing)</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -b simple-update -h 127.0.0.1 -p 5432 -U jinli postgres</span>
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: <span class="token operator">&lt;</span>builtin: simple update<span class="token operator">></span>
+scaling factor: 2
+query mode: simple
+number of clients: 1
+number of threads: 1
+number of transactions per client: 10
+number of transactions actually processed: 10/10
+latency average <span class="token operator">=</span> 1.977 ms
+tps <span class="token operator">=</span> 505.842481 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 707.113562 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+</code></pre>
 <p>还可以使用3种内置脚本进行混合测试，并在脚本名称后面加上@符号，@符号后面加上一个脚本运行比例的权重的整数值，例如使用simple-update和select-only两种内置脚本，并且以2:8的比例混合进行测试，代码如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -b simple-update@8 -b select-only@2 -h 127.0.0.1 -p 5432 -U jinli postgres</span></span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: multiple scripts</span><br><span class="line">scaling factor: 2</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 1</span><br><span class="line">number of threads: 1</span><br><span class="line">number of transactions per client: 10</span><br><span class="line">number of transactions actually processed: 10/10</span><br><span class="line">latency average = 1.740 ms</span><br><span class="line">tps = 574.877838 (including connections establishing)</span><br><span class="line">tps = 877.500878 (excluding connections establishing)</span><br><span class="line">SQL script 1: &lt;<span class="built_in">builtin</span>: simple update&gt;</span><br><span class="line"> - weight: 8 (targets 80.0% of total)</span><br><span class="line"> - 8 transactions (80.0% of total, tps = 459.902271)</span><br><span class="line"> - latency average = 1.199 ms</span><br><span class="line"> - latency stddev = 0.316 ms</span><br><span class="line">SQL script 2: &lt;<span class="built_in">builtin</span>: select only&gt;</span><br><span class="line"> - weight: 2 (targets 20.0% of total)</span><br><span class="line"> - 2 transactions (20.0% of total, tps = 114.975568)</span><br><span class="line"> - latency average = 0.867 ms</span><br><span class="line"> - latency stddev = 0.666 ms</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -b simple-update@8 -b select-only@2 -h 127.0.0.1 -p 5432 -U jinli postgres</span>
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: multiple scripts
+scaling factor: 2
+query mode: simple
+number of clients: 1
+number of threads: 1
+number of transactions per client: 10
+number of transactions actually processed: 10/10
+latency average <span class="token operator">=</span> 1.740 ms
+tps <span class="token operator">=</span> 574.877838 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 877.500878 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+SQL script 1: <span class="token operator">&lt;</span>builtin: simple update<span class="token operator">></span>
+ - weight: 8 <span class="token punctuation">(</span>targets 80.0% of total<span class="token punctuation">)</span>
+ - 8 transactions <span class="token punctuation">(</span>80.0% of total, tps <span class="token operator">=</span> 459.902271<span class="token punctuation">)</span>
+ - latency average <span class="token operator">=</span> 1.199 ms
+ - latency stddev <span class="token operator">=</span> 0.316 ms
+SQL script 2: <span class="token operator">&lt;</span>builtin: <span class="token keyword">select</span> only<span class="token operator">></span>
+ - weight: 2 <span class="token punctuation">(</span>targets 20.0% of total<span class="token punctuation">)</span>
+ - 2 transactions <span class="token punctuation">(</span>20.0% of total, tps <span class="token operator">=</span> 114.975568<span class="token punctuation">)</span>
+ - latency average <span class="token operator">=</span> 0.867 ms
+ - latency stddev <span class="token operator">=</span> 0.666 ms
+</code></pre>
 <p>使用内置脚本混合测试，最终输出的结果除了常规的报告项之外，还会输出每个测试脚本的实际占比，以及每个类型的平均延时、TPS等等更加详细的值。使用混合方式的测试，可以方便模拟不同的读写比。</p>
 <h3 id="3，自定义测试"><a href="#3，自定义测试" class="headerlink" title="3，自定义测试"></a><strong>3，自定义测试</strong></h3><p>pgbench支持从一个文件中读取事务脚本来替换默认的事务脚本，达到运行自定义测试场景的目的。</p>
-<h4 id="1）创建测试表："><a href="#1）创建测试表：" class="headerlink" title="1）创建测试表："></a>1）创建测试表：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># create table tb1(id serial primary key,ival int);</span></span><br><span class="line">CREATE TABLE</span><br></pre></td></tr></table></figure>
-
+<h4 id="1）创建测试表："><a href="#1）创建测试表：" class="headerlink" title="1）创建测试表："></a>1）创建测试表：</h4><pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table tb1(id serial primary key,ival int);</span>
+CREATE TABLE
+</code></pre>
 <h4 id="2）运行自定义脚本"><a href="#2）运行自定义脚本" class="headerlink" title="2）运行自定义脚本"></a>2）运行自定义脚本</h4><p>在pgbench命令中使用-f参数运行自定义的脚本，举例如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -f bench_script_for_select.sql -h 127.0.0.1 -p 5432 -U jinli postgres</span></span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: bench_script_for_select.sql</span><br><span class="line">scaling factor: 1</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 1</span><br><span class="line">number of threads: 1</span><br><span class="line">number of transactions per client: 10</span><br><span class="line">number of transactions actually processed: 10/10</span><br><span class="line">latency average = 0.979 ms</span><br><span class="line">tps = 1021.763564 (including connections establishing)</span><br><span class="line">tps = 2616.431188 (excluding connections establishing)</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -f bench_script_for_select.sql -h 127.0.0.1 -p 5432 -U jinli postgres</span>
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: bench_script_for_select.sql
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+number of transactions per client: 10
+number of transactions actually processed: 10/10
+latency average <span class="token operator">=</span> 0.979 ms
+tps <span class="token operator">=</span> 1021.763564 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 2616.431188 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+</code></pre>
 <p>在测试过程中，通常会使用变量作为SQL语句的参数传入。在脚本中可以使用类似于psql的以反斜杠开头的元命令和内建函数定义变量。pgbench自定义脚本支持的元命令有：<br>\sleep number[us|ms|s]：每执行一个事物暂停一定时间，但是可以是微秒、毫秒和秒，如果不写单位，默认使用秒。<br>\set varname expression：用于设置一个变量、元命令、参数和参数的值之间用空格分开。在pgbench中定义了一些可以在元命令中使用的函数，例如random(int,int)。<br>例如自定义一个脚本，在tb1表的ival字段中插入一个随机数，代码如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># cat bench_script_for_insert.sql</span></span><br><span class="line">\sleep 500ms</span><br><span class="line">\<span class="built_in">set</span> ival random(1,100000)</span><br><span class="line">INSERT INTO tb1(ival) VALUES(:ival)</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># cat bench_script_for_insert.sql</span>
+\sleep 500ms
+\set ival random<span class="token punctuation">(</span>1,100000<span class="token punctuation">)</span>
+INSERT INTO tb1<span class="token punctuation">(</span>ival<span class="token punctuation">)</span> VALUES<span class="token punctuation">(</span>:ival<span class="token punctuation">)</span>
+</code></pre>
 <p>运行pgbench使用该脚本进行测试，如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -f bench_script_for_insert.sql -h 127.0.0.1 -p 5432 -U jinli postgres</span></span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: bench_script_for_insert.sql</span><br><span class="line">scaling factor: 1</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 1</span><br><span class="line">number of threads: 1</span><br><span class="line">number of transactions per client: 10</span><br><span class="line">number of transactions actually processed: 10/10</span><br><span class="line">latency average = 501.557 ms</span><br><span class="line">tps = 1.993791 (including connections establishing)</span><br><span class="line">tps = 1.994899 (excluding connections establishing)</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -f bench_script_for_insert.sql -h 127.0.0.1 -p 5432 -U jinli postgres</span>
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: bench_script_for_insert.sql
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+number of transactions per client: 10
+number of transactions actually processed: 10/10
+latency average <span class="token operator">=</span> 501.557 ms
+tps <span class="token operator">=</span> 1.993791 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 1.994899 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+</code></pre>
 <p>检查测试表，结果如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># select count(id) from tb1; </span></span><br><span class="line">count</span><br><span class="line">------- </span><br><span class="line">10</span><br><span class="line">(1 row)</span><br><span class="line">postgres=<span class="comment"># select * from tb1 order by id desc limit 3; </span></span><br><span class="line">id | ival</span><br><span class="line">----+------- </span><br><span class="line">10 | 12642 9 | 79033 8 | 50844</span><br><span class="line">(3 rows)</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select count(id) from tb1; </span>
+count
+------- 
+10
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select * from tb1 order by id desc limit 3; </span>
+<span class="token function">id</span> <span class="token operator">|</span> ival
+----+------- 
+10 <span class="token operator">|</span> 12642 9 <span class="token operator">|</span> 79033 8 <span class="token operator">|</span> 50844
+<span class="token punctuation">(</span>3 rows<span class="token punctuation">)</span>
+</code></pre>
 <p>可以看到INSERT成功地插入了预期的值，共10条记录。从pgbench输出的测试报告看，平均延迟（latency average）等于500多毫秒，成功执行了10个事务。</p>
 <p>和使用内置脚本一样，可以在-f的参数后加上@符号再加上权重，以不同比例运行多个自定义脚本。全种子并不是一个百分比的值，而是相对一个固定的数值，例如第一个脚本运行3次，第二个脚本运行10次，下面是一个在多个测试脚本中加入权重值选项进行测试的例子：</p>
 <h3 id="4，其它选项"><a href="#4，其它选项" class="headerlink" title="4，其它选项"></a><strong>4，其它选项</strong></h3><h4 id="1）模拟客户端数量和连接方式"><a href="#1）模拟客户端数量和连接方式" class="headerlink" title="1）模拟客户端数量和连接方式"></a>1）模拟客户端数量和连接方式</h4><p>-c 指定模拟客户端的数量，也就是并发数据库的连接数量，默认为1.<br>-C 指定是否为每个事物创建一个新的连接，如果每次都创建新的连接则性能会明显下降很多，测试连接池性能时这个参数比较有用。<br>-j 在多线程CPU上进行测试，将模拟的客户端平均分配在各个线程上。</p>
@@ -514,11 +597,25 @@
 <h4 id="3）用gudingsulv运行测试脚本"><a href="#3）用gudingsulv运行测试脚本" class="headerlink" title="3）用gudingsulv运行测试脚本"></a>3）用gudingsulv运行测试脚本</h4><p>使用-R可以用固定速率执行事务，单位是TPS。如果给定的既定速率的值大于最大可能的速率，则该速率限制不会影响结果。</p>
 <h4 id="4）超出阈值的事务的报告"><a href="#4）超出阈值的事务的报告" class="headerlink" title="4）超出阈值的事务的报告"></a>4）超出阈值的事务的报告</h4><p>使用-L参数设置一个阈值，对超过这个阈值的事务进行独立报告和计数，单位是毫秒。</p>
 <h4 id="5）输出选项"><a href="#5）输出选项" class="headerlink" title="5）输出选项"></a>5）输出选项</h4><p>pgbench又丰富的测试结果报告的输出格式。<br>-d 可以输出debug信息，通常不使用它。<br>-P 可以每隔一段时间输出一次测试结果。<br>-l或–log将每一个事物执行的时间计入一个名称为“pgbench_log.n”的日志文件中，如果使用-j参数指定使用多个线程，则会生成名称为“pgbench_log.n.m”的日志文件。其中n是测试时pgbench的PID，m是从1开始的线程的序号，pgbench_log是默认的日志文件的前缀，例如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># pgbench -T 10 -l -c 6 -j 2 -f bench_script_for_select.sql@3 -f bench_script_for_insert.sql@10 -h 127.0.0.1 -p 5433 -U postgres postgres </span></span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: multiple scripts</span><br><span class="line">scaling factor: 1</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 6</span><br><span class="line">number of threads: 2</span><br><span class="line">duration: 10 </span><br><span class="line">snumber of transactions actually processed: 164</span><br><span class="line">latency average = 367.479 </span><br><span class="line">mstps = 16.327451 (including connections establishing)</span><br><span class="line">tps = 16.336404 (excluding connections establishing)</span><br><span class="line">SQL script 1: bench_script_for_select.sql - weight: 3 (targets 23.1% of total) - 44 transactions (26.8% of total, tps = 4.380536) - latency average = 0.405 ms - latency stddev = 0.554 ms</span><br><span class="line">SQL script 2: bench_script_for_insert.sql - weight: 10 (targets 76.9% of total) - 120 transactions (73.2% of total, tps = 11.946915) - latency average = 500.896 ms - latency stddev = 1.606 ms</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># pgbench -T 10 -l -c 6 -j 2 -f bench_script_for_select.sql@3 -f bench_script_for_insert.sql@10 -h 127.0.0.1 -p 5433 -U postgres postgres </span>
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: multiple scripts
+scaling factor: 1
+query mode: simple
+number of clients: 6
+number of threads: 2
+duration: 10 
+snumber of transactions actually processed: 164
+latency average <span class="token operator">=</span> 367.479 
+mstps <span class="token operator">=</span> 16.327451 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 16.336404 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+SQL script 1: bench_script_for_select.sql - weight: 3 <span class="token punctuation">(</span>targets 23.1% of total<span class="token punctuation">)</span> - 44 transactions <span class="token punctuation">(</span>26.8% of total, tps <span class="token operator">=</span> 4.380536<span class="token punctuation">)</span> - latency average <span class="token operator">=</span> 0.405 ms - latency stddev <span class="token operator">=</span> 0.554 ms
+SQL script 2: bench_script_for_insert.sql - weight: 10 <span class="token punctuation">(</span>targets 76.9% of total<span class="token punctuation">)</span> - 120 transactions <span class="token punctuation">(</span>73.2% of total, tps <span class="token operator">=</span> 11.946915<span class="token punctuation">)</span> - latency average <span class="token operator">=</span> 500.896 ms - latency stddev <span class="token operator">=</span> 1.606 ms
+</code></pre>
 <p>测试结束后，在运行pgbench的目录会生成pgbench_log.293825和pgbench_log.293825.1两个日志文件。它们的内容格式如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@281e3b653c05:/home<span class="comment"># cat pgbench_log.293825</span></span><br><span class="line">client_id transaction_no time script_no time_epoch time_us[schedule_lag]0 0 502229 1 1623307003 23531 0 503174 1 1623307003 32992 0 503260 1 1623307003 33852 1 770 0 1623307003 41572 2 305 0 1623307003 44650 1 500455 1 1623307003 5028481 1 500769 1 1623307003 5040711 2 716 0 1623307003 5047902 3 500681 1 1623307003 505148</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">root@281e3b653c05:/home<span class="token comment" spellcheck="true"># cat pgbench_log.293825</span>
+client_id transaction_no <span class="token function">time</span> script_no time_epoch time_us<span class="token punctuation">[</span>schedule_lag<span class="token punctuation">]</span>0 0 502229 1 1623307003 23531 0 503174 1 1623307003 32992 0 503260 1 1623307003 33852 1 770 0 1623307003 41572 2 305 0 1623307003 44650 1 500455 1 1623307003 5028481 1 500769 1 1623307003 5040711 2 716 0 1623307003 5047902 3 500681 1 1623307003 505148
+</code></pre>
 <p>其中client_no为客户端的序号id；transaction_no为事务的序号;time是该事务所花费的时间，单位为微秒；在使用了多个脚本时，script_no标识该事务使用的是哪个脚本；time_epoch/time_us是一个Unix纪元格式的时间戳以及一个显示事务完成时间的以微秒计的偏移量（适用于创建一个带有分数秒的ISO 8601时间戳）。</p>
 
                 
@@ -773,7 +870,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            PgBouncer介绍PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，
                         
                     </div>
                     <div class="publish-info">
@@ -784,8 +881,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/PostgreSQL/" class="post-category">
-                                    PostgreSQL
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             
@@ -822,7 +919,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            背景常用数据库的基准测试最关键的衡量指标有：吞吐量（Throughput）、响应时间（RT）或延迟（Latency）和并发量。吞吐量是衡量数据库的单位时间内的事务处理能力，常用的单位是TPS（每秒事务数）。响应时间或延迟，描述操作过程里用来
                         
                     </div>
                     <div class="publish-info">
@@ -833,8 +930,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/PostgreSQL/" class="post-category">
-                                    PostgreSQL
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             

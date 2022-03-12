@@ -5,8 +5,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="Linux一些命令, jinlid&#39;s blog">
-    <meta name="description" content="Linux网络命令1 配置IP地址1.1 配置ip地址ip地址是计算机在互联网中唯一的地址编码。每台计算机如果需要接入网络和其他计算机进行数据通信，就必须配置唯一的公司IP地址。
-1vi /etc/sysconfig/network-scr">
+    <meta name="description" content="
+
+Linux网络命令1 配置IP地址1.1 配置ip地址ip地址是计算机在互联网中唯一的地址编码。每台计算机如果需要接入网络和其他计算机进行数据通信，就必须配置唯一的公司IP地址。
+vi /etc/sysconfig/network-sc">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -32,7 +34,7 @@
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -444,8 +446,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/Linux/" class="post-category">
-                                Linux
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                操作系统
                             </a>
                         
                     </div>
@@ -478,20 +480,22 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="Linux网络命令"><a href="#Linux网络命令" class="headerlink" title="Linux网络命令"></a>Linux网络命令</h1><h3 id="1-配置IP地址"><a href="#1-配置IP地址" class="headerlink" title="1 配置IP地址"></a>1 配置IP地址</h3><h4 id="1-1-配置ip地址"><a href="#1-1-配置ip地址" class="headerlink" title="1.1 配置ip地址"></a>1.1 配置ip地址</h4><p>ip地址是计算机在互联网中唯一的地址编码。每台计算机如果需要接入网络和其他计算机进行数据通信，就必须配置唯一的公司IP地址。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/sysconfig/network-scripts/ifcfg-ens33</span><br></pre></td></tr></table></figure>
+                <span id="more"></span>
 
-<h4 id="1-2-重启网络服务"><a href="#1-2-重启网络服务" class="headerlink" title="1.2 重启网络服务"></a>1.2 重启网络服务</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service network restart</span><br></pre></td></tr></table></figure>
-
+<h1 id="Linux网络命令"><a href="#Linux网络命令" class="headerlink" title="Linux网络命令"></a>Linux网络命令</h1><h3 id="1-配置IP地址"><a href="#1-配置IP地址" class="headerlink" title="1 配置IP地址"></a>1 配置IP地址</h3><h4 id="1-1-配置ip地址"><a href="#1-1-配置ip地址" class="headerlink" title="1.1 配置ip地址"></a>1.1 配置ip地址</h4><p>ip地址是计算机在互联网中唯一的地址编码。每台计算机如果需要接入网络和其他计算机进行数据通信，就必须配置唯一的公司IP地址。</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">vi</span> /etc/sysconfig/network-scripts/ifcfg-ens33
+</code></pre>
+<h4 id="1-2-重启网络服务"><a href="#1-2-重启网络服务" class="headerlink" title="1.2 重启网络服务"></a>1.2 重启网络服务</h4><pre class=" language-bash"><code class="language-bash"><span class="token function">service</span> network restart
+</code></pre>
 <h4 id="1-3-虚拟机需要桥接到有线网卡，并重启网络服务"><a href="#1-3-虚拟机需要桥接到有线网卡，并重启网络服务" class="headerlink" title="1.3 虚拟机需要桥接到有线网卡，并重启网络服务"></a>1.3 虚拟机需要桥接到有线网卡，并重启网络服务</h4><h4 id="1-4-复制镜像有可能需要重置UUID（唯一标识符）"><a href="#1-4-复制镜像有可能需要重置UUID（唯一标识符）" class="headerlink" title="1.4 复制镜像有可能需要重置UUID（唯一标识符）"></a>1.4 复制镜像有可能需要重置UUID（唯一标识符）</h4><p>1 删除MAC地址行（HWADDR）</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/sysconfig/network-scripts/ifcfg-ens33</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">vi</span> /etc/sysconfig/network-scripts/ifcfg-ens33
+</code></pre>
 <p>2 删除MAC地址和UUID绑定文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf  /etc/udev/rules.d/70-persistent-ipoib.rules</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">rm</span> -rf  /etc/udev/rules.d/70-persistent-ipoib.rules
+</code></pre>
 <p>3 重启Linux</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reboot</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">reboot</span>
+</code></pre>
 <h3 id="2-ifconfig命令"><a href="#2-ifconfig命令" class="headerlink" title="2 ifconfig命令"></a>2 ifconfig命令</h3><p>ifconfig命令最主要的作用就是查看IP地址的信息，直接输入ifconfig命令即可。</p>
 <blockquote>
 <p>[root@jinli81 ~]# ifconfig</p>
@@ -526,8 +530,8 @@
 <p>-u:    显示使用UDP协议端口的连接状况</p>
 <p>-l:    仅显示监听状态的连接</p>
 <p>-r:    显示路由表</p>
-<h4 id="4-1-查看本机开启的端口"><a href="#4-1-查看本机开启的端口" class="headerlink" title="4.1 查看本机开启的端口"></a>4.1 查看本机开启的端口</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tuln</span><br></pre></td></tr></table></figure>
-
+<h4 id="4-1-查看本机开启的端口"><a href="#4-1-查看本机开启的端口" class="headerlink" title="4.1 查看本机开启的端口"></a>4.1 查看本机开启的端口</h4><pre class=" language-bash"><code class="language-bash"><span class="token function">netstat</span> -tuln
+</code></pre>
 <blockquote>
 <p>[root@jinli81 ~]# netstat -tuln<br>Active Internet connections (only servers)<br>Proto Recv-Q Send-Q Local Address           Foreign Address         State<br>tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:3307            0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN<br>tcp        0      0 192.168.122.1:53        0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN    </p>
 <p>…</p>
@@ -565,55 +569,55 @@
 </ul>
 </li>
 </ul>
-<h4 id="4-2-查看本机哪些程序开启的端口"><a href="#4-2-查看本机哪些程序开启的端口" class="headerlink" title="4.2 查看本机哪些程序开启的端口"></a>4.2 查看本机哪些程序开启的端口</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tulnp</span><br></pre></td></tr></table></figure>
-
+<h4 id="4-2-查看本机哪些程序开启的端口"><a href="#4-2-查看本机哪些程序开启的端口" class="headerlink" title="4.2 查看本机哪些程序开启的端口"></a>4.2 查看本机哪些程序开启的端口</h4><pre class=" language-bash"><code class="language-bash"><span class="token function">netstat</span> -tulnp
+</code></pre>
 <blockquote>
 <p>[root@jinli81 ~]# netstat -tulnp<br>Active Internet connections (only servers)<br>Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name<br>tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      1875/mysqld<br>tcp        0      0 0.0.0.0:3307            0.0.0.0:*               LISTEN      9620/docker-proxy<br>tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/systemd<br>tcp        0      0 192.168.122.1:53        0.0.0.0:*               LISTEN      1746/dnsmasq<br>tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1110/sshd<br>tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN      1106/cupsd<br>…</p>
 </blockquote>
 <h4 id="4-3-查看所有连接"><a href="#4-3-查看所有连接" class="headerlink" title="4.3 查看所有连接"></a>4.3 查看所有连接</h4><p>使用选项”-an“可以查看所有连接，包括监听状态的连接（LISTEN）、已经建立的连接（ESTABLISHED）、Socket程序连接等。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -an</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">netstat</span> -an
+</code></pre>
 <blockquote>
 <p>[root@jinli81 ~]# netstat -an<br>Active Internet connections (servers and established)<br>Proto Recv-Q Send-Q Local Address           Foreign Address         State<br>tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:3307            0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN<br>tcp        0      0 192.168.122.1:53        0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN<br>tcp        0    184 192.168.138.81:22       192.168.138.1:6344      ESTABLISHED</p>
 <p>…</p>
 <p>Active UNIX domain sockets (servers and established)<br>Proto RefCnt Flags       Type       State         I-Node   Path<br>unix  2      [ ACC ]     STREAM     LISTENING     41631    @/tmp/dbus-UXc30Wk0<br>unix  2      [ ACC ]     STREAM     LISTENING     38507    @/tmp/.ICE-unix/1722<br>unix  2      [ ACC ]     STREAM     LISTENING     38135    private/tlsmgr<br>unix  2      [ ACC ]     STREAM     LISTENING     38138    private/rewrite<br>unix  2      [ ACC ]     STREAM     LISTENING     36539    /tmp/.X11-unix/X0<br>unix  2      [ ACC ]     STREAM     LISTENING     38141    private/bounce<br>unix  2      [ ACC ]     STREAM     LISTENING     36538    @/tmp/.X11-unix/X0<br>unix  2      [ ACC ]     STREAM     LISTENING     38144    private/defer</p>
 <p>…</p>
 </blockquote>
-<h4 id="4-4-查看网关"><a href="#4-4-查看网关" class="headerlink" title="4.4 查看网关"></a>4.4 查看网关</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -rn</span><br></pre></td></tr></table></figure>
-
+<h4 id="4-4-查看网关"><a href="#4-4-查看网关" class="headerlink" title="4.4 查看网关"></a>4.4 查看网关</h4><pre class=" language-bash"><code class="language-bash"><span class="token function">netstat</span> -rn
+</code></pre>
 <blockquote>
 <p>[root@jinli81 ~]# netstat -rn<br>Kernel IP routing table<br>Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface<br>0.0.0.0         192.168.138.2   0.0.0.0         UG        0 0          0 ens33<br>169.254.0.0     0.0.0.0         255.255.0.0     U         0 0          0 ens33</p>
 </blockquote>
 <h1 id="Linux挂载命令"><a href="#Linux挂载命令" class="headerlink" title="Linux挂载命令"></a>Linux挂载命令</h1><h3 id="1-mount命令基本格式"><a href="#1-mount命令基本格式" class="headerlink" title="1 mount命令基本格式"></a>1 mount命令基本格式</h3><p>linux所有存储设备都必须挂载使用，包括硬盘</p>
 <p>查询系统中已经挂载的设备</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount [-l]</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mount</span> <span class="token punctuation">[</span>-l<span class="token punctuation">]</span>
+</code></pre>
 <p>依据配置文件/etc/fstab的内容，自动挂载</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -a</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount [-t 文件系统] [-L 卷标名] [-o 特殊选项] 设备文件名 挂载点</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mount</span> -a
+</code></pre>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mount</span> <span class="token punctuation">[</span>-t 文件系统<span class="token punctuation">]</span> <span class="token punctuation">[</span>-L 卷标名<span class="token punctuation">]</span> <span class="token punctuation">[</span>-o 特殊选项<span class="token punctuation">]</span> 设备文件名 挂载点
+</code></pre>
 <p>选项：</p>
 <p>-t 文件系统：    加入文件系统类型来指定挂载的类型，可以ext3、ext4、ios9660等文件系统。</p>
 <p>-L 卷标名：    挂载指定卷标的分区，而不是安装设备文件名挂载。</p>
 <p>-o 特殊选项：    可以指定挂载的额外选项，比如读写权限、同步异步等，如果不指定则默认值生效。</p>
 <h3 id="2-挂载光盘"><a href="#2-挂载光盘" class="headerlink" title="2 挂载光盘"></a>2 挂载光盘</h3><h3 id="3-挂载U盘"><a href="#3-挂载U盘" class="headerlink" title="3 挂载U盘"></a>3 挂载U盘</h3><p>U盘会和硬盘公用设备文件名，所以U盘的设备文件名不是固定的，需要手工查询，查询命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fdisk -l</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">fdisk</span> -l
+</code></pre>
 <p>然后就是挂载了，挂载命令如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t vfast /dev/sdb3 /mnt/usb/</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mount</span> -t vfast /dev/sdb3 /mnt/usb/
+</code></pre>
 <p>如果U盘中有中文，会发现中文是乱码。要正常显示中文，需要两个条件：</p>
 <ul>
 <li>安装了中文编码和中文字体</li>
 <li>操作终端需要支持中文显示（纯字符终端，是不支持中文编码的）</li>
 </ul>
 <p>而我们当前系统是安装了中文编码和字体，而xshell终端是Windows下的程序，当然是支持中文显示的。那之所以挂载U盘还出现乱码，需要在挂载的时候，手工指定中文编码，例如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t vfast -o iocharset=utf8 /dev/sdb3 /mnt/usb/</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mount</span> -t vfast -o iocharset<span class="token operator">=</span>utf8 /dev/sdb3 /mnt/usb/
+</code></pre>
 <p>如果要卸载，可以执行以下命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">umount /mnt/usb</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">umount</span> /mnt/usb
+</code></pre>
 <h1 id="dd命令"><a href="#dd命令" class="headerlink" title="dd命令"></a>dd命令</h1><p>dd是一个在unix和类unix操作系统上的命令行实用程序，它的主要目的是转换和复制文件（简单来说就是用指定大小的块拷贝一个文件，并在拷贝的同时进行指定的转换）。</p>
 <p>因为一个硬盘的启动扇区的内容是在安装文件系统之前生成的，所以无法用操作系统的cp命令备份。此时就可以使用dd程序来完成硬盘的启动扇区的备份工作，还可以使用dd命令将一个硬盘上的数据彻底洗掉。dd程序还可以在复制数据的同时完成数据的转换，其中包括字节顺序的置换和进行ASCII编码和EBCDIC编码的互换。</p>
 <p>在dd命令中可以使用很多选项，选项的语法格式是：选项=选项值，而每个选项之间用空格分隔。其中常用的选项如下：</p>
@@ -639,14 +643,14 @@
 </ul>
 <p>dd命令行使用程序进行Linux系统维护工作的一些例子，其中包括了整个硬盘的备份与恢复、MGR的备份恢复、光盘的复制，以及清除磁盘或文件中的所有数据和将内存的数据复制到硬盘等。</p>
 <p>1 dd命令测试硬盘的写速度</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd <span class="keyword">if</span>=/dev/zero bs=1024 count=1000000 of=file_1GB</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">dd</span> if<span class="token operator">=</span>/dev/zero bs<span class="token operator">=</span>1024 count<span class="token operator">=</span>1000000 of<span class="token operator">=</span>file_1GB
+</code></pre>
 <p>2 测试硬盘的读速度</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd <span class="keyword">if</span>=file_1GB of=/dev/null bs=1024</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">dd</span> if<span class="token operator">=</span>file_1GB of<span class="token operator">=</span>/dev/null bs<span class="token operator">=</span>1024
+</code></pre>
 <p>3 当环境掉电使得查询postgresql表数据时报错Could not open file “pg_clog/XXXX”: No such file or directory” ，这时需要dd命令修复：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd <span class="keyword">if</span>=/dev/zero of=<span class="variable">$GAUSSDATA</span>/pg_clog/XXXX bs=256k count=1</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">dd</span> if<span class="token operator">=</span>/dev/zero of<span class="token operator">=</span><span class="token variable">$GAUSSDATA</span>/pg_clog/XXXX bs<span class="token operator">=</span>256k count<span class="token operator">=</span>1
+</code></pre>
 
                 
             </div>
@@ -912,8 +916,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Linux/" class="post-category">
-                                    Linux
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             
@@ -951,7 +955,8 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            1 iptables1.1 介绍防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。
+ipta
                         
                     </div>
                     <div class="publish-info">
@@ -962,8 +967,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Linux/" class="post-category">
-                                    Linux
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             

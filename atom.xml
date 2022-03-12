@@ -6,7 +6,7 @@
   <link href="https://jinlid.github.io/atom.xml" rel="self"/>
   
   <link href="https://jinlid.github.io/"/>
-  <updated>2021-12-12T16:19:11.009Z</updated>
+  <updated>2022-03-12T04:38:44.917Z</updated>
   <id>https://jinlid.github.io/</id>
   
   <author>
@@ -21,20 +21,22 @@
     <link href="https://jinlid.github.io/2021/09/15/Linux%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4/"/>
     <id>https://jinlid.github.io/2021/09/15/Linux%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2021-12-12T16:19:11.009Z</updated>
+    <updated>2022-03-12T04:38:44.917Z</updated>
     
     
       
       
         
         
-    <summary type="html">&lt;h1 id=&quot;Linux网络命令&quot;&gt;&lt;a href=&quot;#Linux网络命令&quot; class=&quot;headerlink&quot; title=&quot;Linux网络命令&quot;&gt;&lt;/a&gt;Linux网络命令&lt;/h1&gt;&lt;h3 id=&quot;1-配置IP地址&quot;&gt;&lt;a href=&quot;#1-配置IP地址&quot;</summary>
+    <summary type="html">&lt;span id=&quot;more&quot;&gt;&lt;/span&gt;
+
+&lt;h1 id=&quot;Linux网络命令&quot;&gt;&lt;a href=&quot;#Linux网络命令&quot; class=&quot;headerlink&quot; title=&quot;Linux网络命令&quot;&gt;&lt;/a&gt;Linux网络命令&lt;/h1&gt;&lt;h3</summary>
         
       
     
     
     
-    <category term="Linux" scheme="https://jinlid.github.io/categories/Linux/"/>
+    <category term="操作系统" scheme="https://jinlid.github.io/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
     
     <category term="挂载" scheme="https://jinlid.github.io/tags/%E6%8C%82%E8%BD%BD/"/>
@@ -46,20 +48,15 @@
     <link href="https://jinlid.github.io/2021/09/15/iptables/"/>
     <id>https://jinlid.github.io/2021/09/15/iptables/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2021-12-12T16:40:31.362Z</updated>
+    <updated>2022-03-12T04:38:37.844Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;1-iptables&quot;&gt;&lt;a href=&quot;#1-iptables&quot; class=&quot;headerlink&quot; title=&quot;1 iptables&quot;&gt;&lt;/a&gt;1 iptables&lt;/h1&gt;&lt;h2 id=&quot;1-1-介绍&quot;&gt;&lt;a href=&quot;#1-1-介绍&quot;</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;1-iptables&quot;&gt;&lt;a href=&quot;#1-iptables&quot; class=&quot;headerlink&quot; title=&quot;1 iptables&quot;&gt;&lt;/a&gt;1 iptables&lt;/h1&gt;&lt;h2 id=&quot;1-1-介绍&quot;&gt;&lt;a href=&quot;#1-1-介绍&quot; class=&quot;headerlink&quot; title=&quot;1.1 介绍&quot;&gt;&lt;/a&gt;1.1 介绍&lt;/h2&gt;&lt;p&gt;防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。&lt;/p&gt;
+&lt;p&gt;iptables主机型防火墙工作在2，3，4层，对TCP/IP数据包进行过滤和限制。属于过滤型防火墙。（除非编译内核才可以使iptables支持7层）。&lt;/p&gt;</summary>
     
     
     
-    <category term="Linux" scheme="https://jinlid.github.io/categories/Linux/"/>
+    <category term="操作系统" scheme="https://jinlid.github.io/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
     
     <category term="iptables" scheme="https://jinlid.github.io/tags/iptables/"/>
@@ -71,20 +68,22 @@
     <link href="https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/"/>
     <id>https://jinlid.github.io/2021/09/15/jdbc%E7%BC%96%E7%A8%8B/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-01-25T04:06:16.808Z</updated>
+    <updated>2022-03-12T04:38:40.674Z</updated>
     
     
       
       
         
         
-    <summary type="html">&lt;h3 id=&quot;1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot;&gt;&lt;a href=&quot;#1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot; class=&quot;headerlink&quot;</summary>
+    <summary type="html">&lt;span id=&quot;more&quot;&gt;&lt;/span&gt;
+
+&lt;h3 id=&quot;1，一个入门查询postgresql数据库的例子，新建JDBCFirstDemo-java文件&quot;&gt;&lt;a</summary>
         
       
     
     
     
-    <category term="java" scheme="https://jinlid.github.io/categories/java/"/>
+    <category term="开发语言" scheme="https://jinlid.github.io/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/"/>
     
     
     <category term="jdbc" scheme="https://jinlid.github.io/tags/jdbc/"/>
@@ -96,16 +95,10 @@
     <link href="https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/"/>
     <id>https://jinlid.github.io/2021/09/15/opengauss%E5%AE%89%E8%A3%85/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2021-12-13T00:12:00.156Z</updated>
+    <updated>2022-03-12T04:38:55.019Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;安装概述&quot;&gt;&lt;a href=&quot;#安装概述&quot; class=&quot;headerlink&quot;</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;安装概述&quot;&gt;&lt;a href=&quot;#安装概述&quot; class=&quot;headerlink&quot; title=&quot;安装概述&quot;&gt;&lt;/a&gt;安装概述&lt;/h1&gt;&lt;p&gt;openGauss支持单机部署和单机HA部署两种部署方式。单机部署时，可在一个主机部署多个数据库实例，但为了数据安全，不建议用户这样部署。单机HA部署支持一台主机和最少一台备机，备机一共最多8台的配置方式。&lt;/p&gt;</summary>
     
     
     
@@ -121,21 +114,14 @@
     <link href="https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/"/>
     <id>https://jinlid.github.io/2021/09/15/selenium%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%BB%8B%E7%BB%8D/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-01-23T14:56:37.413Z</updated>
+    <updated>2022-03-12T04:39:41.841Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;
-&lt;h4 id=&quot;1-安装&quot;&gt;&lt;a</summary>
-        
-      
+    <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;</summary>
     
     
     
-    <category term="selenium" scheme="https://jinlid.github.io/categories/selenium/"/>
+    <category term="开发语言" scheme="https://jinlid.github.io/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/"/>
     
     
     <category term="python模块" scheme="https://jinlid.github.io/tags/python%E6%A8%A1%E5%9D%97/"/>
@@ -149,16 +135,10 @@
     <link href="https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/"/>
     <id>https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2021-12-12T16:20:41.972Z</updated>
+    <updated>2022-03-12T04:37:48.708Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;1-os&quot;&gt;&lt;a href=&quot;#1-os&quot; class=&quot;headerlink&quot; title=&quot;1 os&quot;&gt;&lt;/a&gt;1</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;1-os&quot;&gt;&lt;a href=&quot;#1-os&quot; class=&quot;headerlink&quot; title=&quot;1 os&quot;&gt;&lt;/a&gt;1 os&lt;/h1&gt;&lt;p&gt;模块os让你能够访问多个操作系统服务，它包含了很多有用的函数和变量。除此之外os及其子模块os.path还包含多个查看、创建和删除目录及文件的函数，以及一些操作路径的函数（例如os.path.split和os.path.join让你在大多数情况下都可以忽略ps.pathsep）。&lt;/p&gt;</summary>
     
     
     
@@ -174,22 +154,14 @@
     <link href="https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/"/>
     <id>https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2021-10-17T06:23:53.261Z</updated>
+    <updated>2022-03-12T04:38:25.195Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;Django作为Web框架，需要一种很便利得方法动态地生成HTML网页，因此有了模板这个概念。模板包含所需HTML的部分代码以及一些特殊语法，特殊语法用于描述如何将视图传递的数据动态插入HTML网页中。&lt;/p&gt;
-&lt;p&gt;[TOC]&lt;/p&gt;
-&lt;h1</summary>
-        
-      
+    <summary type="html">&lt;p&gt;Django作为Web框架，需要一种很便利得方法动态地生成HTML网页，因此有了模板这个概念。模板包含所需HTML的部分代码以及一些特殊语法，特殊语法用于描述如何将视图传递的数据动态插入HTML网页中。&lt;/p&gt;</summary>
     
     
     
-    <category term="python" scheme="https://jinlid.github.io/categories/python/"/>
+    <category term="开发语言" scheme="https://jinlid.github.io/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/"/>
     
     
     <category term="web开发" scheme="https://jinlid.github.io/tags/web%E5%BC%80%E5%8F%91/"/>
@@ -203,26 +175,17 @@
     <link href="https://jinlid.github.io/2021/09/15/postgresql/"/>
     <id>https://jinlid.github.io/2021/09/15/postgresql/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-01-25T04:07:33.955Z</updated>
+    <updated>2022-03-12T04:39:08.328Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h2 id=&quot;postgresql数据库进程&quot;&gt;&lt;a href=&quot;#postgresql数据库进程&quot; class=&quot;headerlink&quot; title=&quot;postgresql数据库进程&quot;&gt;&lt;/a&gt;postgresql数据库进程&lt;/h2&gt;&lt;blockquote&gt;
-&lt;p&gt;pg93</summary>
-        
-      
+    <summary type="html">&lt;h2 id=&quot;postgresql数据库进程&quot;&gt;&lt;a href=&quot;#postgresql数据库进程&quot; class=&quot;headerlink&quot; title=&quot;postgresql数据库进程&quot;&gt;&lt;/a&gt;postgresql数据库进程&lt;/h2&gt;</summary>
     
     
     
-    <category term="postgresql" scheme="https://jinlid.github.io/categories/postgresql/"/>
+    <category term="数据库" scheme="https://jinlid.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
     
     <category term="postgresql模块" scheme="https://jinlid.github.io/tags/postgresql%E6%A8%A1%E5%9D%97/"/>
-    
-    <category term="数据库" scheme="https://jinlid.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
@@ -231,21 +194,22 @@
     <link href="https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
     <id>https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</id>
     <published>2021-08-12T16:00:00.000Z</published>
-    <updated>2022-01-23T14:53:56.683Z</updated>
+    <updated>2022-03-12T04:38:32.149Z</updated>
     
     
       
       
         
         
-    <summary type="html">&lt;h2 id=&quot;1-安装docker&quot;&gt;&lt;a href=&quot;#1-安装docker&quot; class=&quot;headerlink&quot; title=&quot;1 安装docker&quot;&gt;&lt;/a&gt;1 安装docker&lt;/h2&gt;&lt;p&gt;卸载旧版本&lt;/p&gt;
-&lt;figure class=&quot;highlight</summary>
+    <summary type="html">&lt;span id=&quot;more&quot;&gt;&lt;/span&gt;
+
+&lt;h2 id=&quot;1-安装docker&quot;&gt;&lt;a href=&quot;#1-安装docker&quot; class=&quot;headerlink&quot; title=&quot;1 安装docker&quot;&gt;&lt;/a&gt;1</summary>
         
       
     
     
     
-    <category term="docker" scheme="https://jinlid.github.io/categories/docker/"/>
+    <category term="操作系统" scheme="https://jinlid.github.io/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
     
     <category term="docker" scheme="https://jinlid.github.io/tags/docker/"/>
@@ -257,20 +221,14 @@
     <link href="https://jinlid.github.io/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/"/>
     <id>https://jinlid.github.io/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/</id>
     <published>2021-08-12T16:00:00.000Z</published>
-    <updated>2021-10-15T16:09:30.100Z</updated>
+    <updated>2022-03-12T04:38:50.828Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;1-nginx介绍&quot;&gt;&lt;a href=&quot;#1-nginx介绍&quot; class=&quot;headerlink&quot; title=&quot;1 nginx介绍&quot;&gt;&lt;/a&gt;1 nginx介绍&lt;/h1&gt;&lt;h3 id=&quot;1-1-什么是nginx&quot;&gt;&lt;a</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;1-nginx介绍&quot;&gt;&lt;a href=&quot;#1-nginx介绍&quot; class=&quot;headerlink&quot; title=&quot;1 nginx介绍&quot;&gt;&lt;/a&gt;1 nginx介绍&lt;/h1&gt;&lt;h3 id=&quot;1-1-什么是nginx&quot;&gt;&lt;a href=&quot;#1-1-什么是nginx&quot; class=&quot;headerlink&quot; title=&quot;1.1 什么是nginx&quot;&gt;&lt;/a&gt;1.1 什么是nginx&lt;/h3&gt;&lt;p&gt; Nginx是一个高性能的HTTP和反向代理服务器，特点是占有内存少，并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好。Nginx转为性能优化而开发，性能是其最重要的考量，是心啊上非常注重效率，能经受高负载的考验，有报告表明能支持高达5w个并发连接数。&lt;/p&gt;</summary>
     
     
     
-    <category term="nginx" scheme="https://jinlid.github.io/categories/nginx/"/>
+    <category term="操作系统" scheme="https://jinlid.github.io/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
     
     <category term="服务器" scheme="https://jinlid.github.io/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/"/>
@@ -284,20 +242,14 @@
     <link href="https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/"/>
     <id>https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/</id>
     <published>2021-08-12T16:00:00.000Z</published>
-    <updated>2021-12-12T16:36:23.185Z</updated>
+    <updated>2022-03-12T04:39:52.433Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h2 id=&quot;pip介绍&quot;&gt;&lt;a href=&quot;#pip介绍&quot; class=&quot;headerlink&quot; title=&quot;pip介绍&quot;&gt;&lt;/a&gt;pip介绍&lt;/h2&gt;&lt;p&gt;pip的全称：package installer for python，是</summary>
-        
-      
+    <summary type="html">&lt;h2 id=&quot;pip介绍&quot;&gt;&lt;a href=&quot;#pip介绍&quot; class=&quot;headerlink&quot; title=&quot;pip介绍&quot;&gt;&lt;/a&gt;pip介绍&lt;/h2&gt;&lt;p&gt;pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。Python官方的PyPi仓库为我们提供了一个统一的代码托管仓库，名叫PyPi（Python Package Index），所有的库安装都是从这里调度。pip是python的第三方库管理器，把库从PyPi取出来，然后安装到Python里，还可以管理安装好的库，比如更新、查看、搜索、卸载等等。在Python 2.7.9 + 或 Python 3.4+ 以上版本都自带 pip工具。&lt;/p&gt;</summary>
     
     
     
-    <category term="python" scheme="https://jinlid.github.io/categories/python/"/>
+    <category term="开发语言" scheme="https://jinlid.github.io/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/"/>
     
     
     <category term="pip" scheme="https://jinlid.github.io/tags/pip/"/>
@@ -309,20 +261,14 @@
     <link href="https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/"/>
     <id>https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/</id>
     <published>2021-07-10T16:00:00.000Z</published>
-    <updated>2022-01-23T14:55:51.025Z</updated>
+    <updated>2022-03-12T04:39:01.889Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;PgBouncer介绍&quot;&gt;&lt;a href=&quot;#PgBouncer介绍&quot; class=&quot;headerlink&quot;</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;PgBouncer介绍&quot;&gt;&lt;a href=&quot;#PgBouncer介绍&quot; class=&quot;headerlink&quot; title=&quot;PgBouncer介绍&quot;&gt;&lt;/a&gt;PgBouncer介绍&lt;/h1&gt;&lt;p&gt;PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：&lt;br&gt;1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。&lt;br&gt;2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。&lt;br&gt;3，对客户端连接进行限制，预防过多或恶意的连接请求。&lt;/p&gt;</summary>
     
     
     
-    <category term="PostgreSQL" scheme="https://jinlid.github.io/categories/PostgreSQL/"/>
+    <category term="数据库" scheme="https://jinlid.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
     
     <category term="pg工具" scheme="https://jinlid.github.io/tags/pg%E5%B7%A5%E5%85%B7/"/>
@@ -334,20 +280,14 @@
     <link href="https://jinlid.github.io/2021/07/11/pgbench%E5%8E%8B%E6%B5%8B%E5%B7%A5%E5%85%B7/"/>
     <id>https://jinlid.github.io/2021/07/11/pgbench%E5%8E%8B%E6%B5%8B%E5%B7%A5%E5%85%B7/</id>
     <published>2021-07-10T16:00:00.000Z</published>
-    <updated>2021-10-16T01:26:50.393Z</updated>
+    <updated>2022-03-12T04:38:58.387Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot;</summary>
-        
-      
+    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;&lt;strong&gt;背景&lt;/strong&gt;&lt;/h2&gt;&lt;p&gt;常用数据库的基准测试最关键的衡量指标有：吞吐量（Throughput）、响应时间（RT）或延迟（Latency）和并发量。&lt;br&gt;吞吐量是衡量数据库的单位时间内的事务处理能力，常用的单位是TPS（每秒事务数）。&lt;br&gt;响应时间或延迟，描述操作过程里用来响应服务的时间，根据不同的应用可以使用分钟、秒、毫秒、微秒作为单位。通常还会根据响应时间的最大值、最小值以及平均值做分组统计，例如90%的运行周期内的响应时间是1毫秒，10%的运行周期内的响应时间是5毫秒，这样可以得出相对客观的测试结果。&lt;br&gt;并发量是指同时工作的连接数。&lt;br&gt;在不同的测试场景，需要关注的指标也会不同，分析测试结果时，吞吐量、响应时间、并发量是必须关注的三个基本要素。&lt;/p&gt;</summary>
     
     
     
-    <category term="PostgreSQL" scheme="https://jinlid.github.io/categories/PostgreSQL/"/>
+    <category term="数据库" scheme="https://jinlid.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
     
     <category term="pg工具" scheme="https://jinlid.github.io/tags/pg%E5%B7%A5%E5%85%B7/"/>

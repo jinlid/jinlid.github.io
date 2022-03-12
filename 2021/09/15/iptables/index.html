@@ -32,7 +32,7 @@ ipta">
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -444,8 +444,8 @@ ipta">
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/Linux/" class="post-category">
-                                Linux
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                操作系统
                             </a>
                         
                     </div>
@@ -480,6 +480,8 @@ ipta">
             <div id="articleContent">
                 <h1 id="1-iptables"><a href="#1-iptables" class="headerlink" title="1 iptables"></a>1 iptables</h1><h2 id="1-1-介绍"><a href="#1-1-介绍" class="headerlink" title="1.1 介绍"></a>1.1 介绍</h2><p>防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。</p>
 <p>iptables主机型防火墙工作在2，3，4层，对TCP/IP数据包进行过滤和限制。属于过滤型防火墙。（除非编译内核才可以使iptables支持7层）。</p>
+<span id="more"></span>
+
 <h2 id="1-2-iptables的缺点"><a href="#1-2-iptables的缺点" class="headerlink" title="1.2 iptables的缺点"></a>1.2 iptables的缺点</h2><ol>
 <li>防火墙虽然可以过滤互联网的数据包，但却无法过滤内部网络的数据包。因此若有人从内部网络攻击时，防火墙没有作用。</li>
 <li>电脑本身的操作系统亦可能因一些系统漏洞，使入侵者可以利用这些漏洞饶过防火墙过滤。从而入侵电脑。</li>
@@ -583,67 +585,67 @@ ipta">
 </li>
 </ul>
 <p>查看当前的防火墙设置</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -L</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -L
+</code></pre>
 <p> <img src="/image/Linux%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99%E2%80%93IP%20Tables/image-20211020222045044.png" alt="image-20211020222045044"></p>
 <p>以上target目标，prot端口，opt选项，source源地址，destination目标地址。</p>
 <h2 id="2-4-删除规则"><a href="#2-4-删除规则" class="headerlink" title="2.4 删除规则"></a>2.4 删除规则</h2><p>iptables提供了-D选项来删除链规则，有2种不同的语法用于删除一条规则。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iptables -D chain rule-specification </span><br><span class="line">iptables -D chain rulenum</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -D chain rule-specification 
+iptables -D chain rulenum
+</code></pre>
 <p>第1种语法使用规则描述来匹配某条链路规则。为此。用户必须一字不差地照搬当初使用-A选项添加使用的描述。如删除对lo环回接口的规则设置。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -D INPUT -i lo -p ALL -j ACCEPT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -D INPUT -i lo -p ALL -j ACCEPT
+</code></pre>
 <p>第2种语法删除编号为11的链规则</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -D INPUT 11</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -D INPUT 11
+</code></pre>
 <p>清空默认表（也就是filter表）中的数据</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -F
+</code></pre>
 <p>清空默认表中INPUT链的规则</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F INPUT</span><br></pre></td></tr></table></figure>
-
-
-
+<pre class=" language-bash"><code class="language-bash">iptables -F INPUT
+</code></pre>
 <h2 id="2-5-规则的匹配条件"><a href="#2-5-规则的匹配条件" class="headerlink" title="2.5 规则的匹配条件"></a>2.5 规则的匹配条件</h2><p>（1）通用匹配（协议，地址，接口），可以独立使用</p>
 <p>2.5.1 不让别人ping自己</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -t filter -I INPUT -p icmp -j REJECT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -t filter -I INPUT -p icmp -j REJECT
+</code></pre>
 <p> <img src="/image/Linux%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99%E2%80%93IP%20Tables/image-20211020222440074.png" alt="image-20211020222440074"></p>
 <p> <img src="/image/Linux%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99%E2%80%93IP%20Tables/image-20211020222640112.png" alt="image-20211020222640112"></p>
 <p>Destination Port Unreachable代表目标地址不可达。</p>
 <p>删除该规则</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -t filter -D INPUT -p icmp -j REJECT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -t filter -D INPUT -p icmp -j REJECT
+</code></pre>
 <p> <img src="/image/Linux%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99%E2%80%93IP%20Tables/image-20211020223520241.png" alt="image-20211020223520241"></p>
 <p> <img src="/image/Linux%E7%9A%84%E9%98%B2%E7%81%AB%E5%A2%99%E2%80%93IP%20Tables/image-20211020223548876.png" alt="image-20211020223548876"></p>
 <p>下面这条命令将INPUT链的默认策略更改为DROP（丢弃），通常对服务器而言，将所有的链的默认策略设置为DROP事一个好的建议。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -P INPUT DROP</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -P INPUT DROP
+</code></pre>
 <p>执行完这条命令后，所有试图同本机建立连接的努力都会失败，因为所有从“外部”到达防火墙包都被丢弃了，甚至连使用环回接口ping自己都不行</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping localhost</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">ping</span> localhost
+</code></pre>
 <p>假设当前防火墙所在的主机是一台Web服务器，为此应该允许外部主机能够连接到80端口（对应HTTP服务器）和22端口（对应SSH服务）。使用iptables -A命令添加链规则，基本语法如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A chain-name -i interface -j target</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A chain-name -i interface -j target
+</code></pre>
 <p>其中，chain-name代表链的名字，interface指定该规则用于哪个网络接口，target用于定义策略。<br>为简便起见，假设只有一个网络接口eth0通向外部，lo是本地环回接口。为了实现防火墙规则的精确匹配，还可能用到下面的选项：</p>
 <p>选项含义-p proto匹配网络协议：tcp、udp、icmp–icmp-type type匹配ICMP类型，和-p icmp配合使用-s source-ip匹配来源主机（或网络）的IP地址–sport port#匹配来源主机（或网络）的端口，和-s source-ip配合使用-d dest-ip匹配目标主机（或网络）的IP地址-dport port匹配目标主机（或网路）的端口，和-d dest-ip配合使用</p>
 <p>下面这条命令添加了一条INPUT链的规则，允许所有的lo接口的连接请求，这样防火墙就不会阻止“自己连接自己”的行为了。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A INPUT -i lo -p ALL -j ACCEPT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i lo -p ALL -j ACCEPT
+</code></pre>
 <p>-p ALL代表包括tcp、udp和icpm三种。<br>很多时候，管理员想要做的并不仅仅是把别人挡在门外，还希望直到有哪些人正在试图访问服务器。下面这条命令给INPUT链添加了一条LOG（日志记录）策略。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A INPUT -i eht0 -j LOG</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eht0 -j LOG
+</code></pre>
 <p>默认情况下，防火墙记录到的访问信息被保存在/var/log/messages中。这是一个文本文件，可以使用任何文本查看命令查看。事实上，/var/log/messages记录了系统中的大部分行为，这是Linux主要的系统日志文件。<br>其中比较常用的记录字段有IN（接收数据包的网络接口）、SRC（数据包来源的IP地址）、DST（数据包的目的IP地址）及开头的日期和时间等。</p>
 <p>（2）隐含匹配 –sport/–dport，需要协议的前提</p>
 <p>通常来说，还应该让外部主机能够ping到这三台web服务器。这样网站出现问题时，管理员可以简单地使用ping命令确定这台服务器是否还在运行。如果服务器拥有两个网路接口eth0和ppp0，分别对应内部网络和Internet。那么一些网络管理员会倾向于将ppp0设置为丢弃外部地ping请求。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A INPUT -i eth0 -p icmp --icmp-type 8 -j ACCEPT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -p icmp --icmp-type 8 -j ACCEPT
+</code></pre>
 <p>命令地-p选项指定该规则匹配协议ICMP，紧跟地–icmp-type指定了ICMP的类型代码。ping命令对用的类型代码是8.<br>接下来的两条命令增加了22端口和80端口的访问许可。注意这次-p选项指定的协议类型是tcp，这时因为SSH服务和HTTP服务都是基于TCP协议的。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT </span><br><span class="line">iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT 
+iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
+</code></pre>
 <p>如果网络接口eth0通向Internet，那么将SSH服务项全世界开放有时不那么让人放心，有些管理员可能希望更进一步，将SSH服务设置为只对本地网络的用户开放。下面的设置指定只有10.68.24.0/24这个网络中的主机可以访问22端口。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp --dport 22 -j ACCEPT</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp --dport 22 -j ACCEPT
+</code></pre>
 <p>（3）显示匹配（通过调用模块：lsmod|grep xl_来加载内核扩展，如匹配）</p>
 
                 
@@ -909,8 +911,8 @@ ipta">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Linux/" class="post-category">
-                                    Linux
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             
@@ -958,8 +960,8 @@ ipta">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/java/" class="post-category">
-                                    java
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             

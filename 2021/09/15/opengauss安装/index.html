@@ -6,8 +6,10 @@
     <meta charset="utf-8">
     <meta name="keywords" content="opengauss安装, jinlid&#39;s blog">
     <meta name="description" content="安装概述openGauss支持单机部署和单机HA部署两种部署方式。单机部署时，可在一个主机部署多个数据库实例，但为了数据安全，不建议用户这样部署。单机HA部署支持一台主机和最少一台备机，备机一共最多8台的配置方式。
+
+
 1 安装依赖软件包
-YU">
+">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -33,7 +35,7 @@ YU">
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -480,13 +482,20 @@ YU">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <h1 id="安装概述"><a href="#安装概述" class="headerlink" title="安装概述"></a>安装概述</h1><p>openGauss支持单机部署和单机HA部署两种部署方式。单机部署时，可在一个主机部署多个数据库实例，但为了数据安全，不建议用户这样部署。单机HA部署支持一台主机和最少一台备机，备机一共最多8台的配置方式。</p>
+<span id="more"></span>
+
 <p>1 安装依赖软件包</p>
 <p>YUM源配置</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /etc/yum.repos.d/repo_bak</span><br><span class="line">mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/repo_bak/</span><br><span class="line">curl -o /etc/yum.repos.d/CentOS-Base.repo https://repo.huaweicloud.com/repository/conf/CentOS-7.repo <span class="comment">## 内网</span></span><br><span class="line">curl -o /etc/yum.repos.d/CentOS-Base.repo https://repo.huaweicloud.com/repository/conf/CentOS-7-reg.repo <span class="comment">## 外网</span></span><br><span class="line">yum clean all</span><br><span class="line">yum makecache</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /etc/yum.repos.d/repo_bak
+<span class="token function">mv</span> /etc/yum.repos.d/*.repo /etc/yum.repos.d/repo_bak/
+curl -o /etc/yum.repos.d/CentOS-Base.repo https://repo.huaweicloud.com/repository/conf/CentOS-7.repo <span class="token comment" spellcheck="true">## 内网</span>
+curl -o /etc/yum.repos.d/CentOS-Base.repo https://repo.huaweicloud.com/repository/conf/CentOS-7-reg.repo <span class="token comment" spellcheck="true">## 外网</span>
+yum clean all
+yum makecache
+</code></pre>
 <p>安装依赖软件包</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install libaio-devel flex bison ncurses-devel glibc-devel patch lsb_release readline-devel</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">yum <span class="token function">install</span> libaio-devel flex bison ncurses-devel glibc-devel patch lsb_release readline-devel
+</code></pre>
 <p>openeuler+x86环境中还需要安装libnsl</p>
 <h1 id="修改操作系统配置"><a href="#修改操作系统配置" class="headerlink" title="修改操作系统配置"></a>修改操作系统配置</h1><h4 id="关闭操作系统防火墙"><a href="#关闭操作系统防火墙" class="headerlink" title="关闭操作系统防火墙"></a>关闭操作系统防火墙</h4><p>为了在防火墙开启的状态下，确保openGauss的正常使用。用户需要将同openGauss相关的服务、协议、IP以及端口添加到openGauss各主机的防火墙白名单中。</p>
 <p><strong>操作步骤</strong></p>
@@ -495,80 +504,156 @@ YU">
 <li><p>修改/etc/selinux/config文件中的“SELINUX”值为“disabled”。</p>
 <ol>
 <li><p>使用VIM打开config文件。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/selinux/config</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">vim /etc/selinux/config
+</code></pre>
+</li>
 <li><p>修改“SELINUX”的值“disabled”，执行:wq保存并退出修改。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELINUX=disabled</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">SELINUX<span class="token operator">=</span>disabled
+</code></pre>
+</li>
 </ol>
 </li>
 <li><p>重新启动操作系统。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reboot</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">reboot</span>
+</code></pre>
+</li>
 <li><p>检查防火墙是否关闭。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl status firewalld</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">systemctl status firewalld
+</code></pre>
 <p>若防火墙状态显示为active (running)，则表示防火墙未关闭，请执行[4](mk:@MSITStore:C:\Users\jinlid\Downloads\openGauss-document-zh-2.0.0\openGauss-document-zh-2.0.0\chm\openGauss 快速入门 01.chm::/zh-cn_topic_0295767908.html#ZH-CN_TOPIC_0295767908__zh-cn_topic_0289899721_zh-cn_topic_0283136490_li17330102819394)；</p>
 <p>若防火墙状态显示为inactive (dead)，则无需再关闭防火墙。</p>
 </li>
 <li><p>关闭防火墙。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl <span class="built_in">disable</span> firewalld.service</span><br><span class="line">systemctl stop firewalld.service</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">systemctl disable firewalld.service
+systemctl stop firewalld.service
+</code></pre>
+</li>
 </ol>
 <h4 id="设置网卡MTU值"><a href="#设置网卡MTU值" class="headerlink" title="设置网卡MTU值"></a>设置网卡MTU值</h4><p><strong>操作步骤</strong></p>
 <ol>
 <li><p>执行如下命令查询服务器的网卡编号。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">ifconfig</span>
+</code></pre>
 <p>如下图所示，如果服务器IP为10.244.53.173，则该服务器的网卡编号为eth0。</p>
 <p> <img src="../image/opengauss%E5%AE%89%E8%A3%85/image-20211212112513163.png" alt="image-20211212112513163"></p>
 </li>
 <li><p>使用如下命令将各数据库节点的网卡MTU值设置为相同大小。对于X86，MTU值推荐1500；对于ARM，MTU值推荐8192。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig 网卡编号 mtu 值</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">ifconfig</span> 网卡编号 mtu 值
+</code></pre>
+</li>
 </ol>
 <h4 id="设置字符集参数"><a href="#设置字符集参数" class="headerlink" title="设置字符集参数"></a>设置字符集参数</h4><p>将各数据库节点的字符集设置为相同的字符集，可以在/etc/profile文件中添加”export LANG=XXX”（XXX为Unicode编码）。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/profile</span><br><span class="line">-----------------</span><br><span class="line"><span class="built_in">export</span> LANG=en_US.UTF8</span><br><span class="line">-----------------</span><br><span class="line"><span class="built_in">source</span> /etc/profile</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">vim /etc/profile
+-----------------
+<span class="token function">export</span> LANG<span class="token operator">=</span>en_US.UTF8
+-----------------
+<span class="token function">source</span> /etc/profile
+</code></pre>
 <h4 id="关闭RemoveIPC-openEuler"><a href="#关闭RemoveIPC-openEuler" class="headerlink" title="关闭RemoveIPC(openEuler)"></a>关闭RemoveIPC(openEuler)</h4><p>在各数据库节点上，关闭RemoveIPC。CentOS操作系统默认为关闭，可以跳过该步骤。</p>
 <p><strong>操作步骤</strong></p>
 <ol>
 <li><p>修改/etc/systemd/logind.conf文件中的“RemoveIPC”值为“no”。</p>
 <ol>
 <li><p>使用VIM打开logind.conf文件。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim  /etc/systemd/logind.conf</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">vim  /etc/systemd/logind.conf
+</code></pre>
+</li>
 <li><p>修改“RemoveIPC”的值“no”。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RemoveIPC=no</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">RemoveIPC<span class="token operator">=</span>no
+</code></pre>
+</li>
 </ol>
 </li>
 <li><p>修改/usr/lib/systemd/system/systemd-logind.service文件中的“RemoveIPC”值为“no”。</p>
 <ol>
 <li><p>使用VIM打开systemd-logind.service文件。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /usr/lib/systemd/system/systemd-logind.service</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">vim /usr/lib/systemd/system/systemd-logind.service
+</code></pre>
+</li>
 <li><p>修改“RemoveIPC”的值“no”。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RemoveIPC=no</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">RemoveIPC<span class="token operator">=</span>no
+</code></pre>
+</li>
 </ol>
 </li>
 <li><p>重新加载配置参数。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl restart systemd-logind</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">systemctl daemon-reload
+systemctl restart systemd-logind
+</code></pre>
+</li>
 </ol>
 <h4 id="可选）关闭swap交换内存"><a href="#可选）关闭swap交换内存" class="headerlink" title="(可选）关闭swap交换内存"></a>(可选）关闭swap交换内存</h4><p>关闭swap交换内存是为了保障数据库的访问性能，避免把数据库的缓冲区内存淘汰到磁盘上。 如果服务器内存比较小，内存过载时，可打开swap交换内存保障正常运行。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/fstab <span class="comment">## 注释掉swap分区挂载</span></span><br><span class="line">swapoff -a <span class="comment">## 关闭swap</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">vim /etc/fstab <span class="token comment" spellcheck="true">## 注释掉swap分区挂载</span>
+swapoff -a <span class="token comment" spellcheck="true">## 关闭swap</span>
+</code></pre>
 <h4 id="设置时区和时间"><a href="#设置时区和时间" class="headerlink" title="设置时区和时间"></a>设置时区和时间</h4><p>在各数据库节点上，确保时区和时间一致。</p>
 <ol>
 <li><p>执行如下命令检查各数据库节点时间和时区是否一致。如果各数据库节点时间和时区不一致区，请执行[步骤2](mk:@MSITStore:C:\Users\jinlid\Downloads\openGauss-document-zh-2.0.0\openGauss-document-zh-2.0.0\chm\openGauss 快速入门 01.chm::/zh-cn_topic_0295767908.html#ZH-CN_TOPIC_0295767908__zh-cn_topic_0289899721_zh-cn_topic_0283136490_li1238816343545)~[步骤3](mk:@MSITStore:C:\Users\jinlid\Downloads\openGauss-document-zh-2.0.0\openGauss-document-zh-2.0.0\chm\openGauss 快速入门 01.chm::/zh-cn_topic_0295767908.html#ZH-CN_TOPIC_0295767908__zh-cn_topic_0289899721_zh-cn_topic_0283136490_li153615819546)。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">date</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">date</span>
+</code></pre>
+</li>
 <li><p>使用如下命令将各数据库节点/usr/share/zoneinfo/目录下的时区文件拷贝为/etc/localtime文件。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp /usr/share/zoneinfo/$地区/$时区 /etc/localtime</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cp</span> /usr/share/zoneinfo/$地区/$时区 /etc/localtime
+</code></pre>
 <p><em>$地区/$时区为需要设置时区的信息，例如：Asia</em>/Shanghai。</p>
 </li>
 <li><p>使用<strong>date -s</strong>命令将各数据库节点的时间设置为统一时间，举例如下。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">date -s <span class="string">&quot;Sat Sep 27 16:00:07 CST 2020&quot;</span></span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">date</span> -s <span class="token string">"Sat Sep 27 16:00:07 CST 2020"</span>
+</code></pre>
+</li>
 </ol>
 <h1 id="创建XML配置文件"><a href="#创建XML配置文件" class="headerlink" title="创建XML配置文件"></a>创建XML配置文件</h1><p>安装openGauss前需要创建cluster_config.xml文件。cluster_config.xml文件包含部署openGauss的服务器信息、安装路径、IP地址以及端口号等。用于告知openGauss如何部署。用户需根据不同场景配置对应的XML文件。</p>
-<h4 id="单节点配置文件"><a href="#单节点配置文件" class="headerlink" title="单节点配置文件"></a>单节点配置文件</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">ROOT</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 整体信息 --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">CLUSTER</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 数据库名称 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;clusterName&quot;</span> <span class="attr">value</span>=<span class="string">&quot;dbCluster&quot;</span> /&gt;</span>  </span><br><span class="line">  <span class="comment">&lt;!-- 数据库主机名称(hostname) --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;nodeNames&quot;</span> <span class="attr">value</span>=<span class="string">&quot;jinli81&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 主机在后端存储网络中的IP地址（内网IP） --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;jinli81&quot;</span> <span class="attr">value</span>=<span class="string">&quot;192.168.138.85&quot;</span>/&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 数据库安装目录--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;gaussdbAppPath&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/opt/gaussdb/app&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 日志目录--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;gaussdbLogPath&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/var/log/gaussdb&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- 临时文件目录--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;tmpMppdbPath&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/opt/huawei/wisequery/perfadm_db&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!--数据库工具目录--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;gaussdbToolPath&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/opt/huawei/wisequery&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!--数据库core文件目录--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;corePath&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/opt/huawei/corefile&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;clusterType&quot;</span> <span class="attr">value</span>=<span class="string">&quot;single-inst&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">CLUSTER</span>&gt;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">&lt;!-- 每台服务器上的节点部署信息 --&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">DEVICELIST</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- node1上的节点部署信息 --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">DEVICE</span> <span class="attr">sn</span>=<span class="string">&quot;100000001&quot;</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- node1的hostname --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;name&quot;</span> <span class="attr">value</span>=<span class="string">&quot;jinli81&quot;</span>/&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- node1所在的AZ及AZ优先级 --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;azName&quot;</span> <span class="attr">value</span>=<span class="string">&quot;AZ1&quot;</span>/&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;azPriority&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span>/&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- node1的IP，如果服务器只有一个网卡可用，将backIP1和sshIP1配置成同一个IP --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;backIp1&quot;</span> <span class="attr">value</span>=<span class="string">&quot;192.168.138.85&quot;</span>/&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;sshIp1&quot;</span> <span class="attr">value</span>=<span class="string">&quot;192.168.138.85&quot;</span>/&gt;</span></span><br><span class="line">		<span class="comment">&lt;!--DBnode--&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;dataNum&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span>/&gt;</span></span><br><span class="line">		<span class="comment">&lt;!--DBnode端口号--&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;dataPortBase&quot;</span> <span class="attr">value</span>=<span class="string">&quot;26000&quot;</span>/&gt;</span></span><br><span class="line">		<span class="comment">&lt;!--DBnode主节点上数据目录，及备机数据目录--&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">PARAM</span> <span class="attr">name</span>=<span class="string">&quot;dataNode1&quot;</span> <span class="attr">value</span>=<span class="string">&quot;/gaussdb/data/db1&quot;</span>/&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">DEVICE</span>&gt;</span></span><br><span class="line">	</span><br><span class="line">	<span class="tag">&lt;/<span class="name">DEVICELIST</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">ROOT</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="单节点配置文件"><a href="#单节点配置文件" class="headerlink" title="单节点配置文件"></a>单节点配置文件</h4><pre class=" language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>ROOT</span><span class="token punctuation">></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 整体信息 --></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>CLUSTER</span><span class="token punctuation">></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 数据库名称 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>clusterName<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dbCluster<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>  
+  <span class="token comment" spellcheck="true">&lt;!-- 数据库主机名称(hostname) --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>nodeNames<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jinli81<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 主机在后端存储网络中的IP地址（内网IP） --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jinli81<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>192.168.138.85<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 数据库安装目录--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>gaussdbAppPath<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/opt/gaussdb/app<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 日志目录--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>gaussdbLogPath<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/var/log/gaussdb<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!-- 临时文件目录--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>tmpMppdbPath<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/opt/huawei/wisequery/perfadm_db<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!--数据库工具目录--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>gaussdbToolPath<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/opt/huawei/wisequery<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token comment" spellcheck="true">&lt;!--数据库core文件目录--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>corePath<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/opt/huawei/corefile<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>clusterType<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>single-inst<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>CLUSTER</span><span class="token punctuation">></span></span>
 
+    <span class="token comment" spellcheck="true">&lt;!-- 每台服务器上的节点部署信息 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>DEVICELIST</span><span class="token punctuation">></span></span>
+        <span class="token comment" spellcheck="true">&lt;!-- node1上的节点部署信息 --></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>DEVICE</span> <span class="token attr-name">sn</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>100000001<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token comment" spellcheck="true">&lt;!-- node1的hostname --></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>name<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jinli81<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment" spellcheck="true">&lt;!-- node1所在的AZ及AZ优先级 --></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>azName<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>AZ1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>azPriority<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment" spellcheck="true">&lt;!-- node1的IP，如果服务器只有一个网卡可用，将backIP1和sshIP1配置成同一个IP --></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>backIp1<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>192.168.138.85<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>sshIp1<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>192.168.138.85<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment" spellcheck="true">&lt;!--DBnode--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dataNum<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment" spellcheck="true">&lt;!--DBnode端口号--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dataPortBase<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>26000<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment" spellcheck="true">&lt;!--DBnode主节点上数据目录，及备机数据目录--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PARAM</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dataNode1<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/gaussdb/data/db1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>DEVICE</span><span class="token punctuation">></span></span>
+    
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>DEVICELIST</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>ROOT</span><span class="token punctuation">></span></span>
+</code></pre>
 <h1 id="准备安装用户及环境"><a href="#准备安装用户及环境" class="headerlink" title="准备安装用户及环境"></a>准备安装用户及环境</h1><h4 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h4><ol>
 <li><p>以root用户登录待安装openGauss的任意主机，并按规划创建存放安装包的目录。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/software/openGauss</span><br><span class="line">chmod 755 -R /opt/software</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /opt/software/openGauss
+<span class="token function">chmod</span> 755 -R /opt/software
+</code></pre>
 <ul>
 <li>不建议把安装包的存放目录规划到openGauss用户的家目录或其子目录下，可能导致权限问题。</li>
 <li>openGauss用户须具有/opt/software/openGauss目录的读写权限。</li>
@@ -577,8 +662,10 @@ YU">
 <li><p>将安装包“openGauss-x.x.x-openEuler-64bit-all.tar.gz”和配置文件“cluster_config.xml”都上传至上一步所创建的目录中。</p>
 </li>
 <li><p>在安装包所在的目录下，解压安装包openGauss-x.x.x-openEuler-64bit-all.tar.gz。安装包解压后，会有OM安装包和Server安装包。继续解压OM安装包，会在/opt/software/openGauss路径下自动生成script子目录，并且在script目录下生成gs_preinstall等各种OM工具脚本。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss</span><br><span class="line">tar -zxvf openGauss-x.x.x-openEuler-64bit-all.tar.gz</span><br><span class="line">tar -zxvf openGauss-x.x.x-openEuler-64bit-om.tar.gz</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> /opt/software/openGauss
+<span class="token function">tar</span> -zxvf openGauss-x.x.x-openEuler-64bit-all.tar.gz
+<span class="token function">tar</span> -zxvf openGauss-x.x.x-openEuler-64bit-om.tar.gz
+</code></pre>
 <ul>
 <li>在执行前置脚本gs_preinstall时，需要规划好openGauss配置文件路径、安装包存放路径、程序安装目录、实例数据目录，后续普通用户使用过程中不能再更改这些路径。</li>
 <li>运行前置脚本gs_preinstall准备安装环境时，脚本内部会自动将openGauss配置文件、解压后的安装包同步拷贝到其余服务器的相同目录下。</li>
@@ -586,21 +673,28 @@ YU">
 </ul>
 </li>
 <li><p>进入到工具脚本存放目录下。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss/script</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> /opt/software/openGauss/script
+</code></pre>
+</li>
 <li><p>如果是openEuler的操作系统，执行如下命令打开performance.sh文件，用#注释sysctl -w vm.min_free_kbytes=112640 &amp;&gt; /dev/null，键入“ESC”键进入指令模式，执行**:wq**保存并退出修改。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/profile.d/performance.sh</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">vi</span> /etc/profile.d/performance.sh
+</code></pre>
+</li>
 <li><p>为确保成功安装，执行命令检查 hostname 与 /etc/hostname 是否一致。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hostname</span><br><span class="line">cat /etc/hostname </span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">hostname</span>
+<span class="token function">cat</span> /etc/hostname 
+</code></pre>
 <p>如果hostname 与 /etc/hostname 中的主机名不一致，请执行如下命令打开/etc/hostname文件，将主机名改为一致，键入“ESC”键进入指令模式，执行**:wq**保存并退出修改。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/hostname </span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">vi</span> /etc/hostname 
+</code></pre>
+</li>
 <li><p>使用gs_preinstall准备好安装环境。若为共用环境需加入–sep-env-file=ENVFILE参数分离环境变量，避免与其他用户相互影响，ENVFILE为用户自行指定的环境变量分离文件的路径。</p>
 <ul>
 <li><p>采用交互模式执行前置，并在执行过程中自动创建root用户互信和</p>
 <p>openGauss</p>
 <p>用户互信：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gs_preinstall -U omm -G dbgrp -X /opt/software/openGauss/cluster_config.xml</span><br></pre></td></tr></table></figure>
-
+<pre><code>./gs_preinstall -U omm -G dbgrp -X /opt/software/openGauss/cluster_config.xml
+</code></pre>
 <p>omm为数据库管理员（也是运行openGauss的操作系统用户），dbgrp为运行openGauss的操作系统用户的群组名称，/opt/software/openGauss/cluster_config.xml为openGauss配置文件路径。在执行过程中，用户根据提示选择是否创建互信，并输入操作系统root用户或omm用户的密码。</p>
 </li>
 <li><p>不允许创建root用户互信时，创建omm用户，在各主机上执行本地模式前置，然后用户手动创建</p>
@@ -608,8 +702,9 @@ YU">
 <p>用户互信：如果预安装指定-L参数，预安装前需手动将所有节点的主机名和ip映射关系，写入各个主机的/etc/hosts，并在每个映射关系后边加入注释内容：#Gauss OM IP Hosts Mapping。</p>
 <ol>
 <li><p>执行下面命令准备安装环境。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss/script</span><br><span class="line">./gs_preinstall -U omm -G dbgrp -L -X /opt/software/openGauss/cluster_config.xml</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> /opt/software/openGauss/script
+./gs_preinstall -U omm -G dbgrp -L -X /opt/software/openGauss/cluster_config.xml
+</code></pre>
 <p>此操作需要在每台主机上执行该命令。</p>
 </li>
 </ol>
@@ -619,8 +714,9 @@ YU">
 <li><p>参考[手工建立互信](mk:@MSITStore:C:\Users\jinlid\Downloads\openGauss-document-zh-2.0.0\openGauss-document-zh-2.0.0\chm\openGauss 快速入门 01.chm::/zh-cn_topic_0295767919.html#ZH-CN_TOPIC_0295767919)章节手工建立root用户互信和openGauss用户互信。</p>
 </li>
 <li><p>执行下面命令准备安装环境。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss/script</span><br><span class="line">./gs_preinstall -U omm -G dbgrp -X /opt/software/openGauss/cluster_config.xml --non-interactive</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> /opt/software/openGauss/script
+./gs_preinstall -U omm -G dbgrp -X /opt/software/openGauss/cluster_config.xml --non-interactive
+</code></pre>
 <ul>
 <li>此模式要求用户确保在执行前，已经建立了各节点root用户互信和openGauss用户互信。</li>
 <li>root用户互信可能会存在安全隐患，因此建议用户在执行完安装后，立即删除各主机上root用户的互信。</li>
@@ -636,10 +732,12 @@ YU">
 <li><p>检查安装包和openGauss配置文件在规划路径下是否已存在，如果没有，重新执行预安装，确保预安装成功，再执行以下步骤。</p>
 </li>
 <li><p>登录到openGauss的主机，并切换到omm用户。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su - omm</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">su</span> - omm
+</code></pre>
+</li>
 <li><p>使用gs_install安装openGauss。若为环境变量分离的模式安装的数据库需要source环境变量分离文件ENVFILE。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gs_install -X /opt/software/openGauss/cluster_config.xml</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">gs_install -X /opt/software/openGauss/cluster_config.xml
+</code></pre>
 <p>/opt/software/openGauss/cluster_config.xml为openGauss配置文件的路径。在执行过程中，用户需根据提示输入数据库用户的密码，密码具有一定的复杂度，为保证用户正常使用该数据库，请记住输入的数据库密码。</p>
 <p>设置的密码要符合复杂度要求：</p>
 <ul>
@@ -653,10 +751,12 @@ YU">
 </ol>
 <h1 id="初始化数据库"><a href="#初始化数据库" class="headerlink" title="初始化数据库"></a>初始化数据库</h1><p>使用SQL创建新的数据库。</p>
 <p>使用SQL语句创建数据库时，指定数据库的字符集为GBK。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gsql -d postgres -p 26000</span><br><span class="line">postgres=<span class="comment"># CREATE DATABASE mydb WITH ENCODING &#x27;GBK&#x27; template = template0;</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">gsql -d postgres -p 26000
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE DATABASE mydb WITH ENCODING 'GBK' template = template0;</span>
+</code></pre>
 <p>显示类似如下信息：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE</span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash">CREATE DATABASE
+</code></pre>
 
                 
             </div>
@@ -921,8 +1021,8 @@ YU">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/java/" class="post-category">
-                                    java
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             
@@ -959,7 +1059,7 @@ YU">
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。
                         
                     </div>
                     <div class="publish-info">
@@ -970,8 +1070,8 @@ YU">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/selenium/" class="post-category">
-                                    selenium
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             

@@ -6,8 +6,9 @@
     <meta charset="utf-8">
     <meta name="keywords" content="selenium自动化测试介绍, jinlid&#39;s blog">
     <meta name="description" content="selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。
-1. 安装
-s">
+
+
+1. 安装">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -33,7 +34,7 @@ s">
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -449,8 +450,8 @@ s">
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/selenium/" class="post-category">
-                                selenium
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                开发语言
                             </a>
                         
                     </div>
@@ -484,11 +485,13 @@ s">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <p>selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。</p>
+<span id="more"></span>
+
 <h4 id="1-安装"><a href="#1-安装" class="headerlink" title="1. 安装"></a>1. 安装</h4><ul>
 <li>selenium的安装</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install selenium</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">pip <span class="token function">install</span> selenium
+</code></pre>
 <ul>
 <li>ChromeDriver的安装</li>
 </ul>
@@ -496,72 +499,235 @@ s">
 <p>下载谷歌浏览器对应版本ChromeDriver驱动，并复制到Python的Scripts目录下。</p>
 <p>ChromeDriver淘宝镜像：<a target="_blank" rel="noopener" href="http://npm.taobao.org/mirrors/chromedriver/">http://npm.taobao.org/mirrors/chromedriver/</a></p>
 <h4 id="2-声明浏览器对象"><a href="#2-声明浏览器对象" class="headerlink" title="2. 声明浏览器对象"></a>2. 声明浏览器对象</h4><p>支持Chrome、Firefox、Edge等。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser = webdriver.Firefox()</span><br><span class="line">browser = webdriver.Edge()</span><br><span class="line">browser = webdriver.PhantomJS()</span><br><span class="line">browser = webdriver.Safari()</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
-<h4 id="3-访问页面"><a href="#3-访问页面" class="headerlink" title="3. 访问页面"></a>3. 访问页面</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.baidu.com&#x27;</span>)</span><br><span class="line">browser.close()</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Firefox<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Edge<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>PhantomJS<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Safari<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="3-访问页面"><a href="#3-访问页面" class="headerlink" title="3. 访问页面"></a>3. 访问页面</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
 <h4 id="4-查找结点"><a href="#4-查找结点" class="headerlink" title="4. 查找结点"></a>4. 查找结点</h4><ul>
 <li>单个节点</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.common.by <span class="keyword">import</span> By</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line"><span class="comment"># 通过id来定位，但有的标签可能没有id属性</span></span><br><span class="line">browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 通过name属性来定位，元素可能不唯一</span></span><br><span class="line">browser.find_element_by_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 使用绝对或相对路径来定位元素，个人觉得这个好用，万能的</span></span><br><span class="line">browser.find_element_by_xpath(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 使用文本定位</span></span><br><span class="line">browser.find_element_by_link_text(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 通过文本的一部分文本来定位</span></span><br><span class="line">browser.find_element_by_partial_link_text(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_element_by_tag_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 用来关联 CSS 中定义的属性</span></span><br><span class="line">browser.find_element_by_class_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_element_by_css_selector(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_element(By.ID,<span class="string">&#x27;&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过id来定位，但有的标签可能没有id属性</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过name属性来定位，元素可能不唯一</span>
+browser<span class="token punctuation">.</span>find_element_by_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 使用绝对或相对路径来定位元素，个人觉得这个好用，万能的</span>
+browser<span class="token punctuation">.</span>find_element_by_xpath<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 使用文本定位</span>
+browser<span class="token punctuation">.</span>find_element_by_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过文本的一部分文本来定位</span>
+browser<span class="token punctuation">.</span>find_element_by_partial_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element_by_tag_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 用来关联 CSS 中定义的属性</span>
+browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element_by_css_selector<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element<span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+</code></pre>
 <ul>
 <li>多个节点，返回相似的元素列表</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.common.by <span class="keyword">import</span> By</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.find_elements_by_id(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_xpath(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_link_text(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_partial_link_text(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_tag_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_class_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements_by_css_selector(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">browser.find_elements(By.ID,<span class="string">&#x27;q&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
 
-<h4 id="5-节点交互"><a href="#5-节点交互" class="headerlink" title="5. 节点交互"></a><strong>5. 节点交互</strong></h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line"><span class="comment"># 文本框的输入</span></span><br><span class="line">browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>).send_keys(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 文本框的清空</span></span><br><span class="line">browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>).clear()</span><br><span class="line"><span class="comment"># 节点的点击</span></span><br><span class="line">browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>).click()</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_xpath<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_partial_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_tag_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements<span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">'q'</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="5-节点交互"><a href="#5-节点交互" class="headerlink" title="5. 节点交互"></a><strong>5. 节点交互</strong></h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 文本框的输入</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>send_keys<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 文本框的清空</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>clear<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 节点的点击</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>click<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
 <h4 id="6-动作链"><a href="#6-动作链" class="headerlink" title="6. 动作链"></a>6. 动作链</h4><p>鼠标拖拽、键盘按键等操作。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver <span class="keyword">import</span> ActionChains</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">action = ActionChains(browser)</span><br><span class="line">source = browser.find_elements_by_css_selector(<span class="string">&#x27;#a&#x27;</span>)</span><br><span class="line">target = browser.find_elements_by_css_selector(<span class="string">&#x27;#b&#x27;</span>)</span><br><span class="line">action.drag_and_drop(source,target)</span><br><span class="line">action.perform()</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver <span class="token keyword">import</span> ActionChains
 
-<h4 id="7-执行JavaScript"><a href="#7-执行JavaScript" class="headerlink" title="7. 执行JavaScript"></a>7. 执行JavaScript</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line"><span class="comment"># 向下滑动</span></span><br><span class="line">browser.execute_script(<span class="string">&#x27;var q=document.documentElement.scrollTop=&#123;&#125;&#x27;</span>%<span class="number">100000</span>)</span><br><span class="line">browser.execute_script(<span class="string">&#x27;alert(&quot;弹出框&quot;)&#x27;</span>)</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+action <span class="token operator">=</span> ActionChains<span class="token punctuation">(</span>browser<span class="token punctuation">)</span>
+source <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">'#a'</span><span class="token punctuation">)</span>
+target <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">'#b'</span><span class="token punctuation">)</span>
+action<span class="token punctuation">.</span>drag_and_drop<span class="token punctuation">(</span>source<span class="token punctuation">,</span>target<span class="token punctuation">)</span>
+action<span class="token punctuation">.</span>perform<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="7-执行JavaScript"><a href="#7-执行JavaScript" class="headerlink" title="7. 执行JavaScript"></a>7. 执行JavaScript</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 向下滑动</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'var q=document.documentElement.scrollTop=&amp;#123;&amp;#125;'</span><span class="token operator">%</span><span class="token number">100000</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'alert("弹出框")'</span><span class="token punctuation">)</span>
+</code></pre>
 <h4 id="8-获取节点信息"><a href="#8-获取节点信息" class="headerlink" title="8. 获取节点信息"></a>8. 获取节点信息</h4><ul>
 <li>获取网页源代码</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.baidu.com&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(browser.page_source)</span><br><span class="line">browser.close()</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>page_source<span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
 <ul>
 <li>获取属性</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">value = browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>).get_attribute(<span class="string">&#x27;&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+value <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>get_attribute<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+</code></pre>
 <ul>
 <li>获取文本值</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">value = browser.find_element_by_id(<span class="string">&#x27;&#x27;</span>).text</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+value <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>text
+</code></pre>
 <ul>
 <li>获取id、位置、标签名和大小</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="built_in">input</span> = browser.find_element_by_class_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">input</span>.<span class="built_in">id</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">input</span>.location)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">input</span>.tag_name)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">input</span>.size)</span><br><span class="line">browser.close()</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
-<h4 id="9-切换frame"><a href="#9-切换frame" class="headerlink" title="9. 切换frame"></a>9. 切换frame</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 切换到子页面</span></span><br><span class="line">browser.switch_to.frame(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">logo = browser.find_element_by_class_name(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 切换到父级frame</span></span><br><span class="line">browser.switch_to.parent_frame(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">logo = browser.find_element_by_class_name(<span class="string">&#x27;&#x27;</span>)</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+input <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>id<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>location<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>tag_name<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>size<span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="9-切换frame"><a href="#9-切换frame" class="headerlink" title="9. 切换frame"></a>9. 切换frame</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到子页面</span>
+browser<span class="token punctuation">.</span>switch_to<span class="token punctuation">.</span>frame<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+logo <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到父级frame</span>
+browser<span class="token punctuation">.</span>switch_to<span class="token punctuation">.</span>parent_frame<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+logo <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+</code></pre>
 <h4 id="10-延时等待"><a href="#10-延时等待" class="headerlink" title="10. 延时等待"></a>10. 延时等待</h4><ul>
 <li>强制等待</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> sleep</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment">#等待2秒</span></span><br><span class="line">sleep(<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true">#等待2秒</span>
+sleep<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>
+</code></pre>
 <ul>
 <li>隐式等待</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line"><span class="comment"># 如果未找到节点，则等待超时后继续查找，还未找到将抛异常</span></span><br><span class="line">browser.implicitly_wait(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 如果未找到节点，则等待超时后继续查找，还未找到将抛异常</span>
+browser<span class="token punctuation">.</span>implicitly_wait<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span>
+</code></pre>
 <ul>
 <li>显示等待</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.common.by <span class="keyword">import</span> By</span><br><span class="line"><span class="comment"># 指定最长等待时间，然后调用until()方法，结合expected_conditions条件使用</span></span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.support.ui <span class="keyword">import</span> WebDriverWait</span><br><span class="line"><span class="keyword">from</span> selenium.webdriver.support <span class="keyword">import</span> expected_conditions <span class="keyword">as</span> EC</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment"># 设置节点的最长等待时间</span></span><br><span class="line">wait = WebDriverWait(browser,<span class="number">10</span>)</span><br><span class="line"><span class="comment"># 下面presence_of_element_located代表id表节点出现的意思</span></span><br><span class="line"><span class="built_in">input</span> = wait.until(EC.presence_of_element_located((By.ID,<span class="string">&#x27;q&#x27;</span>)))</span><br><span class="line"><span class="comment"># 下面element_to_be_clickable代表css出来后按钮可点击的意思</span></span><br><span class="line">button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,<span class="string">&#x27;.btn-search&#x27;</span>)))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">input</span>,button)</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
+<span class="token comment" spellcheck="true"># 指定最长等待时间，然后调用until()方法，结合expected_conditions条件使用</span>
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>support<span class="token punctuation">.</span>ui <span class="token keyword">import</span> WebDriverWait
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>support <span class="token keyword">import</span> expected_conditions <span class="token keyword">as</span> EC
 
-<h4 id="11-前进和后退"><a href="#11-前进和后退" class="headerlink" title="11. 前进和后退"></a>11. 前进和后退</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> sleep</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.baidu.com/&#x27;</span>)</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.taobao.com/&#x27;</span>)</span><br><span class="line"><span class="comment"># 后退</span></span><br><span class="line">browser.back()</span><br><span class="line">sleep(<span class="number">1</span>)</span><br><span class="line"><span class="comment"># 前进</span></span><br><span class="line">browser.forward()</span><br><span class="line">browser.close()</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 设置节点的最长等待时间</span>
+wait <span class="token operator">=</span> WebDriverWait<span class="token punctuation">(</span>browser<span class="token punctuation">,</span><span class="token number">10</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 下面presence_of_element_located代表id表节点出现的意思</span>
+input <span class="token operator">=</span> wait<span class="token punctuation">.</span>until<span class="token punctuation">(</span>EC<span class="token punctuation">.</span>presence_of_element_located<span class="token punctuation">(</span><span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">'q'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 下面element_to_be_clickable代表css出来后按钮可点击的意思</span>
+button <span class="token operator">=</span> wait<span class="token punctuation">.</span>until<span class="token punctuation">(</span>EC<span class="token punctuation">.</span>element_to_be_clickable<span class="token punctuation">(</span><span class="token punctuation">(</span>By<span class="token punctuation">.</span>CSS_SELECTOR<span class="token punctuation">,</span><span class="token string">'.btn-search'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">,</span>button<span class="token punctuation">)</span>
+</code></pre>
+<h4 id="11-前进和后退"><a href="#11-前进和后退" class="headerlink" title="11. 前进和后退"></a>11. 前进和后退</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
 
-<h4 id="12-Cookies"><a href="#12-Cookies" class="headerlink" title="12. Cookies"></a>12. Cookies</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.zhihu.com/explore&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(browser.get_cookies())</span><br><span class="line">browser.add_cookie(&#123;<span class="string">&#x27;name&#x27;</span>:<span class="string">&#x27;name&#x27;</span>,<span class="string">&#x27;domain&#x27;</span>:<span class="string">&#x27;www.zhihu.com&#x27;</span>,<span class="string">&#x27;value&#x27;</span>:<span class="string">&#x27;germey&#x27;</span>&#125;)</span><br><span class="line"><span class="built_in">print</span>(browser.get_cookies())</span><br><span class="line">browser.delete_all_cookies()</span><br><span class="line"><span class="built_in">print</span>(browser.get_cookies())</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com/'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.taobao.com/'</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 后退</span>
+browser<span class="token punctuation">.</span>back<span class="token punctuation">(</span><span class="token punctuation">)</span>
+sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 前进</span>
+browser<span class="token punctuation">.</span>forward<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="12-Cookies"><a href="#12-Cookies" class="headerlink" title="12. Cookies"></a>12. Cookies</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
-<h4 id="13-选项卡管理"><a href="#13-选项卡管理" class="headerlink" title="13. 选项卡管理"></a>13. 选项卡管理</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> sleep</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.baidu.com&#x27;</span>)</span><br><span class="line"><span class="comment"># 打开新选项卡</span></span><br><span class="line">browser.execute_script(<span class="string">&#x27;window.open()&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(browser.window_handles)</span><br><span class="line"><span class="comment"># 切换到新的选项卡</span></span><br><span class="line">browser.switch_to_window(browser.window_handles[<span class="number">1</span>])</span><br><span class="line">browser.get(<span class="string">&#x27;https://www.google.com&#x27;</span>)</span><br><span class="line">sleep(<span class="number">1</span>)</span><br><span class="line"><span class="comment"># 切换到开始的选项卡</span></span><br><span class="line">browser.switch_to_window(browser.window_handles[<span class="number">0</span>])</span><br><span class="line">browser.get(<span class="string">&#x27;https://python.org&#x27;</span>)</span><br><span class="line">browser.close()</span><br></pre></td></tr></table></figure>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.zhihu.com/explore'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>add_cookie<span class="token punctuation">(</span><span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;'name':'name','domain':'www.zhihu.com','value':'germey'&amp;#125;)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>delete_all_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="13-选项卡管理"><a href="#13-选项卡管理" class="headerlink" title="13. 选项卡管理"></a>13. 选项卡管理</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
 
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 打开新选项卡</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'window.open()'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到新的选项卡</span>
+browser<span class="token punctuation">.</span>switch_to_window<span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.google.com'</span><span class="token punctuation">)</span>
+sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到开始的选项卡</span>
+browser<span class="token punctuation">.</span>switch_to_window<span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://python.org'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
 <h4 id="14-异常处理"><a href="#14-异常处理" class="headerlink" title="14. 异常处理"></a>14. 异常处理</h4><p>使用过程中难免遇到异常，如超时、节点未找到等错误，一旦出现异常程序会退出运行。因此需要捕获异常。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br><span class="line"><span class="keyword">from</span> selenium.common.exceptions <span class="keyword">import</span> TimeoutException,NoSuchElementException</span><br><span class="line"></span><br><span class="line">browser = webdriver.Chrome()</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    browser.get(<span class="string">&#x27;https://www.baidu.com&#x27;</span>)</span><br><span class="line"><span class="keyword">except</span> TimeoutException:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;Time Out&#x27;</span>)</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    browser.find_element_by_id(<span class="string">&#x27;hello&#x27;</span>)</span><br><span class="line"><span class="keyword">except</span> NoSuchElementException:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;No Element&#x27;</span>)</span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    browser.close()</span><br></pre></td></tr></table></figure>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>common<span class="token punctuation">.</span>exceptions <span class="token keyword">import</span> TimeoutException<span class="token punctuation">,</span>NoSuchElementException
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> TimeoutException<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Time Out'</span><span class="token punctuation">)</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">'hello'</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> NoSuchElementException<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'No Element'</span><span class="token punctuation">)</span>
+<span class="token keyword">finally</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+
                 
             </div>
             <hr/>
@@ -818,7 +984,7 @@ s">
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            安装概述openGauss支持单机部署和单机HA部署两种部署方式。单机部署时，可在一个主机部署多个数据库实例，但为了数据安全，不建议用户这样部署。单机HA部署支持一台主机和最少一台备机，备机一共最多8台的配置方式。
                         
                     </div>
                     <div class="publish-info">
@@ -867,7 +1033,7 @@ s">
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            1 os模块os让你能够访问多个操作系统服务，它包含了很多有用的函数和变量。除此之外os及其子模块os.path还包含多个查看、创建和删除目录及文件的函数，以及一些操作路径的函数（例如os.path.split和os.path.join让你
                         
                     </div>
                     <div class="publish-info">

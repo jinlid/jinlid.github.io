@@ -31,7 +31,7 @@
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -447,8 +447,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/nginx/" class="post-category">
-                                nginx
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                操作系统
                             </a>
                         
                     </div>
@@ -482,6 +482,8 @@
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <h1 id="1-nginx介绍"><a href="#1-nginx介绍" class="headerlink" title="1 nginx介绍"></a>1 nginx介绍</h1><h3 id="1-1-什么是nginx"><a href="#1-1-什么是nginx" class="headerlink" title="1.1 什么是nginx"></a>1.1 什么是nginx</h3><p> Nginx是一个高性能的HTTP和反向代理服务器，特点是占有内存少，并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好。Nginx转为性能优化而开发，性能是其最重要的考量，是心啊上非常注重效率，能经受高负载的考验，有报告表明能支持高达5w个并发连接数。</p>
+<span id="more"></span>
+
 <h3 id="1-2-正向代理"><a href="#1-2-正向代理" class="headerlink" title="1.2 正向代理"></a>1.2 正向代理</h3><p> Nginx不仅可以做反向代理，实现负载均衡。还能用作正向代理来进行上网功能。正向代理：如果把局域网外的Internet想象成一个巨大的资源库，则局域网中的客户端要访问Internet，则需要通过代理服务器来访问，这种代理服务器就称为正向代理。</p>
 <h3 id="1-3-反向代理"><a href="#1-3-反向代理" class="headerlink" title="1.3 反向代理"></a>1.3 反向代理</h3><p> 客户端对代理无感知，因为客户端不需要任何配置就可以访问，我们只需要将请求发送到反向代理服务器，由反向代理服务器去选择目标服务器获取数据后，再返回给客户端，此时反向代理服务器和目标服务器对外就是一个服务器，暴露的是代理服务器地址，隐藏了真实服务器IP地址。</p>
 <h3 id="1-4-负载均衡"><a href="#1-4-负载均衡" class="headerlink" title="1.4 负载均衡"></a>1.4 负载均衡</h3><p> 客户端发送多个请求到服务器，服务器处理请求，有一些可能要与数据库进行交互，服务器处理完毕后，在将结果返回给客户端。</p>
@@ -490,17 +492,17 @@
 <p> 纵向解决问题的方法行不通了，那么横向增加服务器的数量呢？这个时候集群就产生了，单个服务器解决不了，我们增加服务器的数量，然后将请求分发到每个服务器上，将原先请求集中到单个服务器上的情况改为请求分发到多个服务器上，将负载分发到不同的服务器，也就是我们所说的负载均衡。</p>
 <h3 id="1-5-动静分离"><a href="#1-5-动静分离" class="headerlink" title="1.5 动静分离"></a>1.5 动静分离</h3><p> 为了加快网站的解析速度，可以把动态页面和静态页面由不同的服务器来解析，加快解析速度。降低原来单个服务器的压力。</p>
 <h2 id="2-nginx常用命令"><a href="#2-nginx常用命令" class="headerlink" title="2 nginx常用命令"></a>2 nginx常用命令</h2><p>查看nginx版本号</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -v</span><br></pre></td></tr></table></figure>
-
+<pre><code>nginx -v
+</code></pre>
 <p>启动nginx</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx</span><br></pre></td></tr></table></figure>
-
+<pre><code>nginx
+</code></pre>
 <p>停止nginx</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -s stop</span><br></pre></td></tr></table></figure>
-
+<pre><code>nginx -s stop
+</code></pre>
 <p>重新加载nginx</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -s reload</span><br></pre></td></tr></table></figure>
-
+<pre><code>nginx -s reload
+</code></pre>
 <h2 id="3-nginx配置文件"><a href="#3-nginx配置文件" class="headerlink" title="3 nginx配置文件"></a>3 nginx配置文件</h2><h4 id="3-1-nginx文件由三部分组成"><a href="#3-1-nginx文件由三部分组成" class="headerlink" title="3.1 nginx文件由三部分组成"></a>3.1 nginx文件由三部分组成</h4><h4 id="全局块"><a href="#全局块" class="headerlink" title="全局块"></a>全局块</h4><p>从配置文件到events块之间的内容，主要影响nginx服务器整体运行的配置指令，主要包括配置运行Nginx服务器的用户（组）、允许生成的worker processs数，进程PID存放路径、日志存放路径和类型以及配置文件的引入等。</p>
 <blockquote>
 <p>worker_processes 1;</p>
@@ -791,8 +793,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/docker/" class="post-category">
-                                    docker
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             
@@ -829,7 +831,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            pip介绍pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。Python官方的PyPi仓库为我们提供了一个统一的代码托管仓库，名叫
                         
                     </div>
                     <div class="publish-info">
@@ -840,8 +842,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/python/" class="post-category">
-                                    python
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             

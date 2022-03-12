@@ -31,7 +31,7 @@
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -443,8 +443,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/PostgreSQL/" class="post-category">
-                                PostgreSQL
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
                             </a>
                         
                     </div>
@@ -477,53 +477,124 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="PgBouncer介绍"><a href="#PgBouncer介绍" class="headerlink" title="PgBouncer介绍"></a>PgBouncer介绍</h1><p>PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：<br>1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。<br>2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。<br>3，对客户端连接进行限制，预防过多或恶意的连接请求。<br>支持三种连接池模型：<br><strong>1、Session pooling</strong><br>会话模式，当会话结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于短连接，或者其他模式不适用的场景。<br>不能解决大并发场景连接打满或性能下降的问题（到后端的连接依旧会很多）。<br><strong>2、Transaction pooling</strong><br>事务模式，当事务结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数）的场景。<br><strong>3、Statement pooling</strong><br>语句模式，当SQL执行完成后，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数），并且不需要多语句事务的场景（或者说autocommit的场景）。<br>本例中使用postgresql版本：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># select version();</span></span><br><span class="line">                                                               version                                                                </span><br><span class="line">--------------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"> PostgreSQL 9.6.22 on x86_64-pc-linux-gnu (Debian 9.6.22-1.pgdg90+1), compiled by gcc (Debian 6.3.0-18+deb9u1) 6.3.0 20170516, 64-bit</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure>
+                <h1 id="PgBouncer介绍"><a href="#PgBouncer介绍" class="headerlink" title="PgBouncer介绍"></a>PgBouncer介绍</h1><p>PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：<br>1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。<br>2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。<br>3，对客户端连接进行限制，预防过多或恶意的连接请求。</p>
+<span id="more"></span>
 
+<p>支持三种连接池模型：<br><strong>1、Session pooling</strong><br>会话模式，当会话结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于短连接，或者其他模式不适用的场景。<br>不能解决大并发场景连接打满或性能下降的问题（到后端的连接依旧会很多）。<br><strong>2、Transaction pooling</strong><br>事务模式，当事务结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数）的场景。<br><strong>3、Statement pooling</strong><br>语句模式，当SQL执行完成后，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数），并且不需要多语句事务的场景（或者说autocommit的场景）。<br>本例中使用postgresql版本：</p>
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select version();</span>
+                                                               version                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 9.6.22 on x86_64-pc-linux-gnu <span class="token punctuation">(</span>Debian 9.6.22-1.pgdg90+1<span class="token punctuation">)</span>, compiled by gcc <span class="token punctuation">(</span>Debian 6.3.0-18+deb9u1<span class="token punctuation">)</span> 6.3.0 20170516, 64-bit
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+</code></pre>
 <h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a><strong>使用</strong></h1><h2 id="1、需要先安装libevent依赖。"><a href="#1、需要先安装libevent依赖。" class="headerlink" title="1、需要先安装libevent依赖。"></a><strong>1、需要先安装libevent依赖。</strong></h2><p>libevent安装<br>下载地址：<a target="_blank" rel="noopener" href="https://github.com/libevent/libevent/releases/tag/release-2.1.12-stable">https://github.com/libevent/libevent/releases/tag/release-2.1.12-stable</a><br>创建解压目录：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /home/postgres/libevent</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-shell"><code class="language-shell">mkdir /home/postgres/libevent
+</code></pre>
 <p>解压安装：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf libevent-2.0.21-stable.tar.gz</span><br><span class="line"><span class="built_in">cd</span> libevent-2.0.21-stable</span><br><span class="line">./configure --prefix=/home/postgres/libevent</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">tar</span> -zxvf libevent-2.0.21-stable.tar.gz
+<span class="token function">cd</span> libevent-2.0.21-stable
+./configure --prefix<span class="token operator">=</span>/home/postgres/libevent
+<span class="token function">make</span>
+<span class="token function">make</span> <span class="token function">install</span>
+</code></pre>
 <p>环境变量.bashrc文件增加下面内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> PKG_CONFIG_PATH=/home/postgres/libevent/lib/pkgconfig</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">export</span> PKG_CONFIG_PATH<span class="token operator">=</span>/home/postgres/libevent/lib/pkgconfig
+</code></pre>
 <h2 id="2、安装pgbouncer"><a href="#2、安装pgbouncer" class="headerlink" title="2、安装pgbouncer"></a><strong>2、安装pgbouncer</strong></h2><p>下载地址：<a target="_blank" rel="noopener" href="https://github.com/pgbouncer/pgbouncer/tags">https://github.com/pgbouncer/pgbouncer/tags</a><br>创建解压目录：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /home/postgres/pgbouncer</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> /home/postgres/pgbouncer
+</code></pre>
 <p>解压：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -xvf pgbouncer-1.15.0.tar.gzcd pgbouncer-1.15.0/</span><br></pre></td></tr></table></figure>
-
+<pre><code>tar -xvf pgbouncer-1.15.0.tar.gzcd pgbouncer-1.15.0/
+</code></pre>
 <p>安装：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/home/pg13/pgbouncer/</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">./configure --prefix<span class="token operator">=</span>/home/pg13/pgbouncer/
+<span class="token function">make</span>
+<span class="token function">make</span> <span class="token function">install</span>
+</code></pre>
 <h2 id="3、配置pgbouncer"><a href="#3、配置pgbouncer" class="headerlink" title="3、配置pgbouncer"></a><strong>3、配置pgbouncer</strong></h2><p>新建config目录和log目录：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /home/postgres/pgbouncer/etc/</span><br><span class="line"></span><br><span class="line">mkdir -p /home/postgres/pgbouncer/<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /home/postgres/pgbouncer/etc/
 
+<span class="token function">mkdir</span> -p /home/postgres/pgbouncer/log
+</code></pre>
 <p>配置文件修改如下：</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#/home/postgres/pgbouncer/etc/pgbouncer.ini</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[databases]</span></span><br><span class="line"></span><br><span class="line"><span class="meta">*</span> = <span class="string">host=127.0.0.1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">port</span>=<span class="string">5432</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_size</span>=<span class="string">50</span></span><br><span class="line"></span><br><span class="line"><span class="attr">[pgbouncer]</span></span><br><span class="line"></span><br><span class="line"><span class="attr">reserve_pool_size</span>=<span class="string">14</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logfile</span> = <span class="string">/home/postgres/pgbouncer/log/pgbouncer.log</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pidfile</span> = <span class="string">/home/postgres/pgbouncer/pgbouncer.pid</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_addr</span> = <span class="string">0.0.0.0</span></span><br><span class="line"></span><br><span class="line"><span class="attr">listen_port</span> = <span class="string">4001</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_dir</span> = <span class="string">/home/postgres/pgbouncer</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unix_socket_mode</span> = <span class="string">0700</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_type</span> = <span class="string">md5</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_file</span> = <span class="string">/home/postgres/pgbouncer/etc/userlist.txt</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_user</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth_query</span> = <span class="string">select i_usename,i_passwd from get_shadow($1)</span></span><br><span class="line"></span><br><span class="line"><span class="attr">admin_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">stats_users</span> = <span class="string">jinli</span></span><br><span class="line"></span><br><span class="line"><span class="attr">pool_mode</span> = <span class="string">transaction</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_reset_query</span> = <span class="string">DISCARD ALL</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server_check_query</span> = <span class="string">select 1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">max_client_conn</span> = <span class="string">100</span></span><br><span class="line"></span><br><span class="line"><span class="attr">default_pool_size</span> = <span class="string">20</span></span><br></pre></td></tr></table></figure>
+<pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#/home/postgres/pgbouncer/etc/pgbouncer.ini</span>
 
+[databases]
+
+<span class="token attr-name">*</span> <span class="token punctuation">=</span> <span class="token attr-value">host=127.0.0.1</span>
+
+<span class="token attr-name">port</span><span class="token punctuation">=</span><span class="token attr-value">5432</span>
+
+<span class="token attr-name">pool_size</span><span class="token punctuation">=</span><span class="token attr-value">50</span>
+
+[pgbouncer]
+
+<span class="token attr-name">reserve_pool_size</span><span class="token punctuation">=</span><span class="token attr-value">14</span>
+
+<span class="token attr-name">logfile</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/log/pgbouncer.log</span>
+
+<span class="token attr-name">pidfile</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/pgbouncer.pid</span>
+
+<span class="token attr-name">listen_addr</span> <span class="token punctuation">=</span> <span class="token attr-value">0.0.0.0</span>
+
+<span class="token attr-name">listen_port</span> <span class="token punctuation">=</span> <span class="token attr-value">4001</span>
+
+<span class="token attr-name">unix_socket_dir</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer</span>
+
+<span class="token attr-name">unix_socket_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">0700</span>
+
+<span class="token attr-name">auth_type</span> <span class="token punctuation">=</span> <span class="token attr-value">md5</span>
+
+<span class="token attr-name">auth_file</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/etc/userlist.txt</span>
+
+<span class="token attr-name">auth_user</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
+
+<span class="token attr-name">auth_query</span> <span class="token punctuation">=</span> <span class="token attr-value">select i_usename,i_passwd from get_shadow($1)</span>
+
+<span class="token attr-name">admin_users</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
+
+<span class="token attr-name">stats_users</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
+
+<span class="token attr-name">pool_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">transaction</span>
+
+<span class="token attr-name">server_reset_query</span> <span class="token punctuation">=</span> <span class="token attr-value">DISCARD ALL</span>
+
+<span class="token attr-name">server_check_query</span> <span class="token punctuation">=</span> <span class="token attr-value">select 1</span>
+
+<span class="token attr-name">max_client_conn</span> <span class="token punctuation">=</span> <span class="token attr-value">100</span>
+
+<span class="token attr-name">default_pool_size</span> <span class="token punctuation">=</span> <span class="token attr-value">20</span>
+</code></pre>
 <p>然后将需要用到的用户密码配置到userlist.txt文件中</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#userlist.txt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&quot;jinli&quot;</span> <span class="string">&quot;jinli&quot;</span></span><br></pre></td></tr></table></figure>
+<pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#userlist.txt</span>
 
+<span class="token attr-name">"jinli"</span> <span class="token attr-value">"jinli"</span>
+</code></pre>
 <h2 id="4、启动pgbouncer"><a href="#4、启动pgbouncer" class="headerlink" title="4、启动pgbouncer"></a><strong>4、启动pgbouncer</strong></h2><p>启动前先修改环境变量：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export LD_LIBRARY_PATH=&quot;/home/postgres/libevent/lib&quot;:$LD_LIBRARY_PATH</span><br><span class="line"></span><br><span class="line">export PATH=&quot;/home/postgres/pgbouncer/bin&quot;:$PATH</span><br></pre></td></tr></table></figure>
+<pre class=" language-shell"><code class="language-shell">export LD_LIBRARY_PATH="/home/postgres/libevent/lib":$LD_LIBRARY_PATH
 
+export PATH="/home/postgres/pgbouncer/bin":$PATH
+</code></pre>
 <p>然后启动：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pgbouncer -d /home/postgres/pgbouncer/etc/pgbouncer.ini</span><br></pre></td></tr></table></figure>
-
-<h2 id="5、停止pgbouncer"><a href="#5、停止pgbouncer" class="headerlink" title="5、停止pgbouncer"></a><strong>5、停止pgbouncer</strong></h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /home/postgres/pgbouncer/pgbouncer.pid | xargs <span class="built_in">kill</span> -9</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">pgbouncer -d /home/postgres/pgbouncer/etc/pgbouncer.ini
+</code></pre>
+<h2 id="5、停止pgbouncer"><a href="#5、停止pgbouncer" class="headerlink" title="5、停止pgbouncer"></a><strong>5、停止pgbouncer</strong></h2><pre class=" language-bash"><code class="language-bash"><span class="token function">cat</span> /home/postgres/pgbouncer/pgbouncer.pid <span class="token operator">|</span> <span class="token function">xargs</span> <span class="token function">kill</span> -9
+</code></pre>
 <h2 id="6、连接pgbouncer"><a href="#6、连接pgbouncer" class="headerlink" title="6、连接pgbouncer"></a><strong>6、连接pgbouncer</strong></h2><p>pgbouncer对外提供了一个虚拟数据库pgbouncer，我们可以连接到该库中进行 相关的命令操作：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> PGPASSWORD=jinli</span><br><span class="line"></span><br><span class="line">psql -h 127.0.0.1 -p 4001 -U jinli pgbouncer</span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">export</span> PGPASSWORD<span class="token operator">=</span>jinli
 
+psql -h 127.0.0.1 -p 4001 -U jinli pgbouncer
+</code></pre>
 <p>常用的命令：</p>
 <p>show clients： 用来查看客户端连接信息；<br>show pools： 用来查看连接池信息；<br>show databases：查看连接的数据库；<br>show config：查看相关配置；<br>被会话占用的pgbouncer到PGDB的连接被复用前，（通过pgbouncer.ini配置文件）可以设置重置命令（重置一些会话状态），使用discard即可(配置，执行计划缓存，序列，临时表等)。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">pgbouncer=<span class="comment"># \h discard</span></span><br><span class="line"></span><br><span class="line">Command: DISCARD</span><br><span class="line"></span><br><span class="line">Description: discard session state</span><br><span class="line"></span><br><span class="line">Syntax:DISCARD &#123; ALL | PLANS | SEQUENCES | TEMPORARY | TEMP &#125;</span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash">pgbouncer<span class="token operator">=</span><span class="token comment" spellcheck="true"># \h discard</span>
 
+Command: DISCARD
 
+Description: discard session state
 
+Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123; ALL | PLANS | SEQUENCES | TEMPORARY | TEMP &amp;#125;</span>
+</code></pre>
 <p>参考：</p>
 <p><a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/9.6/sql-discard.html">https://www.postgresql.org/docs/9.6/sql-discard.html</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/pgbouncer/pgbouncer">https://github.com/pgbouncer/pgbouncer</a></p>
@@ -782,7 +853,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            pip介绍pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。Python官方的PyPi仓库为我们提供了一个统一的代码托管仓库，名叫
                         
                     </div>
                     <div class="publish-info">
@@ -793,8 +864,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/python/" class="post-category">
-                                    python
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             
@@ -831,7 +902,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            背景常用数据库的基准测试最关键的衡量指标有：吞吐量（Throughput）、响应时间（RT）或延迟（Latency）和并发量。吞吐量是衡量数据库的单位时间内的事务处理能力，常用的单位是TPS（每秒事务数）。响应时间或延迟，描述操作过程里用来
                         
                     </div>
                     <div class="publish-info">
@@ -842,8 +913,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/PostgreSQL/" class="post-category">
-                                    PostgreSQL
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             

@@ -5,8 +5,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="Docker介绍及常用命令, jinlid&#39;s blog">
-    <meta name="description" content="1 安装docker卸载旧版本
-12345678yum remove docker \           docker-client \           docker-client-latest \           docker-">
+    <meta name="description" content="
+
+1 安装docker卸载旧版本
+yum remove docker \
+           docker-client \
+           docker-client-latest \
+           docker-com">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -32,7 +37,7 @@
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -444,8 +449,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/docker/" class="post-category">
-                                docker
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                操作系统
                             </a>
                         
                     </div>
@@ -478,28 +483,39 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="1-安装docker"><a href="#1-安装docker" class="headerlink" title="1 安装docker"></a>1 安装docker</h2><p>卸载旧版本</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yum remove docker \</span><br><span class="line">           docker-client \</span><br><span class="line">           docker-client-latest \</span><br><span class="line">           docker-common \</span><br><span class="line">           docker-latest \</span><br><span class="line">           docker-latest-logrotate \</span><br><span class="line">           docker-logrotate \</span><br><span class="line">           docker-engine</span><br></pre></td></tr></table></figure>
+                <span id="more"></span>
 
+<h2 id="1-安装docker"><a href="#1-安装docker" class="headerlink" title="1 安装docker"></a>1 安装docker</h2><p>卸载旧版本</p>
+<pre class=" language-bash"><code class="language-bash">yum remove docker \
+           docker-client \
+           docker-client-latest \
+           docker-common \
+           docker-latest \
+           docker-latest-logrotate \
+           docker-logrotate \
+           docker-engine
+</code></pre>
 <p>使用docker阿里云仓库安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yum-config-manager \</span><br><span class="line">--add-repo \</span><br><span class="line">http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">yum-config-manager \
+--add-repo \
+http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+</code></pre>
 <p>安装 Docker Engine-Community</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install docker-ce docker-ce-cli containerd.io</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">yum <span class="token function">install</span> docker-ce docker-ce-cli containerd.io
+</code></pre>
 <p>启动docker</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">systemctl start docker
+</code></pre>
 <p>通过运行 hello-world 映像来验证是否正确安装了 Docker Engine-Community</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run hello-world</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run hello-world
+</code></pre>
 <h2 id="2-Docker镜像"><a href="#2-Docker镜像" class="headerlink" title="2 Docker镜像"></a>2 Docker镜像</h2><p>Docker运行容器前需要本地存在对应的镜像，如果镜像不在本地，Docker会从镜像仓库下载（默认是Docker Hub公共注册服务器中的仓库）</p>
-<h4 id="检索可用镜像"><a href="#检索可用镜像" class="headerlink" title="检索可用镜像"></a>检索可用镜像</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker search centos</span><br></pre></td></tr></table></figure>
-
-<h4 id="拉取操作系统镜像"><a href="#拉取操作系统镜像" class="headerlink" title="拉取操作系统镜像"></a>拉取操作系统镜像</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull centos</span><br></pre></td></tr></table></figure>
-
-<h4 id="列出本地镜像"><a href="#列出本地镜像" class="headerlink" title="列出本地镜像"></a>列出本地镜像</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker images</span><br></pre></td></tr></table></figure>
-
+<h4 id="检索可用镜像"><a href="#检索可用镜像" class="headerlink" title="检索可用镜像"></a>检索可用镜像</h4><pre class=" language-bash"><code class="language-bash">docker search centos
+</code></pre>
+<h4 id="拉取操作系统镜像"><a href="#拉取操作系统镜像" class="headerlink" title="拉取操作系统镜像"></a>拉取操作系统镜像</h4><pre class=" language-bash"><code class="language-bash">docker pull centos
+</code></pre>
+<h4 id="列出本地镜像"><a href="#列出本地镜像" class="headerlink" title="列出本地镜像"></a>列出本地镜像</h4><pre class=" language-bash"><code class="language-bash">docker images
+</code></pre>
 <blockquote>
 <p>REPOSITORY   TAG        IMAGE ID       CREATED       SIZE<br>opengauss    1.1.0      371bb14eed42   4 hours ago   651MB<br>centos       7.6.1810   f1cb7c7d58b7   2 years ago   202MB<br>…<br>列出的字段信息</p>
 </blockquote>
@@ -510,12 +526,12 @@
 <li>CREATED – 创建时间</li>
 <li>SIZE – 镜像大小</li>
 </ul>
-<h4 id="创建并启动容器："><a href="#创建并启动容器：" class="headerlink" title="创建并启动容器："></a>创建并启动容器：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --name centos1 centos /bin/bash</span><br></pre></td></tr></table></figure>
-
+<h4 id="创建并启动容器："><a href="#创建并启动容器：" class="headerlink" title="创建并启动容器："></a>创建并启动容器：</h4><pre class=" language-bash"><code class="language-bash">docker run -it --name centos1 centos /bin/bash
+</code></pre>
 <p>如果不指定具体的标记，则默认使用latest标记信息。</p>
 <h4 id="创建镜像"><a href="#创建镜像" class="headerlink" title="创建镜像"></a>创建镜像</h4><p>创建镜像有很多方法，用户可以从Docker Hub获取已有镜像并更新，也可以利用本地文件系统创建一个。<br><strong>1 修改已有镜像，将容器制作成镜像</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker commit -m <span class="string">&#x27;镜像描述&#x27;</span> -a <span class="string">&#x27;制作者&#x27;</span> 容器名 镜像名</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker commit -m <span class="token string">'镜像描述'</span> -a <span class="token string">'制作者'</span> 容器名 镜像名
+</code></pre>
 <ul>
 <li><p>-m 来指定提交的说明信息，跟版本控制工具一样</p>
 </li>
@@ -526,7 +542,9 @@
 <li><p>镜像名 指定目标镜像的仓库名和tag信息</p>
 <p>创建成功后会返回这个镜像的ID信息。</p>
 <p>之后，可以使用新的镜像来启动容器</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --name 新容器 新镜像 /bin/bash</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">docker run -it --name 新容器 新镜像 /bin/bash
+</code></pre>
+</li>
 </ul>
 <p><strong>2 利用Dockerfile来创建镜像</strong><br>新建一个目录和一个DockerFile</p>
 <blockquote>
@@ -552,22 +570,22 @@
 <p>[root@host pg9.6]# docker images<br>REPOSITORY TAG IMAGE ID CREATED SIZE<br>2242bebfb210 9 minutes ago 258MB<br>ops_info latest 34ea62b0988c 5 weeks ago 2.65GB<br>pg96 latest 85c794950329 3 months ago 258MB<br>postgresql10.0 latest f7f1ca43042f 4 months ago 234MB<br><strong>docker tag命令来修改镜像的标签</strong><br>[root@host pg9.6]# docker tag 2242bebfb210 pg9.6:v2<br>[root@host pg9.6]# docker images<br>REPOSITORY TAG IMAGE ID CREATED SIZE<br>pg9.6 v2 2242bebfb210 10 minutes ago 258MB<br>ops_info latest 34ea62b0988c 5 weeks ago 2.65GB<br>pg96 latest 85c794950329 3 months ago 258MB<br>postgresql10.0 latest f7f1ca43042f 4 months ago 234MB</p>
 </blockquote>
 <h4 id="上传镜像"><a href="#上传镜像" class="headerlink" title="上传镜像"></a>上传镜像</h4><p>docker push命令把自己创建的镜像上传到仓库中来共享。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker push 镜像名</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker push 镜像名
+</code></pre>
 <h4 id="打包镜像"><a href="#打包镜像" class="headerlink" title="打包镜像"></a>打包镜像</h4><p>将制作好的镜像打成tar包文件到本地</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker save -o tar包的名字 镜像名</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker save -o tar包的名字 镜像名
+</code></pre>
 <h4 id="导入镜像"><a href="#导入镜像" class="headerlink" title="导入镜像"></a>导入镜像</h4><p>从到处的本地文件中再导入到本地镜像库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker load &lt; tar 包所在路径</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker load <span class="token operator">&lt;</span> <span class="token function">tar</span> 包所在路径
+</code></pre>
 <p>这将导入镜像及其相关的元数据信息（包括标签等）</p>
-<h4 id="移除镜像"><a href="#移除镜像" class="headerlink" title="移除镜像"></a>移除镜像</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rmi 镜像名</span><br></pre></td></tr></table></figure>
-
+<h4 id="移除镜像"><a href="#移除镜像" class="headerlink" title="移除镜像"></a>移除镜像</h4><pre class=" language-bash"><code class="language-bash">docker rmi 镜像名
+</code></pre>
 <p>在删除镜像之前需要先用docker rm删除依赖这个镜像的所有容器</p>
 <h2 id="3-Docker容器"><a href="#3-Docker容器" class="headerlink" title="3 Docker容器"></a>3 Docker容器</h2><p>简单的说，容器是独立于运行的一个或一组应用，以及它们的运行环境。对应的，虚拟机可以理解为模拟运行的一整套操作系统（提供了运行态环境和其他系统环境）和跑在上面的应用。</p>
 <h3 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h3><p>启动容器分为两种，一种是基于镜像新建一个容器并启动，另外一个是将在停止状态的容器重新启动。<br><strong>1 新建并启动</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -t -i 容器名 /bin/bash</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run -t -i 容器名 /bin/bash
+</code></pre>
 <ul>
 <li>-t 选项让Docker分配一个伪终端并绑定到容器的标准输入上</li>
 <li>-i 则让容器的标准输入保持打开<br>当使用ducker run来创建容器时，Docker在后台运行的标准操作包括：</li>
@@ -580,35 +598,36 @@
 <li>执行完毕后容器被终止</li>
 </ul>
 <p><strong>2 启动已停止的容器</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start 容器名</span><br></pre></td></tr></table></figure>
-
-<h4 id="查看容器状态"><a href="#查看容器状态" class="headerlink" title="查看容器状态"></a>查看容器状态</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker ps -a</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker start 容器名
+</code></pre>
+<h4 id="查看容器状态"><a href="#查看容器状态" class="headerlink" title="查看容器状态"></a>查看容器状态</h4><pre class=" language-bash"><code class="language-bash">docker <span class="token function">ps</span> -a
+</code></pre>
 <ul>
 <li>-a 参数可以查看包含已经停掉的容器</li>
 </ul>
 <h4 id="停止容器"><a href="#停止容器" class="headerlink" title="停止容器"></a>停止容器</h4><p>使用docker stop命令来停止一个运行的容器，另外，当第一次创建并启动一个终端的容器，用户可以通过exit或者Crtl+D来退出终端时，所创建的容器立刻终止。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stop 容器名</span><br></pre></td></tr></table></figure>
-
-<h4 id="重启容器"><a href="#重启容器" class="headerlink" title="重启容器"></a>重启容器</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker restart 容器名</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker stop 容器名
+</code></pre>
+<h4 id="重启容器"><a href="#重启容器" class="headerlink" title="重启容器"></a>重启容器</h4><pre class=" language-bash"><code class="language-bash">docker restart 容器名
+</code></pre>
 <h4 id="进入容器"><a href="#进入容器" class="headerlink" title="进入容器"></a>进入容器</h4><p>在使用-d参数时，容器启动后会进入后台。某些时候需要进入容器进行操作，有很多办法，包括使用docker attac命令或nsenter工具等。<br><strong>attach命令</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -idt 镜像名</span><br><span class="line">docker attach 容器名</span><br></pre></td></tr></table></figure>
-
-<h4 id="导出容器"><a href="#导出容器" class="headerlink" title="导出容器"></a>导出容器</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">export</span> 容器名 &gt; tar包名</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run -idt 镜像名
+docker attach 容器名
+</code></pre>
+<h4 id="导出容器"><a href="#导出容器" class="headerlink" title="导出容器"></a>导出容器</h4><pre class=" language-bash"><code class="language-bash">docker <span class="token function">export</span> 容器名 <span class="token operator">></span> tar包名
+</code></pre>
 <p>这样讲导出容器快照到本地文件。</p>
-<h4 id="导入容器快照"><a href="#导入容器快照" class="headerlink" title="导入容器快照"></a>导入容器快照</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker import tar包名 容器名</span><br></pre></td></tr></table></figure>
-
+<h4 id="导入容器快照"><a href="#导入容器快照" class="headerlink" title="导入容器快照"></a>导入容器快照</h4><pre class=" language-bash"><code class="language-bash">docker <span class="token function">import</span> tar包名 容器名
+</code></pre>
 <p>跟docker import 镜像名区别在于容器快照文件将丢弃所有的历史记录和元数据信息（即仅保存容器当时的快照状态），而镜像存储文件将保存完成记录，体积也要大。此外，从容器导入快照文件导入时可以成功指定标签等元数据信息。</p>
-<h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a><strong>删除容器</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm 容器名</span><br></pre></td></tr></table></figure>
-
+<h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a><strong>删除容器</strong></h4><pre class=" language-bash"><code class="language-bash">docker <span class="token function">rm</span> 容器名
+</code></pre>
 <p>如果删除一个正在运行的容器，可以添加-f参数。Docker会发送SIGKILL信号给容器。</p>
 <h2 id="4-部署数据库"><a href="#4-部署数据库" class="headerlink" title="4 部署数据库"></a>4 部署数据库</h2><h3 id="4-1-docker部署PostgreSQL"><a href="#4-1-docker部署PostgreSQL" class="headerlink" title="4.1 docker部署PostgreSQL"></a>4.1 docker部署PostgreSQL</h3><p>Postgresql镜像地址<a target="_blank" rel="noopener" href="https://hub.docker.com/_/postgres?tab=tags">https://hub.docker.com/_/postgres?tab=tags</a></p>
 <p> <img src="https://img2020.cnblogs.com/blog/2047469/202101/2047469-20210124233231929-274649859.png" alt="img"></p>
 <p>快速部署</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name pg92 -e POSTGRES_PASSWORD=jinli@123 -e POSTGRES_USER=jinli -v /usr/<span class="built_in">local</span>/pg92/data:/var/lib/postgresql/data -p 5492:5432 -d postgres:9.2.21</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run --name pg92 -e POSTGRES_PASSWORD<span class="token operator">=</span>jinli@123 -e POSTGRES_USER<span class="token operator">=</span>jinli -v /usr/local/pg92/data:/var/lib/postgresql/data -p 5492:5432 -d postgres:9.2.21
+</code></pre>
 <ul>
 <li>-name 容器名称，我这里定义为pg92</li>
 <li>POSTGRES_PASSWORD 数据库用户密码</li>
@@ -618,17 +637,18 @@
 <li>postgres:9.2.21 docker hub镜像版本号</li>
 </ul>
 <p>进入Postgres容器</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it pg92 bash</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker <span class="token function">exec</span> -it pg92 <span class="token function">bash</span>
+</code></pre>
 <p>查看主机5492端口已被监听</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@jinli81 ~]<span class="comment"># netstat -apn|grep 5492</span></span><br><span class="line">tcp6       0      0 :::5492                 :::*                    LISTEN      6744/docker-proxy   </span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>root@jinli81 ~<span class="token punctuation">]</span><span class="token comment" spellcheck="true"># netstat -apn|grep 5492</span>
+tcp6       0      0 :::5492                 :::*                    LISTEN      6744/docker-proxy   
+</code></pre>
 <p>使用navicat连接测试</p>
 <p> <img src="https://img2020.cnblogs.com/blog/2047469/202101/2047469-20210125000152855-912296788.png" alt="img"></p>
 <h3 id="4-2-docker部署MySQL"><a href="#4-2-docker部署MySQL" class="headerlink" title="4.2 docker部署MySQL"></a>4.2 docker部署MySQL</h3><p>MySQL镜像地址<a target="_blank" rel="noopener" href="https://hub.docker.com/_/mysql?tab=tags">https://hub.docker.com/_/mysql?tab=tags</a></p>
 <p> <img src="https://img2020.cnblogs.com/blog/2047469/202006/2047469-20200618114154200-1416621102.png" alt="img"></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -itd --name mysql57 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7.30</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run -itd --name mysql57 -p 3307:3306 -e MYSQL_ROOT_PASSWORD<span class="token operator">=</span>123456 mysql:5.7.30
+</code></pre>
 <ul>
 <li>-name 容器名称，我这里定义为mysql57</li>
 <li>MYSQL_ROOT_PASSWORD数据库用户密码</li>
@@ -648,33 +668,44 @@
 <p>[root@jinli81 ~]netstat -apn|grep 3307<br>tcp 0 0 0.0.0.0:3307 0.0.0.0:* LISTEN 8910/docker-proxy<br>tcp6 0 0 :::3307 :::* LISTEN 8915/docker-proxy</p>
 </blockquote>
 <h3 id="4-3-docker部署opengauss"><a href="#4-3-docker部署opengauss" class="headerlink" title="4.3 docker部署opengauss"></a>4.3 docker部署opengauss</h3><p>下载二进制包到/opt/software/</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://opengauss.obs.cn-south-1.myhuaweicloud.com/1.1.0/x86/openGauss-1.1.0-CentOS-64bit-all.tar.gz</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">wget</span> https://opengauss.obs.cn-south-1.myhuaweicloud.com/1.1.0/x86/openGauss-1.1.0-CentOS-64bit-all.tar.gz
+</code></pre>
 <p>下载源码软件到/opt/software/</p>
 <p>地址：<a target="_blank" rel="noopener" href="https://gitee.com/opengauss/openGauss-server/tree/master/docker/dockerfiles">https://gitee.com/opengauss/openGauss-server/tree/master/docker/dockerfiles</a></p>
 <p>解压二进制包</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tar -xf openGauss-1.1.0-CentOS-64bit-all.tar.gz</span></span><br><span class="line"><span class="comment"># ll /opt/software/</span></span><br><span class="line">openGauss-server-master.zip <span class="comment"># 源码包</span></span><br><span class="line">openGauss-2.0.0-CentOS-64bit.tar.bz2 <span class="comment"># 二进制包</span></span><br><span class="line"><span class="comment"># unzip openGauss-server-master.zip # 源码包解压文件</span></span><br><span class="line"><span class="comment"># mv openGauss-1.1.0-CentOS-64bit.tar.bz2 openGauss-server-master/docker/dockerfiles/1.1.0/</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># tar -xf openGauss-1.1.0-CentOS-64bit-all.tar.gz</span>
+<span class="token comment" spellcheck="true"># ll /opt/software/</span>
+openGauss-server-master.zip <span class="token comment" spellcheck="true"># 源码包</span>
+openGauss-2.0.0-CentOS-64bit.tar.bz2 <span class="token comment" spellcheck="true"># 二进制包</span>
+<span class="token comment" spellcheck="true"># unzip openGauss-server-master.zip # 源码包解压文件</span>
+<span class="token comment" spellcheck="true"># mv openGauss-1.1.0-CentOS-64bit.tar.bz2 openGauss-server-master/docker/dockerfiles/1.1.0/</span>
+</code></pre>
 <p>启动docker</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">systemctl start docker
+</code></pre>
 <p>修改md5校验文件内容</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/software/openGauss-server-master/docker/dockerfiles/1.1.0/</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;9d713a83d613c4de248882b7df5472e7 openGauss-1.1.0-CentOS-64bit.tar.bz2&quot;</span> &gt; md5_file_amd64</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> /opt/software/openGauss-server-master/docker/dockerfiles/1.1.0/
+<span class="token keyword">echo</span> <span class="token string">"9d713a83d613c4de248882b7df5472e7 openGauss-1.1.0-CentOS-64bit.tar.bz2"</span> <span class="token operator">></span> md5_file_amd64
+</code></pre>
 <p>构建opengauss镜像</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh /opt/software/openGauss-server-master/docker/dockerfiles/buildDockerImage.sh -v 1.1.0</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">sh /opt/software/openGauss-server-master/docker/dockerfiles/buildDockerImage.sh -v 1.1.0
+</code></pre>
 <p>查看构建的opengauss相关镜像</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker images</span></span><br><span class="line">REPOSITORY   TAG        IMAGE ID       CREATED          SIZE</span><br><span class="line">opengauss    1.1.0      371bb14eed42   47 seconds ago   651MB</span><br><span class="line">centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># docker images</span>
+REPOSITORY   TAG        IMAGE ID       CREATED          SIZE
+opengauss    1.1.0      371bb14eed42   47 seconds ago   651MB
+centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
+</code></pre>
 <p>创建并启动容器</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name opengauss-1.1.0 --privileged=<span class="literal">true</span> -d -e GS_PASSWORD=Enmo@123 -p 21600:5432  opengauss:1.1.0</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">docker run --name opengauss-1.1.0 --privileged<span class="token operator">=</span>true -d -e GS_PASSWORD<span class="token operator">=</span>Enmo@123 -p 21600:5432  opengauss:1.1.0
+</code></pre>
 <p>外部连接数据库</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gsql -d postgres -U gaussdb -W<span class="string">&#x27;Enmo@123&#x27;</span> -h your-host-ip -p21600</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">gsql -d postgres -U gaussdb -W<span class="token string">'Enmo@123'</span> -h your-host-ip -p21600
+</code></pre>
 <p>数据库持久化</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker run --name opengauss --privileged=<span class="literal">true</span> -d -e GS_PASSWORD=Enmo@123 -v /opengauss:/var/lib/opengauss opengauss:1.1.0</span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash">$ docker run --name opengauss --privileged<span class="token operator">=</span>true -d -e GS_PASSWORD<span class="token operator">=</span>Enmo@123 -v /opengauss:/var/lib/opengauss opengauss:1.1.0
+</code></pre>
+
                 
             </div>
             <hr/>
@@ -927,7 +958,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            postgresql数据库进程
                         
                     </div>
                     <div class="publish-info">
@@ -938,8 +969,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             
@@ -951,10 +982,6 @@
                     
                     <a href="/tags/postgresql%E6%A8%A1%E5%9D%97/">
                         <span class="chip bg-color">postgresql模块</span>
-                    </a>
-                    
-                    <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                        <span class="chip bg-color">数据库</span>
                     </a>
                     
                 </div>
@@ -980,7 +1007,7 @@
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            1 nginx介绍1.1 什么是nginx Nginx是一个高性能的HTTP和反向代理服务器，特点是占有内存少，并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好。Nginx转为性能优化而开发，性能是其最重要的考量，是
                         
                     </div>
                     <div class="publish-info">
@@ -991,8 +1018,8 @@
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/nginx/" class="post-category">
-                                    nginx
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             

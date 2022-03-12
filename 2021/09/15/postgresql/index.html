@@ -6,7 +6,9 @@
     <meta charset="utf-8">
     <meta name="keywords" content="postgresql数据库进程, jinlid&#39;s blog">
     <meta name="description" content="postgresql数据库进程
-pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg93      15359  15358  0 ">
+
+
+pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg93      15359  15358  ">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -32,7 +34,7 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
 <meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="jinlid's blog" type="application/atom+xml">
-</head>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
 
 
 
@@ -436,10 +438,6 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                                 <span class="chip bg-color">postgresql模块</span>
                             </a>
                         
-                            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                <span class="chip bg-color">数据库</span>
-                            </a>
-                        
                     </div>
                     
                 </div>
@@ -448,8 +446,8 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/postgresql/" class="post-category">
-                                postgresql
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
                             </a>
                         
                     </div>
@@ -482,7 +480,9 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="postgresql数据库进程"><a href="#postgresql数据库进程" class="headerlink" title="postgresql数据库进程"></a>postgresql数据库进程</h2><blockquote>
+                <h2 id="postgresql数据库进程"><a href="#postgresql数据库进程" class="headerlink" title="postgresql数据库进程"></a>postgresql数据库进程</h2><span id="more"></span>
+
+<blockquote>
 <p>pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgres<br>pg93      15359  15358  0 10:34 ?        00:00:00 postgres: logger process<br>pg93      15361  15358  0 10:34 ?        00:00:00 postgres: checkpointer process<br>pg93      15362  15358  0 10:34 ?        00:00:00 postgres: writer process<br>pg93      15363  15358  0 10:34 ?        00:00:00 postgres: wal writer process<br>pg93      15364  15358  0 10:34 ?        00:00:00 postgres: autovacuum launcher process<br>pg93      15365  15358  0 10:34 ?        00:00:00 postgres: archiver process<br>pg93      15366  15358  0 10:34 ?        00:00:00 postgres: stats collector process<br>pg93      15378  15309  0 10:34 pts/0    00:00:00 grep –color=auto postgres</p>
 </blockquote>
 <h2 id="1-stats-collector"><a href="#1-stats-collector" class="headerlink" title="1 stats collector"></a>1 stats collector</h2><p>了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据库级别或者事务级别或者会话级别的活动信息统计，历史数据库活动统计报告。</p>
@@ -497,7 +497,13 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p>由于统计信息的收集为查询执行增加了一些开销，因此可以将系统配置为收集或不收集信息。这由通常在<code>postgresql.conf</code>中设置的配置参数控制。（ 有关设置配置参数的详细信息。这些参数控制服务器范围的统计信息收集功能。启用统计信息收集后，可以通过<code>pg_stat</code>和<code>pg_statio</code> 系列系统视图访问生成的数据。</p>
 <ul>
 <li><p><code>track_activities</code> (<code>布尔值</code>)</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># select query,query_start from pg_stat_activity;</span></span><br><span class="line">                      query                      |          query_start          </span><br><span class="line">-------------------------------------------------+-------------------------------</span><br><span class="line"> select query,query_start from pg_stat_activity; | 2022-01-22 10:50:46.686303+08</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure></li>
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select query,query_start from pg_stat_activity;</span>
+                      query                      <span class="token operator">|</span>          query_start          
+-------------------------------------------------+-------------------------------
+ <span class="token keyword">select</span> query,query_start from pg_stat_activity<span class="token punctuation">;</span> <span class="token operator">|</span> 2022-01-22 10:50:46.686303+08
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+</code></pre>
+</li>
 <li><p><code>track_activity_query_size</code> (<code>整数</code>)</p>
 <p><code>为pg_stat_activity</code>指定为跟踪每个活动会话的当前存储的SQL长度。<code>query</code>字段。默认值为 1024。此参数只能在服务器启动时设置。</p>
 </li>
@@ -571,8 +577,10 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 </tr>
 </tbody></table>
 <p><code>pg_stat_get_activity</code>，<code>pg_stat_activity</code>视图的底层函数，返回一组记录，其中包含有关每个后端进程的所有可用信息。有时，仅获取此信息的子集可能更方便。在这种情况下，可以使用一组较旧的每个后端统计访问函数；如下表这些访问功能使用后端 ID 号，范围从 1 到当前活动后端的数量。该函数<code>pg_stat_get_backend_idset</code> 提供了一种方便的方法来为每个活动后端生成一行以调用这些函数。例如，显示所有后端的 PID和当前查询：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> pg_stat_get_backend_pid(s.backendid) <span class="keyword">AS</span> pid, </span><br><span class="line">       pg_stat_get_backend_activity(s.backendid) <span class="keyword">AS</span> query </span><br><span class="line">    <span class="keyword">FROM</span> (<span class="keyword">SELECT</span> pg_stat_get_backend_idset() <span class="keyword">AS</span> backendid) <span class="keyword">AS</span> s;</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> pg_stat_get_backend_pid<span class="token punctuation">(</span>s<span class="token punctuation">.</span>backendid<span class="token punctuation">)</span> <span class="token keyword">AS</span> pid<span class="token punctuation">,</span> 
+       pg_stat_get_backend_activity<span class="token punctuation">(</span>s<span class="token punctuation">.</span>backendid<span class="token punctuation">)</span> <span class="token keyword">AS</span> query 
+    <span class="token keyword">FROM</span> <span class="token punctuation">(</span><span class="token keyword">SELECT</span> pg_stat_get_backend_idset<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> backendid<span class="token punctuation">)</span> <span class="token keyword">AS</span> s<span class="token punctuation">;</span>
+</code></pre>
 <p><strong>Per-Backend Statistics Functions</strong></p>
 <table>
 <thead>
@@ -759,17 +767,92 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 </tr>
 </tbody></table>
 <p>编译</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> src/contrib/pg_stat_statements/</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash"><span class="token function">cd</span> src/contrib/pg_stat_statements/
+<span class="token function">make</span>
+<span class="token function">make</span> <span class="token function">install</span>
+</code></pre>
 <p>配置</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># postgresql.conf</span></span><br><span class="line"><span class="attr">shared_preload_libraries</span> = <span class="string">&#x27;pg_stat_statements&#x27;</span></span><br><span class="line"><span class="comment"># Add settings for extensions here</span></span><br><span class="line"><span class="meta">pg_stat_statement.max</span>=<span class="string">1000 #跟踪1k条sql语句</span></span><br><span class="line"><span class="meta">pg_stat_statement.track</span>=<span class="string">all #跟踪所有的sql语句</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># postgresql.conf</span>
+<span class="token attr-name">shared_preload_libraries</span> <span class="token punctuation">=</span> <span class="token attr-value">'pg_stat_statements'</span>
+<span class="token comment" spellcheck="true"># Add settings for extensions here</span>
+<span class="token attr-name">pg_stat_statement.max</span><span class="token punctuation">=</span><span class="token attr-value">1000 #跟踪1k条sql语句</span>
+<span class="token attr-name">pg_stat_statement.track</span><span class="token punctuation">=</span><span class="token attr-value">all #跟踪所有的sql语句</span>
+</code></pre>
 <p>安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># create extension pg_stat_statements;</span></span><br><span class="line">CREATE EXTENSION</span><br><span class="line">postgres=<span class="comment"># \dx</span></span><br><span class="line">                                     List of installed extensions</span><br><span class="line">        Name        | Version |   Schema   |                        Description                        </span><br><span class="line">--------------------+---------+------------+-----------------------------------------------------------</span><br><span class="line"> pg_stat_statements | 1.1     | public     | track execution statistics of all SQL statements executed</span><br><span class="line"> plpgsql            | 1.0     | pg_catalog | PL/pgSQL procedural language</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># create extension pg_stat_statements;</span>
+CREATE EXTENSION
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \dx</span>
+                                     List of installed extensions
+        Name        <span class="token operator">|</span> Version <span class="token operator">|</span>   Schema   <span class="token operator">|</span>                        Description                        
+--------------------+---------+------------+-----------------------------------------------------------
+ pg_stat_statements <span class="token operator">|</span> 1.1     <span class="token operator">|</span> public     <span class="token operator">|</span> track execution statistics of all SQL statements executed
+ plpgsql            <span class="token operator">|</span> 1.0     <span class="token operator">|</span> pg_catalog <span class="token operator">|</span> PL/pgSQL procedural language
+<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+</code></pre>
 <p>使用</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># select pg_stat_statements_reset();</span></span><br><span class="line"> pg_stat_statements_reset </span><br><span class="line">--------------------------</span><br><span class="line"> </span><br><span class="line">(1 row)</span><br><span class="line"></span><br><span class="line">$ pgbench postgres -i bench -d</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_history&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_tellers&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_accounts&quot;</span> does not exist, skipping</span><br><span class="line">NOTICE:  table <span class="string">&quot;pgbench_branches&quot;</span> does not exist, skipping</span><br><span class="line">creating tables...</span><br><span class="line">100000 of 100000 tuples (100%) <span class="keyword">done</span> (elapsed 0.07 s, remaining 0.00 s).</span><br><span class="line">vacuum...</span><br><span class="line"><span class="built_in">set</span> primary keys...</span><br><span class="line"><span class="keyword">done</span>.</span><br><span class="line">$ pgbench -c10 -t300 postgres</span><br><span class="line">starting vacuum...end.</span><br><span class="line">transaction <span class="built_in">type</span>: TPC-B (sort of)</span><br><span class="line">scaling factor: 1</span><br><span class="line">query mode: simple</span><br><span class="line">number of clients: 10</span><br><span class="line">number of threads: 1</span><br><span class="line">number of transactions per client: 300</span><br><span class="line">number of transactions actually processed: 3000/3000</span><br><span class="line">tps = 797.172906 (including connections establishing)</span><br><span class="line">tps = 804.683041 (excluding connections establishing</span><br><span class="line">$ psql</span><br><span class="line">postgres=<span class="comment"># SELECT query, calls, total_time, rows, 100.0 * shared_blks_hit /</span></span><br><span class="line">postgres-<span class="comment">#                nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent</span></span><br><span class="line">postgres-<span class="comment">#           FROM pg_stat_statements ORDER BY total_time DESC LIMIT 5;</span></span><br><span class="line">-[ RECORD 1 ]-------------------------------------------------------------------</span><br><span class="line">query       | UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;</span><br><span class="line">calls       | 3000</span><br><span class="line">total_time  | 15051.292</span><br><span class="line">rows        | 3000</span><br><span class="line">hit_percent | 99.9856674856674857</span><br><span class="line">-[ RECORD 2 ]-------------------------------------------------------------------</span><br><span class="line">query       | UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;</span><br><span class="line">calls       | 3000</span><br><span class="line">total_time  | 8990.91099999996</span><br><span class="line">rows        | 3000</span><br><span class="line">hit_percent | 99.9932682598451700</span><br><span class="line">-[ RECORD 3 ]-------------------------------------------------------------------</span><br><span class="line">query       | copy pgbench_accounts from stdin</span><br><span class="line">calls       | 1</span><br><span class="line">total_time  | 230.676</span><br><span class="line">rows        | 100000</span><br><span class="line">hit_percent | 0.30395136778115501520</span><br><span class="line">-[ RECORD 4 ]-------------------------------------------------------------------</span><br><span class="line">query       | UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;</span><br><span class="line">calls       | 3000</span><br><span class="line">total_time  | 198.885999999999</span><br><span class="line">rows        | 3000</span><br><span class="line">hit_percent | 98.4169002387625869</span><br><span class="line">-[ RECORD 5 ]-------------------------------------------------------------------</span><br><span class="line">query       | vacuum analyze pgbench_accounts</span><br><span class="line">calls       | 1</span><br><span class="line">total_time  | 74.101</span><br><span class="line">rows        | 0</span><br><span class="line">hit_percent | 99.9199199199199199</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_stat_statements_reset();</span>
+ pg_stat_statements_reset 
+--------------------------
+ 
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 
+$ pgbench postgres -i bench -d
+NOTICE:  table <span class="token string">"pgbench_history"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_tellers"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_accounts"</span> does not exist, skipping
+NOTICE:  table <span class="token string">"pgbench_branches"</span> does not exist, skipping
+creating tables<span class="token punctuation">..</span>.
+100000 of 100000 tuples <span class="token punctuation">(</span>100%<span class="token punctuation">)</span> <span class="token keyword">done</span> <span class="token punctuation">(</span>elapsed 0.07 s, remaining 0.00 s<span class="token punctuation">)</span>.
+vacuum<span class="token punctuation">..</span>.
+<span class="token keyword">set</span> primary keys<span class="token punctuation">..</span>.
+done.
+$ pgbench -c10 -t300 postgres
+starting vacuum<span class="token punctuation">..</span>.end.
+transaction type: TPC-B <span class="token punctuation">(</span>sort of<span class="token punctuation">)</span>
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+number of transactions per client: 300
+number of transactions actually processed: 3000/3000
+tps <span class="token operator">=</span> 797.172906 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 804.683041 <span class="token punctuation">(</span>excluding connections establishing
+$ psql
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT query, calls, total_time, rows, 100.0 * shared_blks_hit /</span>
+postgres-<span class="token comment" spellcheck="true">#                nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent</span>
+postgres-<span class="token comment" spellcheck="true">#           FROM pg_stat_statements ORDER BY total_time DESC LIMIT 5;</span>
+-<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>-------------------------------------------------------------------
+query       <span class="token operator">|</span> UPDATE pgbench_branches SET bbalance <span class="token operator">=</span> bbalance + ? WHERE bid <span class="token operator">=</span> ?<span class="token punctuation">;</span>
+calls       <span class="token operator">|</span> 3000
+total_time  <span class="token operator">|</span> 15051.292
+rows        <span class="token operator">|</span> 3000
+hit_percent <span class="token operator">|</span> 99.9856674856674857
+-<span class="token punctuation">[</span> RECORD 2 <span class="token punctuation">]</span>-------------------------------------------------------------------
+query       <span class="token operator">|</span> UPDATE pgbench_tellers SET tbalance <span class="token operator">=</span> tbalance + ? WHERE tid <span class="token operator">=</span> ?<span class="token punctuation">;</span>
+calls       <span class="token operator">|</span> 3000
+total_time  <span class="token operator">|</span> 8990.91099999996
+rows        <span class="token operator">|</span> 3000
+hit_percent <span class="token operator">|</span> 99.9932682598451700
+-<span class="token punctuation">[</span> RECORD 3 <span class="token punctuation">]</span>-------------------------------------------------------------------
+query       <span class="token operator">|</span> copy pgbench_accounts from stdin
+calls       <span class="token operator">|</span> 1
+total_time  <span class="token operator">|</span> 230.676
+rows        <span class="token operator">|</span> 100000
+hit_percent <span class="token operator">|</span> 0.30395136778115501520
+-<span class="token punctuation">[</span> RECORD 4 <span class="token punctuation">]</span>-------------------------------------------------------------------
+query       <span class="token operator">|</span> UPDATE pgbench_accounts SET abalance <span class="token operator">=</span> abalance + ? WHERE aid <span class="token operator">=</span> ?<span class="token punctuation">;</span>
+calls       <span class="token operator">|</span> 3000
+total_time  <span class="token operator">|</span> 198.885999999999
+rows        <span class="token operator">|</span> 3000
+hit_percent <span class="token operator">|</span> 98.4169002387625869
+-<span class="token punctuation">[</span> RECORD 5 <span class="token punctuation">]</span>-------------------------------------------------------------------
+query       <span class="token operator">|</span> vacuum analyze pgbench_accounts
+calls       <span class="token operator">|</span> 1
+total_time  <span class="token operator">|</span> 74.101
+rows        <span class="token operator">|</span> 0
+hit_percent <span class="token operator">|</span> 99.9199199199199199
+
+</code></pre>
 <h3 id="查看bgwriter的统计信息"><a href="#查看bgwriter的统计信息" class="headerlink" title="查看bgwriter的统计信息"></a>查看bgwriter的统计信息</h3><p>backend的buffer写过于频繁说明shared buffer不够用，或者是bgwrtiter的sleep time太长需要调整。</p>
 <p>让bgwriter多干点活（bgwriter_delay、bgwriter_lru_maxpages，bgwriter_lru_multiplier）或者调大shared buffer.</p>
 <p> <strong><code>pg_stat_bgwriter</code> View</strong></p>
@@ -1447,16 +1530,17 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 </tbody></table>
 <h2 id="2-autovacuum"><a href="#2-autovacuum" class="headerlink" title="2 autovacuum"></a>2 autovacuum</h2><h3 id="1-1-什么是autovacuum？"><a href="#1-1-什么是autovacuum？" class="headerlink" title="1.1 什么是autovacuum？"></a>1.1 什么是autovacuum？</h3><p>autocuum是启动postgresql时自动启动的后台实用程序之一</p>
 <p>在生产环境中不应该将其关闭</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">autovacuum</span>=<span class="string">on #默认on</span></span><br><span class="line"><span class="attr">track_counts</span>=<span class="string">on #默认on</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">autovacuum</span><span class="token punctuation">=</span><span class="token attr-value">on #默认on</span>
+<span class="token attr-name">track_counts</span><span class="token punctuation">=</span><span class="token attr-value">on #默认on</span>
+</code></pre>
 <h3 id="1-2-为什么需要autovacuum"><a href="#1-2-为什么需要autovacuum" class="headerlink" title="1.2 为什么需要autovacuum"></a>1.2 为什么需要autovacuum</h3><ul>
 <li>需要vacuum来移除死元组</li>
 <li>防止死元组膨胀</li>
 <li>更新表的统计信息进行分析，以便提供优化器使用</li>
 <li>autovacuum launcher使用Stats Collector的后台进程收集的信息来确定autovacuum的候选表列表</li>
 </ul>
-<h3 id="1-3-记录autovacuum"><a href="#1-3-记录autovacuum" class="headerlink" title="1.3 记录autovacuum"></a>1.3 记录autovacuum</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">log_autovacuum_min_duration</span>=<span class="string">-1 # -1表示不记录，0表示记录所有的，大于0（如250ms,1s,1min,1h,1d）表示真空操作大于此值的操作</span></span><br></pre></td></tr></table></figure>
-
+<h3 id="1-3-记录autovacuum"><a href="#1-3-记录autovacuum" class="headerlink" title="1.3 记录autovacuum"></a>1.3 记录autovacuum</h3><pre class=" language-properties"><code class="language-properties"><span class="token attr-name">log_autovacuum_min_duration</span><span class="token punctuation">=</span><span class="token attr-value">-1 # -1表示不记录，0表示记录所有的，大于0（如250ms,1s,1min,1h,1d）表示真空操作大于此值的操作</span>
+</code></pre>
 <h3 id="1-4-什么时候做autovacuum"><a href="#1-4-什么时候做autovacuum" class="headerlink" title="1.4 什么时候做autovacuum"></a>1.4 什么时候做autovacuum</h3><p>Autovacuum实际操作的内容</p>
 <ol>
 <li><p>Autovacuum</p>
@@ -1467,8 +1551,11 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p>Autovacuum ANALYZE thresold a table = autovacuum_analyze_scale_factor * number of tuples + autovacuum_analyze_threshold</p>
 </li>
 </ol>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">autovacuum_vacuum_threshold</span> = <span class="string">50       # min number of row updates before vacuum</span></span><br><span class="line"><span class="attr">autovacuum_analyze_threshold</span> = <span class="string">50      # min number of row updates before analyze</span></span><br><span class="line"><span class="attr">autovacuum_vacuum_scale_factor</span> = <span class="string">0.2   # fraction of table size before vacuum</span></span><br><span class="line"><span class="attr">autovacuum_analyze_scale_factor</span> = <span class="string">0.1  # fraction of table size before analyze</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">50       # min number of row updates before vacuum</span>
+<span class="token attr-name">autovacuum_analyze_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">50      # min number of row updates before analyze</span>
+<span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.2   # fraction of table size before vacuum</span>
+<span class="token attr-name">autovacuum_analyze_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.1  # fraction of table size before analyze</span>
+</code></pre>
 <p>举个例子</p>
 <p>test表有1000行记录。</p>
 <p>上面的公式作为参考：</p>
@@ -1480,19 +1567,53 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p>table2=100w行</p>
 <p>其触发analyze和vacuum的阈值分别是：100050和200050.</p>
 <h3 id="1-6-如何确定需要调整其autovacuum-setting的表"><a href="#1-6-如何确定需要调整其autovacuum-setting的表" class="headerlink" title="1.6 如何确定需要调整其autovacuum setting的表"></a>1.6 如何确定需要调整其autovacuum setting的表</h3><p>为了单独调整表的autovacuum，必须知道一段时间内表上的插入/删除/更新数。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># select n_tup_ins,n_tup_upd,n_tup_del,n_live_tup,n_dead_tup from pg_stat_user_tables where schemaname = &#x27;public&#x27; and relname = &#x27;test&#x27;;</span></span><br><span class="line"> n_tup_ins | n_tup_upd | n_tup_del | n_live_tup | n_dead_tup </span><br><span class="line">-----------+-----------+-----------+------------+------------</span><br><span class="line">      1000 |         0 |       249 |        751 |          0</span><br><span class="line">(1 row)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select n_tup_ins,n_tup_upd,n_tup_del,n_live_tup,n_dead_tup from pg_stat_user_tables where schemaname = 'public' and relname = 'test';</span>
+ n_tup_ins <span class="token operator">|</span> n_tup_upd <span class="token operator">|</span> n_tup_del <span class="token operator">|</span> n_live_tup <span class="token operator">|</span> n_dead_tup 
+-----------+-----------+-----------+------------+------------
+      1000 <span class="token operator">|</span>         0 <span class="token operator">|</span>       249 <span class="token operator">|</span>        751 <span class="token operator">|</span>          0
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+</code></pre>
 <p>表autovacuum setting的设置</p>
 <p>可以通过设置单个表的存储参数来重写此行为，这样会忽略全局设置。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">postgres=<span class="comment"># alter table test set (autovacuum_vacuum_cost_limit=500);</span></span><br><span class="line">ALTER TABLE</span><br><span class="line">postgres=<span class="comment"># alter table test set (autovacuum_vacuum_cost_delay=10);</span></span><br><span class="line">ALTER TABLE</span><br><span class="line">postgres=<span class="comment"># \d+ test</span></span><br><span class="line">                         Table <span class="string">&quot;public.test&quot;</span></span><br><span class="line"> Column |  Type   | Modifiers | Storage  | Stats target | Description </span><br><span class="line">--------+---------+-----------+----------+--------------+-------------</span><br><span class="line"> id     | <span class="built_in">integer</span> |           | plain    |              | </span><br><span class="line"> info   | text    |           | extended |              | </span><br><span class="line">Has OIDs: no</span><br><span class="line">Options: autovacuum_vacuum_cost_limit=500, autovacuum_vacuum_cost_delay=10</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># alter table test set (autovacuum_vacuum_cost_limit=500);</span>
+ALTER TABLE
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># alter table test set (autovacuum_vacuum_cost_delay=10);</span>
+ALTER TABLE
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d+ test</span>
+                         Table <span class="token string">"public.test"</span>
+ Column <span class="token operator">|</span>  Type   <span class="token operator">|</span> Modifiers <span class="token operator">|</span> Storage  <span class="token operator">|</span> Stats target <span class="token operator">|</span> Description 
+--------+---------+-----------+----------+--------------+-------------
+ <span class="token function">id</span>     <span class="token operator">|</span> integer <span class="token operator">|</span>           <span class="token operator">|</span> plain    <span class="token operator">|</span>              <span class="token operator">|</span> 
+ info   <span class="token operator">|</span> text    <span class="token operator">|</span>           <span class="token operator">|</span> extended <span class="token operator">|</span>              <span class="token operator">|</span> 
+Has OIDs: no
+Options: autovacuum_vacuum_cost_limit<span class="token operator">=</span>500, autovacuum_vacuum_cost_delay<span class="token operator">=</span>10
+</code></pre>
 <h3 id="1-7-一次可以运行多个autovacuum过程"><a href="#1-7-一次可以运行多个autovacuum过程" class="headerlink" title="1.7 一次可以运行多个autovacuum过程"></a>1.7 一次可以运行多个autovacuum过程</h3><p>在可能包含多个数据库的实例/集群上，一次运行的autovacuum进程数不能超过下面参数设置的值：</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">autovacuum_max_workers</span> = <span class="string">3             # max number of autovacuum subprocesses</span></span><br><span class="line"><span class="comment">                                        # (change requires restart)</span></span><br><span class="line"><span class="attr">autovacuum_naptime</span> = <span class="string">1min         # time between autovacuum runs</span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_max_workers</span> <span class="token punctuation">=</span> <span class="token attr-value">3             # max number of autovacuum subprocesses</span>
+<span class="token comment" spellcheck="true">                                        # (change requires restart)</span>
+<span class="token attr-name">autovacuum_naptime</span> <span class="token punctuation">=</span> <span class="token attr-value">1min         # time between autovacuum runs</span>
+</code></pre>
 <p>启动下一个autovacuum之前的等待时间：</p>
 <p>autovacuum_naptime/N，其中N是实例中数据库的总数。真空是IO密集型操作，设置了一些参数来最小化真空对IO的影响。</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 可达到的总成本限制，结合所有的autovacuum作业</span></span><br><span class="line"><span class="attr">autovacuum_vacuum_cost_limit</span> = <span class="string">-1      # default vacuum cost limit for</span></span><br><span class="line"><span class="comment">                                        # autovacuum, -1 means use</span></span><br><span class="line"><span class="comment">                                        # vacuum_cost_limit</span></span><br><span class="line"><span class="comment"># 当一个清理工作达到autovacuum_vacuum_cost_limit指定的成本限制时，autovacuum将休眠数毫秒</span></span><br><span class="line"><span class="attr">autovacuum_vacuum_cost_delay</span> = <span class="string">20ms    # default vacuum cost delay for</span></span><br><span class="line"><span class="comment">                                        # autovacuum, in milliseconds;</span></span><br><span class="line"><span class="comment">                                        # -1 means use vacuum_cost_delay</span></span><br><span class="line"><span class="comment">                                        </span></span><br><span class="line"><span class="comment"># - Cost-Based Vacuum Delay -</span></span><br><span class="line"><span class="comment">#vacuum_cost_delay = 0                  # 0-100 milliseconds</span></span><br><span class="line"><span class="comment"># 读取已在共享缓冲区中且不需要磁盘读取的页的成本</span></span><br><span class="line"><span class="attr">vacuum_cost_page_hit</span> = <span class="string">1               # 0-10000 credits</span></span><br><span class="line"><span class="comment"># 获取不在共享缓冲区中的页的成本</span></span><br><span class="line"><span class="attr">vacuum_cost_page_miss</span> = <span class="string">10             # 0-10000 credits</span></span><br><span class="line"><span class="comment"># 在每一页中发现死元组时写入该页的成本</span></span><br><span class="line"><span class="attr">vacuum_cost_page_dirty</span> = <span class="string">20            # 0-10000 credits</span></span><br><span class="line"><span class="comment">#vacuum_cost_limit = 200                # 1-10000 credits                                        </span></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># 可达到的总成本限制，结合所有的autovacuum作业</span>
+<span class="token attr-name">autovacuum_vacuum_cost_limit</span> <span class="token punctuation">=</span> <span class="token attr-value">-1      # default vacuum cost limit for</span>
+<span class="token comment" spellcheck="true">                                        # autovacuum, -1 means use</span>
+<span class="token comment" spellcheck="true">                                        # vacuum_cost_limit</span>
+<span class="token comment" spellcheck="true"># 当一个清理工作达到autovacuum_vacuum_cost_limit指定的成本限制时，autovacuum将休眠数毫秒</span>
+<span class="token attr-name">autovacuum_vacuum_cost_delay</span> <span class="token punctuation">=</span> <span class="token attr-value">20ms    # default vacuum cost delay for</span>
+<span class="token comment" spellcheck="true">                                        # autovacuum, in milliseconds;</span>
+<span class="token comment" spellcheck="true">                                        # -1 means use vacuum_cost_delay</span>
+                                        
+<span class="token comment" spellcheck="true"># - Cost-Based Vacuum Delay -</span>
+<span class="token comment" spellcheck="true">#vacuum_cost_delay = 0                  # 0-100 milliseconds</span>
+<span class="token comment" spellcheck="true"># 读取已在共享缓冲区中且不需要磁盘读取的页的成本</span>
+<span class="token attr-name">vacuum_cost_page_hit</span> <span class="token punctuation">=</span> <span class="token attr-value">1               # 0-10000 credits</span>
+<span class="token comment" spellcheck="true"># 获取不在共享缓冲区中的页的成本</span>
+<span class="token attr-name">vacuum_cost_page_miss</span> <span class="token punctuation">=</span> <span class="token attr-value">10             # 0-10000 credits</span>
+<span class="token comment" spellcheck="true"># 在每一页中发现死元组时写入该页的成本</span>
+<span class="token attr-name">vacuum_cost_page_dirty</span> <span class="token punctuation">=</span> <span class="token attr-value">20            # 0-10000 credits</span>
+<span class="token comment" spellcheck="true">#vacuum_cost_limit = 200                # 1-10000 credits                                        </span>
+</code></pre>
 <p>1秒（1000ms）中会发生什么</p>
 <p>在读取延迟为0毫秒的最佳情况下，autovacuum可以唤醒并进入睡眠50次（1000毫秒/20毫秒），因为唤醒之间的延迟需要20毫秒。</p>
 <p>由于在共享缓冲区中每次读取一个页面的相关成本时1，因此在每个唤醒中可以读取200个页面（因为上面把总成本限制设置为200），在50个唤醒中可以读取50*200个页面。</p>
@@ -1518,8 +1639,14 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <li><p>请注意，BEGIN命令没有指定txid。在PostgreSQL中，当第一个命令在BEGIN命令执行后执行时，事务管理器会分配一个txid，然后分配它的事物开始。</p>
 </li>
 </ul>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">postgres</span>=<span class="string"># begin;</span></span><br><span class="line"><span class="attr">BEGIN</span></span><br><span class="line"><span class="attr">postgres</span>=<span class="string"># select txid_current();</span></span><br><span class="line"> <span class="attr">txid_current</span> <span class="string"></span></span><br><span class="line"><span class="attr">--------------</span></span><br><span class="line">         <span class="attr">100</span></span><br><span class="line"><span class="meta">(1</span> <span class="string">row)</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">postgres</span><span class="token punctuation">=</span><span class="token attr-value"># begin;</span>
+BEGIN
+<span class="token attr-name">postgres</span><span class="token punctuation">=</span><span class="token attr-value"># select txid_current();</span>
+<span class="token attr-name"> txid_current</span> 
+--------------
+         100
+<span class="token attr-name">(1</span> <span class="token attr-value">row)</span>
+</code></pre>
 <ul>
 <li><strong>0</strong>表示<strong>无效</strong>的 txid。</li>
 <li><strong>1</strong>表示<strong>Bootstrap</strong> txid，仅在数据库集群初始化时使用。</li>
@@ -1602,8 +1729,61 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p>与删除操作一样，如果提交 txid 100，则 Tuple_1 和 Tuple_2 将是死元组，如果中止 txid 100，则 Tuple_2 和 Tuple_3 将是死元组。</p>
 <p><em>页面检查</em></p>
 <p>PostgreSQL 提供了一个扩展<em>pageinspect</em>，它是一个贡献模块，用于显示数据库页面的内容。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">testdb=# CREATE EXTENSION pageinspect;</span><br><span class="line">CREATE EXTENSION</span><br><span class="line">testdb=# CREATE TABLE tbl (data text);</span><br><span class="line">CREATE TABLE</span><br><span class="line">testdb=# INSERT INTO tbl VALUES(&#x27;A&#x27;);</span><br><span class="line">INSERT 0 1</span><br><span class="line">testdb=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid </span><br><span class="line">                FROM heap_page_items(get_raw_page(&#x27;tbl&#x27;, 0));</span><br><span class="line"> tuple | t_xmin | t_xmax | t_cid | t_ctid </span><br><span class="line">-------+--------+--------+-------+--------</span><br><span class="line">     1 |     99 |      0 |     0 | (0,1)</span><br><span class="line">(1 row)</span><br><span class="line">postgres=# delete from tbl;</span><br><span class="line">DELETE 1</span><br><span class="line">postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid </span><br><span class="line">                FROM heap_page_items(get_raw_page(&#x27;tbl&#x27;, 0));</span><br><span class="line"> tuple | t_xmin | t_xmax | t_cid | t_ctid </span><br><span class="line">-------+--------+--------+-------+--------</span><br><span class="line">     1 |   4965 |   4966 |     0 | (0,1)</span><br><span class="line">(1 row)</span><br><span class="line"></span><br><span class="line">postgres=# truncate table tbl;</span><br><span class="line">TRUNCATE TABLE</span><br><span class="line">postgres=# INSERT INTO tbl VALUES(&#x27;A&#x27;);</span><br><span class="line">INSERT 0 1</span><br><span class="line">postgres=# begin;</span><br><span class="line">BEGIN</span><br><span class="line">postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid </span><br><span class="line">                FROM heap_page_items(get_raw_page(&#x27;tbl&#x27;, 0));</span><br><span class="line"> tuple | t_xmin | t_xmax | t_cid | t_ctid </span><br><span class="line">-------+--------+--------+-------+--------</span><br><span class="line">     1 |   4979 |      0 |     0 | (0,1)</span><br><span class="line">(1 row)</span><br><span class="line"></span><br><span class="line">postgres=# update tbl set data = &#x27;B&#x27;;</span><br><span class="line">UPDATE 1</span><br><span class="line">postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid </span><br><span class="line">                FROM heap_page_items(get_raw_page(&#x27;tbl&#x27;, 0));</span><br><span class="line"> tuple | t_xmin | t_xmax | t_cid | t_ctid </span><br><span class="line">-------+--------+--------+-------+--------</span><br><span class="line">     1 |   4979 |   4980 |     0 | (0,2)</span><br><span class="line">     2 |   4980 |      0 |     0 | (0,2)</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br><span class="line">postgres=# update tbl set data = &#x27;C&#x27;;</span><br><span class="line">UPDATE 1</span><br><span class="line">postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid </span><br><span class="line">                FROM heap_page_items(get_raw_page(&#x27;tbl&#x27;, 0));</span><br><span class="line"> tuple | t_xmin | t_xmax | t_cid | t_ctid </span><br><span class="line">-------+--------+--------+-------+--------</span><br><span class="line">     1 |   4979 |   4980 |     0 | (0,2)</span><br><span class="line">     2 |   4980 |   4980 |     0 | (0,3)</span><br><span class="line">     3 |   4980 |      0 |     1 | (0,3)</span><br><span class="line">(3 rows)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# CREATE EXTENSION pageinspect;
+CREATE EXTENSION
+testdb=# CREATE TABLE tbl (data text);
+CREATE TABLE
+testdb=# INSERT INTO tbl VALUES('A');
+INSERT 0 1
+testdb=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid 
+                FROM heap_page_items(get_raw_page('tbl', 0));
+ tuple | t_xmin | t_xmax | t_cid | t_ctid 
+-------+--------+--------+-------+--------
+     1 |     99 |      0 |     0 | (0,1)
+(1 row)
+postgres=# delete from tbl;
+DELETE 1
+postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid 
+                FROM heap_page_items(get_raw_page('tbl', 0));
+ tuple | t_xmin | t_xmax | t_cid | t_ctid 
+-------+--------+--------+-------+--------
+     1 |   4965 |   4966 |     0 | (0,1)
+(1 row)
 
+postgres=# truncate table tbl;
+TRUNCATE TABLE
+postgres=# INSERT INTO tbl VALUES('A');
+INSERT 0 1
+postgres=# begin;
+BEGIN
+postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid 
+                FROM heap_page_items(get_raw_page('tbl', 0));
+ tuple | t_xmin | t_xmax | t_cid | t_ctid 
+-------+--------+--------+-------+--------
+     1 |   4979 |      0 |     0 | (0,1)
+(1 row)
+
+postgres=# update tbl set data = 'B';
+UPDATE 1
+postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid 
+                FROM heap_page_items(get_raw_page('tbl', 0));
+ tuple | t_xmin | t_xmax | t_cid | t_ctid 
+-------+--------+--------+-------+--------
+     1 |   4979 |   4980 |     0 | (0,2)
+     2 |   4980 |      0 |     0 | (0,2)
+(2 rows)
+
+postgres=# update tbl set data = 'C';
+UPDATE 1
+postgres=# SELECT lp as tuple, t_xmin, t_xmax, t_field3 as t_cid, t_ctid 
+                FROM heap_page_items(get_raw_page('tbl', 0));
+ tuple | t_xmin | t_xmax | t_cid | t_ctid 
+-------+--------+--------+-------+--------
+     1 |   4979 |   4980 |     0 | (0,2)
+     2 |   4980 |   4980 |     0 | (0,3)
+     3 |   4980 |      0 |     1 | (0,3)
+(3 rows)
+</code></pre>
 <h3 id="1-9-冻结处理"><a href="#1-9-冻结处理" class="headerlink" title="1.9 冻结处理"></a>1.9 冻结处理</h3><p>冻结处理有两种模式，根据特定条件以任何一种模式执行。为方便起见，这些模式被称为<strong>惰性模式</strong>和<strong>急切模式</strong>。</p>
 <p>冻结处理通常以惰性模式运行；但是，当满足特定条件时，就会运行急切模式。</p>
 <p>在惰性模式下，冻结处理仅使用目标表的相应 VM 扫描包含死元组的页面。</p>
@@ -1659,8 +1839,33 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p><img src="https://www.interdb.jp/pg/img/fig-6-05.png" alt="图 6.5。 pg_database.datfrozenxid 和 pg_class.relfrozenxid(s) 之间的关系。"></p>
 <p><em>如何显示 pg_class.relfrozenxid 和 pg_database.datfrozenxid</em></p>
 <p>在下文中，第一个查询显示了“testdb”数据库中所有可见关系的 relfrozenxid，第二个查询显示了“testdb”数据库的 pg_database.datfrozenxld。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">testdb=# VACUUM table_1;</span><br><span class="line">VACUUM</span><br><span class="line"></span><br><span class="line">testdb=# SELECT n.nspname as &quot;Schema&quot;, c.relname as &quot;Name&quot;, c.relfrozenxid</span><br><span class="line">             FROM pg_catalog.pg_class c</span><br><span class="line">             LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace</span><br><span class="line">             WHERE c.relkind IN (&#x27;r&#x27;,&#x27;&#x27;)</span><br><span class="line">                   AND n.nspname &lt;&gt; &#x27;information_schema&#x27; AND n.nspname !~ &#x27;^pg_toast&#x27;</span><br><span class="line">                   AND pg_catalog.pg_table_is_visible(c.oid)</span><br><span class="line">                   ORDER BY c.relfrozenxid::text::bigint DESC;</span><br><span class="line">   Schema   |            Name         | relfrozenxid </span><br><span class="line">------------+-------------------------+--------------</span><br><span class="line"> public     | table_1                 |    100002000</span><br><span class="line"> public     | table_2                 |         1846</span><br><span class="line"> pg_catalog | pg_database             |         1827</span><br><span class="line"> pg_catalog | pg_user_mapping         |         1821</span><br><span class="line"> pg_catalog | pg_largeobject          |         1821</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"> pg_catalog | pg_transform            |         1821</span><br><span class="line">(57 rows)</span><br><span class="line"></span><br><span class="line">testdb=# SELECT datname, datfrozenxid FROM pg_database WHERE datname = &#x27;testdb&#x27;; datname | datfrozenxid </span><br><span class="line">---------+-------------- testdb  |         1821</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure>
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# VACUUM table_1;
+VACUUM
 
+testdb=# SELECT n.nspname as "Schema", c.relname as "Name", c.relfrozenxid
+             FROM pg_catalog.pg_class c
+             LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+             WHERE c.relkind IN ('r','')
+                   AND n.nspname <> 'information_schema' AND n.nspname !~ '^pg_toast'
+                   AND pg_catalog.pg_table_is_visible(c.oid)
+                   ORDER BY c.relfrozenxid::text::bigint DESC;
+   Schema   |            Name         | relfrozenxid 
+------------+-------------------------+--------------
+ public     | table_1                 |    100002000
+ public     | table_2                 |         1846
+ pg_catalog | pg_database             |         1827
+ pg_catalog | pg_user_mapping         |         1821
+ pg_catalog | pg_largeobject          |         1821
+
+...
+
+ pg_catalog | pg_transform            |         1821
+(57 rows)
+
+testdb=# SELECT datname, datfrozenxid FROM pg_database WHERE datname = 'testdb'; datname | datfrozenxid 
+---------+-------------- testdb  |         1821
+(1 row)
+</code></pre>
 <p><em>冻结选项</em></p>
 <p>带有 FREEZE 选项的 VACUUM 命令强制冻结指定表中的所有 txid。这是在急切模式下执行的；但是，freezeLimit 设置为 OldestXmin（不是“OldestXmin - Vacuum_freeze_min_age”）。例如，当 txid 5000 执行 VACUUM FULL 命令且没有其他正在运行的事务时，OldesXmin 设置为 5000，小于 5000 的 txid 将被冻结。</p>
 <p><strong>在急切模式下改进冻结处理</strong></p>
@@ -1675,8 +1880,22 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p><img src="https://www.interdb.jp/pg/img/fig-6-07.png" alt="图 6.7。 删除不必要的阻塞文件和页面。"></p>
 <p><em>pg_database.datfrozenxid 和 clog 文件</em></p>
 <p>下面显示了 pg_database.datfrozenxid 和 clog 文件的实际输出：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ psql testdb -c &quot;SELECT datname, datfrozenxid FROM pg_database&quot;</span><br><span class="line">  datname  | datfrozenxid </span><br><span class="line">-----------+--------------</span><br><span class="line"> template1 |      7308883</span><br><span class="line"> template0 |      7556347</span><br><span class="line"> postgres  |      7339732</span><br><span class="line"> testdb    |      7506298</span><br><span class="line">(4 rows)</span><br><span class="line"></span><br><span class="line">$ ls -la -h data/pg_xact/	# In version 9.6 or earlier, &quot;ls -la -h data/pg_clog/&quot;</span><br><span class="line">total 316K</span><br><span class="line">drwx------  2 postgres postgres   28 Dec 29 17:15 .</span><br><span class="line">drwx------ 20 postgres postgres 4.0K Dec 29 17:13 ..</span><br><span class="line">-rw-------  1 postgres postgres 256K Dec 29 17:15 0006</span><br><span class="line">-rw-------  1 postgres postgres  56K Dec 29 17:15 0007</span><br></pre></td></tr></table></figure>
+<pre><code>$ psql testdb -c &quot;SELECT datname, datfrozenxid FROM pg_database&quot;
+  datname  | datfrozenxid 
+-----------+--------------
+ template1 |      7308883
+ template0 |      7556347
+ postgres  |      7339732
+ testdb    |      7506298
+(4 rows)
 
+$ ls -la -h data/pg_xact/    # In version 9.6 or earlier, &quot;ls -la -h data/pg_clog/&quot;
+total 316K
+drwx------  2 postgres postgres   28 Dec 29 17:15 .
+drwx------ 20 postgres postgres 4.0K Dec 29 17:13 ..
+-rw-------  1 postgres postgres 256K Dec 29 17:15 0006
+-rw-------  1 postgres postgres  56K Dec 29 17:15 0007
+</code></pre>
 <h4 id="自动清理守护进程"><a href="#自动清理守护进程" class="headerlink" title="自动清理守护进程"></a>自动清理守护进程</h4><p>真空处理已通过 autovacuum 守护进程自动化；至此，PostgreSQL 的操作变得异常简单。</p>
 <p>autovacuum 守护进程定期调用几个 autovacuum_worker 进程。默认情况下，它每 1 分钟唤醒一次（由<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-autovacuum.html#GUC-AUTOVACUUM-NAPTIME">autovacuum_naptime</a>定义），并调用三个 worker（由<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-autovacuum.html#GUC-AUTOVACUUM-MAX-WORKERS">autovacuum_max_works</a>定义）。</p>
 <p>由 autovacuum 调用的 autovacuum worker 逐渐对各个表同时执行真空处理，对数据库活动的影响最小。</p>
@@ -1684,8 +1903,9 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p>如图显示了一个极端的例子。假设一个表由三页组成，每页包含六个元组。执行以下 DELETE 命令删除元组，执行 VACUUM 命令删除死元组：</p>
 <p><strong>（并发）VACUUM 缺点的示例。</strong></p>
 <p><img src="https://www.interdb.jp/pg/img/fig-6-08.png" alt="图 6.8。 显示（并发）VACUUM 缺点的示例。"></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">testdb=# DELETE FROM tbl WHERE id % 6 != 0;</span><br><span class="line">testdb=# VACUUM tbl;</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# DELETE FROM tbl WHERE id % 6 != 0;
+testdb=# VACUUM tbl;
+</code></pre>
 <p>删除死元组；但是，表格大小并没有减少。这既浪费了磁盘空间，又对数据库性能产生了负面影响。例如，在上面的示例中，当读取表中的三个元组时，必须从磁盘加载三个页面。</p>
 <p>为了应对这种情况，PostgreSQL 提供了 Full VACUUM 模式。下图显示了该模式的概要。</p>
 <p><strong>Full VACUUM 模式的概要。</strong></p>
@@ -1706,8 +1926,22 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 </ul>
 <p>Full VACUUM 的伪代码如下所示：</p>
 <p> <em>伪代码：全 VACUUM</em></p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)  <span class="keyword">FOR</span> <span class="keyword">each</span> <span class="keyword">table</span></span><br><span class="line">(<span class="number">2</span>)       Acquire AccessExclusiveLock lock <span class="keyword">for</span> the <span class="keyword">table</span></span><br><span class="line">(<span class="number">3</span>)       <span class="keyword">Create</span> a <span class="keyword">new</span> <span class="keyword">table</span> file</span><br><span class="line">(<span class="number">4</span>)       <span class="keyword">FOR</span> <span class="keyword">each</span> live tuple <span class="keyword">in</span> the <span class="keyword">old</span> <span class="keyword">table</span></span><br><span class="line">(<span class="number">5</span>)            <span class="keyword">Copy</span> the live tuple <span class="keyword">to</span> the <span class="keyword">new</span> <span class="keyword">table</span> file</span><br><span class="line">(<span class="number">6</span>)            Freeze the tuple IF necessary</span><br><span class="line">            <span class="keyword">END</span> <span class="keyword">FOR</span></span><br><span class="line">(<span class="number">7</span>)        ​Remove the <span class="keyword">old</span> <span class="keyword">table</span> file</span><br><span class="line">(<span class="number">8</span>)        Rebuild <span class="keyword">all</span> indexes</span><br><span class="line">(<span class="number">9</span>)        Update FSM <span class="keyword">and</span> VM</span><br><span class="line">(<span class="number">10</span>)      Update statistics</span><br><span class="line">           ​<span class="keyword">Release</span> AccessExclusiveLock lock</span><br><span class="line">      ​<span class="keyword">END</span> <span class="keyword">FOR</span></span><br><span class="line">(<span class="number">11</span>)  ​Remove unnecessary clog files <span class="keyword">and</span> pages if possib</span><br><span class="line">  </span><br></pre></td></tr></table></figure>
-
+<pre class=" language-sql"><code class="language-sql"><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>  <span class="token keyword">FOR</span> each <span class="token keyword">table</span>
+<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>       Acquire AccessExclusiveLock <span class="token keyword">lock</span> <span class="token keyword">for</span> the <span class="token keyword">table</span>
+<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span>       <span class="token keyword">Create</span> <span class="token number">a</span> new <span class="token keyword">table</span> <span class="token keyword">file</span>
+<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>       <span class="token keyword">FOR</span> each live tuple <span class="token operator">in</span> the old <span class="token keyword">table</span>
+<span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span>            Copy the live tuple <span class="token keyword">to</span> the new <span class="token keyword">table</span> <span class="token keyword">file</span>
+<span class="token punctuation">(</span><span class="token number">6</span><span class="token punctuation">)</span>            Freeze the tuple <span class="token keyword">IF</span> necessary
+            <span class="token keyword">END</span> <span class="token keyword">FOR</span>
+<span class="token punctuation">(</span><span class="token number">7</span><span class="token punctuation">)</span>        ​Remove the old <span class="token keyword">table</span> <span class="token keyword">file</span>
+<span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">)</span>        Rebuild <span class="token keyword">all</span> indexes
+<span class="token punctuation">(</span><span class="token number">9</span><span class="token punctuation">)</span>        <span class="token keyword">Update</span> FSM <span class="token operator">and</span> VM
+<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span>      <span class="token keyword">Update</span> <span class="token keyword">statistics</span>
+           ​<span class="token keyword">Release</span> AccessExclusiveLock <span class="token keyword">lock</span>
+      ​<span class="token keyword">END</span> <span class="token keyword">FOR</span>
+<span class="token punctuation">(</span><span class="token number">11</span><span class="token punctuation">)</span>  ​Remove unnecessary clog files <span class="token operator">and</span> pages <span class="token keyword">if</span> possib
+  
+</code></pre>
 <p>使用 VACUUM FULL 命令时应考虑两点。</p>
 <ol>
 <li>当 Full VACUUM 正在处理时，没有人可以访问（读/写）表。</li>
@@ -1716,22 +1950,60 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
 <p> <em>我应该什么时候做 VACUUM FULL？</em></p>
 <p>不幸的是，当您应该执行“VACUUM FULL”时，没有最佳实践。然而，扩展<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">pg_freespacemap</a>可能会给你很好的建议。</p>
 <p>以下查询显示了您想知道的表的平均可用空间比率。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">testdb=# CREATE EXTENSION pg_freespacemap;</span><br><span class="line">CREATE EXTENSION</span><br><span class="line"></span><br><span class="line">testdb=# SELECT count(*) as &quot;number of pages&quot;,</span><br><span class="line">       pg_size_pretty(cast(avg(avail) as bigint)) as &quot;Av. freespace size&quot;,</span><br><span class="line">       round(100 * avg(avail)/8192 ,2) as &quot;Av. freespace ratio&quot;</span><br><span class="line">       FROM pg_freespace(&#x27;accounts&#x27;);</span><br><span class="line"> number of pages | Av. freespace size | Av. freespace ratio </span><br><span class="line">-----------------+--------------------+---------------------</span><br><span class="line">            1640 | 99 bytes           |                1.21</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure>
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# CREATE EXTENSION pg_freespacemap;
+CREATE EXTENSION
 
+testdb=# SELECT count(*) as "number of pages",
+       pg_size_pretty(cast(avg(avail) as bigint)) as "Av. freespace size",
+       round(100 * avg(avail)/8192 ,2) as "Av. freespace ratio"
+       FROM pg_freespace('accounts');
+ number of pages | Av. freespace size | Av. freespace ratio 
+-----------------+--------------------+---------------------
+            1640 | 99 bytes           |                1.21
+(1 row)
+</code></pre>
 <p>如上结果，您可以发现可用空间很少。</p>
 <p>如果你删除几乎元组并执行 VACUUM 命令，你会发现几乎页是空格的。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">testdb=# DELETE FROM accounts WHERE aid %10 != 0 OR aid &lt; 100;</span><br><span class="line">DELETE 90009</span><br><span class="line"></span><br><span class="line">testdb=# VACUUM accounts;</span><br><span class="line">VACUUM</span><br><span class="line"></span><br><span class="line">testdb=# SELECT count(*) ​as &quot;number of pages&quot;,</span><br><span class="line">      ​pg_size_pretty(cast(avg(avail) as bigint)) as &quot;Av. freespace size&quot;,</span><br><span class="line">      ​round(100 * avg(avail)/8192 ,2) as &quot;Av. freespace ratio&quot;</span><br><span class="line">      ​FROM pg_freespace(&#x27;accounts&#x27;);</span><br><span class="line">​number of pages | Av. freespace size | Av. freespace ratio </span><br><span class="line">-----------------+--------------------+---------------------</span><br><span class="line">           ​1640 | 7124 bytes         |               86.97</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure>
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# DELETE FROM accounts WHERE aid %10 != 0 OR aid < 100;
+DELETE 90009
 
+testdb=# VACUUM accounts;
+VACUUM
+
+testdb=# SELECT count(*) ​as "number of pages",
+      ​pg_size_pretty(cast(avg(avail) as bigint)) as "Av. freespace size",
+      ​round(100 * avg(avail)/8192 ,2) as "Av. freespace ratio"
+      ​FROM pg_freespace('accounts');
+​number of pages | Av. freespace size | Av. freespace ratio 
+-----------------+--------------------+---------------------
+           ​1640 | 7124 bytes         |               86.97
+(1 row)
+</code></pre>
 <p>以下查询检查指定表的每一页的可用空间比率。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">testdb=# SELECT *, round(100 * avail/8192 ,2) as &quot;freespace ratio&quot;</span><br><span class="line">                FROM pg_freespace(&#x27;accounts&#x27;);</span><br><span class="line"> blkno | avail | freespace ratio </span><br><span class="line">-------+-------+-----------------</span><br><span class="line">     0 |  7904 |           96.00</span><br><span class="line">     1 |  7520 |           91.00</span><br><span class="line">     2 |  7136 |           87.00</span><br><span class="line">     3 |  7136 |           87.00</span><br><span class="line">     4 |  7136 |           87.00</span><br><span class="line">     5 |  7136 |           87.00</span><br><span class="line">....</span><br></pre></td></tr></table></figure>
-
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# SELECT *, round(100 * avail/8192 ,2) as "freespace ratio"
+                FROM pg_freespace('accounts');
+ blkno | avail | freespace ratio 
+-------+-------+-----------------
+     0 |  7904 |           96.00
+     1 |  7520 |           91.00
+     2 |  7136 |           87.00
+     3 |  7136 |           87.00
+     4 |  7136 |           87.00
+     5 |  7136 |           87.00
+....
+</code></pre>
 <p>执行 VACUUM FULL 后，可以发现表文件已经被压缩。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">testdb=# VACUUM FULL accounts;</span><br><span class="line">VACUUM</span><br><span class="line">testdb=# SELECT count(*) as &quot;number of blocks&quot;,</span><br><span class="line">       pg_size_pretty(cast(avg(avail) as bigint)) as &quot;Av. freespace size&quot;,</span><br><span class="line">       round(100 * avg(avail)/8192 ,2) as &quot;Av. freespace ratio&quot;</span><br><span class="line">       FROM pg_freespace(&#x27;accounts&#x27;);</span><br><span class="line"> number of pages | Av. freespace size | Av. freespace ratio </span><br><span class="line">-----------------+--------------------+---------------------</span><br><span class="line">             164 | 0 bytes            |                0.00</span><br><span class="line">(1 row)</span><br></pre></td></tr></table></figure>
-
-
-
-
-
+<pre class=" language-sql-monosp"><code class="language-sql-monosp">testdb=# VACUUM FULL accounts;
+VACUUM
+testdb=# SELECT count(*) as "number of blocks",
+       pg_size_pretty(cast(avg(avail) as bigint)) as "Av. freespace size",
+       round(100 * avg(avail)/8192 ,2) as "Av. freespace ratio"
+       FROM pg_freespace('accounts');
+ number of pages | Av. freespace size | Av. freespace ratio 
+-----------------+--------------------+---------------------
+             164 | 0 bytes            |                0.00
+(1 row)
+</code></pre>
 <p>END</p>
 
                 
@@ -1799,10 +2071,6 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                             
                                 <a href="/tags/postgresql%E6%A8%A1%E5%9D%97/">
                                     <span class="chip bg-color">postgresql模块</span>
-                                </a>
-                            
-                                <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                    <span class="chip bg-color">数据库</span>
                                 </a>
                             
                         </div>
@@ -1990,7 +2258,7 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            Django作为Web框架，需要一种很便利得方法动态地生成HTML网页，因此有了模板这个概念。模板包含所需HTML的部分代码以及一些特殊语法，特殊语法用于描述如何将视图传递的数据动态插入HTML网页中。
                         
                     </div>
                     <div class="publish-info">
@@ -2001,8 +2269,8 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/python/" class="post-category">
-                                    python
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             
@@ -2054,8 +2322,8 @@ pg93      15358      1  0 10:34 pts/0    00:00:00 /usr/local/pg93/bin/postgrespg
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/docker/" class="post-category">
-                                    docker
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             
