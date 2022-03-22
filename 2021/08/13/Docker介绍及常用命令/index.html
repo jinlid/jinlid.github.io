@@ -5,13 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="Docker介绍及常用命令, jinlid&#39;s blog">
-    <meta name="description" content="
-
-1 安装docker卸载旧版本
-yum remove docker \
-           docker-client \
-           docker-client-latest \
-           docker-com">
+    <meta name="description" content="Docker简介 Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中,然后发布到任何流行的Linux或Windows操作系统的机器上,也可以实现虚拟化,容器是完全使用沙箱机制,相互之间不会有任何">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -483,8 +477,10 @@ yum remove docker \
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <span id="more"></span>
+                <p>Docker简介 Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中,然后发布到任何流行的Linux或Windows操作系统的机器上,也可以实现虚拟化,容器是完全使用沙箱机制,相互之间不会有任何接口。</p>
+<span id="more"></span>
 
+<p>[TOC]</p>
 <h2 id="1-安装docker"><a href="#1-安装docker" class="headerlink" title="1 安装docker"></a>1 安装docker</h2><p>卸载旧版本</p>
 <pre class=" language-bash"><code class="language-bash">yum remove docker \
            docker-client \
@@ -946,19 +942,19 @@ centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/09/15/postgresql/">
+                <a href="/2021/09/15/stats%20collector%E8%BF%9B%E7%A8%8B/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="postgresql数据库进程">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
                         
-                        <span class="card-title">postgresql数据库进程</span>
+                        <span class="card-title">stats collector进程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            postgresql数据库进程
+                            了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据库级别或者事务级别或者会话级别的活动信息统计，历史数据库活动统计报告。
                         
                     </div>
                     <div class="publish-info">
@@ -980,8 +976,8 @@ centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql%E6%A8%A1%E5%9D%97/">
-                        <span class="chip bg-color">postgresql模块</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
@@ -995,19 +991,19 @@ centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/08/13/Nginx%E4%BB%8B%E7%BB%8D/">
+                <a href="/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="nginx介绍">
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="一文学会使用pip">
                         
-                        <span class="card-title">nginx介绍</span>
+                        <span class="card-title">一文学会使用pip</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            1 nginx介绍1.1 什么是nginx Nginx是一个高性能的HTTP和反向代理服务器，特点是占有内存少，并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好。Nginx转为性能优化而开发，性能是其最重要的考量，是
+                            pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。
                         
                     </div>
                     <div class="publish-info">
@@ -1018,8 +1014,8 @@ centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
-                                    操作系统
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                    开发语言
                                 </a>
                             
                             
@@ -1029,12 +1025,8 @@ centos       7.6.1810   f1cb7c7d58b7   2 years ago      202MB
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
-                        <span class="chip bg-color">服务器</span>
-                    </a>
-                    
-                    <a href="/tags/web%E5%BC%80%E5%8F%91/">
-                        <span class="chip bg-color">web开发</span>
+                    <a href="/tags/python/">
+                        <span class="chip bg-color">python</span>
                     </a>
                     
                 </div>

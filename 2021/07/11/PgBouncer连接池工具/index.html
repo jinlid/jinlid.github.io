@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="PgBouncer连接池工具, jinlid&#39;s blog">
-    <meta name="description" content="PgBouncer介绍PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，">
+    <meta name="description" content="PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -431,8 +431,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/pg%E5%B7%A5%E5%85%B7/">
-                                <span class="chip bg-color">pg工具</span>
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
                             </a>
                         
                     </div>
@@ -477,9 +477,10 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="PgBouncer介绍"><a href="#PgBouncer介绍" class="headerlink" title="PgBouncer介绍"></a>PgBouncer介绍</h1><p>PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：<br>1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。<br>2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。<br>3，对客户端连接进行限制，预防过多或恶意的连接请求。</p>
+                <p>PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：<br>1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。<br>2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。<br>3，对客户端连接进行限制，预防过多或恶意的连接请求。</p>
 <span id="more"></span>
 
+<p>[TOC]</p>
 <p>支持三种连接池模型：<br><strong>1、Session pooling</strong><br>会话模式，当会话结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于短连接，或者其他模式不适用的场景。<br>不能解决大并发场景连接打满或性能下降的问题（到后端的连接依旧会很多）。<br><strong>2、Transaction pooling</strong><br>事务模式，当事务结束时，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数）的场景。<br><strong>3、Statement pooling</strong><br>语句模式，当SQL执行完成后，被会话占用的pgbouncer到PGDB的连接可以被其他会话复用。<br>适用于大并发、未使用（游标、绑定变量、消息队列、特殊参数），并且不需要多语句事务的场景（或者说autocommit的场景）。<br>本例中使用postgresql版本：</p>
 <pre class=" language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select version();</span>
                                                                version                                                                
@@ -520,59 +521,35 @@
 <pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#/home/postgres/pgbouncer/etc/pgbouncer.ini</span>
 
 [databases]
-
 <span class="token attr-name">*</span> <span class="token punctuation">=</span> <span class="token attr-value">host=127.0.0.1</span>
-
 <span class="token attr-name">port</span><span class="token punctuation">=</span><span class="token attr-value">5432</span>
-
 <span class="token attr-name">pool_size</span><span class="token punctuation">=</span><span class="token attr-value">50</span>
-
 [pgbouncer]
-
 <span class="token attr-name">reserve_pool_size</span><span class="token punctuation">=</span><span class="token attr-value">14</span>
-
 <span class="token attr-name">logfile</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/log/pgbouncer.log</span>
-
 <span class="token attr-name">pidfile</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/pgbouncer.pid</span>
-
 <span class="token attr-name">listen_addr</span> <span class="token punctuation">=</span> <span class="token attr-value">0.0.0.0</span>
-
 <span class="token attr-name">listen_port</span> <span class="token punctuation">=</span> <span class="token attr-value">4001</span>
-
 <span class="token attr-name">unix_socket_dir</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer</span>
-
 <span class="token attr-name">unix_socket_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">0700</span>
-
 <span class="token attr-name">auth_type</span> <span class="token punctuation">=</span> <span class="token attr-value">md5</span>
-
 <span class="token attr-name">auth_file</span> <span class="token punctuation">=</span> <span class="token attr-value">/home/postgres/pgbouncer/etc/userlist.txt</span>
-
 <span class="token attr-name">auth_user</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
-
 <span class="token attr-name">auth_query</span> <span class="token punctuation">=</span> <span class="token attr-value">select i_usename,i_passwd from get_shadow($1)</span>
-
 <span class="token attr-name">admin_users</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
-
 <span class="token attr-name">stats_users</span> <span class="token punctuation">=</span> <span class="token attr-value">jinli</span>
-
 <span class="token attr-name">pool_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">transaction</span>
-
 <span class="token attr-name">server_reset_query</span> <span class="token punctuation">=</span> <span class="token attr-value">DISCARD ALL</span>
-
 <span class="token attr-name">server_check_query</span> <span class="token punctuation">=</span> <span class="token attr-value">select 1</span>
-
 <span class="token attr-name">max_client_conn</span> <span class="token punctuation">=</span> <span class="token attr-value">100</span>
-
 <span class="token attr-name">default_pool_size</span> <span class="token punctuation">=</span> <span class="token attr-value">20</span>
 </code></pre>
 <p>然后将需要用到的用户密码配置到userlist.txt文件中</p>
 <pre class=" language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#userlist.txt</span>
-
 <span class="token attr-name">"jinli"</span> <span class="token attr-value">"jinli"</span>
 </code></pre>
 <h2 id="4、启动pgbouncer"><a href="#4、启动pgbouncer" class="headerlink" title="4、启动pgbouncer"></a><strong>4、启动pgbouncer</strong></h2><p>启动前先修改环境变量：</p>
 <pre class=" language-shell"><code class="language-shell">export LD_LIBRARY_PATH="/home/postgres/libevent/lib":$LD_LIBRARY_PATH
-
 export PATH="/home/postgres/pgbouncer/bin":$PATH
 </code></pre>
 <p>然后启动：</p>
@@ -582,17 +559,13 @@ export PATH="/home/postgres/pgbouncer/bin":$PATH
 </code></pre>
 <h2 id="6、连接pgbouncer"><a href="#6、连接pgbouncer" class="headerlink" title="6、连接pgbouncer"></a><strong>6、连接pgbouncer</strong></h2><p>pgbouncer对外提供了一个虚拟数据库pgbouncer，我们可以连接到该库中进行 相关的命令操作：</p>
 <pre class=" language-bash"><code class="language-bash"><span class="token function">export</span> PGPASSWORD<span class="token operator">=</span>jinli
-
 psql -h 127.0.0.1 -p 4001 -U jinli pgbouncer
 </code></pre>
 <p>常用的命令：</p>
 <p>show clients： 用来查看客户端连接信息；<br>show pools： 用来查看连接池信息；<br>show databases：查看连接的数据库；<br>show config：查看相关配置；<br>被会话占用的pgbouncer到PGDB的连接被复用前，（通过pgbouncer.ini配置文件）可以设置重置命令（重置一些会话状态），使用discard即可(配置，执行计划缓存，序列，临时表等)。</p>
 <pre class=" language-bash"><code class="language-bash">pgbouncer<span class="token operator">=</span><span class="token comment" spellcheck="true"># \h discard</span>
-
 Command: DISCARD
-
 Description: discard session state
-
 Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123; ALL | PLANS | SEQUENCES | TEMPORARY | TEMP &amp;#125;</span>
 </code></pre>
 <p>参考：</p>
@@ -664,8 +637,8 @@ Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comme
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/pg%E5%B7%A5%E5%85%B7/">
-                                    <span class="chip bg-color">pg工具</span>
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
                                 </a>
                             
                         </div>
@@ -853,7 +826,7 @@ Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comme
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            pip介绍pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。Python官方的PyPi仓库为我们提供了一个统一的代码托管仓库，名叫
+                            pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。
                         
                     </div>
                     <div class="publish-info">
@@ -875,8 +848,8 @@ Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comme
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/pip/">
-                        <span class="chip bg-color">pip</span>
+                    <a href="/tags/python/">
+                        <span class="chip bg-color">python</span>
                     </a>
                     
                 </div>
@@ -890,19 +863,19 @@ Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comme
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/07/11/pgbench%E5%8E%8B%E6%B5%8B%E5%B7%A5%E5%85%B7/">
+                <a href="/2021/07/11/postgresql%E4%BD%BF%E7%94%A8ssl%E8%BF%9E%E6%8E%A5/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="pgbench压测工具">
+                        <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="PostgreSQL使用SSL连接">
                         
-                        <span class="card-title">pgbench压测工具</span>
+                        <span class="card-title">PostgreSQL使用SSL连接</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            背景常用数据库的基准测试最关键的衡量指标有：吞吐量（Throughput）、响应时间（RT）或延迟（Latency）和并发量。吞吐量是衡量数据库的单位时间内的事务处理能力，常用的单位是TPS（每秒事务数）。响应时间或延迟，描述操作过程里用来
+                            PostgreSQL的SSL连接分两块1、服务端的SSL验证：用SSL连接代替明文连接以防止网络包被窃听和防止他人伪装成服务器。 2、客户端的SSL验证：用客户端SSL证书登录代替密码登录。
                         
                     </div>
                     <div class="publish-info">
@@ -924,8 +897,8 @@ Syntax:DISCARD <span class="token operator">&amp;</span><span class="token comme
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/pg%E5%B7%A5%E5%85%B7/">
-                        <span class="chip bg-color">pg工具</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
