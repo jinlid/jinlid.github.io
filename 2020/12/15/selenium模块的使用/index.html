@@ -4,14 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="PostgreSQL使用SSL连接, jinlid&#39;s blog">
-    <meta name="description" content="PostgreSQL的SSL连接分两块1、服务端的SSL验证：用SSL连接代替明文连接以防止网络包被窃听和防止他人伪装成服务器。 2、客户端的SSL验证：用客户端SSL证书登录代替密码登录。
+    <meta name="keywords" content="selenium模块的使用, jinlid&#39;s blog">
+    <meta name="description" content="selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。
 
 
-服务端证书类型。
-证书可以分为三类
-
-自签名">
+[TOC]">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -23,7 +20,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>PostgreSQL使用SSL连接 | jinlid&#39;s blog</title>
+    <title>selenium模块的使用 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
@@ -316,12 +313,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/14.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">PostgreSQL使用SSL连接</h1>
+                    <h1 class="description center-align post-title">selenium模块的使用</h1>
                 </div>
             </div>
         </div>
@@ -437,8 +434,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/postgresql/">
-                                <span class="chip bg-color">postgresql</span>
+                            <a href="/tags/python/">
+                                <span class="chip bg-color">python</span>
                             </a>
                         
                     </div>
@@ -449,8 +446,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                数据库
+                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
+                                开发语言
                             </a>
                         
                     </div>
@@ -462,7 +459,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-07-11
+                    2020-12-15
                 </div>
                 
 
@@ -483,229 +480,227 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="PostgreSQL的SSL连接分两块"><a href="#PostgreSQL的SSL连接分两块" class="headerlink" title="PostgreSQL的SSL连接分两块"></a>PostgreSQL的SSL连接分两块</h3><p>1、服务端的SSL验证：用SSL连接代替明文连接以防止网络包被窃听和防止他人伪装成服务器。 2、客户端的SSL验证：用客户端SSL证书登录代替密码登录。</p>
+                <p>selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。</p>
 <span id="more"></span>
 
-<p>服务端证书类型。</p>
-<p>证书可以分为三类</p>
-<ul>
-<li><p>自签名证书：</p>
-<p>自签名证书是没有由证书颁发机构（CA)签名的安全证书。证书颁发者和主题是一样，自己给自己颁发，此类证书不需要根证书认证，所以是不安全的，是无</p>
-<p>法防止他人伪装成服务器，但如果服务器是按IP地址连接的，也许对这项要求不是很注重，所以自签名证书就够了。</p>
-<p>要为服务器创建一个有效期为365天的简单自签名证书，可以使用下面的OpenSSL命令，将dbhost.yourdomain.com替换为服务器的主机名：</p>
-<pre class=" language-bash"><code class="language-bash">openssl req -new -x509 -days 365 -nodes -text -out server.crt \
-  -keyout server.key -subj <span class="token string">"/CN=
-dbhost.yourdomain.com
-"</span>
-<span class="token function">chmod</span> og-rwx server.key
+<p>[TOC]</p>
+<h4 id="1-安装"><a href="#1-安装" class="headerlink" title="1. 安装"></a>1. 安装</h4><p>selenium的安装</p>
+<pre class=" language-bash"><code class="language-bash">pip <span class="token function">install</span> selenium
 </code></pre>
-<p>CN=后面是证书主题如域名或IP地址，此命令生成证书文件server.crt 和私钥文件 server.key ，证书有效期为365天。</p>
-</li>
-<li><p>建立本地根CA，再由根CA签发服务器证书：</p>
-<p>尽管可以使用自签名证书进行测试，但是在生产中应该使用由证书颁发机构（CA）（通常是企业范围的根CA）签名的证书。要创建其身份可以被客户端验证</p>
-<p>的服务器证书，请首先创建一个证书签名请求（CSR）和一个公共/专用密钥文件：</p>
-<pre class=" language-bash"><code class="language-bash">openssl req -new -nodes -text -out root.csr \
-  -keyout root.key -subj <span class="token string">"/CN=
-root.yourdomain.com
-"</span>
-<span class="token function">chmod</span> og-rwx root.key
-</code></pre>
-<p>然后，使用密钥对请求进行签名以创建根证书颁发机构（使用Linux上的默认OpenSSL配置文件位置）：</p>
-<pre class=" language-bash"><code class="language-bash">openssl x509 -req -in root.csr -text -days 3650 \
-  -extfile /etc/ssl/openssl.cnf -extensions v3_ca \
-  -signkey root.key -out root.crt
-</code></pre>
-<p>openssl.cnf并位于openssl version -d报告的目录中，上面生成两个有用的文件 root.key (根CA的私钥）, root.crt(根CA证书）。<br>最后，创建由新的根证书颁发机构签名的服务器证书：</p>
-<pre class=" language-bash"><code class="language-bash">openssl req -new -nodes -text -out server.csr \
-  -keyout server.key -subj <span class="token string">"/CN=
-dbhost.yourdomain.com
-"</span>
-<span class="token function">chmod</span> og-rwx server.key
-openssl x509 -req -in server.csr -text -days 365 \
-  -CA root.crt -CAkey root.key -CAcreateserial \
-  -out server.crt
-</code></pre>
-<p>server.crt和server.key应该存储在服务器上，并且root.crt应该存储在客户端上，以便客户端可以验证服务器的叶证书已由其受信任的根证书签名。root.key应该离线存储以用于创建将来的证书。</p>
-</li>
-<li><p>公共CA签署的证书：</p>
-<p>此类型需要客户端配置公共的root.crt。由知名CA签署的证书，大部分要收使用费，一般用在有域名的服务器上。申请后一般会得三个文件服务器私钥</p>
-<p>server.key、服务器证书server.crt、颁布者CA自己的证书。请将server.key和server.crt部署在服务器。客户端的公共root.crt可从 libcurl网站获取最新的pem</p>
-<p>文件，此文件含有目前世界已知所有CA的证书，将此文件改名为root.crt，并部署在客户端的$appdata/postgresql目录下，若在sslmode=verify-ca模式登陆</p>
-<p>失败，可能是颁布者CA的证书不含在root.crt里，可将颁布者CA的证书连接到root.crt（文本格式可编辑），也可连接到部署在服务器的服务器证书</p>
-<p>server.crt，建议后者。</p>
-</li>
-</ul>
-<h3 id="PostgreSQL支持的SSL模式？"><a href="#PostgreSQL支持的SSL模式？" class="headerlink" title="PostgreSQL支持的SSL模式？"></a>PostgreSQL支持的SSL模式？</h3><ul>
-<li>disable: 只尝试非SSL连接。</li>
-<li>allow：首先尝试非SSL连接，若失败再尝试SSL连接。</li>
-<li>prefer (default)：首先尝试SSL连接，若失败再尝试非SSL连接。</li>
-<li>require：只尝试SSL连接，若有根证书存在，等同于verify-ca。</li>
-<li>verify-ca：只尝试SSL连接，并用根证书验证服务器证书是不是根CA签发的。</li>
-<li>verify-full：只尝试SSL连接，并用根证书验证服务器证书是不是根CA签发的，且主题必须匹配连接域名或IP地址。</li>
-</ul>
-<h3 id="使用opsnessl生成密钥和自签名证书"><a href="#使用opsnessl生成密钥和自签名证书" class="headerlink" title="使用opsnessl生成密钥和自签名证书"></a>使用opsnessl生成密钥和自签名证书</h3><p>生成一个有效期365天的简单自签名证书</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 cert<span class="token punctuation">]</span>$ openssl req -new -x509 -days 365 -nodes -text -out server.crt -keyout server.key -subj <span class="token string">"/CN=host"</span>
-Generating a 2048 bit RSA private key
-<span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span>+++
-<span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span><span class="token punctuation">..</span>.+++
-writing new private key to <span class="token string">'server.key'</span>
------
-<span class="token punctuation">[</span>pg96@jinli81 cert<span class="token punctuation">]</span>$ ll
-total 8
--rw-rw-r-- 1 pg96 pg96 4042 Mar 22 23:18 server.crt
--rw-rw-r-- 1 pg96 pg96 1708 Mar 22 23:18 server.key
-</code></pre>
-<p>openssl req 参数说明：</p>
-<ul>
-<li>-new：创建一个证书请求文件，会交互式提醒输入一些信息，这些交互选项以及交互选项信息的长度值以及其他一些扩展属性在配置文件(默认为openssl.cnf，还有些辅助配置文件)中指定了默认值。如果没有指定”-key”选项，则会自动生成一个RSA私钥，该私钥的生成位置也在openssl.cnf中指定了。</li>
-<li>-x509：指定该选项时，将生成一个自签署证书，而不是创建证书请求。一般用于测试或者为根CA创建自签名证书。X509一般是指X.509。X.509是密码学里公钥证书的格式标准, 规定了数字证书的格式。X.509证书含有公钥和标识（主机名、组织或个人），并由证书颁发机构（CA）签名（或自签名）。对于一份经由可信的证书签发机构签名（或者可以通过其它方式验证）的证书，证书的拥有者就可以用证书及相应的私钥来创建安全的通信，以及对文档进行数字签名。</li>
-<li>-days n：指定自签名证书的有效期限，默认30天，需要和”-x509”一起使用。</li>
-<li>-nodes ：默认情况下，openssl req自动创建私钥时都要求加密并提示输入加密密码，指定该选项后则禁止对私钥文件加密。</li>
-<li>-text：以文本格式打印证书请求。</li>
-<li>-out filename：证书请求或自签署证书的输出文件，也可以是其他内容的输出文件，不指定时默认stdout。</li>
-<li>-keyout filename：指定自动创建私钥时私钥的存放位置，若未指定该选项，则使用配置文件中default_keyfile指定的值，默认该值为privkey.pem。</li>
-<li>-subj args：替换或自定义证书请求时需要输入的信息，并输出修改后的请求信息。args的格式为”/type0=value0/type1=value1…”，如果value为空，则表示使用配置文件中指定的默认值，如果value值为”.”，则表示该项留空。其中可识别type(man req)有：C是Country、ST是state、L是localcity、O是Organization、OU是Organization Unit、CN是common name等。</li>
-</ul>
-<p>修改权限</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 cert<span class="token punctuation">]</span>$ <span class="token function">chmod</span> 600 server.*
-<span class="token punctuation">[</span>pg96@jinli81 cert<span class="token punctuation">]</span>$ ll
-total 8
--rw------- 1 pg96 pg96 4042 Mar 22 23:18 server.crt
--rw------- 1 pg96 pg96 1708 Mar 22 23:18 server.key
-</code></pre>
-<p>复制认证文件到数据目录下</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 cert<span class="token punctuation">]</span>$ <span class="token function">cp</span> server.* <span class="token variable">$PGDATA</span>
-</code></pre>
-<p>配置postgres.conf和pg_hba.conf文件</p>
-<p>修改postgresql.conf</p>
-<pre class=" language-bash"><code class="language-bash">ssl<span class="token operator">=</span>on                      <span class="token comment" spellcheck="true"># 是否支持SSL连接。默认是关闭的。</span>
-ssl_cert_file<span class="token operator">=</span><span class="token string">'server.crt'</span>  <span class="token comment" spellcheck="true"># 指定包含SSL服务器证书的文件的名称。</span>
-ssl_key_file<span class="token operator">=</span><span class="token string">'server.key'</span>   <span class="token comment" spellcheck="true"># 指定包含SSL服务器私钥的文件的名称。</span>
-<span class="token comment" spellcheck="true">#ssl_ca_file 是用在客户端SSL认证上，服务端的SSL验证和此参数无关</span>
-</code></pre>
-<p>修改pg_hba.conf，新增ssl认证连接规则</p>
-<pre class=" language-bash"><code class="language-bash">hostnossl all all 0.0.0.0/0 reject
-hostssl all all 0.0.0.0/0 md5
-</code></pre>
-<p>将ssl设置为on，即表示打开ssl。SSL打开后，此时服务器将侦听同一TCP端口上的正常连接和SSL连接，并与任何连接客户机协商是否使用SSL。</p>
-<p>重启数据库，连接数据库可以看到ssl生效</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 ~<span class="token punctuation">]</span>$ psql <span class="token string">"host=192.168.138.81 dbname=postgres port=5432 user=pg96 password=postgresql@123"</span>
-psql <span class="token punctuation">(</span>9.6.24<span class="token punctuation">)</span>
-SSL connection <span class="token punctuation">(</span>protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: off<span class="token punctuation">)</span>
-Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+<p>ChromeDriver的安装</p>
+<p>版本查看浏览器输入：<strong>chrome://version/</strong></p>
+<p>下载谷歌浏览器对应版本ChromeDriver驱动，并复制到Python的Scripts目录下。</p>
+<p>ChromeDriver淘宝镜像：<a target="_blank" rel="noopener" href="http://npm.taobao.org/mirrors/chromedriver/">http://npm.taobao.org/mirrors/chromedriver/</a></p>
+<h4 id="2-声明浏览器对象"><a href="#2-声明浏览器对象" class="headerlink" title="2. 声明浏览器对象"></a>2. 声明浏览器对象</h4><p>支持Chrome、Firefox、Edge等。</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
-postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \q</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Firefox<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Edge<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>PhantomJS<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Safari<span class="token punctuation">(</span><span class="token punctuation">)</span>
 </code></pre>
-<p>注意：</p>
-<p>要在SSL模式下启动，必须包含服务器证书和私钥的文件。默认情况下，这些文件将被命名为server.crt和server.key。但是可以使用配置参数ssl_cert_file和ssl_key_file指定其他名称和位置。</p>
-<p>配置了SSL=on，并不代表会确保所有客户端总是通过SSL连接, 它只是表示允许使用SSL。如果想要确保所有连接都是用ssl, 还需要结合pg_hba.conf进行配置。比</p>
-<p>如添加类似“hostssl   all all 0.0.0.0/0 md5 hostnossl all all 0.0.0.0/0 reject” 这样的配置。</p>
-<h3 id="SSL双向认证和SSL单向认证的区别："><a href="#SSL双向认证和SSL单向认证的区别：" class="headerlink" title="SSL双向认证和SSL单向认证的区别："></a>SSL双向认证和SSL单向认证的区别：</h3><p>双向认证 SSL 协议要求服务器和用户双方都有证书。单向认证 SSL 协议不需要客户拥有CA证书，服务器端不会验证客户证书，以及在协商对称密码方案，对称通话密钥时，服务器发送给客户的是没有加过密的(这并不影响 SSL 过程的安全性)密码方案。这样，双方具体的通讯内容，都是加过密的数据，如果有第三方攻击，获得的只是加密的数据，第三方要获得有用的信息，就需要对加密的数据进行解密，这时候的安全就依赖于密码方案的安全。而幸运的是，目前所用的密码方案，只要通讯密钥长度足够的长，就足够的安全。这也是我们强调要求使用128位加密通讯的原因。</p>
-<p>一般Web应用都是采用SSL单向认证的，原因很简单，用户数目广泛，且无需在通讯层对用户身份进行验证，一般都在应用逻辑层来保证用户的合法登入。但如果是企业应用对接，情况就不一样，可能会要求对客户端(相对而言)做身份验证。这时就需要做SSL双向认证。由于单向认证和双向认证的区别仅在于创建连接阶段，数据的传输均为加密的，因此客户端与PG服务端的连接采取SSL单向认证即可，即仅在PG Server端配置SSL证书。</p>
-<h3 id="postgresql开启双向ssl认证"><a href="#postgresql开启双向ssl认证" class="headerlink" title="postgresql开启双向ssl认证"></a>postgresql开启双向ssl认证</h3><p>服务器端需生成三个文件: root.crt(根证书)、server.crt(服务器证书)、server.key(服务器私钥)</p>
-<h3 id="ssl证书制作"><a href="#ssl证书制作" class="headerlink" title="ssl证书制作"></a>ssl证书制作</h3><p>1，搭建CA环境</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> <span class="token function">test</span>
-<span class="token function">cd</span> <span class="token function">test</span>
-<span class="token comment" spellcheck="true"># 将配置文件拷贝到test</span>
-<span class="token function">cp</span> `openssl version -d <span class="token operator">|</span> <span class="token function">awk</span> -F <span class="token string">'"'</span> <span class="token string">'&amp;#123;print <span class="token variable">$2</span>&amp;#125;'</span>`/openssl.cnf <span class="token keyword">.</span>
-<span class="token comment" spellcheck="true"># 创建文件夹demoCA./demoCA/newcerts./demoCA/private</span>
-<span class="token function">mkdir</span> ./demoCA ./demoCA/newcerts ./demoCA/private
-<span class="token comment" spellcheck="true"># 创建serial文件,写入01</span>
-<span class="token keyword">echo</span> <span class="token string">'01'</span> <span class="token operator">></span> demoCA/serial
-<span class="token comment" spellcheck="true"># --创建文件index.txt</span>
-<span class="token function">touch</span> demoCA/index.txt
-<span class="token comment" spellcheck="true"># 修改openssl.cnf配置文件中的参数</span>
-<span class="token function">dir</span> <span class="token operator">=</span> ./demoCA
-default_md <span class="token operator">=</span> sha256
-</code></pre>
-<p>2，生成根私钥和证书</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成根私钥</span>
-openssl genrsa -aes256 -passout pass:postgresql@123 -out demoCA/private/cakey.pem 2048
-<span class="token comment" spellcheck="true"># 生成根证书请求文件</span>
-openssl req -config openssl.cnf -passin pass:postgresql@123 -new -key demoCA/private/cakey.pem -out demoCA/careq.pem -subj <span class="token string">"/C=CN/ST=Shanxi/L=Xian/O=test/OU=test/CN=localhost"</span>
-<span class="token comment" spellcheck="true"># 修改openssl.cnf</span>
-basicConstraints<span class="token operator">=</span>CA:TRUE
-<span class="token comment" spellcheck="true"># 生成自签发根证书</span>
-openssl ca -config openssl.cnf -out demoCA/cacert.pem -passin pass:postgresql@123 -keyfile demoCA/private/cakey.pem -selfsign -infiles demoCA/careq.pem
-</code></pre>
-<p>3，生成服务端私钥和证书</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成服务端私钥</span>
-openssl genrsa -aes256 -passout pass:postgresql@123 -out server.key 2048
-<span class="token comment" spellcheck="true"># 生成服务端证书请求文件</span>
-openssl req -config openssl.cnf -passin pass:postgresql@123 -new -key server.key -out server.req -subj <span class="token string">"/C=CN/ST=Shanxi/L=Xian/O=test/OU=test/CN=localhost"</span>
-<span class="token comment" spellcheck="true"># 修改openssl.cnf</span>
-basicConstraints<span class="token operator">=</span>CA:FALSE
-<span class="token comment" spellcheck="true"># 修改demoCA/index.txt.attr中属性为no</span>
-unique_subject <span class="token operator">=</span> no
-<span class="token comment" spellcheck="true"># 生成服务端证书</span>
-openssl ca -config openssl.cnf -passin pass:postgresql@123 -in server.req -out server.crt -days 3650 -md sha256
-<span class="token comment" spellcheck="true"># 去掉服务端私钥的密码保护</span>
-openssl rsa -in server.key -out server.key <span class="token comment" spellcheck="true"># RSA证书</span>
-</code></pre>
-<p>4，生成客户端私钥和证书</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成客户端私钥</span>
-openssl genrsa -aes256 -passout pass:postgresql@123 -out client.key 2048
-<span class="token comment" spellcheck="true"># 生成客户端证书请求文件</span>
-openssl req -config openssl.cnf -passin pass:postgresql@123 -new -key client.key -out client.req -subj <span class="token string">"/C=CN/ST=Shanxi/L=Xian/O=test/OU=test/CN=pg96"</span>
-<span class="token comment" spellcheck="true"># 生成客户端证书</span>
-openssl ca -config openssl.cnf -passin pass:postgresql@123 -in client.req -out client.crt -days 3650 -md sha256
-<span class="token comment" spellcheck="true"># 去掉客户端私钥的密码保护</span>
-openssl rsa -in client.key -out client.key <span class="token comment" spellcheck="true"># RSA证书</span>
-</code></pre>
-<p>把相关证书拷贝到服务端</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">chmod</span> 600 server.* client.* demoCA/cacert.pem
-<span class="token function">cp</span> server.* client.* demoCA/cacert.pem <span class="token variable">$PGDATA</span>
-</code></pre>
-<p>修改配置文件</p>
-<p>–修改postgresql.conf</p>
-<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">ssl</span><span class="token punctuation">=</span><span class="token attr-value">on</span>
-<span class="token attr-name">ssl_cert_file</span><span class="token punctuation">=</span><span class="token attr-value">'server.crt'</span>
-<span class="token attr-name">ssl_key_file</span><span class="token punctuation">=</span><span class="token attr-value">'server.key'</span>
-<span class="token attr-name">ssl_ca_file</span><span class="token punctuation">=</span><span class="token attr-value">'cacert.pem'</span>
-</code></pre>
-<p>–修改pg_hba.conf </p>
-<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">hostnossl</span> <span class="token attr-value">all all 0.0.0.0/0 reject</span>
-<span class="token attr-name">hostssl</span> <span class="token attr-value">all all 0.0.0.0/0 cert</span>
-</code></pre>
-<p>postgresql.conf增加ssl_ca_file</p>
-<p>pg_hba.conf认证模式改成cert并且是hostssl连接</p>
-<p>把相关证书拷贝到客户端路径</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">cp</span> client.crt client.key demoCA/cacert.pem /home/pg96
-</code></pre>
-<p>配置客户端ssl连接</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">cat</span> ~/.bashrc
-<span class="token function">export</span> PGSSLCERT<span class="token operator">=</span><span class="token string">"/home/pg96/client.crt"</span>
-<span class="token function">export</span> PGSSLKEY<span class="token operator">=</span><span class="token string">"/home/pg96/client.key"</span>
-<span class="token function">export</span> PGSSLMODE<span class="token operator">=</span><span class="token string">"verify-ca"</span>
-<span class="token function">export</span> PGSSLROOTCERT<span class="token operator">=</span><span class="token string">"/home/pg96/cacert.pem"</span>
-</code></pre>
-<p>source使生效</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">source</span> ~/.bashrc
-</code></pre>
-<p>重启数据库</p>
-<pre class=" language-bah"><code class="language-bah">pg_ctl restart -mi
-</code></pre>
-<p>客户端连接</p>
-<p>1 使用证书连接，不需要密码</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 test<span class="token punctuation">]</span>$ psql <span class="token string">"host=192.168.138.81 dbname=postgres port=5432 user=pg96 sslmode=verify-ca"</span>
-psql <span class="token punctuation">(</span>9.6.24<span class="token punctuation">)</span>
-SSL connection <span class="token punctuation">(</span>protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: off<span class="token punctuation">)</span>
-Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+<h4 id="3-访问页面"><a href="#3-访问页面" class="headerlink" title="3. 访问页面"></a>3. 访问页面</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
 
-postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \q</span>
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
 </code></pre>
-<p>2 使用证书外用户连接会失败</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 test<span class="token punctuation">]</span>$ psql <span class="token string">"host=192.168.138.81 dbname=postgres port=5432 user=test sslmode=verify-ca"</span>
-LOG:  provided user name <span class="token punctuation">(</span>test<span class="token punctuation">)</span> and authenticated user name <span class="token punctuation">(</span>pg96<span class="token punctuation">)</span> <span class="token keyword">do</span> not match
-FATAL:  certificate authentication failed <span class="token keyword">for</span> user <span class="token string">"test"</span>
-DETAIL:  Connection matched pg_hba.conf line 87: <span class="token string">"hostssl all all 0.0.0.0/0 cert"</span>
-psql: FATAL:  certificate authentication failed <span class="token keyword">for</span> user <span class="token string">"test"</span>
+<h4 id="4-查找结点"><a href="#4-查找结点" class="headerlink" title="4. 查找结点"></a>4. 查找结点</h4><p>单个节点</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过id来定位，但有的标签可能没有id属性</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过name属性来定位，元素可能不唯一</span>
+browser<span class="token punctuation">.</span>find_element_by_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 使用绝对或相对路径来定位元素，个人觉得这个好用，万能的</span>
+browser<span class="token punctuation">.</span>find_element_by_xpath<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 使用文本定位</span>
+browser<span class="token punctuation">.</span>find_element_by_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 通过文本的一部分文本来定位</span>
+browser<span class="token punctuation">.</span>find_element_by_partial_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element_by_tag_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 用来关联 CSS 中定义的属性</span>
+browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element_by_css_selector<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_element<span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
 </code></pre>
-<p>3 没有证书情况下，提示需要ca证书来连接</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg96@jinli81 ~<span class="token punctuation">]</span>$ psql <span class="token string">"host=192.168.138.81 dbname=postgres port=5432 user=pg96"</span>
-psql: root certificate <span class="token function">file</span> <span class="token string">"/home/pg96/cacert.pem"</span> does not exist
-Either provide the <span class="token function">file</span> or change sslmode to disable server certificate verification.
-LOG:  could not accept SSL connection: EOF detected
+<p>多个节点，返回相似的元素列表</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_xpath<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_partial_link_text<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_tag_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>find_elements<span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">'q'</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="5-节点交互"><a href="#5-节点交互" class="headerlink" title="5. 节点交互"></a><strong>5. 节点交互</strong></h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 文本框的输入</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>send_keys<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 文本框的清空</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>clear<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 节点的点击</span>
+browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>click<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="6-动作链"><a href="#6-动作链" class="headerlink" title="6. 动作链"></a>6. 动作链</h4><p>鼠标拖拽、键盘按键等操作。</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver <span class="token keyword">import</span> ActionChains
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+action <span class="token operator">=</span> ActionChains<span class="token punctuation">(</span>browser<span class="token punctuation">)</span>
+source <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">'#a'</span><span class="token punctuation">)</span>
+target <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_elements_by_css_selector<span class="token punctuation">(</span><span class="token string">'#b'</span><span class="token punctuation">)</span>
+action<span class="token punctuation">.</span>drag_and_drop<span class="token punctuation">(</span>source<span class="token punctuation">,</span>target<span class="token punctuation">)</span>
+action<span class="token punctuation">.</span>perform<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="7-执行JavaScript"><a href="#7-执行JavaScript" class="headerlink" title="7. 执行JavaScript"></a>7. 执行JavaScript</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 向下滑动</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'var q=document.documentElement.scrollTop=&amp;#123;&amp;#125;'</span><span class="token operator">%</span><span class="token number">100000</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'alert("弹出框")'</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="8-获取节点信息"><a href="#8-获取节点信息" class="headerlink" title="8. 获取节点信息"></a>8. 获取节点信息</h4><p>获取网页源代码</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>page_source<span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>获取属性</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+value <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>get_attribute<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+</code></pre>
+<p>获取文本值</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+value <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>text
+</code></pre>
+<p>获取id、位置、标签名和大小</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+input <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>id<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>location<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>tag_name<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">.</span>size<span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="9-切换frame"><a href="#9-切换frame" class="headerlink" title="9. 切换frame"></a>9. 切换frame</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到子页面</span>
+browser<span class="token punctuation">.</span>switch_to<span class="token punctuation">.</span>frame<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+logo <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到父级frame</span>
+browser<span class="token punctuation">.</span>switch_to<span class="token punctuation">.</span>parent_frame<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+logo <span class="token operator">=</span> browser<span class="token punctuation">.</span>find_element_by_class_name<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="10-延时等待"><a href="#10-延时等待" class="headerlink" title="10. 延时等待"></a>10. 延时等待</h4><p>强制等待</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true">#等待2秒</span>
+sleep<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>
+</code></pre>
+<p>隐式等待</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 如果未找到节点，则等待超时后继续查找，还未找到将抛异常</span>
+browser<span class="token punctuation">.</span>implicitly_wait<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span>
+</code></pre>
+<p>显示等待</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>common<span class="token punctuation">.</span>by <span class="token keyword">import</span> By
+<span class="token comment" spellcheck="true"># 指定最长等待时间，然后调用until()方法，结合expected_conditions条件使用</span>
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>support<span class="token punctuation">.</span>ui <span class="token keyword">import</span> WebDriverWait
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>webdriver<span class="token punctuation">.</span>support <span class="token keyword">import</span> expected_conditions <span class="token keyword">as</span> EC
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 设置节点的最长等待时间</span>
+wait <span class="token operator">=</span> WebDriverWait<span class="token punctuation">(</span>browser<span class="token punctuation">,</span><span class="token number">10</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 下面presence_of_element_located代表id表节点出现的意思</span>
+input <span class="token operator">=</span> wait<span class="token punctuation">.</span>until<span class="token punctuation">(</span>EC<span class="token punctuation">.</span>presence_of_element_located<span class="token punctuation">(</span><span class="token punctuation">(</span>By<span class="token punctuation">.</span>ID<span class="token punctuation">,</span><span class="token string">'q'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 下面element_to_be_clickable代表css出来后按钮可点击的意思</span>
+button <span class="token operator">=</span> wait<span class="token punctuation">.</span>until<span class="token punctuation">(</span>EC<span class="token punctuation">.</span>element_to_be_clickable<span class="token punctuation">(</span><span class="token punctuation">(</span>By<span class="token punctuation">.</span>CSS_SELECTOR<span class="token punctuation">,</span><span class="token string">'.btn-search'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>input<span class="token punctuation">,</span>button<span class="token punctuation">)</span>
+</code></pre>
+<h4 id="11-前进和后退"><a href="#11-前进和后退" class="headerlink" title="11. 前进和后退"></a>11. 前进和后退</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com/'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.taobao.com/'</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 后退</span>
+browser<span class="token punctuation">.</span>back<span class="token punctuation">(</span><span class="token punctuation">)</span>
+sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 前进</span>
+browser<span class="token punctuation">.</span>forward<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="12-Cookies"><a href="#12-Cookies" class="headerlink" title="12. Cookies"></a>12. Cookies</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.zhihu.com/explore'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>add_cookie<span class="token punctuation">(</span><span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;'name':'name','domain':'www.zhihu.com','value':'germey'&amp;#125;)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>delete_all_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>get_cookies<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="13-选项卡管理"><a href="#13-选项卡管理" class="headerlink" title="13. 选项卡管理"></a>13. 选项卡管理</h4><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> time <span class="token keyword">import</span> sleep
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 打开新选项卡</span>
+browser<span class="token punctuation">.</span>execute_script<span class="token punctuation">(</span><span class="token string">'window.open()'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到新的选项卡</span>
+browser<span class="token punctuation">.</span>switch_to_window<span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.google.com'</span><span class="token punctuation">)</span>
+sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 切换到开始的选项卡</span>
+browser<span class="token punctuation">.</span>switch_to_window<span class="token punctuation">(</span>browser<span class="token punctuation">.</span>window_handles<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://python.org'</span><span class="token punctuation">)</span>
+browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="14-异常处理"><a href="#14-异常处理" class="headerlink" title="14. 异常处理"></a>14. 异常处理</h4><p>使用过程中难免遇到异常，如超时、节点未找到等错误，一旦出现异常程序会退出运行。因此需要捕获异常。</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> selenium <span class="token keyword">import</span> webdriver
+<span class="token keyword">from</span> selenium<span class="token punctuation">.</span>common<span class="token punctuation">.</span>exceptions <span class="token keyword">import</span> TimeoutException<span class="token punctuation">,</span>NoSuchElementException
+
+browser <span class="token operator">=</span> webdriver<span class="token punctuation">.</span>Chrome<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'https://www.baidu.com'</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> TimeoutException<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Time Out'</span><span class="token punctuation">)</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>find_element_by_id<span class="token punctuation">(</span><span class="token string">'hello'</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> NoSuchElementException<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'No Element'</span><span class="token punctuation">)</span>
+<span class="token keyword">finally</span><span class="token punctuation">:</span>
+    browser<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
 </code></pre>
 
                 
@@ -733,7 +728,7 @@ LOG:  could not accept SSL connection: EOF detected
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2021/07/11/postgresql%E4%BD%BF%E7%94%A8ssl%E8%BF%9E%E6%8E%A5/">https://jinlid.github.io/2021/07/11/postgresql%E4%BD%BF%E7%94%A8ssl%E8%BF%9E%E6%8E%A5/</a>
+                    <a href="https://jinlid.github.io/2020/12/15/selenium%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/">https://jinlid.github.io/2020/12/15/selenium%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -771,8 +766,8 @@ LOG:  could not accept SSL connection: EOF detected
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/postgresql/">
-                                    <span class="chip bg-color">postgresql</span>
+                                <a href="/tags/python/">
+                                    <span class="chip bg-color">python</span>
                                 </a>
                             
                         </div>
@@ -997,7 +992,7 @@ LOG:  could not accept SSL connection: EOF detected
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/07/11/%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85pg9.6/">
+                <a href="/2020/09/11/%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85pg9.6/">
                     <div class="card-image">
                         
                         
@@ -1014,7 +1009,7 @@ LOG:  could not accept SSL connection: EOF detected
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-07-11
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-09-11
                             </span>
                         <span class="publish-author">
                             
