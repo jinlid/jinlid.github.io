@@ -6,7 +6,7 @@
   <link href="https://jinlid.github.io/atom.xml" rel="self"/>
   
   <link href="https://jinlid.github.io/"/>
-  <updated>2022-03-17T17:05:04.098Z</updated>
+  <updated>2022-05-06T16:42:19.201Z</updated>
   <id>https://jinlid.github.io/</id>
   
   <author>
@@ -17,11 +17,30 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>iptables介绍及常用命令</title>
+    <link href="https://jinlid.github.io/2022/03/28/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
+    <id>https://jinlid.github.io/2022/03/28/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</id>
+    <published>2022-03-27T16:00:00.000Z</published>
+    <updated>2022-05-06T16:42:19.201Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="操作系统" scheme="https://jinlid.github.io/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+    
+    <category term="iptables" scheme="https://jinlid.github.io/tags/iptables/"/>
+    
+  </entry>
+  
+  <entry>
     <title>pyautogui模块的使用</title>
     <link href="https://jinlid.github.io/2022/03/18/pyautogui%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
     <id>https://jinlid.github.io/2022/03/18/pyautogui%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
     <published>2022-03-17T16:00:00.000Z</published>
-    <updated>2022-03-17T17:05:04.098Z</updated>
+    <updated>2022-05-06T16:21:25.350Z</updated>
     
     
     <summary type="html">&lt;p&gt;PyAutoGUI是一个纯Python的GUI自动化工具，其目的是可以用程序自动控制鼠标和键盘操作，多平台支持（Windows，OS X，Linux）。&lt;/p&gt;</summary>
@@ -40,7 +59,7 @@
     <link href="https://jinlid.github.io/2022/03/11/postgresql%E4%BD%BF%E7%94%A8ssl%E8%BF%9E%E6%8E%A5/"/>
     <id>https://jinlid.github.io/2022/03/11/postgresql%E4%BD%BF%E7%94%A8ssl%E8%BF%9E%E6%8E%A5/</id>
     <published>2022-03-10T16:00:00.000Z</published>
-    <updated>2022-03-24T11:51:22.945Z</updated>
+    <updated>2022-05-06T16:21:37.718Z</updated>
     
     
     <summary type="html">&lt;h3 id=&quot;PostgreSQL的SSL连接分两块&quot;&gt;&lt;a href=&quot;#PostgreSQL的SSL连接分两块&quot; class=&quot;headerlink&quot; title=&quot;PostgreSQL的SSL连接分两块&quot;&gt;&lt;/a&gt;PostgreSQL的SSL连接分两块&lt;/h3&gt;&lt;p&gt;1、服务端的SSL验证：用SSL连接代替明文连接以防止网络包被窃听和防止他人伪装成服务器。 2、客户端的SSL验证：用客户端SSL证书登录代替密码登录。&lt;/p&gt;
@@ -60,7 +79,7 @@
     <link href="https://jinlid.github.io/2022/03/01/stats%20collector%E8%BF%9B%E7%A8%8B/"/>
     <id>https://jinlid.github.io/2022/03/01/stats%20collector%E8%BF%9B%E7%A8%8B/</id>
     <published>2022-02-28T16:00:00.000Z</published>
-    <updated>2022-03-24T11:48:34.140Z</updated>
+    <updated>2022-05-06T16:20:59.440Z</updated>
     
     
     <summary type="html">&lt;p&gt;了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据库级别或者事务级别或者会话级别的活动信息统计，历史数据库活动统计报告。&lt;/p&gt;</summary>
@@ -79,7 +98,7 @@
     <link href="https://jinlid.github.io/2022/02/01/autovacuum%E8%BF%9B%E7%A8%8B/"/>
     <id>https://jinlid.github.io/2022/02/01/autovacuum%E8%BF%9B%E7%A8%8B/</id>
     <published>2022-01-31T16:00:00.000Z</published>
-    <updated>2022-03-24T11:49:37.982Z</updated>
+    <updated>2022-05-06T16:35:56.843Z</updated>
     
     
     <summary type="html">&lt;p&gt;autovacuum 是 postgresql 里非常重要的一个服务端进程，能够自动地执行，在一定条件下自动地对 dead tuples 进行清理并对表进行分析。&lt;/p&gt;</summary>
@@ -98,7 +117,7 @@
     <link href="https://jinlid.github.io/2022/01/01/pg%E8%BF%90%E7%BB%B4%E5%91%BD%E4%BB%A4%E6%80%BB%E7%BB%93/"/>
     <id>https://jinlid.github.io/2022/01/01/pg%E8%BF%90%E7%BB%B4%E5%91%BD%E4%BB%A4%E6%80%BB%E7%BB%93/</id>
     <published>2021-12-31T16:00:00.000Z</published>
-    <updated>2022-03-24T15:47:52.103Z</updated>
+    <updated>2022-05-06T16:21:49.838Z</updated>
     
     
       
@@ -125,7 +144,7 @@
     <link href="https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/"/>
     <id>https://jinlid.github.io/2021/09/15/Python%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97/</id>
     <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-03-14T15:04:53.486Z</updated>
+    <updated>2022-05-06T16:21:15.828Z</updated>
     
     
     <summary type="html">&lt;p&gt;Python 模块(Module)，是一个 Python 文件，以 .py 结尾，包含了 Python 对象定义和Python语句。模块让你能够有逻辑地组织你的 Python 代码段。把相关的代码分配到一个模块里能让你的代码更好用，更易懂。模块能定义函数，类和变量，模块里也能包含可执行的代码。&lt;/p&gt;</summary>
@@ -140,23 +159,27 @@
   </entry>
   
   <entry>
-    <title>Django开发</title>
-    <link href="https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/"/>
-    <id>https://jinlid.github.io/2021/09/15/Django%E5%BC%80%E5%8F%91/</id>
-    <published>2021-09-14T16:00:00.000Z</published>
-    <updated>2022-03-14T15:08:53.231Z</updated>
+    <title>Linux网络命令</title>
+    <link href="https://jinlid.github.io/2021/09/14/Linux%E7%BD%91%E7%BB%9C%E5%91%BD%E4%BB%A4/"/>
+    <id>https://jinlid.github.io/2021/09/14/Linux%E7%BD%91%E7%BB%9C%E5%91%BD%E4%BB%A4/</id>
+    <published>2021-09-13T16:00:00.000Z</published>
+    <updated>2022-05-06T16:40:02.940Z</updated>
     
     
-    <summary type="html">&lt;p&gt;Django作为Web框架，需要一种很便利得方法动态地生成HTML网页，因此有了模板这个概念。模板包含所需HTML的部分代码以及一些特殊语法，特殊语法用于描述如何将视图传递的数据动态插入HTML网页中。&lt;/p&gt;</summary>
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Linux网络命令&quot;&gt;&lt;a href=&quot;#Linux网络命令&quot; class=&quot;headerlink&quot; title=&quot;Linux网络命令&quot;&gt;&lt;/a&gt;Linux网络命令&lt;/h1&gt;&lt;h3 id=&quot;1-配置IP地址&quot;&gt;&lt;a href=&quot;#1-配置IP地址&quot;</summary>
+        
+      
     
     
     
-    <category term="开发语言" scheme="https://jinlid.github.io/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/"/>
+    <category term="Linux" scheme="https://jinlid.github.io/categories/Linux/"/>
     
     
-    <category term="python" scheme="https://jinlid.github.io/tags/python/"/>
-    
-    <category term="Django" scheme="https://jinlid.github.io/tags/Django/"/>
+    <category term="网络" scheme="https://jinlid.github.io/tags/%E7%BD%91%E7%BB%9C/"/>
     
   </entry>
   
@@ -165,7 +188,7 @@
     <link href="https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
     <id>https://jinlid.github.io/2021/08/13/Docker%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</id>
     <published>2021-08-12T16:00:00.000Z</published>
-    <updated>2022-03-14T15:12:34.021Z</updated>
+    <updated>2022-05-06T16:47:42.756Z</updated>
     
     
     <summary type="html">&lt;p&gt;Docker简介 Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中,然后发布到任何流行的Linux或Windows操作系统的机器上,也可以实现虚拟化,容器是完全使用沙箱机制,相互之间不会有任何接口。&lt;/p&gt;</summary>
@@ -184,7 +207,7 @@
     <link href="https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/"/>
     <id>https://jinlid.github.io/2021/08/13/%E4%B8%80%E6%96%87%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8pip/</id>
     <published>2021-08-12T16:00:00.000Z</published>
-    <updated>2022-03-24T11:50:35.746Z</updated>
+    <updated>2022-05-06T16:19:46.133Z</updated>
     
     
     <summary type="html">&lt;p&gt;pip的全称：package installer for python，是 Python包管理工具，该工具提供了对Python包的查找、下载、安装、卸载的功能。&lt;/p&gt;
@@ -204,7 +227,7 @@
     <link href="https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/"/>
     <id>https://jinlid.github.io/2021/07/11/PgBouncer%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%B7%A5%E5%85%B7/</id>
     <published>2021-07-10T16:00:00.000Z</published>
-    <updated>2022-03-14T14:57:25.013Z</updated>
+    <updated>2022-05-06T16:38:34.329Z</updated>
     
     
     <summary type="html">&lt;p&gt;PgBouncer是为PostgreSQL提供的轻量级连接池工具，作用如下：&lt;br&gt;1，能够缓存和PostgreSQL的连接，当有连接请求进来的时候，直接分配空闲进程，而不需要PostgreSQL fork出新进程来建立连接，以节省创建新进程，创建连接的资源消耗。&lt;br&gt;2，能够有效提高连接的利用率，避免过多的无效连接，导致数据库消耗资源过大，CPU占用过高。&lt;br&gt;3，对客户端连接进行限制，预防过多或恶意的连接请求。&lt;/p&gt;</summary>
@@ -223,7 +246,7 @@
     <link href="https://jinlid.github.io/2020/12/15/selenium%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
     <id>https://jinlid.github.io/2020/12/15/selenium%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
     <published>2020-12-14T16:00:00.000Z</published>
-    <updated>2022-03-24T11:48:56.854Z</updated>
+    <updated>2022-05-06T16:21:05.785Z</updated>
     
     
     <summary type="html">&lt;p&gt;selenium是一个自动化测试工具，利用它可以驱动浏览器执行特定的动作，如点击、下拉等操作，同时还可以获取浏览器当前呈现的页面的源代码，做到可见即可爬。对于一些Javascript动态渲染的页面来说，此种抓取方式非常有效。&lt;/p&gt;</summary>
@@ -242,7 +265,7 @@
     <link href="https://jinlid.github.io/2020/09/11/%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85pg9.6/"/>
     <id>https://jinlid.github.io/2020/09/11/%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85pg9.6/</id>
     <published>2020-09-10T16:00:00.000Z</published>
-    <updated>2022-03-24T11:49:51.696Z</updated>
+    <updated>2022-05-06T16:19:51.574Z</updated>
     
     
       

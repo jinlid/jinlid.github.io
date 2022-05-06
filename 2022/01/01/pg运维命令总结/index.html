@@ -647,14 +647,48 @@ help –总的帮助 
 <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> total_bytes <span class="token keyword">DESC</span><span class="token punctuation">)</span> <span class="token number">a</span><span class="token punctuation">;</span>
 </code></pre>
 </li>
-<li>查看超过1GB的表或者索引大小<br>```sql</li>
-<li>-表<br>select schemaname,relname,size from(<br>select split_part(pg_ls_dir(relation_path),’.’,1) as relid,count(1)-1 as size from (<br>select replace(PG_RELATION_FILEPATH(relid),reverse(split_part(reverse(PG_RELATION_FILEPATH(relid)),’/‘,1)),’’) as relation_path<br>from pg_stat_user_tables group by 1<br>)z<br>group by 1<br>having count(1) &gt; 1<br>)x,pg_stat_user_tables y<br>where x.relid::oid = pg_relation_filenode(y.relid)<br>order by size desc;</li>
+<li>查看超过1GB的表包含索引的大小</li>
 </ul>
-<p>–表、索引<br>select relname,<br>case relkind<br>when ‘r’ then ‘table’<br>when ‘i’ then ‘index’<br>when ‘t’ then ‘toast’<br>end as relkind,<br>size||’GB+’ as size from(<br>select split_part(pg_ls_dir(relation_path),’.’,1) as relid,count(1)-1 as size from (<br>select replace(PG_RELATION_FILEPATH(relid),reverse(split_part(reverse(PG_RELATION_FILEPATH(relid)),’/‘,1)),’’) as relation_path<br>from pg_stat_user_tables group by 1<br>)z<br>group by 1<br>having count(1) &gt; 1<br>)x,pg_class y<br>where x.relid::oid = y.relfilenode<br>order by size desc;</p>
-<p>–文件<br>ll $PGDATA/base/13324/*.[0-9] |awk -F ‘/‘ ‘{print $(NF)}’|sort -t ‘.’ -r -k 2</p>
-<pre><code>- 查看表结构 
-```sql
-\d tablename  --表名前面加上schema名称就可以不同schema下表的表结构 
+<pre class=" language-sql"><code class="language-sql"><span class="token keyword">select</span> schemaname<span class="token punctuation">,</span>relname<span class="token punctuation">,</span>size <span class="token keyword">from</span><span class="token punctuation">(</span>
+<span class="token keyword">select</span> split_part<span class="token punctuation">(</span>pg_ls_dir<span class="token punctuation">(</span>relation_path<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">'.'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">as</span> relid<span class="token punctuation">,</span><span class="token function">count</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span> <span class="token keyword">as</span> size <span class="token keyword">from</span> <span class="token punctuation">(</span>
+<span class="token keyword">select</span> replace<span class="token punctuation">(</span>PG_RELATION_FILEPATH<span class="token punctuation">(</span>relid<span class="token punctuation">)</span><span class="token punctuation">,</span>reverse<span class="token punctuation">(</span>split_part<span class="token punctuation">(</span>reverse<span class="token punctuation">(</span>PG_RELATION_FILEPATH<span class="token punctuation">(</span>relid<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">'/'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span> <span class="token keyword">as</span> relation_path
+<span class="token keyword">from</span> pg_stat_user_tables <span class="token keyword">group</span> <span class="token keyword">by</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>z
+<span class="token keyword">group</span> <span class="token keyword">by</span> <span class="token number">1</span>
+<span class="token keyword">having</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">1</span>
+<span class="token punctuation">)</span>x<span class="token punctuation">,</span>pg_stat_user_tables y
+<span class="token keyword">where</span> x<span class="token punctuation">.</span>relid::oid <span class="token operator">=</span> pg_relation_filenode<span class="token punctuation">(</span>y<span class="token punctuation">.</span>relid<span class="token punctuation">)</span>
+<span class="token keyword">order</span> <span class="token keyword">by</span> size <span class="token keyword">desc</span><span class="token punctuation">;</span>
+</code></pre>
+<ul>
+<li>查看超过1GB的表及者索引大小</li>
+</ul>
+<pre class=" language-sql"><code class="language-sql"><span class="token keyword">select</span> relname<span class="token punctuation">,</span>
+<span class="token keyword">case</span> relkind
+<span class="token keyword">when</span> <span class="token string">'r'</span> <span class="token keyword">then</span> <span class="token string">'table'</span>
+<span class="token keyword">when</span> <span class="token string">'i'</span> <span class="token keyword">then</span> <span class="token string">'index'</span>
+<span class="token keyword">when</span> <span class="token string">'t'</span> <span class="token keyword">then</span> <span class="token string">'toast'</span>
+<span class="token keyword">end</span> <span class="token keyword">as</span> relkind<span class="token punctuation">,</span>
+size<span class="token operator">||</span><span class="token string">'GB+'</span> <span class="token keyword">as</span> size <span class="token keyword">from</span><span class="token punctuation">(</span>
+<span class="token keyword">select</span> split_part<span class="token punctuation">(</span>pg_ls_dir<span class="token punctuation">(</span>relation_path<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">'.'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">as</span> relid<span class="token punctuation">,</span><span class="token function">count</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span> <span class="token keyword">as</span> size <span class="token keyword">from</span> <span class="token punctuation">(</span>
+<span class="token keyword">select</span> replace<span class="token punctuation">(</span>PG_RELATION_FILEPATH<span class="token punctuation">(</span>relid<span class="token punctuation">)</span><span class="token punctuation">,</span>reverse<span class="token punctuation">(</span>split_part<span class="token punctuation">(</span>reverse<span class="token punctuation">(</span>PG_RELATION_FILEPATH<span class="token punctuation">(</span>relid<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">'/'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span> <span class="token keyword">as</span> relation_path
+<span class="token keyword">from</span> pg_stat_user_tables <span class="token keyword">group</span> <span class="token keyword">by</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>z
+<span class="token keyword">group</span> <span class="token keyword">by</span> <span class="token number">1</span>
+<span class="token keyword">having</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">1</span>
+<span class="token punctuation">)</span>x<span class="token punctuation">,</span>pg_class y
+<span class="token keyword">where</span> x<span class="token punctuation">.</span>relid::oid <span class="token operator">=</span> y<span class="token punctuation">.</span>relfilenode
+<span class="token keyword">order</span> <span class="token keyword">by</span> size <span class="token keyword">desc</span><span class="token punctuation">;</span>
+</code></pre>
+<ul>
+<li>查看13324数据库下超过1GB的文件</li>
+</ul>
+<pre><code>ll $PGDATA/base/13324/*.[0-9] |awk -F &#39;/&#39; &#39;&#123;print $(NF)&#125;&#39;|sort -t &#39;.&#39; -r -k 2
+</code></pre>
+<ul>
+<li>查看表结构 </li>
+</ul>
+<pre class=" language-sql"><code class="language-sql">\<span class="token number">d</span> tablename  <span class="token comment" spellcheck="true">--表名前面加上schema名称就可以不同schema下表的表结构 </span>
 </code></pre>
 <pre class=" language-sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> information_schema<span class="token punctuation">.</span><span class="token keyword">columns</span> <span class="token keyword">where</span> table_schema<span class="token operator">=</span><span class="token string">'PUBLIC'</span> <span class="token operator">and</span> table_name<span class="token operator">=</span><span class="token string">'xx'</span><span class="token punctuation">;</span> 
 </code></pre>
