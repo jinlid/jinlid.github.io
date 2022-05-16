@@ -4,13 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="iptables介绍及常用命令, jinlid&#39;s blog">
-    <meta name="description" content="防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。
+    <meta name="keywords" content="toast简介, jinlid&#39;s blog">
+    <meta name="description" content="PostgreSQL数据库不允许元组(行，记录)跨越多个页面(page)存储，所以，它不能直接存储非常大的字段值。对于大字段值，它将被压缩且(或)分解为多个物理行，该技术称为“TOAST”。
 
 
-
-
-1 介绍iptables主机型防">
+toast技术特点
+toast是超长字段在P">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -22,7 +21,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>iptables介绍及常用命令 | jinlid&#39;s blog</title>
+    <title>toast简介 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
@@ -315,12 +314,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/3.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/6.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">iptables介绍及常用命令</h1>
+                    <h1 class="description center-align post-title">toast简介</h1>
                 </div>
             </div>
         </div>
@@ -436,8 +435,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/iptables/">
-                                <span class="chip bg-color">iptables</span>
+                            <a href="/tags/postgresql-conf/">
+                                <span class="chip bg-color">postgresql.conf</span>
                             </a>
                         
                     </div>
@@ -448,8 +447,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
-                                操作系统
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
                             </a>
                         
                     </div>
@@ -461,7 +460,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-03-28
+                    2022-05-16
                 </div>
                 
 
@@ -482,236 +481,197 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。</p>
+                <p>PostgreSQL数据库不允许元组(行，记录)跨越多个页面(page)存储，所以，它不能直接存储非常大的字段值。对于大字段值，它将被压缩且(或)分解为多个物理行，该技术称为“TOAST”。</p>
 <span id="more"></span>
 
+<h3 id="toast技术特点"><a href="#toast技术特点" class="headerlink" title="toast技术特点"></a>toast技术特点</h3><ol>
+<li>toast是超长字段在PG的一个存储方式；</li>
+<li>全称The overSized Attribute Stroage Technique（超尺寸字段存储技术）；</li>
+<li>它会将大字段值压缩或者分散为多个物理行来存储；</li>
+<li>对于用户来说不用关注这一技术实现，完全是透明的；</li>
+</ol>
+<h3 id="toast的存储方式"><a href="#toast的存储方式" class="headerlink" title="toast的存储方式"></a>toast的存储方式</h3><ul>
+<li>pg的部分类型数据支持toast，因为有些字段类型是不会产生大字段数据（比如date，time，boolean）；</li>
+<li>支持toast的数据类型应当是可变长度的（variable-length）；</li>
+<li>表中任何一个字段有toast，这个表都会有一个相关联的toast表，oid被存储在pg_class.reltoastrelid里；</li>
+<li>超出的数值会被分割成chunks，并且最多toast_max_chunk_size个byte（缺省是2KB）;</li>
+<li>当存储的长度超过toast_tuple_threshold（通常是2KB）,就会触发toast存储；</li>
+<li>toast将会压缩或者移动字段值直到超过部分比toast_tuple_targer值小（这个值通常也是2KB）</li>
+</ul>
+<h3 id="建表时自动创建toast表"><a href="#建表时自动创建toast表" class="headerlink" title="建表时自动创建toast表"></a>建表时自动创建toast表</h3><pre class=" language-bash"><code class="language-bash">dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table toast_1(id int);</span>
+CREATE TABLE
 
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select oid,relname,reltoastrelid from pg_class where relname = 'toast_1';</span>
+  oid  <span class="token operator">|</span> relname <span class="token operator">|</span> reltoastrelid 
+-------+---------+---------------
+ 16498 <span class="token operator">|</span> toast_1 <span class="token operator">|</span>             0
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 
-<h1 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1 介绍"></a>1 介绍</h1><p>iptables主机型防火墙工作在2，3，4层，对TCP/IP数据包进行过滤和限制。属于过滤型防火墙。（除非编译内核才可以使iptables支持7层）。</p>
-<h2 id="1-2-iptables的缺点"><a href="#1-2-iptables的缺点" class="headerlink" title="1.2 iptables的缺点"></a>1.2 iptables的缺点</h2><ol>
-<li>防火墙虽然可以过滤互联网的数据包，但却无法过滤内部网络的数据包。因此若有人从内部网络攻击时，防火墙没有作用。</li>
-<li>电脑本身的操作系统亦可能因一些系统漏洞，使入侵者可以利用这些漏洞饶过防火墙过滤。从而入侵电脑。</li>
-<li>防火墙无法有效阻挡病毒攻击，尤其隐藏在数据中的病毒。</li>
-<li>正常情况下，所有互联网的数据包软件都应经过防火墙的过滤，这将造成网络交通的瓶颈。例如在攻击性数据包出现时，攻击者不时寄出数据包，让防火墙疲于过滤数据包，而使一些合法数据包软件亦无法正常进出防火墙。</li>
-</ol>
-<p>PS：没有绝对安全的操作系统，虽然防火墙有这些缺点，但还是能阻挡大多数来自外网的攻击。</p>
-<h2 id="1-3-核心原理"><a href="#1-3-核心原理" class="headerlink" title="1.3 核心原理"></a>1.3 核心原理</h2><h3 id="1-3-1-四个表"><a href="#1-3-1-四个表" class="headerlink" title="1.3.1 四个表"></a>1.3.1 四个表</h3><p>（1）filter</p>
-<p>其中默认包含了3个链，分别是FORWARD、INPUT和OUTPUT。</p>
-<ol>
-<li>FORWARD：途经本机的数据包进行过滤</li>
-<li>INPUT：访问本机的数据包进行过滤</li>
-<li>OUTPUT：本机访问互联网的数据包进行过滤</li>
-</ol>
-<p>总结：根据规则来处理数据包，如转或者丢。（实现主机型防火墙的主要表；内核模块iptables_filter）。</p>
-<p>（2）nat</p>
-<ol>
-<li>PREROUTING：修改目的地址</li>
-<li>POSTROUTING：修改源地址</li>
-<li>OUTPUT：主要是控制内部</li>
-</ol>
-<p>总结：转换地址的表（改IP，改端口；当网关使用的Linux保护内部流量；内核模块是iptables_nat）。</p>
-<p>（3）mangle</p>
-<ol>
-<li>PREROUTING</li>
-<li>POSTROUTING</li>
-<li>INPUT</li>
-<li>OUTPUT</li>
-<li>FORWARD</li>
-</ol>
-<p>总结：流量整形的表；路由标记用的表；改TOS，TTL，Mark标记策略路由等；内核模块iptables_mangle。</p>
-<p>（4）raw</p>
-<ol>
-<li>PREROUTING</li>
-<li>OUTPUT</li>
-</ol>
-<p>总结：新表；数据包跟踪；内核模块：iptables_raw。</p>
-<p>表的应用顺序：</p>
-<p>raw&gt;&gt;mangle&gt;&gt;nat&gt;&gt;filter。</p>
-<h3 id="1-3-2-iptables的五个链"><a href="#1-3-2-iptables的五个链" class="headerlink" title="1.3.2 iptables的五个链"></a>1.3.2 iptables的五个链</h3><ul>
-<li>PREROUTING预路由</li>
-<li>POSTROUTING已路由</li>
-<li>INPUT入站</li>
-<li>OUTPUT出站</li>
-<li>FORWARD转发</li>
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table toast_2(id int,info text);--其中info字段是text类型，则会自动产生toast表来存储。</span>
+CREATE TABLE
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select oid,relname,reltoastrelid from pg_class where relname = 'toast_2';</span>
+  oid  <span class="token operator">|</span> relname <span class="token operator">|</span> reltoastrelid 
+-------+---------+---------------
+ 16501 <span class="token operator">|</span> toast_2 <span class="token operator">|</span>         16504
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select oid,relname from pg_class where oid = 16504;</span>
+  oid  <span class="token operator">|</span>    relname     
+-------+----------------
+ 16504 <span class="token operator">|</span> pg_toast_16501
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+</code></pre>
+<h3 id="更改表的存储方式为toast"><a href="#更改表的存储方式为toast" class="headerlink" title="更改表的存储方式为toast"></a>更改表的存储方式为toast</h3><p>语法：</p>
+<pre class=" language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token punctuation">[</span> <span class="token keyword">TABLE</span> <span class="token punctuation">]</span> <span class="token keyword">ALTER</span> <span class="token punctuation">[</span> <span class="token keyword">COLUMN</span> <span class="token punctuation">]</span> column_name <span class="token keyword">SET</span> STORAGE <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123; PLAIN | EXTERNAL | EXTENDED | MAIN &amp;#125;</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table toast_0(info text);</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span>
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d+ toast_0</span>
+                      <span class="token keyword">Table</span> <span class="token string">"public.toast_0"</span>
+ <span class="token keyword">Column</span> <span class="token operator">|</span> <span class="token keyword">Type</span> <span class="token operator">|</span> Modifiers <span class="token operator">|</span> Storage  <span class="token operator">|</span> Stats target <span class="token operator">|</span> Description 
+<span class="token comment" spellcheck="true">--------+------+-----------+----------+--------------+-------------</span>
+ info   <span class="token operator">|</span> <span class="token keyword">text</span> <span class="token operator">|</span>           <span class="token operator">|</span> <span class="token keyword">extended</span> <span class="token operator">|</span>              <span class="token operator">|</span> 
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># alter table toast_0 alter column info set storage main;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span>
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d+ toast_0</span>
+                      <span class="token keyword">Table</span> <span class="token string">"public.toast_0"</span>
+ <span class="token keyword">Column</span> <span class="token operator">|</span> <span class="token keyword">Type</span> <span class="token operator">|</span> Modifiers <span class="token operator">|</span> Storage <span class="token operator">|</span> Stats target <span class="token operator">|</span> Description 
+<span class="token comment" spellcheck="true">--------+------+-----------+---------+--------------+-------------</span>
+ info   <span class="token operator">|</span> <span class="token keyword">text</span> <span class="token operator">|</span>           <span class="token operator">|</span> main    <span class="token operator">|</span>              <span class="token operator">|</span> 
+
+</code></pre>
+<h3 id="查看toast表的名字"><a href="#查看toast表的名字" class="headerlink" title="查看toast表的名字"></a>查看toast表的名字</h3><pre class=" language-bash"><code class="language-bash">dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select relname,relfilenode,reltoastrelid from pg_class where relname = 'toast_0';</span>
+ relname <span class="token operator">|</span> relfilenode <span class="token operator">|</span> reltoastrelid 
+---------+-------------+---------------
+ toast_0 <span class="token operator">|</span>       16507 <span class="token operator">|</span>         16510
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select relname from pg_class where oid = 16510;</span>
+    relname     
+----------------
+ pg_toast_16507
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+</code></pre>
+<h3 id="toast四种存储策略"><a href="#toast四种存储策略" class="headerlink" title="toast四种存储策略"></a>toast四种存储策略</h3><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PLAIN</td>
+<td>避免压缩和行外存储。只有那些不需要TOAST策略就能存放的数据类型允许选择（例如 int类型），而对于text这类要求存储长度超过页大小的类型，是不允许采用此策略的</td>
+</tr>
+<tr>
+<td>MAIN</td>
+<td>允许压缩，但不许行外存储。实际上，为了保证大数据的存储，行外存储在其他方式（例如压缩）都无法满足的情况下，作为最后手段还是会被启动。因此理解为尽量不使用行外存储更贴切</td>
+</tr>
+<tr>
+<td>EXTENDED</td>
+<td>允许行外存储和压缩。一般会压缩，如果还是太大，就会行外存储</td>
+</tr>
+<tr>
+<td>EXTERNA</td>
+<td>允许行外存储，但不允许压缩。类似字符串这种会对数据的一部分进行操作的字段，采用此策略可能获得更高的性能，因为不需要读取整行数据再解压</td>
+</tr>
+</tbody></table>
+<h3 id="toast表额外的三个字段"><a href="#toast表额外的三个字段" class="headerlink" title="toast表额外的三个字段"></a>toast表额外的三个字段</h3><table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>属性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>chunk_id</td>
+<td>标识TOAST表的OID字段</td>
+</tr>
+<tr>
+<td>chunk_seq</td>
+<td>chunk的序列号，与chunk_id的组合唯一索引可以加速访问</td>
+</tr>
+<tr>
+<td>chunk_data</td>
+<td>存储TOAST表的实际数据</td>
+</tr>
+</tbody></table>
+<pre class=" language-bash"><code class="language-bash">dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select oid,relname,reltoastrelid from pg_class where relname = 'toast_0';</span>
+  oid  <span class="token operator">|</span> relname <span class="token operator">|</span> reltoastrelid 
+-------+---------+---------------
+ 16507 <span class="token operator">|</span> toast_0 <span class="token operator">|</span>         16510
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d+ toast_0</span>
+                      Table <span class="token string">"public.toast_0"</span>
+ Column <span class="token operator">|</span> Type <span class="token operator">|</span> Modifiers <span class="token operator">|</span> Storage <span class="token operator">|</span> Stats target <span class="token operator">|</span> Description 
+--------+------+-----------+---------+--------------+-------------
+ info   <span class="token operator">|</span> text <span class="token operator">|</span>           <span class="token operator">|</span> main    <span class="token operator">|</span>              <span class="token operator">|</span> 
+
+</code></pre>
+<h3 id="toast表的计算"><a href="#toast表的计算" class="headerlink" title="toast表的计算"></a>toast表的计算</h3><ul>
+<li>计算一个表的大小时要注意统计toast的大小，因为对超长字段存储时，在基础表上可能只存了20%，另外的数据都存到了toast表里面去了，计算大小时要结合起来看</li>
+<li>索引也是一样，对于表里有extended或者EXTERNA类型的会创建toast表，两者的关联是通过pg_class里的OID取关联的</li>
 </ul>
-<p>FORWARD链中定义的规则作用于那些需要转发到另一个网络接口的数据包。INPUT链中定义的规则作用于发送到本机的数据包。相对应的，OUTPUT链中定义的规则作用域从本机发送出去的数据包。通常定义filter表就可以迎合大部分的安全需求，因为这个表包含了包过滤器的所有内容。</p>
-<h4 id="三种报文流向"><a href="#三种报文流向" class="headerlink" title="三种报文流向"></a>三种报文流向</h4><p>流入本机：POSTROUTING –&gt; INPUT –&gt; 用户空间进程</p>
-<p>流出本机：用户空间进程 –&gt; OUTPUT –&gt; POSTROUTING</p>
-<p>转发：POSTROUTING –&gt; FORWARD –&gt; POSTROUTING </p>
-<h4 id="链之间的顺序："><a href="#链之间的顺序：" class="headerlink" title="链之间的顺序："></a>链之间的顺序：</h4><p>入站&gt;&gt;转发&gt;&gt;出站</p>
-<h4 id="规则的应用顺序："><a href="#规则的应用顺序：" class="headerlink" title="规则的应用顺序："></a>规则的应用顺序：</h4><p>ACL逐条匹配，匹配即停止。（除了LOG）</p>
-<h3 id="1-3-3-图示"><a href="#1-3-3-图示" class="headerlink" title="1.3.3 图示"></a>1.3.3 图示</h3><h1 id="2-防火墙设置"><a href="#2-防火墙设置" class="headerlink" title="2 防火墙设置"></a>2 防火墙设置</h1><h2 id="2-1-iptables语法："><a href="#2-1-iptables语法：" class="headerlink" title="2.1 iptables语法："></a>2.1 iptables语法：</h2><blockquote>
-<p>iptables -t 表名 管理选项 [][][][][链名] [匹配条件] [-j 控制类型]</p>
-<ol>
-<li><p>表名</p>
-<p>filter（不写默认）、nat、mangle、raw。</p>
-</li>
-<li><p>管理选项</p>
-<p>操作方式如插入，删除，查看等。</p>
-</li>
-<li><p>链名</p>
-<p>一般是FORWORD、INPUT和OUTPUT中的一个。</p>
-</li>
-<li><p>匹配条件</p>
-<p>数据包特征ip，端口等。</p>
-</li>
-<li><p>控制类型</p>
-<p>用于定义策略，数据包处理方式，filter表中共有9个不同的策略可供使用，但最常用的只有4个：</p>
-<ul>
-<li><p>ACCEPT：表示允许包通过。</p>
-</li>
-<li><p>DROP：丢弃一个包。</p>
-</li>
-<li><p>REJECT：会在丢失的同时返回一条ICMP错误消息。</p>
-</li>
-<li><p>LOG：扮演了计事员的角色记录包的信息，并把它们写入日志。</p>
-</li>
-</ul>
-</li>
+<pre class=" language-bash"><code class="language-bash">dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table toast_t(id int,name varchar(50),info text);</span>
+CREATE TABLE
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select relname,relfilenode,reltoastrelid from pg_class where relname = 'toast_t';</span>
+ relname <span class="token operator">|</span> relfilenode <span class="token operator">|</span> reltoastrelid 
+---------+-------------+---------------
+ toast_t <span class="token operator">|</span>       16513 <span class="token operator">|</span>         16516
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into toast_t select generate_series(1,2),'test',repeat('t',10000);</span>
+INSERT 0 2
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_column_size(id),pg_column_size(name),pg_column_size(info) from toast_t;</span>
+ pg_column_size <span class="token operator">|</span> pg_column_size <span class="token operator">|</span> pg_column_size 
+----------------+----------------+----------------
+              4 <span class="token operator">|</span>              5 <span class="token operator">|</span>            125
+              4 <span class="token operator">|</span>              5 <span class="token operator">|</span>            125
+<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_size_pretty(pg_relation_size('toast_t')),pg_size_pretty(pg_relation_size(16516));</span>
+ pg_size_pretty <span class="token operator">|</span> pg_size_pretty 
+----------------+----------------
+ 8192 bytes     <span class="token operator">|</span> 0 bytes
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into toast_t select generate_series(1,2),'test',repeat('t',100000);</span>
+INSERT 0 2
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_size_pretty(pg_relation_size('toast_t')),pg_size_pretty(pg_relation_size(16516));</span>
+ pg_size_pretty <span class="token operator">|</span> pg_size_pretty 
+----------------+----------------
+ 8192 bytes     <span class="token operator">|</span> 0 bytes
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into toast_t select generate_series(1,2),'test',repeat('t',200000);</span>
+INSERT 0 2
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_size_pretty(pg_relation_size('toast_t')),pg_size_pretty(pg_relation_size(16516));</span>
+ pg_size_pretty <span class="token operator">|</span> pg_size_pretty 
+----------------+----------------
+ 8192 bytes     <span class="token operator">|</span> 8192 bytes
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into toast_t select generate_series(1,2),'test',repeat('t',400000);</span>
+INSERT 0 2
+dellstore2<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_size_pretty(pg_relation_size('toast_t')),pg_size_pretty(pg_relation_size(16516));</span>
+ pg_size_pretty <span class="token operator">|</span> pg_size_pretty 
+----------------+----------------
+ 8192 bytes     <span class="token operator">|</span> 16 kB
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+
+</code></pre>
+<p>可以看到后插入的数据随着字段内容的增多，toast段一直在变大。基础表的大小没有变化。</p>
+<h3 id="toast表的优点"><a href="#toast表的优点" class="headerlink" title="toast表的优点"></a>toast表的优点</h3><ol>
+<li>可以存储超长大字段，避免之前不能直接存储的限制；</li>
+<li>物理上与普通表是分离的，检索查询时不检索到该字段会极大地加快速度；</li>
+<li>更新普通表时，该表地toast数据没有被更新时，不用去更新toast表</li>
 </ol>
-</blockquote>
-<p>itables命令最常用的5个选项分别是-F、-P、-I、-A、-D和-L。在大部分情况下，管理员只需要这5个选项就可以完成防火墙的规则配置。<br>iptables的常用选项：</p>
-<p>选项含义</p>
-<ul>
-<li><p>-F：清除链中所有的规则（-X是清理自定义的链，用的少；-Z清零规则序号）</p>
-</li>
-<li><p>-P：为链设置一条默认策略（或者说目标）</p>
-</li>
-<li><p>-I：在链的开头（或指定序号）插入一条规则</p>
-</li>
-<li><p>-A：为链增加一条规则说明</p>
-</li>
-<li><p>-D：删除链内指定序号（或内容）的一条规则</p>
-</li>
-<li><p>-L：查看当前表中的链和规则</p>
-</li>
-<li><p>-n：以数字形式显示地址、端口等信息</p>
-</li>
-<li><p>-v：以更详细的方式显示规则信息</p>
-</li>
-<li><p>–line-numbers：查看规则时，显示规则的序号（方便之处，通过需要来删除和插入）</p>
-</li>
-</ul>
-<p>查看当前的防火墙设置</p>
-<pre class=" language-bash"><code class="language-bash">iptables -nvL
-</code></pre>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328205333006.png" alt="image-20220328205333006"></p>
-<p>以上target目标，prot端口，opt选项，source源地址，destination目标地址。</p>
-<p>简单的例子：</p>
-<ol>
-<li>从192.168.138.81过来的包DROP掉</li>
+<h3 id="toast表的缺点"><a href="#toast表的缺点" class="headerlink" title="toast表的缺点"></a>toast表的缺点</h3><ol>
+<li>对大字段的索引创建是一个问题，有可能会失败，通常不建议在大字段上创建，全文检索是一个解决方案</li>
+<li>大字段的更新会有点慢， 其他DB也存在相同问题</li>
 </ol>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328205401031.png" alt="image-20220328205401031"></p>
-<p>尝试从192.168.138.81ping，发现连接卡住</p>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328205559677.png" alt="image-20220328205559677"></p>
-<ol start="2">
-<li>从192.168.138.82过来的包REJECT掉</li>
-</ol>
-<p><img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328211628077.png" alt="image-20220328211628077"></p>
-<p>尝试从192.168.138.82ping，发现连接报错：Destination Port Unreachable</p>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328211710697.png" alt="image-20220328211710697"></p>
-<p>使用tcpdump抓包发现，192.168.138.81有去无回，从192.168.138.82有去有回</p>
-<p><img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328211845819.png" alt="image-20220328211845819"></p>
-<h2 id="2-4-删除规则"><a href="#2-4-删除规则" class="headerlink" title="2.4 删除规则"></a>2.4 删除规则</h2><p>iptables提供了-D选项来删除链规则，有2种不同的语法用于删除一条规则。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -D chain rule-specification 
-iptables -D chain rulenum
-</code></pre>
-<p>第1种语法使用规则描述来匹配某条链路规则。为此。用户必须一字不差地照搬当初使用-A选项添加使用的描述。如删除对lo环回接口的规则设置。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -D INPUT -i lo -p ALL -j ACCEPT
-</code></pre>
-<p>第2种语法删除编号为2的链规则</p>
-<pre class=" language-bash"><code class="language-bash">iptables -D INPUT 2
-</code></pre>
-<p><img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328212541809.png" alt="image-20220328212541809"></p>
-<p>清空默认表（也就是filter表）中的数据</p>
-<pre class=" language-bash"><code class="language-bash">iptables -F
-</code></pre>
-<p>清空默认表中INPUT链的规则</p>
-<pre class=" language-bash"><code class="language-bash">iptables -F INPUT
-</code></pre>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328212601217.png" alt="image-20220328212601217"></p>
-<h2 id="2-5-基本的匹配条件"><a href="#2-5-基本的匹配条件" class="headerlink" title="2.5 基本的匹配条件"></a>2.5 基本的匹配条件</h2><p>基本匹配条件：无需加载模块，由iptables/netfilter自行提供</p>
-<ul>
-<li><p>-s, –source address[/mask] [,…]：源ip地址或者不连续的ip地址</p>
-</li>
-<li><p>-d, –destination address[/mask] [,…]：目标ip地址或者不连续的ip地址</p>
-</li>
-<li><p>-p, –protocol protocol ：指定协议，可使用数字如0（all）</p>
-<p>protocol：tcp,udp,icmp,icmpv6,udplite,ah,sctp,mh or “all”，参考：/etc/protocols</p>
-</li>
-<li><p>-i, –in-interface name：报文流入的接口：只能应用于数据报文流入环节，只应用于INPUT、FORWARD、PREROUTING链</p>
-</li>
-<li><p>-o, –out-interface name：报文流出的接口：只能应用于数据报文流出环节，只应用于FORWARD、OUTPUT、PREROUTING链</p>
-</li>
-</ul>
-<p>不让别人ping自己</p>
-<pre class=" language-bash"><code class="language-bash">iptables -t filter -I INPUT -p icmp -j REJECT
-</code></pre>
-<p>删除该规则</p>
-<pre class=" language-bash"><code class="language-bash">iptables -t filter -D INPUT -p icmp -j REJECT
-</code></pre>
-<p>下面这条命令将INPUT链的默认策略更改为DROP（丢弃），通常对服务器而言，将所有的链的默认策略设置为DROP事一个好的建议。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -P INPUT DROP
-</code></pre>
-<p>防止本地也无法连接，首先将本地地址添加进来。</p>
-<p> <img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328213455439.png" alt="image-20220328213455439"></p>
-<p>执行完这条命令后，所有试图同本机建立连接的努力都会失败，因为所有从“外部”到达防火墙包都被丢弃了，甚至连使用环回接口ping自己都不行</p>
-<pre class=" language-bash"><code class="language-bash"><span class="token function">ping</span> localhost
-</code></pre>
-<p>假设当前防火墙所在的主机是一台Web服务器，为此应该允许外部主机能够连接到80端口（对应HTTP服务器）和22端口（对应SSH服务）。使用iptables -A命令添加链规则，基本语法如下：</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A chain-name -i interface -j target
-</code></pre>
-<p>下面这条命令添加了一条INPUT链的规则，允许所有的lo接口的连接请求，这样防火墙就不会阻止“自己连接自己”的行为了。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i lo -p ALL -j ACCEPT
-</code></pre>
-<p>很多时候，管理员想要做的并不仅仅是把别人挡在门外，还希望直到有哪些人正在试图访问服务器。下面这条命令给INPUT链添加了一条LOG（日志记录）策略。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eht0 -j LOG
-</code></pre>
-<p>默认情况下，防火墙记录到的访问信息被保存在/var/log/messages中。这是一个文本文件，可以使用任何文本查看命令查看。事实上，/var/log/messages记录了系统中的大部分行为，这是Linux主要的系统日志文件。<br>其中比较常用的记录字段有IN（接收数据包的网络接口）、SRC（数据包来源的IP地址）、DST（数据包的目的IP地址）及开头的日期和时间等。</p>
-<p>建议使用黑名单模式，允许所有的网段都能连接，最后剩下的都拒绝。</p>
-<p><img src="/image/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/image-20220328215824721.png" alt="image-20220328215824721"></p>
-<h3 id="2-6-扩展匹配条件"><a href="#2-6-扩展匹配条件" class="headerlink" title="2.6 扩展匹配条件"></a>2.6 扩展匹配条件</h3><p>扩展匹配条件：需要加载(/usr/lib64/xtables/*.so)，方可生效</p>
-<h4 id="2-6-1-隐式扩展"><a href="#2-6-1-隐式扩展" class="headerlink" title="2.6.1 隐式扩展"></a>2.6.1 隐式扩展</h4><p>iptables在使用-p选项指明了特定的协议时，无需再用-m选项指明扩展模块的扩展机制，不需要手动加载扩展模块</p>
-<p><strong>tcp协议的扩展选项</strong></p>
-<ul>
-<li><p>–source-port,–sport port[:port]：匹配报文源端口，可为端口连续范围</p>
-</li>
-<li><p>–destination-port,–dport port[:port]：匹配报文源端口，可为端口连续范围</p>
-</li>
-<li><p>–tcp-flags mask comp</p>
-<p>mask 需检查的标志位列表，用,分隔，例如SYN,ACK,FIN,RST</p>
-<p>comp 在mask列表中必须为1的标志位列表，无指定则必须为0，分隔tcp协议的扩展选项</p>
-<p>–tcp-flags SYN,ACK,FIN,RST SYN 表示要检查的标志位为YN,ACK,FIN,RST四个，其中SYN必须为1，余下的必须为0，第一次握手</p>
-<p>–tcp-flags SYN,ACK,FIN,RST SYN,ACK 第二次握手</p>
-<p>错误包 –tcp-flags ALL ALL</p>
-<p>​            –tcp-flags ALL NONE</p>
-<p>–syn：用于匹配第一次握手，相当于–tcp-flags SYN,ACK,FIN,RST SYN</p>
-</li>
-</ul>
-<p><strong>udp协议的扩展选项</strong></p>
-<ul>
-<li>–source-port,–sport port[:port]：匹配报文的源端口或端口范围</li>
-<li>–destination-port,–dport port[:port]：匹配报文的目标端口或端口范围</li>
-</ul>
-<p><strong>icmp协议的扩展选项</strong></p>
-<ul>
-<li><p>–icmp-type {type[/code]|typename}</p>
-<p>type/code</p>
-<p>0/0 echo-repl                 icmp应答</p>
-<p>8/0 echo-request          icmp请求</p>
-</li>
-</ul>
-<p>一些例子：</p>
-<p>网站出现问题时，管理员可以简单地使用ping命令确定这台服务器是否还在运行。如果服务器拥有两个网路接口eth0和ppp0，分别对应内部网络和Internet。那么一些网络管理员会倾向于将ppp0设置为丢弃外部地ping请求。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -p icmp --icmp-type 8 -j ACCEPT
-</code></pre>
-<p>命令地-p选项指定该规则匹配协议ICMP，紧跟地–icmp-type指定了ICMP的类型代码。ping命令对用的类型代码是8.<br>接下来的两条命令增加了22端口和80端口的访问许可。注意这次-p选项指定的协议类型是tcp，这时因为SSH服务和HTTP服务都是基于TCP协议的。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT 
-iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
-</code></pre>
-<p>如果网络接口eth0通向Internet，那么将SSH服务项全世界开放有时不那么让人放心，有些管理员可能希望更进一步，将SSH服务设置为只对本地网络的用户开放。下面的设置指定只有10.68.24.0/24这个网络中的主机可以访问22端口。</p>
-<pre class=" language-bash"><code class="language-bash">iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp --dport 22 -j ACCEPT
-</code></pre>
 
                 
             </div>
@@ -738,7 +698,7 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2022/03/28/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">https://jinlid.github.io/2022/03/28/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</a>
+                    <a href="https://jinlid.github.io/2022/05/16/toast%E6%8A%80%E6%9C%AF/">https://jinlid.github.io/2022/05/16/toast%E6%8A%80%E6%9C%AF/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -776,8 +736,8 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/iptables/">
-                                    <span class="chip bg-color">iptables</span>
+                                <a href="/tags/postgresql-conf/">
+                                    <span class="chip bg-color">postgresql.conf</span>
                                 </a>
                             
                         </div>
@@ -949,9 +909,10 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2022/05/16/toast%E6%8A%80%E6%9C%AF/">
                     <div class="card-image">
@@ -969,9 +930,9 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-05-16
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-05-16
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -984,6 +945,7 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -1002,31 +964,31 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/03/18/pyautogui%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%BF%E7%94%A8/">
+                <a href="/2022/03/28/iptables%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="pyautogui模块的使用">
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="iptables介绍及常用命令">
                         
-                        <span class="card-title">pyautogui模块的使用</span>
+                        <span class="card-title">iptables介绍及常用命令</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PyAutoGUI是一个纯Python的GUI自动化工具，其目的是可以用程序自动控制鼠标和键盘操作，多平台支持（Windows，OS X，Linux）。
+                            防火墙是网络安全的基本工具。通过在服务器和外部访客之间建立过滤机制，防火墙在网络层面上实现了安全防范。Linux的防火墙工具是IP Tables，这套防火墙系统甚至被作为很多其他专业网络设备的核心。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-03-18
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-03-28
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" class="post-category">
-                                    开发语言
+                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
+                                    操作系统
                                 </a>
                             
                             
@@ -1036,8 +998,8 @@ iptables -A INPUT -i eht0 -p tcp --dport 80 -j ACCEPT
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/python/">
-                        <span class="chip bg-color">python</span>
+                    <a href="/tags/iptables/">
+                        <span class="chip bg-color">iptables</span>
                     </a>
                     
                 </div>

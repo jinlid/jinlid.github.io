@@ -6,7 +6,7 @@
   <link href="https://jinlid.github.io/atom.xml" rel="self"/>
   
   <link href="https://jinlid.github.io/"/>
-  <updated>2022-05-06T16:42:19.201Z</updated>
+  <updated>2022-05-16T16:27:52.643Z</updated>
   <id>https://jinlid.github.io/</id>
   
   <author>
@@ -15,6 +15,25 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>toast简介</title>
+    <link href="https://jinlid.github.io/2022/05/16/toast%E6%8A%80%E6%9C%AF/"/>
+    <id>https://jinlid.github.io/2022/05/16/toast%E6%8A%80%E6%9C%AF/</id>
+    <published>2022-05-15T16:00:00.000Z</published>
+    <updated>2022-05-16T16:27:52.643Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;PostgreSQL数据库不允许元组(行，记录)跨越多个页面(page)存储，所以，它不能直接存储非常大的字段值。对于大字段值，它将被压缩且(或)分解为多个物理行，该技术称为“TOAST”。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="数据库" scheme="https://jinlid.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+    <category term="postgresql.conf" scheme="https://jinlid.github.io/tags/postgresql-conf/"/>
+    
+  </entry>
   
   <entry>
     <title>iptables介绍及常用命令</title>
