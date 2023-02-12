@@ -1,0 +1,1359 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="postgresql流复制一（环境搭建）, jinlid&#39;s blog">
+    <meta name="description" content="PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>postgresql流复制一（环境搭建） | jinlid&#39;s blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">jinlid&#39;s blog</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">jinlid&#39;s blog</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/18.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">postgresql流复制一（环境搭建）</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2023-02-08
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了一个 PostgreSQL 实例，并在实例上创建多个数据库，通过流复制技术可以在另外一台主机 host2 上创建个热备只读 PostgreSQL实例，我们通常将 host1 上的数据库称为主库（ Primary Database 或Master） ，host2 上的数据库称为备库（ Standby Database或Slave），host1 称为 主节点， host2 称为备节。流复制同步方式有同步、异步两种，如果主节点和备节点不是很忙，通常异步模式下备库和主库的延迟时间能控制在毫秒级。</p>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<p>WAL (Write-Ahead Logging ）日志记录数据库的变化，格式为二进制格式，当主机出现异常断电时，如果 WAL 文件已经写入成功，但还没来得及刷新数据文件，当数据库再次启动时会根据 WAL 日志文件信息进行事务前滚，从而恢复数据库到一致性状态。</p>
+<h2 id="1-异步流复制"><a href="#1-异步流复制" class="headerlink" title="1 异步流复制"></a>1 异步流复制</h2><p>流复制根据数据同步方式分为异步流复和同步流复 ，异步流复制是指主库上提交事务不需要等待备库接收 WAL 日志流并写入到备库 WAL 志文件时便返回成功，而同步流复制相反，后面会详细介绍异步流复制、同步流复制的部署。</p>
+<p>这一小节先介绍 PostgreSQL 异步流复制的部署，异步流复制部署主要有两种方式，一方式是拷贝数据文件方式，另一种方式是通过pg_basebackup命令行工具 这两种方式绝大部分部署步骤都一样，只是数据复制的方式不同而己，接下来会详细介绍实验环境为两台虚拟机，具体信息如表 1-1</p>
+<table>
+<thead>
+<tr>
+<th>主机</th>
+<th>主机名</th>
+<th>IP地址</th>
+<th>操作系统</th>
+<th>PostgreSQL版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主节点</td>
+<td>host1</td>
+<td>192.168.137.129</td>
+<td>CentOS 7</td>
+<td>PostgreSQL10</td>
+</tr>
+<tr>
+<td>备节点</td>
+<td>host2</td>
+<td>192.168.137.130</td>
+<td>CentOS 7</td>
+<td>PostgreSQL10</td>
+</tr>
+</tbody></table>
+<h3 id="1-1-以拷贝数据文件方式部署流复制"><a href="#1-1-以拷贝数据文件方式部署流复制" class="headerlink" title="1.1 以拷贝数据文件方式部署流复制"></a>1.1 以拷贝数据文件方式部署流复制</h3><p>在主备 host1和 host2 上创建操作系统用户和相关目录，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">groupadd</span> postgres
+<span class="token function">useradd</span> pg10 -g postgres
+<span class="token function">passwd</span> pg10
+<span class="token function">mkdir</span> -p /home/pg10/postgresql10.23/data
+<span class="token function">mkdir</span> -p /home/pg10/postgresql10.23/tbl
+<span class="token function">chown</span> -R pg10:postgres /home/pg10/postgresql10.23
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>/home/pg10/postgresql10.23/data 目录存储数据库系统数据文件，/home/pg10/postgresql10.23/tbl存储用户自定义表空间文件</p>
+<p>设置 pg10 操作系统用户环境变量，/home/pg10/.bash_profile 文件添加以下内容：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">export</span> PGPORT<span class="token operator">=</span>1921
+<span class="token function">export</span> PGHOME<span class="token operator">=</span>/home/pg10/postgresql10.23
+<span class="token function">export</span> PGDATA<span class="token operator">=</span><span class="token variable">$PGHOME</span>/data
+<span class="token function">export</span> PATH<span class="token operator">=</span><span class="token variable">$PATH</span><span class="token keyword">:</span><span class="token variable">$PGHOME</span>/bin
+<span class="token function">export</span> LD_LIBRARY_PATH<span class="token operator">=</span><span class="token variable">$PGHOME</span>/lib:<span class="token variable">$LD_LIBRARY_PATH</span> 
+<span class="token function">alias</span> rm<span class="token operator">=</span><span class="token string">'rm -i'</span>
+<span class="token function">alias</span> ll<span class="token operator">=</span><span class="token string">'ls -lh'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>以上内容可根据使用偏好设置环境变量。</p>
+<p>主备下载、解压并编译 PostgreSQL 软件，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">wget</span> https://ftp.postgresql.org/pub/source/v10.23/postgresql-10.23.tar.gz
+<span class="token function">tar</span> -xf postgresql-10.23.tar.gz -C /home/pg10/
+<span class="token function">cd</span> /home/pg10/postgresql-10.23
+./configure --prefix<span class="token operator">=</span>/home/pg10/postgresql10.23 --with-pgport<span class="token operator">=</span>1921 --with-openssl
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>如果configure过程中缺少如下操作系统包，通过yum install命令安装相关依赖包即可。</p>
+<ul>
+<li><p>configure: error: no acceptable C compiler found in $PATH</p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum -y <span class="token function">install</span> gcc
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>configure: error: readline library not found</p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum -y <span class="token function">install</span> readline-devel
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>configure: error: zlib library not found</p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum -y <span class="token function">install</span> zlib-devel
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>configure: error: library ‘crypto’ is required for OpenSSL</p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum -y <span class="token function">install</span> openssl-devel
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+</ul>
+<p>之后进行编译安装，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">gmake world
+gmake install-world
+<span class="token function">chown</span> -R pg10:postgres /home/pg10
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>gmake world 表示编译所有能编译的东西，包括文档和附加模块 ，而 gmake 命令不会安装这些内容， gmake world 相比 gmake 编译时间长很多。之后通过 gmake install-world命令安装 PostgreSQL 软件到目录/home/pg10/postgresql10.23 ，安装后/home/pg10/postgresql10.23/share 目录下生成 /doc 文档目录，并且 /home/pg10/postgresql10.23/share/extension 目录下生成了大量的扩展模块文件，这些扩展模块提供的功能能够丰富 PostgreSQL 特性，在生产环境下推荐 gmake world 编译安装。</p>
+<p>编译安装 PostgreSQL 软件过程使用的是 root 操作系账号 ，之后的部署步骤使用操作系统普通账号 pg10 即可 ，在 host1 上使用 pg10系统账号执行 initdb 命令初始化数据库，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">su</span> - pg10
+initdb -D /home/pg10/postgresql10.23/data -E UTF8 --locale<span class="token operator">=</span>C -U pg10 -W
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>以上初始化数据库后，目录下将产生系统数据文件，之后配置，设置以下参数：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">listen_addresses</span> <span class="token punctuation">=</span> <span class="token attr-value">'*'          # what IP address(es) to listen on;</span>
+<span class="token attr-name">wal_level</span> <span class="token punctuation">=</span> <span class="token attr-value">replica                    # minimal, replica, or logical</span>
+<span class="token attr-name">archive_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">on             # enables archiving; off, on, or always</span>
+<span class="token attr-name">archive_command</span> <span class="token punctuation">=</span> <span class="token attr-value">'test ! -f /home/pg10/postgresql10.23/archive/%f &amp;&amp; cp %p /home/pg10/postgresql10.23/archive/%f'           # command to use to archive a logfile segment</span>
+<span class="token attr-name">max_wal_senders</span> <span class="token punctuation">=</span> <span class="token attr-value">10           # max number of walsender processes</span>
+<span class="token attr-name">wal_keep_segments</span> <span class="token punctuation">=</span> <span class="token attr-value">16          # in logfile segments, 16MB each; 0 disables</span>
+<span class="token attr-name">hot_standby</span> <span class="token punctuation">=</span> <span class="token attr-value">on                       # "off" disallows queries during recovery</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>以上几个 postgresql.conf 参数是流复制的主要参数，其他可选参数没有列出。</p>
+<p>wal_level 参数控制 WAL 日志信息的输出级别，有 minimal、 replica、logical 三种模式， minimal 记录的 WAL 志信息最少，除了记录数据库异常关闭需要恢复时的WAL 信息外，其他操作信息都不记录； replica 记录的 WAL 信息比 minimal 信息多些，会记录支持 WAL 归档、复制和备库中启用只读查询等操作所 WAL 信息；logical 记录的 WAL 日志信息最多， 包含了支持逻辑解析 (10 版本的新特性，逻辑复制使用这种模式）所需的 WAL ; replica 模式记录的 WAL 信息包含了 minimal 的信息， logical 模式记录的 WAL 信息包含了 replica 记录的信息， 参数默认值为 replica ，调整此参数需重启数据库生效，开启流复制至少需要设置此参数为 replica 级别。</p>
+<p>archive_mode 参数控制是否启用归档， off 表示不启用归档， on 表示启用归档并使用 archive command 参数的配置命令将 WAL 日志归档到归档存储上，此参数设置后需重启数据库生效，这里通常设置成 on。</p>
+<p>archive_command 参数设置 WAL 归档命令， 可以将 WAL 归档到本机目录，也可以归档到远程主机上，由于流复制的配置并不一 需要依赖配置归档命令，我们将归档命令暂且设置成伪归档命令$PGHOME/archive，后期如果需要打开归档直接配置归档命令即可。</p>
+<p>max_wal_senders 参数控制主库上的最大 WAL 发送进程数 ，通 pg_base_backup 命令在主库上做基准备份时也会消耗 WAL 进程，参数设置不能比 max_connections参数值高，默认值为 10，一个流复制备库通常只需要消耗流复制主库 WAL 发送进程。</p>
+<p>wal_keep_segments 参数设置主库 pg_wal 目录保留的最小 WAL 日志文件数，以便备库落后主库时可以通过主库保留的 WAL 进行追回，这个参数设置得越大，理论上备库在异常断开时追平主库的机率越大，如果归档存储空间充足，建议将此参数配置得大些，由于默认情况下每个 WAL 文件为 16MB （编译时可通过 with-wal-segsize 参数设 WAL 文件大小），因此 pg_wal 目录大概占用空间为 wal_keep_segments 参数值× 16MB ，这里为 16×16MB=256MB ，实际情况下 pg_wal 目录下的WAL 文件数会比此参数的值稍大些。</p>
+<p>hot_standby 参数控制数据库恢复过程中是否启用读操作 ，这个参数通常用在流复制备库，开启此参数后流复制备库支持只读 SQL ，但备库不支持写操作，主库上也设参数为on。</p>
+<p>以上是流复制配置过程中主要的 postgresqI.conf 参数，其他参数没有列出，主库和备库的 postgresqI.conf 配置建议完全一致。</p>
+<p>配置主库的 pg_hba.conf 文件，添加以下内容：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># replication privilege.</span>
+<span class="token attr-name">host</span> <span class="token attr-value">   replication     repuser         192.168.137.129/32              md5</span>
+<span class="token attr-name">host</span> <span class="token attr-value">   replication     repuser         192.168.137.130/32              md5</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>这里为什么配置两条 pg_hba.conf 策略？因为主库和备库的角色不是静止的，它们的角色是可以互换的，比如做一次主备切换后角色就发生了变化，因此建议主库、备库 pg_hba.conf 配置完全一致。</p>
+<p>之后 host1 启动数据库，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl start
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>使用超级用户 pg10 登录到数据库创建流复制用户 repuser ，流复制用户需要有 REPLICATION 权限和 LOGIN 权限，如下所示：</p>
+<pre class="line-numbers language-sql"><code class="language-sql">psql <span class="token operator">-</span><span class="token number">d</span> postgres
+<span class="token keyword">CREATE</span> <span class="token keyword">USER</span> repuser <span class="token keyword">REPLICATION</span> LOGIN CONNECTION <span class="token keyword">LIMIT</span> <span class="token number">5</span> ENCRYPTED PASSWORD <span class="token string">'re123456'</span><span class="token punctuation">;</span> 
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>建议为流复制创建专门的流复制用户。</p>
+<p>以上完成了主库上的配置，接下来热备生成一个备库，制作备库过程中主库仍然可读写，不影响主库上的业务，以 pg10 超级用户执行以下命令：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_start_backup('label1');</span>
+ pg_start_backup
+-----------------
+ 0/2000060
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>pg_ start_ backup() 函数在主库上发起一个在线备份，命令执行成功后，将数据文件拷贝到备节点 host2，如下所示。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">tar</span> -cf data.tar.gz data --exclude<span class="token operator">=</span>data/pg_wal
+<span class="token function">scp</span> data.tar.gz 192.168.137.130:/home/pg10/postgresql10.23
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>pg_wal 目录不是必须复制的，如果 pg_wal 目录下文件较多，压缩包时可以排除这个目录， 节省数据拷贝时间，数据到备节点后，备节点 pg_wal 目录需要手工创建，以上只是拷 data 系统数据目录， 如果有另外的表空间目录也需要拷贝。</p>
+<p>之后在 host2 解压文件，如下所</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">tar</span> -xf data.tar.gz
+<span class="token function">mkdir</span> data/pg_wal
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>文件拷贝到备节点后，在主库执行以下命令：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_stop_backup();</span>
+NOTICE:  pg_stop_backup complete, all required WAL segments have been archived
+ pg_stop_backup
+----------------
+ 0/A000130
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>以上命令表示完成在线备份，但备库上仍然需要一些配置， 之后配置host2主机上的recovery.conf，此配置文件提供了数据库恢复相关的配置参数，这个文件默认在$PG_DATA 并不存在， 可以在软件目录中找，并复制到 $PGDATA目录如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cp</span> <span class="token variable">$PGHOME</span>/share/recovery.conf.sample <span class="token variable">$PGDATA</span>/recovery.conf
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>在recovery.conf中配置以下参数</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">recovery_target_timeline</span> <span class="token punctuation">=</span> <span class="token attr-value">'latest'</span>
+<span class="token attr-name">standby_mode</span> <span class="token punctuation">=</span> <span class="token attr-value">on </span>
+<span class="token attr-name">primary_conninfo</span> <span class="token punctuation">=</span> <span class="token attr-value">'host=192.168.137.129 port=1921 user=repuser'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>recovery_target_timeline 参数设置恢复的时间线（timeline）默认情况下是恢复到基准备份生成时的时间线，设置成 latest 表示从备份中恢复到最新的时间线，通常复制环境设置此参数为 latest ，复杂的恢复场景可将此参数设置成其他值。</p>
+<p>standby_mode 参数设置是否启用数据库为备库，如果设置 on ，备库会不停地从主库获取 WAL 日志流，直到主库上获取主库上最新的 WAL 日志流。</p>
+<p>primary_conninfo 参数设置主库的连接信息 ，这里设置了主库 IP、端口、用户名信息，但没有配置明文密码，在连接串中给出数据库密码不是好习惯， 建议将密码配置在隐藏文件~/.pgpass文件中。</p>
+<p>配置~/.pgpass隐藏文件，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">touch</span> .pgpass
+<span class="token function">chmod</span> 0600 .pgpass
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>.pgpass 文件默认情况下不存在，需要手动创建并设置 0600 后给 .pgpass权限。之后给.pgpass文件添加以下内容：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">192.168.137.129</span><span class="token punctuation">:</span><span class="token attr-value">1921:replication:repuser:123456</span>
+<span class="token attr-name">192.168.137.130</span><span class="token punctuation">:</span><span class="token attr-value">1921:replication:repuser:123456</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>.pgpass文件内容分五个部分，分别为IP、端口、数据库名、用户名、密码，用冒号分割，设置后，repuser用户可以免密码直接登录到数据库。之后在host2上启动从库即可，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl start
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果此步没报错，并且主库上可以查看到 WAL 发送进程，同时备库上可以看到 WAL 接收进程说明流复制配置成功，查看主库上的 WAL 发送进程 如下所示：</p>
+<blockquote>
+<p>postgres: wal sender process repuser 192.168.137.130(56102) streaming 0/13000060</p>
+</blockquote>
+<p>查看备库上的 WAL 接收进程，如下所示：</p>
+<blockquote>
+<p>postgres: wal receiver process   streaming 0/13000060</p>
+</blockquote>
+<p>接着在主库上创建一个测试表并插入数据，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># create table test(id int);</span>
+CREATE TABLE
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into test values(1);</span>
+INSERT 0 1
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在备库上验证数据是否已同步，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select * from test;</span>
+ <span class="token function">id</span>
+----
+  1
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在主库上创建一张表后，在备库上立刻就能查询到了，值得一提的是，备库上 postgresql.confd 的 hot_standby 参数需要设置成 on 才支持查询操作，此参数调整后需重启数据库生效，如下所示：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">hot_standby</span> <span class="token punctuation">=</span> <span class="token attr-value">on                       # "off" disallows queries during recovery</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>参数设置成 off ，通过 psql 连接数据库时会抛出以下错误</p>
+<blockquote>
+<p>$ psql postgres<br>2023-02-08 22:47:31.838 CST [12048] FATAL:  the database system is starting up<br>psql: FATAL:  the database system is starting up</p>
+</blockquote>
+<p>以上信息显示数据库在恢复中，不允许连接数据库也不允许执行查询。</p>
+<p>以上是异步流复制部署的所有过程，虽然本小节内容有些多，但总体来说流复制配置并不复杂，读者在配置过程中如遇错误，根据数据库日志报错信息进行问题排查。</p>
+<h3 id="1-2-以pg-basebackup方式部署流复制"><a href="#1-2-以pg-basebackup方式部署流复制" class="headerlink" title="1.2 以pg_basebackup方式部署流复制"></a>1.2 以pg_basebackup方式部署流复制</h3><p>上一小节介绍了以拷贝数据文件的方式部署流复制，这一 小节介绍 pg_basebackup 方式部署流复制，通过上一小节的介绍，部署流复制备库的数据复制环节主要包含三个步骤：</p>
+<ol>
+<li>执行SELECT pg_start_backup(‘label1’)；</li>
+<li>拷贝主节点 PGDATA 数据文件和表空间文件到备节点；</li>
+<li>执行pg_stop_backup()；</li>
+</ol>
+<p>以三个步骤可以合成一步完成， PostgreSQL 提供内 pg_basebackup 命令行工具支持对主库发起一个在线基准备份，并自动进入备份模式进行数据库基准备份，备份完成后自动从备份模式退出，不需要执行额外的 pg_start_backup() 和 pg_stop_backup() 命令显式地声明进入备份模式和退出备份模式，pg_basebackup 工具是对数据库实例级进行的物理备份，因此这个工具通常作为备份工具对据库进行基准备份。</p>
+<p>pg_basebackup 工具发起备份需要超级用户权限或 REPLICATION 权限， 注意 max_wal_senders 参数配置，因为 pg_basebackup 工具将消耗至少一个 WAL 发送进程。本节将演示通过 pg_basebackup 工具部署异步流复制，之前已经在 host2 上部署了一个备库 ，我们先将这个备库删除，之后通过 pg_basebackup 工具重新做一次备库，删除 host2 上的备库只需要先停备库之后删除备库数据库数据文件即可，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl stop
+<span class="token function">rm</span> -rf /home/pg10/postgresql10.23/data
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>之后在 host2 使用 pg_basebackup 工具做一个基准备份，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ pg_basebackup -D /home/pg10/postgresql10.23/data -Fp -Xs -v -P -h 192.168.137.129 -p 1921 -U repuser
+pg_basebackup: initiating base backup, waiting <span class="token keyword">for</span> checkpoint to complete
+pg_basebackup: checkpoint completed
+pg_basebackup: write-ahead log start point: 0/14000028 on timeline 1
+pg_basebackup: starting background WAL receiver
+23749/23749 kB <span class="token punctuation">(</span>100%<span class="token punctuation">)</span>, 1/1 tablespace
+pg_basebackup: write-ahead log end point: 0/140000F8
+pg_basebackup: waiting <span class="token keyword">for</span> background process to finish streaming <span class="token punctuation">..</span>.
+pg_basebackup: base backup completed
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>从以上日志信息可以看出 pg_basebackup 命令首先对数据库做一次 checkpoint ，之后基于时间点做一个全库基准备份， 全备过程中会拷贝 $PGDATA 数据文件和表空间文件到备库节点对应目录， pg_basebackup 主要选项解释如下：</p>
+<p>-D 参数表示指定备节点用来接收主库数据的目标路径，这里和主库保持一致，依然是 /home/pg10/postgresql10.23/data 目录。</p>
+<p>-F 参数指定 pg_basebackup 命令生成的备份数据格式，支持两种格式， p(plain)格式和 t(tar）格式， p(plain ）格式是指生成的备份数据和主库上的数据文件布局一样，也就是说类似于操作系统命令将数据库 $PGDATA 系统数据文件、表空间文件完全拷贝到备节点； t(tar）格式是指将备份文件打个 tar 包并存储在指定目录里，系统文件被打包成 base.tar ，其他表空间文件被打包成 oid.tar，其中 OID 为表 间的 OID。</p>
+<p>-X 参数设置在备份的过程中产生的 WAL 日志包含在备份中的方式，有两种可选方式， f(fetch ）和 s(stream), f(fetch）是指 WAL 日志在基准备份完成后被传送到备节点，这时主库上的 wal_keep_segments 参数需要设置得较大， 以免备份过程中产生WAL 还没发送到备节点之前被主库覆盖掉，如果出现这种情况创建基准备份将会失败， f(fetch) 方式下主库将会启动一个基准备份 WAL 发送进程； s(stream ）方式中主库上除了启动一个基准备份 WAL 发送进程外还会额外启动一个 WAL 发送进程用于发送主库产生的 WAL 增量日志流，这种方式避免了f(fetch）方式过程中主库WAL 被覆盖掉的情况，生产环境流复制部署推荐这种方式，特别是比较繁忙的库或者是大库。</p>
+<p>-v 参数表示启用 verbose 模式，命令执行过程中打印出各阶段的日志，建议启用此参数，了解命令执行到哪个阶段。</p>
+<p>-P 参数显示数据文件、表空间文件近似传输百分比，由于执行 pg_basebackup 过程中主库数据文件会变化，因此这只是一个估算值；建议启用此选项，了解数据复制的进度。</p>
+<p>-h、-p、-U 参数为数据库连接通用参数，不再解释，以上只是 pg_basebackup 命令主要选项，其他选项读者可查看手册 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/10/app-pgbasebackup.html">https://www.postgresql.org/docs/10/app-pgbasebackup.html</a></p>
+<p>命令执行成功后，配置备库 recovery.conf ，之前已将此文件备份到家目录，从家目录将此文件复制到 $PGDATA 目录下即可 ，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cp</span> ~/recovery.conf <span class="token variable">$PGDATA</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>之后在 host2 上启动备库，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl start 
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这时备节点上已经有了 WAL 接收进程，同时主节点上已经有了 WAL 发送进程，表示流复制工作正常。</p>
+<h3 id="1-3-查看流复制同步方式"><a href="#1-3-查看流复制同步方式" class="headerlink" title="1.3 查看流复制同步方式"></a>1.3 查看流复制同步方式</h3><p>异步流复制部署完成后，可通过 pg_stat_replication 系统视图的 sync_state字段查看流复制同步方式，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select usename,application_name,client_addr,sync_state from pg_stat_replication;</span>
+ usename <span class="token operator">|</span> application_name <span class="token operator">|</span>   client_addr   <span class="token operator">|</span> sync_state
+---------+------------------+-----------------+------------
+ repuser <span class="token operator">|</span> walreceiver      <span class="token operator">|</span> 192.168.137.130 <span class="token operator">|</span> async
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>pg_stat_replication 视图显示主库上 WAL 发送进程信息，主库上有多少个 WAL 发送进程， 此视图就对应多少条记录 ，这里主要看 sync_state 字段， sync_state 字段的可选项包括：</p>
+<ul>
+<li>async：表示备库为异步同步方式。</li>
+<li>potential：表示备库当前为异步同步方式，如果当前的同步备库岩机后，异步备库可升级成为同步备库。</li>
+<li>sync：当前备库为同步方式。</li>
+<li>quorum ：此特性为 PostgreSQL 10 版本新增特性，表示备库 quorum standbys 的候选。</li>
+</ul>
+<p>以上查询结果 sync_state 字段值为 async，表示主备数据复制使用异步方式。</p>
+<h2 id="2-同步流复制"><a href="#2-同步流复制" class="headerlink" title="2 同步流复制"></a>2 同步流复制</h2><p>异步流复制指主库上提交事务时不需要等待备库接收并写入 WAL 日志时便返回成功，如果主库异常宕机，主库上已提交的事务可能还没来得及发送给备库，就会造成备库数据丢失，备库丢失的数据量和 WAL 复制延迟有关， WAL 制延迟越大，备库上丢失的数据量越大。</p>
+<p>同步流复制在主库上提交事务时需等待备库接收WAL ，当主库至少收到一个备库发回的确认信息时便返回成功，同步流复制确保了至少一个备库收到了主库发送的 WAL 日志，一方面保障了数据的完整性，另一方面增加了事务响应时间，因此同步流复制主库的吞吐量相比异步流复制主库吞吐量低。</p>
+<p>这一小节将介绍同步流复制的部署， 同步流复制的部署与异步流复制部署过程没有太大差 ，只是postgresql.,conf和recovery.conf 配置文件的几个参数需要额外配置。</p>
+<h3 id="2-1-synchronous-commit-参数详解"><a href="#2-1-synchronous-commit-参数详解" class="headerlink" title="2.1 synchronous_commit 参数详解"></a>2.1 synchronous_commit 参数详解</h3><p>在介绍同步流复制部署之前先来介绍 synchronous_commit 参数， synchronous commit 参数是流复制配置中的重点参数，理解它 含义能够更好地理 同步流复制 、异步流复的工作原理。</p>
+<p>synchronous_commit 参数是 postgresqI.conf 配置文件中 WAL 相关配置参数，是指当数据库提交事务时是否需要等待 WAL 日志写人硬盘后才向客户端返回成功 ，此参数可选值为on、off、local、remote_ apply、remote_write ，要理解每个参数的含义可能没那么容易 ，这里尽可能详细解释这些选项值的含义，分单实例和流 制环境介绍。</p>
+<p>场景一：单实例环境</p>
+<p>on：当数据库提交事务时， WAL 先写人 WAL BUFFER 再写入 WAL 日志文件，设置成 on 表示提交事务时需等待本 WAL 写人 WAL 日志后才向客户端返回成功，设置成 on 非常安全，但数据库性能有损耗。</p>
+<p>off：设置成 off 表示提交事务时不需等待本地 WAL BUFFER 写入 WAL 日志后向客户端返回成功，设置成 off 时也不会对数据库带来风险，虽然当数据库着机时最新提交的少量事务可能丢失，但数据库重启后会认为这些事务异常中止，设置 off 能够提升数据库性能，因此对于数据准确性没有非常精确要求同时追求数据库性能的场景建议设置成 off。</p>
+<p>loca：local 含义和 on 类似，表示提交事务时需等待本地 WAL 写入后才向客户端返回成功。</p>
+<p>场景二：流复制环境</p>
+<p>remot_write：当流复制主库提交事务时，需等待备库接收主库发送的 WAL 日志流并写入备节点操作系统缓存中，之后向客户端返回成功，这种情况下备库实例出现异常关闭时不会有已传送的 WAL 日志丢失风险，但备库操作系统异常看宕机就有已传送的 WAL 丢失风险了，此时 WAL 可能还没完全写人备节点 WAL 文件中，简单地说 remot_write 表示本地 WAL 已落盘，备库的 WAL 还在备库操作系统缓存中，也就是说只有一份持久化的 WAL ，这个选项带来的事务响应时间较低。</p>
+<p>on：设置成 表示流复制主库提交事务时， 等待备库接收主库发送的 WAL 日志流并写人 WAL 文件，之后才向客户端返回成功，简单地说 on 表示本地 WAL 已落盘，备库的 WAL 也已落盘， 也就是说有两份持久化的 WAL ，但备库此时还没有完成重做，这个选项带来的事务响应时间较高。</p>
+<p>remote_apply：表示流复制主库提交事务时 ，需等待备库接收主库发送的 WAL 并写人 WAL 文件，同时备库已经完成重做，之后才向客户端返回成功，简单地说 remote_apply 表示本 WAL 已落盘，备库 WAL 已落盘并且已完成重做，这个设置保证了拥有两份持久化的 WAL ，同时备库也完成了重做，这个选项带来的事务响应时间最高。</p>
+<h3 id="2-2-配置同步流复制"><a href="#2-2-配置同步流复制" class="headerlink" title="2.2 配置同步流复制"></a>2.2 配置同步流复制</h3><p>备库 recovery. conf 配置文件设置以下参数，如下所示：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">primary_conninfo</span> <span class="token punctuation">=</span> <span class="token attr-value">'host=192.168.137.129 port=1921 user=repuser application_name=node2'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>primary_conninfo 参数添加 appication_name 选项， appication_name 选项指定备节点的别名，主库 postgresql.conf的synchronous_standby_names 参数可引用备库 application_name 选项设置的值，这里设置成 node2。</p>
+<p>主库上 postgresql.conf 置文件设置以下参数， 其他参数和异步流复制配置一致。</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_commit</span> <span class="token punctuation">=</span> <span class="token attr-value">on         # synchronization level;</span>
+<span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">'node2'     # standby servers that provide sync rep</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>wa_level 配置也和异步流复制配置一致，设置 replica或logical 即可。</p>
+<p>synchronous_commit 参数配置成 on 或 remote_apply ，通常设 on 表示有两持久化的 WAL 日志。</p>
+<p>synchronous_standby_names 参数配置同步复制的备库列表，可以配置多个同步备库，实验环境为一主一备环境，因此这里设 node2 ，这个值必须和同步备库 recovery.conf 文件的 primary_conninfo 参数 application_name 选项设置值一致。</p>
+<p>配置完成后，主库执行以下命 使配置生效：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl reload
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>wa_level 参数调整后需重启数据库生效， synchronous_commit 和 synchronous_standby_names 参数调整后不需要重启数据库生效，只需执行 pg_ctl reload 命令重新载入配置文件即可。由于配置异步流复制时 wa_level 已经配置成 replica ，因此不需要再调整此参数配置。</p>
+<p>备库调整了 recovery.conf 参数后需重启生效， host2 上重启数据库，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl restart
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>之后查看主库是否建立了 WAL 发送进程，备库上是否建立了 WAL 接收进程， 如果有异常，查看数据库日志排查错误。</p>
+<p>主库上查看复制状态，如下所示</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select usename,application_name,client_addr,sync_state from pg_stat_replication;</span>
+ usename <span class="token operator">|</span> application_name <span class="token operator">|</span>   client_addr   <span class="token operator">|</span> sync_state
+---------+------------------+-----------------+------------
+ repuser <span class="token operator">|</span> node2            <span class="token operator">|</span> 192.168.137.130 <span class="token operator">|</span> <span class="token function">sync</span>
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>此时 pg_stat_replication 图的 sync_state 字段已变成了 sync 状态，sync 表示主库与备库之间采用同步复制方式，以上就是同步流复制主要配置步骤。</p>
+<h3 id="2-3-同步流复制的典型“陷阱”"><a href="#2-3-同步流复制的典型“陷阱”" class="headerlink" title="2.3 同步流复制的典型“陷阱”"></a>2.3 同步流复制的典型“陷阱”</h3><p>同步流复制模式中，由于主库提交事务时需等待至少一个备库接收 WAL 并返回确认信息后主库才 客户端返回成功， 一方面保障了数据的完整性，另一方面对于一主一备的同步流复制环境存在一个典型的“陷阱”，具体表现为如果备库若机， 主库上的写操作将处于等待状态。接下来在刚部署完成的同步流制环境做个测试，环境为一主一备， host1上的数据库为主库， host2 上的数据库为同步备库。</p>
+<p>先把备库停掉模拟备库故障，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_ctl stop
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>之后 试在主库上执行读操作，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select * from test limit 1;</span>
+ <span class="token function">id</span>
+----
+  1
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>同步备库宕机后 ，主库上的查询不受影响。</p>
+<p>之后在主库上尝试插入一条记录，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># insert into test values(1);</span>
+--阻塞住
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>注意这里命令被阻塞。</p>
+<p>这时主库上的 INSERT 一直处于等待 ，也就是说同步备库宕机后，主库上的读操作不受影响， 写操作将处于等待状态 ，因为主库上的事务需收到至少一个备库接WAL 后的返回信息才会向客户端返回成功，而此时备库已经停掉了，主库上收不到备库发来的确认信息，如果是生产库， 将对生产系统带来严重影响。</p>
+<p>通常生产系统一主一备的情况下不会采用同步复制方式，因为备库若机后同样对生产统造成严重影响，PostgreSQL 支持一主多从的流复制架构，比如一主两从，将其中一个备库设为同步备库，另一个设为异步备库，当同步备库若机后异步备库升级为同步备库， 同时主库上的读写操作不受影响。</p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://jinlid.github.io/2023/postgresql-liu-fu-zhi-yi-huan-jing-da-jian/">https://jinlid.github.io/2023/postgresql-liu-fu-zhi-yi-huan-jing-da-jian/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">JINLID</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2023/postgresql-liu-fu-zhi/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="postgresql流复制">
+                        
+                        <span class="card-title">postgresql流复制</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-08
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2023/da-jian-prometheus-grafana-de-yun-ping-tai-jian-kong-xi-tong/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="搭建Prometheus+Grafana的云平台监控系统">
+                        
+                        <span class="card-title">搭建Prometheus+Grafana的云平台监控系统</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            Prometheus是一套开源的监控&amp;报警&amp;时间序列数据库的组合，起始是由SoundCloud公司开发的。现在最常见的 Docker、Mesos、Kubernetes 容器管理系统中，通常会搭配Prometheus 进行监控
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-01-30
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E7%9B%91%E6%8E%A7/" class="post-category">
+                                    监控
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                    <a href="/tags/Linux/">
+                        <span class="chip bg-color">Linux</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2023</span>
+            
+            <a href="/about" target="_blank">JINLID</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/jinlid" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:845401160@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=845401160" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 845401160" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

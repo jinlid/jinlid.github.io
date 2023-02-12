@@ -513,7 +513,7 @@ drwx------ 3 postgres postgres 4096 Feb 11 12:45 pg_xlog
 </tr>
 </tbody></table>
 <p>pg_class 目录管理所有上述对象元素。在 pg_class 目录中存储了表名（relname）和 TOAST 表的 OID 或 TOAST 索引（reltoastrelid）。 pg_tables 目录是一个视图，它只从 pg_class 目录中提取表。关联表和索引的目录是 pg_index。 pg_class目录中存储的表的OID（indexrelid）和一个索引的OID（indrelid）等信息都存储在该目录中。</p>
-<p><img src="/themes/hexo-theme-matery/source/medias/image/image-20230114232329252.png" alt="图1.1 表和系统目录的关系"></p>
+<p><img src="/medias/image/image-20230114232329252.png" alt="图1.1 表和系统目录的关系"></p>
 <p><strong>表与文件的关系</strong></p>
 <p>表、索引、文件对应pg_class表的relfilenode列的值。</p>
 <p>对象和文件之间的关系也可以用 oid2name 实用程序确认。要存储的表空间由 pg_class 目录的 reltablespace 列确认。如果此列值为 0，则表明该对象使用了 pg_default 表空间。</p>
@@ -546,7 +546,7 @@ $ <span class="token function">ls</span> -l 16495*
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p> <strong>索引文件</strong></p>
 <p>与表类似，索引也被创建为一个单独的文件。索引的文件名也存储在 pg_class 目录的 relfilenode 列中。连接表和索引的目录pg_index。</p>
-<p><img src="/themes/hexo-theme-matery/source/medias/image/image-20230114232919112.png" alt="图1.2 pg_class 目录和索引之间的关系"></p>
+<p><img src="/medias/image/image/image-20230114232919112.png" alt="图1.2 pg_class 目录和索引之间的关系"></p>
 <h3 id="1-3-TOAST-功能"><a href="#1-3-TOAST-功能" class="headerlink" title="1.3 TOAST 功能"></a><strong>1.3 TOAST 功能</strong></h3><p>通常，PostgreSQL 以 8 KB 为单位将元组存储在页中。元组不跨页存储。因此，大规模的元组不能存储在页面中。为了存储更大的元组，提供了一种称为 TOAST（超大属性存储技术）的功能。当压缩后的列数据超过大小时创建TOAST数据，这由TOAST_TUPLE_THRESHOLD决定（在编译时确定）。它还将数据存储到 TOAST 表中，直到它减少到不超过 TOAST_TUPLE_TARGET。</p>
 <p><strong>TOAST 表</strong></p>
 <p>TOAST 数据存储在单独的表（另一个文件）中，该文件由 pg_class 目录的 relfilenode 列指定。在 pg_class 目录的 reltoastrelid 列中，存储了 TOAST 表的 oid。通过从 pg_class 目录中搜索 TOAST 表 (relfilenode) 的文件名，可以识别该文件。为了加快TOAST表的查找速度，TOAST索引是用TOAST表创建的。 TOAST 表没有出现在 pg_tables 目录中。</p>
@@ -572,7 +572,7 @@ $ <span class="token function">ls</span> -l 16495*
 </tr>
 </tbody></table>
 <p>下图展示了表与TOAST表的关系。创建表toast1时，自动创建TOAST表toast_16525并保存在文件16532中。TOAST索引从pg_index目录中找到indrelid column = 16528的元组。</p>
-<p> <img src="/themes/hexo-theme-matery/source/medias/image/image-20230114225518523.png" alt="图1.3  pg_class目录与TOAST表的关系"></p>
+<p> <img src="/medias/image/image-20230114225518523.png" alt="图1.3  pg_class目录与TOAST表的关系"></p>
 <p>保存TOAST数据</p>
 <p>可以用 TOAST 数据指定保存格式。通常保存格式是自动确定的，但也可以逐列指定。</p>
 <p>表1.2 TOAST 数据保存格式</p>
@@ -760,7 +760,7 @@ statement, check is performed
 <p>指定表空间</p>
 <p>pg_default 表空间对应于数据库集群中的“base”目录。与外部表空间已创建，符号链接已在 {PGDATA}/pg_tblspc 目录中创建的文件名。</p>
 <p>图2.1 目录结构和表空间</p>
-<p><img src="/../themes/hexo-theme-matery/source/medias/image/image-20230115153943779.png" alt="image-20230115153943779"></p>
+<p><img src="/medias/image/image-20230115153943779.png" alt="image-20230115153943779"></p>
 <p>表空间的对应关系</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLESPACE tbl2 LOCATION '/usr/local/pgsql/tbl2' ;</span>
 CREATE TABLESPACE
@@ -951,7 +951,7 @@ pg_visibility_map
 <p>自由空间地图</p>
 <p>Free Space Map (FSM) 是一个文件，用于管理表格每一页中的可用空间量文件。它以单个字节管理表文件中包含的每个页面。 FSM 文件的名称是“{RELFILENODE}_fsm”。通过引用这个文件，它可以高速找到元组的存储位置。此文件的初始大小为 24 KB。表创建后，它是在第一次 VACUUM 执行时创建的。此外，它会在每次 VACUUM 执行时更新。</p>
 <p>VACUUM 参照 Visibility Map 进行处理，更新 Free Space地图。</p>
-<p><img src="/../themes/hexo-theme-matery/source/medias/image/image-20230115155409496.png" alt="图3.1  可见性地图和自由空间地图"></p>
+<p><img src="/medias/image/image-20230115155409496.png" alt="图3.1  可见性地图和自由空间地图"></p>
 <p> 可见性地图和自由空间地图</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token operator">></span> SELECT relname, relfilenode FROM pg_class
 WHERE relname<span class="token operator">=</span><span class="token string">'data1'</span> <span class="token punctuation">;</span>
@@ -1862,7 +1862,7 @@ sysidentifier <span class="token operator">|</span><span class="token operator">
 </ul>
 <h2 id="6-块格式"><a href="#6-块格式" class="headerlink" title="6 块格式"></a>6 块格式</h2><h3 id="6-1-块和页面"><a href="#6-1-块和页面" class="headerlink" title="6.1 块和页面"></a>6.1 块和页面</h3><p>在 PostgreSQL 中，I/O 是以块为基础进行的。块的大小默认为 8 KB。为了更改值，需要更改“src/include/pg_config.h”中的“#define BLOCKSZ 8192”并重新编译它。在目前的 PostgreSQL 中，一个块包含一个页，因此块和页可以认为是一回事。一个文件中可以存储 131,072 个块（页）。当数据文件超过此大小时 (8 KB × 131,072 = 1 GB)，将创建一个新文件。</p>
 <p>该值由 pg_config.h 文件的 RELSEG_SIZE 宏决定。在每个页面中，存储了指向页面中每个元组和页眉的指针。项目指针指示元组在页面中的位置。元组存储在从页面末尾到页面顶部的位置。另一方面，项目指针将被添加到页面的末尾，紧跟在页眉之后。</p>
-<p><img src="/../themes/hexo-theme-matery/source/medias/image/image-20230115200109187.png" alt="图6.1 页面结构"></p>
+<p><img src="/medias/image/image-20230115200109187.png" alt="图6.1 页面结构"></p>
 <p>页眉定义在“src/include/storage/bufpage.h”中的PageHeaderData结构中。</p>
 <p> PageHeaderData 结构</p>
 <pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">typedef</span> <span class="token keyword">struct</span> PageHeaderData
