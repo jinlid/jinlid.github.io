@@ -413,11 +413,11 @@
                 </a>
                 
                 
-                <a href="/categories/python/" title="python: 4">
+                <a href="/categories/python/" title="python: 5">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #D5F5E3;">python
-                        <span class="tag-length">4</span>
+                        <span class="tag-length">5</span>
                     </span>
                 </a>
                 
@@ -494,19 +494,26 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2022/stats-collector-jin-cheng/">
+                    <a href="/2022/yuan-ma-an-zhuang-postgresql9.6/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
+                            <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="源码安装PostgreSQL9.6">
                             
-                            <span class="card-title">stats collector进程</span>
+                            <span class="card-title">源码安装PostgreSQL9.6</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
+                                
+
+添加用户useradd postgres
+
+下载源码包cd postgres
+wget https://ftp.postgresql.org/pub/source/v9.6.24/postgresql-9.6.24.tar.gz
+
+解压
                             
                         </div>
                         <div class="publish-info">
@@ -540,26 +547,19 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2022/yuan-ma-an-zhuang-postgresql9.6/">
+                    <a href="/2022/stats-collector-jin-cheng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="源码安装PostgreSQL9.6">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
                             
-                            <span class="card-title">源码安装PostgreSQL9.6</span>
+                            <span class="card-title">stats collector进程</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                
-
-添加用户useradd postgres
-
-下载源码包cd postgres
-wget https://ftp.postgresql.org/pub/source/v9.6.24/postgresql-9.6.24.tar.gz
-
-解压
+                                PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
                             
                         </div>
                         <div class="publish-info">
@@ -694,57 +694,6 @@ wget https://ftp.postgresql.org/pub/source/v9.6.24/postgresql-9.6.24.tar.gz
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
-                            
-                            <span class="card-title">第2章 进程和内存架构</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
-
-
-[TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
-
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
                     <a href="/2021/8.huan-chong-qu-guan-li-qi/">
                         <div class="card-image tag-image">
                             
@@ -812,6 +761,57 @@ wget https://ftp.postgresql.org/pub/source/v9.6.24/postgresql-9.6.24.tar.gz
 
 [TOC]
 共有三种广泛的并发控制技术，即多版本并发控制*(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                            
+                            <span class="card-title">第2章 进程和内存架构</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+
+
+[TOC]
+2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
+
                             
                         </div>
                         <div class="publish-info">
