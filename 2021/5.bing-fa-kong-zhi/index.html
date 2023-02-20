@@ -9,7 +9,8 @@
 
 
 [TOC]
-共有三种广泛的并发控制技术，即多版本并发控制*(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都">
+
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -420,42 +421,22 @@
 <span id="more"></span>
 
 <p>[TOC]</p>
-<p>共有三种广泛的并发控制技术，即多版本并发控制*(MVCC)、<em>严格两阶段锁定</em>(S2PL) 和<em>乐观并发控制</em>(OCC)，每种技术都有许多变体。在 MVCC 中，每个写操作都会创建一个新版本的数据项，同时保留旧版本。当一个事务读取一个数据项时，系统会选择其中一个版本来确保单个事务的隔离。MVCC的主要优点是 ‘<em>读者不阻塞写者，写者不阻塞读者</em>‘，相比之下，例如，基于S2PL的系统必须在写入器写入项目时阻止读取器，因为写入器获得了该项目的排它锁。PostgreSQL和一些RDBMS使用称为**快照隔离(SI)**的MVCC变体。</p>
-<p>为了实现 SI，一些 RDBMS，例如 Oracle，使用回滚段。写入新数据项时，将旧版本项写入回滚段，随后将新项覆盖到数据区。PostgreSQL 使用一种更简单的方法。一个新的数据项被直接插入到相关的表格页面中。在读取项目时，PostgreSQL通过应用<strong>可见性检查规则</strong>来选择项目的适当版本以响应单个事务。</p>
-<p>SI不允许ANSI SQL-92标准中定义的三种异常，即<em>脏读</em>、<em>不可重复读</em>和<em>幻读</em>。但是，SI 无法实现真正的可序列化，因为它允许序列化异常，例如<em>Write Skew</em>和<em>Read-only Transaction Skew</em>。请注意，基于经典可串行化定义的 ANSI SQL-92 标准并不等同于现代理论中的定义。为了解决这个问题，**Serializable Snapshot Isolation(SSI)**从9.1版开始添加。SSI可以检测序列化异常并解决此类异常引起的冲突。因此，PostgreSQL9.1及更高版本提供了真正的 SERIALIZABLE隔离级别。（另外，SQL Server也使用SSI，Oracle仍然只使用SI。）</p>
+<blockquote>
+<p>共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都有许多变体。在 MVCC 中，每个写操作都会创建一个新版本的数据项，同时保留旧版本。当一个事务读取一个数据项时，系统会选择其中一个版本来确保单个事务的隔离。MVCC的主要优点是 ‘<em>读不阻塞写，写不阻塞读</em>‘，相比之下，例如，基于S2PL的系统必须在写入器写入项目时阻止读取器，因为写入器获得了该项目的排它锁。PostgreSQL和一些RDBMS使用称为快照隔离(SI)的MVCC变体。</p>
+<p>为了实现 SI，一些 RDBMS，例如 Oracle，使用回滚段。写入新数据项时，将旧版本项写入回滚段，随后将新项覆盖到数据区。PostgreSQL 使用一种更简单的方法。一个新的数据项被直接插入到相关的表格页面中，在读取项目时，PostgreSQL通过应用可见性检查规则来选择项目的适当版本以响应单个事务。</p>
+<p>SI不允许ANSI SQL-92标准中定义的三种异常，即<em>脏读</em>、<em>不可重复读</em>和<em>幻读</em>。但是，SI 无法实现真正的可序列化，因为它允许序列化异常，例如<em>Write Skew</em>和<em>Read-only Transaction Skew</em>。请注意，基于经典可串行化定义的 ANSI SQL-92 标准并不等同于现代理论中的定义。为了解决这个问题，Serializable Snapshot Isolation(SSI)从9.1版开始添加。SSI可以检测序列化异常并解决此类异常引起的冲突。因此，PostgreSQL9.1及更高版本提供了真正的 SERIALIZABLE隔离级别。（另外，SQL Server也使用SSI，Oracle仍然只使用SI）</p>
+</blockquote>
 <p>本章包括以下四个部分：</p>
-<ul>
-<li><p><strong>第 1 部分：</strong>第 5.1—5.3</p>
-</li>
-<li><p>本部分提供理解后续部分所需的基本信息。</p>
-</li>
-<li><p>第 5.1 节和第 5.2 节分别描述了事务ID和元组结构。5.3 节展示了如何插入、删除和更新元组。</p>
-</li>
-<li><p><strong>第 2 部分：</strong>第 5.4— 5.6</p>
-</li>
-<li><p>这部分说明了实现并发控制机制所需的关键特性。</p>
-</li>
-<li><p>5.4、5.5 和 5.6 节描述了提交日志（clog），它分别保存了所有事务状态、事务快照和可见性检查规则。</p>
-</li>
-<li><p><strong>第 3 部分：</strong>第 5.7—5.9</p>
-</li>
-<li><p>这部分通过具体的例子来描述PostgreSQL中的并发控制。</p>
-</li>
-<li><p>5.7 节描述了可见性检查。本节还展示了如何防止ANSI SQL标准中定义的三个异常。第 5.8 节描述了防止<em>丢失更新</em>，第 5.9 节简要描述了SSI。</p>
-</li>
-<li><p><strong>第 4 部分：</strong>第 5.10 节。</p>
-</li>
-<li><p>这部分描述了永久运行并发控制机制所需的几个维护过程。维护过程是通过vacuum处理来执行的，这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中进行了描述。</p>
-</li>
-</ul>
+<p><strong>第 1 部分：</strong>第 5.1—5.3 本部分提供理解后续部分所需的基本信息。</p>
+<p>第 5.1 节和第 5.2 节分别描述了事务ID和元组结构，5.3 节展示了如何插入、删除和更新元组。</p>
+<p><strong>第 2 部分：</strong>第 5.4— 5.6 这部分说明了实现并发控制机制所需的关键特性。</p>
+<p>5.4、5.5 和 5.6 节描述了提交日志（clog），它分别保存了所有事务状态、事务快照和可见性检查规则。</p>
+<p><strong>第 3 部分：</strong>第 5.7—5.9 这部分通过具体的例子来描述PostgreSQL中的并发控制。</p>
+<p>5.7 节描述了可见性检查，本节还展示了如何防止ANSI SQL标准中定义的三个异常，第 5.8 节描述了防止丢失更新，第 5.9 节简要描述了SSI。</p>
+<p><strong>第 4 部分：</strong>第 5.10 节。这部分描述了永久运行并发控制机制所需的几个维护过程。维护过程是通过vacuum处理来执行的，这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中进行了描述。</p>
 <p>本章重点介绍 PostgreSQL 独有的主题，尽管有许多与并发控制相关的主题。注意死锁预防和锁模式的描述被省略（更多信息请参考<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/explicit-locking.html">官方文档</a>）。</p>
-<p><em>PostgreSQL 中的事务隔离级别</em></p>
+<p><strong>PostgreSQL 中的事务隔离级别</strong></p>
 <p>PostgreSQL 实现的事务隔离级别如下表所述：</p>
-<p>| 隔离级别 | 脏读 | 不可重复读 | 幻读 | 序列化异常 |</p>
-<p>| ———- | —— | ———- | ———————————————————— | ———- |</p>
-<p>| 读已提交 | 不可能 | 可能 | 可能 | 可能 |</p>
-<p>| 可重复读*1 | 不可能 | 不可能 | 在 PG 中不可能；见<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.2.">第 5.7.2 节。</a> （在ANSI SQL中可能） | 可能 |</p>
-<p>| 可序列化 | 不可能 | 不可能 | 不可能 | 不可能 |</p>
 <table>
 <thead>
 <tr>
@@ -477,7 +458,7 @@
 <td align="left">可重复读</td>
 <td align="left">不可能</td>
 <td align="left">不可能</td>
-<td align="left">在 PG 中不可能; 见<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.2.">Section 5.7.2.</a> (在ANSI SQL中可能)</td>
+<td align="left">在 PG 中不可能(在ANSI SQL中可能)，见<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.2.">第 5.7.2 节</a></td>
 <td align="left">可能</td>
 </tr>
 <tr>
@@ -488,9 +469,11 @@
 <td align="left">不可能</td>
 </tr>
 </tbody></table>
-<p>*1 ：在9.0及更早版本中，此级别已用作“SERIALIZABLE”，因为它不允许ANSI SQL-92标准中定义的三个异常。但是，随着9.1版中SSI的实现，此级别已更改为“可重复读”并引入了真正的可序列化级别。</p>
+<blockquote>
+<p>可重复读在9.0及更早版本中，此级别已用作“SERIALIZABLE”，因为它不允许ANSI SQL-92标准中定义的三个异常。但是，随着9.1版中SSI的实现，此级别已更改为“可重复读”并引入了真正的可序列化级别。</p>
+</blockquote>
 <p>PostgreSQL对DML（数据操作语言，例如 SELECT、UPDATE、INSERT、DELETE）使用SSI，对DDL（数据定义语言，例如 CREATE TABLE 等）使用2PL。</p>
-<h2 id="5-1-事务ID"><a href="#5-1-事务ID" class="headerlink" title="5.1 事务ID"></a>5.1 事务ID</h2><p>每当事务开始时，事务管理器都会分配一个唯一标识符，称为**事务ID(txid)*<em>。PostgreSQL的txid是一个 32位无符号整数，大约为42 亿（上百万）。如果在事务开始后执行内置的</em>txid_current()*函数，该函数将返回当前的txid，如下所示。</p>
+<h2 id="5-1-事务ID"><a href="#5-1-事务ID" class="headerlink" title="5.1 事务ID"></a>5.1 事务ID</h2><p>每当事务开始时，事务管理器都会分配一个唯一标识符，称为事务ID(txid)。PostgreSQL的txid是一个 32位无符号整数，大约为42 亿。如果在事务开始后执行内置的txid_current()函数，该函数将返回当前的txid，如下所示。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># BEGIN;</span>
 BEGIN
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT txid_current();</span>
@@ -501,42 +484,39 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>PostgreSQL 保留了以下三个特殊的 txid：</p>
 <ul>
-<li><p><strong>0</strong>表示<strong>无效的</strong>txid。</p>
+<li><p><strong>0</strong>表示无效的txid。</p>
 </li>
-<li><p><strong>1</strong>表示<strong>Bootstrap</strong> txid，仅用于数据库集群的初始化。</p>
+<li><p><strong>1</strong>表示Bootstrap txid，仅用于数据库集群的初始化。</p>
 </li>
-<li><p><strong>2</strong>表示<strong>Frozen</strong> txid，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1 节中</a>描述。</p>
+<li><p><strong>2</strong>表示Frozen txid，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1">第 5.10.1 节</a>中描述。</p>
 </li>
 </ul>
-<p>Txid可以相互比较。例如，在txid100的观点下，大于100的txids是’in future’，在txid100中是<em>不可见</em>的；小于 100的txid 是“过去的”并且是<em>可见的</em>（图 5.1 a）。</p>
+<p>Txid可以相互比较。例如，在txid 100的观点下，大于100的txids是’未来的’，在txid 100中是<em>不可见</em>的；小于100的txid 是’’过去的’，并且是<em>可见的</em>（图 5.1 a）。</p>
 <p><img src="/medias/image/fig-5-01.png" alt="图 5.1 PostgreSQL中的事务ID"></p>
-<p>由于实际系统中txid空间不足，PostgreSQL将txid空间视为一个圆圈。之前的21亿交易是“过去”，接下来的21亿交易是“未来”（图 5.1 b）。</p>
-<p>请注意，<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1 节中</a>描述了所谓的<em>txid环绕问题</em>。</p>
-<p>请注意，没有为BEGIN命令分配txid。在PostgreSQL中，当执行完BEGIN命令后执行第一个命令时，事务管理器会分配一个tixd，然后它的事务就开始了。</p>
-<h2 id="5-2-元组结构"><a href="#5-2-元组结构" class="headerlink" title="5.2 元组结构"></a>5.2 元组结构</h2><p>表页中的堆元组分为普通数据元组和TOAST元组。本节仅描述普通的元组。</p>
+<p>由于实际系统中txid空间不足，PostgreSQL将txid空间视为一个圆圈。之前的21亿事务是’过去的’，接下来的21亿交易是’’未来的’（图 5.1 b）。在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1 节</a>中描述了所谓的<em>txid</em>环绕问题。</p>
+<p>注意，没有为BEGIN命令分配txid。在PostgreSQL中，当执行完BEGIN命令后执行第一个命令时，事务管理器会分配一个tixd，然后它的事务就开始了。</p>
+<h2 id="5-2-元组结构"><a href="#5-2-元组结构" class="headerlink" title="5.2 元组结构"></a>5.2 元组结构</h2><p>表页中的堆元组分为普通数据元组和TOAST元组，本节仅描述普通的元组。</p>
 <p>一个堆元组由三部分组成，即 HeapTupleHeaderData结构、NULL位图和用户数据（图 5.2）。</p>
 <p><img src="/medias/image/fig-5-02.png" alt="图 5.2 元组结构"></p>
-<p>HeapTupleHeaderData 结构在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/ee943004466418595363d567f18c053bae407792/src/include/access/htup_details.h">src/include/access/htup_details.h 中定义</a>。</p>
-<p>虽然<a href="void(0)">HeapTupleHeaderData</a>结构包含七个字段，但后续部分需要四个字段。</p>
+<p>HeapTupleHeaderData 结构在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/ee943004466418595363d567f18c053bae407792/src/include/access/htup_details.h">src/include/access/htup_details.h</a>中定义。<a href="void(0)">HeapTupleHeaderData</a>结构包含七个字段，但后续部分只需要四个字段。</p>
 <ul>
 <li><p><strong>t_xmin</strong>保存插入此元组的事务的txid。</p>
 </li>
-<li><p><strong>t_xmax</strong>保存删除或更新此元组的事务的txid。如果此元组尚未删除或更新，则t_xmax设置为<em>0</em>，这意味着 INVALID。</p>
+<li><p><strong>t_xmax</strong>保存删除或更新此元组的事务的txid。如果此元组尚未删除或更新，则t_xmax设置为0，这意味着 INVALID。</p>
 </li>
-<li><p><strong>t_cid</strong>保存着command id（cid），意思是从0开始的当前事务内执行此命令之前执行了多少条SQL命令。例如，假设我们在单个事务中执行三个INSERT命令：’BEGIN;INSERT ;INSERT;INSERT;COMMIT;’。如果第一个命令插入这个元组，t_cid 设置为 0。如果第二个命令插入这个，t_cid设置为1，依此类推。</p>
+<li><p><strong>t_cid</strong>保存着command id（cid），意思是从0开始的当前事务内执行此命令之前执行了多少条SQL命令。例如，假设我们在单个事务中执行三个INSERT命令：’BEGIN;INSERT ;INSERT;INSERT;COMMIT;’。如果第一个命令插入这个元组，t_cid 设置为 0，如果第二个命令插入这个，t_cid设置为1，依此类推。</p>
 </li>
-<li><p><strong>t_ctid</strong>保存指向自身或新元组的元组标识符 (tid)。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql01.html#_1.3.">1.3 节中</a>描述的tid用于标识表中的元组。当这个元组更新时，这个元组的t_ctid指向新的元组；否则，t_ctid 指向自身。</p>
+<li><p><strong>t_ctid</strong>保存指向自身或新元组的元组标识符 (tid)。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql01.html#_1.3.">第 1.3 节</a>中描述的tid用于标识表中的元组，当这个元组更新时，这个元组的t_ctid指向新的元组，否则t_ctid 指向自身。</p>
 </li>
 </ul>
-<h2 id="5-3-插入、删除和更新元组"><a href="#5-3-插入、删除和更新元组" class="headerlink" title="5.3 插入、删除和更新元组"></a>5.3 插入、删除和更新元组</h2><p>本节介绍如何插入、删除和更新元组。然后，简要描述了用于插入和更新元组的<em>自由空间映射（FSM）</em>。</p>
+<h2 id="5-3-插入、删除和更新元组"><a href="#5-3-插入、删除和更新元组" class="headerlink" title="5.3 插入、删除和更新元组"></a>5.3 插入、删除和更新元组</h2><p>本节介绍如何插入、删除和更新元组。然后简要的描述了用于插入和更新元组的<em>自由空间映射（FSM）</em>。</p>
 <p>为了关注元组，下面没有表示页眉和行指针。图 5.3 显示了如何表示元组的示例。</p>
-<p><img src="/medias/image/fig-5-03.png" alt="图 5.2 元组结构"></p>
+<p><img src="/medias/image/fig-5-03.png" alt="图 5.2 元组的表示"></p>
 <h3 id="5-3-1-插入"><a href="#5-3-1-插入" class="headerlink" title="5.3.1 插入"></a>5.3.1 插入</h3><p>通过插入操作，一个新的元组被直接插入到目标表的一页中（图 5.4）。</p>
-<p><img src="/medias/image/fig-5-04.png" alt="图 5.2 元组结构"></p>
+<p><img src="/medias/image/fig-5-04.png" alt="图 5.2 插入元组"></p>
 <p>假设一个tuple被一个 txid 为 99 的事务插入到一个页面中。在这种情况下，插入的tuple的header字段设置如下。</p>
+<p>Tuple_1：</p>
 <ul>
-<li><p>元组_1：</p>
-</li>
 <li><p><strong>t_xmin</strong>设置为 99，因为该元组由txid 99插入。</p>
 </li>
 <li><p><strong>t_xmax</strong>设置为 0，因为此元组尚未删除或更新。</p>
@@ -546,7 +526,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><p><strong>t_ctid</strong>设置为 (0,1)，它指向自身，因为这是最新的元组。</p>
 </li>
 </ul>
-<p><em>页面检查</em></p>
+<p><strong>页面检查</strong></p>
 <p>PostgreSQL 提供了一个扩展<em>pageinspect</em>，它是一个贡献模块，用于显示数据库页面的内容。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE EXTENSION pageinspect;</span>
 CREATE EXTENSION
@@ -564,61 +544,45 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <h3 id="5-3-2-删除"><a href="#5-3-2-删除" class="headerlink" title="5.3.2 删除"></a>5.3.2 删除</h3><p>在删除操作中，目标元组被逻辑删除。执行DELETE命令的txid的值设置为元组的t_xmax（图 5.5）。</p>
 <p><img src="/medias/image/fig-5-05.png" alt="图 5.5 元组删除"></p>
 <p>假设Tuple_1被txid 111删除，此时Tuple_1的header字段设置如下。</p>
+<p>Tuple_1：</p>
 <ul>
-<li><p>元组_1：</p>
-</li>
-<li><p><strong>t_xmax</strong>设置为 111。</p>
-</li>
+<li><strong>t_xmax</strong>设置为 111。</li>
 </ul>
-<p>如果提交了 txid 111，则不再需要 Tuple_1。通常，不需要的元<strong>组</strong>在 PostgreSQL中被称为<strong>死元组</strong>。</p>
-<p>死元组最终应该从页面中删除。清理死元组称为<strong>VACUUM</strong>处理，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章中</a>描述。</p>
+<p>如果提交了 txid 111，则不再需要 Tuple_1。通常，不需要的元组在 PostgreSQL中被称为<strong>死亡元组</strong>，死亡元组最终应该从页面中删除。清理死元组称为<strong>VACUUM</strong>处理，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中介绍。</p>
 <h3 id="5-3-3-更新"><a href="#5-3-3-更新" class="headerlink" title="5.3.3 更新"></a>5.3.3 更新</h3><p>在更新操作中，PostgreSQL在逻辑上删除最新的元组并插入一个新元组（图 5.6）。</p>
 <p><img src="/medias/image/fig-5-06.png" alt="图 5.5 元组删除"></p>
 <p>假设由 txid 99插入的行被 txid 100更新了两次。</p>
-<p>当执行第一个UPDATE 命令时，通过将 txid 100 设置为 t_xmax 逻辑删除<em>Tuple_1</em>，然后插入Tuple_2。然后，将<em>Tuple_1</em>的 t_ctid 重写为指向 Tuple_2。Tuple_1 和 Tuple_2 的头域如下。</p>
+<p>当执行第一个UPDATE 命令时，通过将 txid 100 设置为 t_xmax 逻辑删除Tuple_1，然后插入Tuple_2。然后，将Tuple_1的 t_ctid 重写为指向 Tuple_2。Tuple_1 和 Tuple_2 的头域如下。</p>
+<p>Tuple_1：</p>
 <ul>
-<li><p>元组_1：</p>
-</li>
-<li><p><strong>t_xmax</strong>设置为 100。</p>
-</li>
-<li><p><strong>t_ctid</strong>从 (0, 1) 改写为 (0, 2)。</p>
-</li>
-<li><p>元组_2：</p>
-</li>
-<li><p><strong>t_xmin</strong>设置为 100。</p>
-</li>
-<li><p><strong>t_xmax</strong>设置为 0。</p>
-</li>
-<li><p><strong>t_cid</strong>设置为 0。</p>
-</li>
-<li><p><strong>t_ctid</strong>设置为 (0,2)。</p>
-</li>
+<li><strong>t_xmax</strong>设置为 100。</li>
+<li><strong>t_ctid</strong>从 (0, 1) 改写为 (0, 2)。</li>
+</ul>
+<p>Tuple_2：</p>
+<ul>
+<li><strong>t_xmin</strong>设置为 100。</li>
+<li><strong>t_xmax</strong>设置为 0。</li>
+<li><strong>t_cid</strong>设置为 0。</li>
+<li><strong>t_ctid</strong>设置为 (0,2)。</li>
 </ul>
 <p>当执行第二个UPDATE命令时，与第一个UPDATE命令一样，逻辑上删除Tuple_2 并插入Tuple_3。Tuple_2和Tuple_3 的头域如下。</p>
+<p>Tuple_2：</p>
 <ul>
-<li><p>元组_2：</p>
-</li>
-<li><p><strong>t_xmax</strong>设置为 100。</p>
-</li>
-<li><p><strong>t_ctid</strong>从 (0, 2) 改写为 (0, 3)。</p>
-</li>
-<li><p>元组_3：</p>
-</li>
-<li><p><strong>t_xmin</strong>设置为 100。</p>
-</li>
-<li><p><strong>t_xmax</strong>设置为 0。</p>
-</li>
-<li><p><strong>t_cid</strong>设置为 1。</p>
-</li>
-<li><p><strong>t_ctid</strong>设置为 (0,3)。</p>
-</li>
+<li><strong>t_xmax</strong>设置为 100。</li>
+<li><strong>t_ctid</strong>从 (0, 2) 改写为 (0, 3)。</li>
+</ul>
+<p>Tuple_3：</p>
+<ul>
+<li><strong>t_xmin</strong>设置为 100。</li>
+<li><strong>t_xmax</strong>设置为 0。</li>
+<li><strong>t_cid</strong>设置为 1。</li>
+<li><strong>t_ctid</strong>设置为 (0,3)。</li>
 </ul>
 <p>与删除操作一样，如果 txid 100被提交，Tuple_1和 Tuple_2将是死元组，如果 txid 100被中止，Tuple_2 和 Tuple_3 将是死元组。</p>
-<h3 id="5-3-4-Free-Space-Map"><a href="#5-3-4-Free-Space-Map" class="headerlink" title="5.3.4 Free Space Map"></a>5.3.4 Free Space Map</h3><p>在插入堆或索引元组时，PostgreSQL使用对应表或索引的<strong>FSM</strong>来选择可以插入它的页面。</p>
-<p>如<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql01.html#_1.2.3.">第 1.2.3 节所述</a>，所有表和索引都有各自的FSM。每个FSM将有关每个页面的可用空间容量的信息存储在相应的表或索引文件中。</p>
-<p>所有FSM都以后缀“fsm”存储，如有必要，它们会加载到共享内存中。</p>
-<p>pg_freespacemap</p>
-<p>扩展<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">pg_freespacemap</a>提供指定表/索引的<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">空闲</a>空间。以下查询显示指定表中每个页面的可用空间比率。</p>
+<h3 id="5-3-4-Free-Space-Map"><a href="#5-3-4-Free-Space-Map" class="headerlink" title="5.3.4 Free Space Map"></a>5.3.4 Free Space Map</h3><p>在插入堆表或索引元组时，PostgreSQL使用对应表或索引的<strong>FSM</strong>来选择可以插入它的页面。</p>
+<p>如<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql01.html#_1.2.3.">第 1.2.3 节</a>所述，所有表和索引都有各自的FSM，每个FSM将有关每个页面的<strong>可用空间容量的信息</strong>存储在相应的表或索引文件中。所有FSM都以后缀’fsm’存储，如有必要，它们会加载到共享内存中。</p>
+<p><em>pg_freespacemap</em></p>
+<p>扩展<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">pg_freespacemap</a>提供指定表或者索引的空闲空间。以下查询显示指定表中每个页面的可用空间比例。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE EXTENSION pg_freespacemap;</span>
 CREATE EXTENSION
 
@@ -634,28 +598,30 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
      5 <span class="token operator">|</span>  7136 <span class="token operator">|</span>           87.00
 <span class="token punctuation">..</span><span class="token punctuation">..</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="5-4-提交日志（clog）"><a href="#5-4-提交日志（clog）" class="headerlink" title="5.4. 提交日志（clog）"></a>5.4. 提交日志（clog）</h2><p>PostgreSQL在<strong>Commit Log 中</strong>保存事务的状态。Commit Log，通常称为<strong>clog</strong>，分配给共享内存，并在整个事务处理过程中使用。</p>
-<p>本节介绍PostgreSQL中事务的状态，clog如何运行，以及clog的维护。</p>
-<h3 id="5-4-1-事务状态"><a href="#5-4-1-事务状态" class="headerlink" title="5.4.1 事务状态"></a>5.4.1 事务状态</h3><p>PostgreSQL定义了四种事务状态，即IN_PROGRESS、COMMITTED、ABORTED和SUB_COMMITTED。</p>
-<p>前三个状态是显而易见的。例如，当一个事务在进行中时，它的状态是 IN_PROGRES 等。</p>
-<p>SUB_COMMITTED 用于子事务，本文档省略其说明。</p>
-<h3 id="5-4-2-clog的运作"><a href="#5-4-2-clog的运作" class="headerlink" title="5.4.2 clog的运作"></a>5.4.2 clog的运作</h3><p>clog由共享内存中的一个或多个8KB页组成。clog在逻辑上形成一个阵列。数组的索引对应各自的交易id，数组中的每一项都保存着对应的事务id的状态。图 5.7 显示了clog及其运作方式。</p>
+<h2 id="5-4-提交日志（clog）"><a href="#5-4-提交日志（clog）" class="headerlink" title="5.4. 提交日志（clog）"></a>5.4. 提交日志（clog）</h2><p>PostgreSQL在<strong>Commit Log <strong>（通常称为</strong>clog</strong>）中保存事务的状态，分配给共享内存，并在整个事务处理过程中使用。本节介绍PostgreSQL中事务的状态，clog如何运行，以及clog的维护。</p>
+<h3 id="5-4-1-事务状态"><a href="#5-4-1-事务状态" class="headerlink" title="5.4.1 事务状态"></a>5.4.1 事务状态</h3><p>PostgreSQL定义了四种事务状态，即IN_PROGRESS、COMMITTED、ABORTED和SUB_COMMITTED。前三个状态是显而易见的。例如，当一个事务在进行中时，它的状态是 IN_PROGRES 等。SUB_COMMITTED 用于子事务，本文省略其说明。</p>
+<h3 id="5-4-2-clog的运作"><a href="#5-4-2-clog的运作" class="headerlink" title="5.4.2 clog的运作"></a>5.4.2 clog的运作</h3><p>clog由共享内存中的一个或多个8KB页组成，clog在逻辑上形成一个阵列，数组的索引对应各自的事务id，数组中的每一项都保存着对应的事务id的状态。图 5.7 显示了clog及其运作方式。</p>
 <p><img src="/medias/image/fig-5-07.png" alt="图 5.7 clog如何运作"></p>
 <hr>
 <ul>
-<li><p><strong>T1：</strong> txid 200次提交；txid 200的状态从IN_PROGRESS 更改为COMMITTED。</p>
+<li><p><strong>T1：</strong> txid 200提交，txid 200的状态从IN_PROGRESS 更改为COMMITTED。</p>
 </li>
-<li><p><strong>T2：</strong> txid 201中止；txid 201的状态从IN_PROGRESS 更改为ABORTED。</p>
+<li><p><strong>T2：</strong> txid 201中止，txid 201的状态从IN_PROGRESS 更改为ABORTED。</p>
 </li>
 </ul>
 <p>当前txid前进并且clog无法再存储它时，会附加一个新页面。</p>
-<p>当需要事务的状态时，调用内部函数。这些函数读取阻塞并返回请求事务的状态。（也可以看看 <em>Hint Bits</em> 在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.1.">第 5.7.1 节中</a>。）</p>
-<h3 id="5-4-3-clog的维护"><a href="#5-4-3-clog的维护" class="headerlink" title="5.4.3 clog的维护"></a>5.4.3 clog的维护</h3><p>当PostgreSQL关闭或checkpoint进程运行时，clog的数据被写入存储在<strong>pg_clog</strong>子目录下的文件中。（注意 pg_clog将在版本10中重命名为<em>pg_xact</em>。）这些文件被命名为<em>0000</em>、<em>0001</em>等。最大文件大小为 256 KB。例如，当clog使用8页（第一页到第八页；总大小为64 KB）时，将其数据写入0000（64 KB），以37页（296 KB）写入数据分为 0000 和 0001，其大小分别为 256 KB 和 40 KB。</p>
-<p>当PostgreSQL启动时，存储在pg_clog的文件（pg_xact 的文件）中的数据被加载以初始化clog。</p>
-<p>clog的大小不断增加，因为每当堵塞物被填满时都会附加一个新页面。但是，并非clog中的所有数据都是必需的。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章中</a>描述的vacuum处理会定期删除此类旧数据（clog页面和文件）。有关删除clog数据的详细信息在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.4.">第 6.4 节中</a>描述。</p>
-<h2 id="5-5-事务快照"><a href="#5-5-事务快照" class="headerlink" title="5.5. 事务快照"></a>5.5. 事务快照</h2><p>一事务快照是存储的信息有关的所有交易是否活跃，在一定的时间点为个人交易的数据集。这里的活动事务意味着它正在进行中或尚未开始。</p>
-<p>PostgreSQL内部将事务快照的文本表示格式定义为**’100:100’<strong>。例如，</strong>‘100:100’**表示’小于99的txid不活跃，等于或大于100的txid是活跃的’。在下面的描述中，使用了这种方便的表示形式。如果您不熟悉它，请参阅以下。</p>
-<p><em>内置函数 txid_current_snapshot 及其文本表示格式</em></p>
+<p>当需要事务的状态时，调用内部函数，这些函数读取阻塞并返回请求事务的状态。（也可以 在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.1">第 5.7.1 节</a>中看看 <em>Hint Bits</em>。）</p>
+<h3 id="5-4-3-clog的维护"><a href="#5-4-3-clog的维护" class="headerlink" title="5.4.3 clog的维护"></a>5.4.3 clog的维护</h3><p>当PostgreSQL关闭或checkpoint进程运行时，clog的数据被写入存储在<strong>pg_clog</strong>子目录下的文件中。</p>
+<blockquote>
+<p>pg_clog将在版本10中重命名为pg_xact。</p>
+</blockquote>
+<p>这些文件被命名为<em>0000</em>、<em>0001</em>等。最大文件大小为 256 KB，当clog使用8页（第一页到第八页，总大小为64 KB）时，将其数据写入0000（64 KB），以37页（296 KB）写入数据分为 0000 和 0001，其大小分别为 256 KB 和 40 KB。</p>
+<p>当PostgreSQL启动时，存储在pg_clog的文件中的数据被加载以初始化clog。clog的大小不断增加，因为每当堵塞物被填满时都会附加一个新页面。但是，并非clog中的所有数据都是必需的。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中描述的vacuum处理会定期删除此类旧数据（clog页面和文件），有关删除clog数据的详细信息在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.4">第 6.4 节</a>中描述。</p>
+<h2 id="5-5-事务快照"><a href="#5-5-事务快照" class="headerlink" title="5.5. 事务快照"></a>5.5. 事务快照</h2><p>事务快照是存储有关所有事务是否活跃的信息，在一定的时间点为单个事务的数据集。这里的活动事务意味着它正在进行中或尚未开始。</p>
+<p>PostgreSQL内部将事务快照的文本表示格式定义为’<strong>100:100</strong>‘。例如，’<strong>100:100</strong>‘表示小于99的txid不活跃，等于或大于100的txid是活跃的。在下面的描述中，使用了这种方便的表示形式。如果您不熟悉它，请参阅以下。</p>
+<blockquote>
+<p> 内置函数 txid_current_snapshot 及其文本表示格式</p>
+</blockquote>
 <p>函数<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/functions-info.html#FUNCTIONS-TXID-SNAPSHOT">txid_current_snapshot</a>显示当前事务的快照。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT txid_current_snapshot();</span>
  txid_current_snapshot 
@@ -663,32 +629,30 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
  100:104:100,102
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>txid_current_snapshot的文本表示为**’xmin:xmax:xip_list’**，组件描述如下。</p>
+<p>txid_current_snapshot的文本表示为’<strong>xmin:xmax:xip_list</strong>‘，组件描述如下。</p>
+<p>xmin</p>
 <ul>
-<li><p>最小</p>
-</li>
-<li><p>仍处于活动状态的最早txid。所有较早的事务要么被提交并可见，要么回滚并死亡。</p>
-</li>
-<li><p>最大</p>
-</li>
-<li><p>第一个尚未分配的txid。截至快照时，所有大于或等于此值的 txid 尚未启动，因此不可见。</p>
-</li>
-<li><p>xip_list</p>
-</li>
-<li><p>快照时的活动txid。该列表仅包括xmin和xmax之间的活动txid。</p>
-</li>
+<li>仍处于活动状态的最早txid。所有较早的事务要么被提交并可见，要么回滚并死亡。</li>
 </ul>
-<p>例如，在快照**’100:104:100,102’**中，xmin 为“100”，xmax 为“104”，而 xip_list 为“100,102”。</p>
+<p>xmax</p>
+<ul>
+<li>第一个尚未分配的txid。截至快照时，所有大于或等于此值的 txid 尚未启动，因此不可见。</li>
+</ul>
+<p>xip_list</p>
+<ul>
+<li>快照时的活动txid。该列表仅包括xmin和xmax之间的活动txid。</li>
+</ul>
+<p>例如，在快照’<strong>100:104:100,102</strong>‘中，xmin 为“100”，xmax 为“104”，而 xip_list 为“100:102:”。</p>
 <p>下面给出两个具体的例子：</p>
-<p><img src="/medias/image/fig-5-08.png" alt="图 5.8 交易快照表示的示例"></p>
-<p>第一个例子是**’100:100’**。该快照的含义如下（图 5.8(a)）：</p>
+<p><img src="/medias/image/fig-5-08.png" alt="图 5.8 事务快照表示的示例"></p>
+<p>第一个例子是’<strong>100:100</strong>‘。该快照的含义如下（图 5.8(a)）：</p>
 <ul>
 <li><p>等于或小于 99 的 txid不活跃，因为 xmin 是 100。</p>
 </li>
-<li><p>等于或大于 100 的 txid 是<em>活动的，</em>因为 xmax 是 100。</p>
+<li><p>等于或大于 100 的 txid是活跃的，因为 xmax 是 100。</p>
 </li>
 </ul>
-<p>第二个例子是**’100:104:100,102’**。该快照的含义如下（图 5.8(b)）：</p>
+<p>第二个例子是’<strong>100:104:100,102</strong>‘。该快照的含义如下（图 5.8(b)）：</p>
 <ul>
 <li><p>等于或小于99的txid不活跃。</p>
 </li>
@@ -697,44 +661,40 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><p>txid 100和102处于活跃状态，因为它们存在于xip列表中，而 txid 101和103未处于活跃状态。</p>
 </li>
 </ul>
-<p>事务快照由事务管理器提供。在READ COMMITTED隔离级别中，每当执行 SQL 命令时，事务都会获取快照；否则（REPEATABLE READ 或 SERIALIZABLE），事务仅在执行第一个 SQL 命令时获取快照。获取的事务快照用于元组的可见性检查，这在第 5.7 节中描述。</p>
+<p>事务快照由事务管理器提供。在READ COMMITTED隔离级别中，每当执行 SQL 命令时，事务都会获取快照；否则（REPEATABLE READ 或 SERIALIZABLE），事务仅在执行第一个 SQL 命令时获取快照。获取的事务快照用于元组的可见性检查，这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7">第 5.7 节</a>中描述。</p>
 <p>当使用获取的快照进行可见性检查时，快照中的<em>活动</em>事务必须被视为<em>进行中，</em> 即使它们实际上已被提交或中止。此规则很重要，因为它会导致READ COMMITTED 和 REPEATABLE READ（或 SERIALIZABLE）之间的行为不同。我们将在以下各节中反复提及此规则。</p>
 <p>在本节的其余部分，事务管理器和事务使用特定场景图 5.9 进行描述。</p>
 <p><img src="/medias/image/fig-5-09.png" alt="图 5.9 事务管理器和事务"></p>
 <p>事务管理器始终保存有关当前正在运行的事务的信息。假设三个事务依次启动，Transaction_A和Transaction_B的隔离级别为READ COMMITTED，Transaction_C的隔离级别为REPEATABLE READ。</p>
+<p><strong>T1：</strong></p>
 <ul>
-<li><p><strong>T1：</strong></p>
-</li>
-<li><p>Transaction_A启动并执行第一个SELECT命令。在执行第一条命令时，Transaction_A请求了这一刻的txid和快照。在这种情况下，事务管理器分配txid 200，并返回事务快照“200:200:”。</p>
-</li>
-<li><p><strong>T2：</strong></p>
-</li>
-<li><p>Transaction_B 启动并执行第一个SELECT命令。事务管理器分配 txid 201，并返回事务快照“200:200:”，因为 Transaction_A (txid 200) 正在进行中。因此，从Transaction_B无法看到Transaction_A。</p>
-</li>
-<li><p><strong>T3：</strong></p>
-</li>
-<li><p>Transaction_C启动并执行第一个SELECT命令。事务管理器分配txid 202，返回事务快照’200:200:’，因此从Transaction_C看不到Transaction_A和Transaction_B。</p>
-</li>
-<li><p><strong>T4：</strong></p>
-</li>
-<li><p>Transaction_A已提交。事务管理器删除有关此事务的信息。</p>
-</li>
-<li><p><strong>T5：</strong></p>
-</li>
-<li><p>Transaction_B和Transaction_C执行各自的SELECT命令。</p>
-</li>
-<li><p>Transaction_B需要事务快照，因为它处于READ COMMITTED级别。在这种情况下，Transaction_B获得新快照“201:201:”，因为Transaction_A (txid 200) 已提交。因此，Transaction_A不再对Transaction_B不可见。</p>
-</li>
-<li><p>Transaction_C不需要事务快照，因为它处于REPEATABLE READ级别并使用获取的快照，即’200:200:’。因此，Transaction_A对Transaction_C仍然不可见。</p>
-</li>
+<li>Transaction_A启动并执行第一个SELECT命令。在执行第一条命令时，Transaction_A请求了这一刻的txid和快照。在这种情况下，事务管理器分配txid 200，并返回事务快照“200:200:”。</li>
+</ul>
+<p><strong>T2：</strong></p>
+<ul>
+<li>Transaction_B 启动并执行第一个SELECT命令。事务管理器分配 txid 201，并返回事务快照“200:200:”，因为 Transaction_A (txid 200) 正在进行中。因此，从Transaction_B无法看到Transaction_A。</li>
+</ul>
+<p><strong>T3：</strong></p>
+<ul>
+<li>Transaction_C启动并执行第一个SELECT命令。事务管理器分配txid 202，返回事务快照’200:200:’，因此从Transaction_C看不到Transaction_A和Transaction_B。</li>
+</ul>
+<p><strong>T4：</strong></p>
+<ul>
+<li>Transaction_A已提交。事务管理器删除有关此事务的信息。</li>
+</ul>
+<p><strong>T5：</strong></p>
+<ul>
+<li>Transaction_B和Transaction_C执行各自的SELECT命令。</li>
+<li>Transaction_B需要事务快照，因为它处于READ COMMITTED级别。在这种情况下，Transaction_B获得新快照“201:201:”，因为Transaction_A (txid 200) 已提交。因此，Transaction_A不再对Transaction_B不可见。</li>
+<li>Transaction_C不需要事务快照，因为它处于REPEATABLE READ级别并使用获取的快照，即’200:200:’。因此，Transaction_A对Transaction_C仍然不可见。</li>
 </ul>
 <h2 id="5-6-可见性检查规则"><a href="#5-6-可见性检查规则" class="headerlink" title="5.6 可见性检查规则"></a>5.6 可见性检查规则</h2><p>可见性检查规则是一组规则，用于使用元组的t_xmin和t_xmax、clog和获取的事务快照来确定每个元组是可见还是不可见。这些规则太复杂，无法详细解释。因此，本文档显示了后续描述所需的最少规则。在下文中，我们省略了与子事务相关的规则并忽略了关于t_ctid的讨论，即我们不考虑在一个事务中更新超过两次的元组。</p>
 <p>选择的规则数为十个，可以分为三种情况。</p>
 <h3 id="5-6-1-t-xmin的状态为ABORTED"><a href="#5-6-1-t-xmin的状态为ABORTED" class="headerlink" title="5.6.1 t_xmin的状态为ABORTED"></a>5.6.1 t_xmin的状态为ABORTED</h3><p>t_xmin状态为ABORTED的元组始终<em>不可见</em>（规则 1），因为插入此元组的事务已中止。</p>
 <pre class="line-numbers language-c"><code class="language-c"> <span class="token comment" spellcheck="true">/* t_xmin status == ABORTED */</span>
 Rule <span class="token number">1</span><span class="token punctuation">:</span> IF t_xmin status is <span class="token string">'ABORTED'</span> THEN
-                  RETURN <span class="token string">'Invisible'</span>
-            END IF
+            RETURN <span class="token string">'Invisible'</span>
+        END IF
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 <p>该规则明确表示为以下数学表达式。</p>
 <ul>
@@ -755,7 +715,7 @@ Rule <span class="token number">4</span><span class="token punctuation">:</span>
              END IF
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>如果这个元组被另一个事务插入并且t_xmin的状态是IN_PROGRESS，这个元组显然是<em>不可见的</em>（规则4）。</p>
-<p>如果 t_xmin 等于当前的 txid（即这个元组是由当前事务插入的）并且 t_xmax<strong>不是</strong>INVALID，那么这个元组是<em>不可见的，</em> 因为它已经被当前事务更新或删除了（规则 3）。</p>
+<p>如果 t_xmin 等于当前的 txid（即这个元组是由当前事务插入的）并且 t_xmax不是INVALID，那么这个元组是<em>不可见的，</em> 因为它已经被当前事务更新或删除了（规则 3）。</p>
 <p>异常条件是该元组由当前事务插入并且t_xmax 为INVALID 的情况。在这种情况下，这个元组必须从当前事务中<em>可见</em>（规则 2），因为这个元组是当前事务本身插入的元组。</p>
 <ul>
 <li><p><strong>规则 2：</strong>如果 Status(t_xmin) = IN_PROGRESS ∧ t_xmin = current_txid ∧ t_xmax = INVAILD ⇒ 可见</p>
@@ -808,8 +768,8 @@ Rule <span class="token number">10</span><span class="token punctuation">:</span
 </li>
 </ul>
 <hr>
-<h2 id="5-7-能见度检查"><a href="#5-7-能见度检查" class="headerlink" title="5.7 能见度检查"></a>5.7 能见度检查</h2><p>本节描述PostgreSQL如何执行可见性检查，即如何选择给定事务中适当版本的堆元组。本节还介绍了 PostgreSQL如何防止ANSI SQL-92 标准中定义的异常：脏读、可重复读和幻读。</p>
-<h3 id="5-7-1-能见度检查"><a href="#5-7-1-能见度检查" class="headerlink" title="5.7.1 能见度检查"></a>5.7.1 能见度检查</h3><p><img src="/medias/image/fig-5-10.png" alt="图 5.10 描述可见性检查的场景"></p>
+<h2 id="5-7-可见性检查"><a href="#5-7-可见性检查" class="headerlink" title="5.7 可见性检查"></a>5.7 可见性检查</h2><p>本节描述PostgreSQL如何执行可见性检查，即如何选择给定事务中适当版本的堆元组。本节还介绍了 PostgreSQL如何防止ANSI SQL-92 标准中定义的异常：脏读、可重复读和幻读。</p>
+<h3 id="5-7-1-可见性检查"><a href="#5-7-1-可见性检查" class="headerlink" title="5.7.1 可见性检查"></a>5.7.1 可见性检查</h3><p><img src="/medias/image/fig-5-10.png" alt="图 5.10 描述可见性检查的场景"></p>
 <p>在图 5.10 所示的场景中，SQL 命令按以下时间顺序执行。</p>
 <ul>
 <li><p><strong>T1：</strong>开始事务（txid 200）</p>
@@ -881,7 +841,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <p>如果更新的元组在提交之前从其他事务中可见，则它们被称为<strong>脏读</strong>，也称为<strong>wr-conflicts</strong>。但是，如上所示，在 PostgreSQL 中的任何隔离级别都不会发生脏读。</p>
 <p><strong>T7的SELECT命令：</strong></p>
 <p>下面分别介绍T7的SELECT命令在两个隔离级别下的行为。</p>
-<p>首先，我们探索 txid 201 何时处于 READ COMMITTED 级别。在这种情况下，txid 200 被视为已提交，因为事务快照是*’201:201:’<em>。因此，Tuple_1是</em>看不见的<em>由<strong>第10</strong>和Tuple_2是</em>可见*由<strong>第6</strong>，和SELECT命令返回“海德”。</p>
+<p>首先，我们探索 txid 201 何时处于 READ COMMITTED 级别。在这种情况下，txid 200 被视为已提交，因为事务快照是’201:201:’<em>。因此，Tuple_1是</em>看不见的由第10和Tuple_2是可见由第6，和SELECT命令返回“Hyde”。</p>
 <ul>
 <li><p>Rule10(Tuple_1): Status(t_xmin:199) = COMMITTED ∧ Status(t_xmax:200) = COMMITTED ∧ Snapshot(t_xmax:200) ≠ active ⇒ Invisible</p>
 </li>
@@ -952,7 +912,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 ----+------
 <span class="token punctuation">(</span>0 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="5-8-防止丢失更新"><a href="#5-8-防止丢失更新" class="headerlink" title="5.8 防止丢失更新"></a>5.8 防止丢失更新</h2><p>一个丢失的更新，也被称为WW冲突，是发生在并发事务更新同一行的异常，它必须在可重复读和可系列化级别都被阻止。（请注意，READ COMMITTED级别不需要防止丢失更新。）本节描述PostgreSQL如何防止丢失更新并显示示例。</p>
+<h2 id="5-8-防止丢失更新"><a href="#5-8-防止丢失更新" class="headerlink" title="5.8 防止丢失更新"></a>5.8 防止丢失更新</h2><p>一个丢失的更新，也被称为WW冲突，是发生在并发事务更新同一行的异常，它必须在可重复读和可系列化级别都被阻止（请注意，READ COMMITTED级别不需要防止丢失更新）。本节描述PostgreSQL如何防止丢失更新并显示示例。</p>
 <h3 id="5-8-1-并发UPDATE命令的行为"><a href="#5-8-1-并发UPDATE命令的行为" class="headerlink" title="5.8.1 并发UPDATE命令的行为"></a>5.8.1 并发UPDATE命令的行为</h3><p>当执行UPDATE命令时，函数ExecUpdate被内部调用。ExecUpdate的伪代码如下所示：</p>
 <p><em>伪代码：ExecUpdate</em></p>
 <pre class="line-numbers language-c"><code class="language-c"><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>  FOR each row that will be updated by this UPDATE <span class="token function">command</span>
@@ -984,147 +944,100 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
            END WHILE 
       END FOR 
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<ul>
-<li><p>(1) 获取将被此 UPDATE 命令更新的每一行。</p>
-</li>
-<li><p>(2) 重复下面的过程，直到目标行被更新（或者这个事务被中止）。</p>
-</li>
-<li><p>(3) 如果目标行<em>正在更新</em>，则进行步骤(3)；否则，继续执行步骤（8）。</p>
-</li>
-<li><p>(4) 等待更新目标行的事务终止，因为 PostgreSQL在 SI 中使用<em>first-updater-win</em>方案。</p>
-</li>
-<li><p>(5) 如果更新目标行的事务状态为COMMITTED，且该事务的隔离级别为REPEATABLE READ（或SERIALIZABLE），则进行步骤（6）；否则，继续执行步骤（7）。</p>
-</li>
-<li><p>(6) 中止此事务以防止丢失更新。</p>
-</li>
-<li><p>(7) 继续步骤(2)，尝试在下一轮更新目标行。</p>
-</li>
-<li><p>(8) 如果目标行已被另一个并发事务更新，则进行步骤(9)；否则，继续执行步骤（12）。</p>
-</li>
-<li><p>(9) 如果该事务的隔离级别为READ COMMITTED，则进行步骤(10)；否则，继续执行步骤（11）。</p>
-</li>
-<li><p>(10) UPDATE目标行，进入步骤(1)。</p>
-</li>
-<li><p>(11) 中止此事务以防止丢失更新。</p>
-</li>
-<li><p>(12) UPDATE目标行，因为目标行还没有被修改或者已经被终止的事务更新，即存在ww-conflict，所以继续步骤(1)。</p>
-</li>
-</ul>
+<p>(1) 获取将被此 UPDATE 命令更新的每一行。</p>
+<p>(2) 重复下面的过程，直到目标行被更新（或者这个事务被中止）。</p>
+<p>(3) 如果目标行<em>正在更新</em>，则进行步骤(3)；否则，继续执行步骤（8）。</p>
+<p>(4) 等待更新目标行的事务终止，因为 PostgreSQL在 SI 中使用<em>first-updater-win</em>方案。</p>
+<p>(5) 如果更新目标行的事务状态为COMMITTED，且该事务的隔离级别为REPEATABLE READ（或SERIALIZABLE），则进行步骤（6）；否则，继续执行步骤（7）。</p>
+<p>(6) 中止此事务以防止丢失更新。</p>
+<p>(7) 继续步骤(2)，尝试在下一轮更新目标行。</p>
+<p>(8) 如果目标行已被另一个并发事务更新，则进行步骤(9)；否则，继续执行步骤（12）。</p>
+<p>(9) 如果该事务的隔离级别为READ COMMITTED，则进行步骤(10)；否则，继续执行步骤（11）。</p>
+<p>(10) UPDATE目标行，进入步骤(1)。</p>
+<p>(11) 中止此事务以防止丢失更新。</p>
+<p>(12) UPDATE目标行，因为目标行还没有被修改或者已经被终止的事务更新，即存在ww-conflict，所以继续步骤(1)。</p>
 <p>此函数为每个目标行执行更新操作。它有一个while循环来更新每一行，while循环内部根据图5.11所示的条件分支为三个块。</p>
 <p><img src="/medias/image/fig-5-11.png" alt="图 5.11 ExecUpdate 中的三个内部块"></p>
+<p>[1]正在更新目标行</p>
 <ul>
-<li><p>xxxxxxxxxx&nbsp;$ find /home/postgres/archives -mtime +3d -exec rm &nbsp;-f {} ;bash</p>
-</li>
 <li><p>“正在更新”意味着该行被另一个并发事务更新，并且其事务尚未终止。在这种情况下，当前事务必须等待更新目标行的事务终止，因为PostgreSQL的SI使用<strong>first-updater-win</strong>方案。例如，假设事务Tx_A和Tx_B同时运行，并且Tx_B尝试更新一行；然而，Tx_A已经更新它并且仍在进行中。在这种情况下，Tx_B等待Tx_A 的终止。</p>
 </li>
 <li><p>更新目标行的事务提交后，继续进行当前事务的更新操作。如果当前事务处于READ COMMITTED级别，则更新目标行；否则（REPEATABLE READ 或 SERIALIZABLE），当前事务将立即中止以防止丢失更新。</p>
 </li>
-<li><p>[2]目标行已被并发事务更新（图5.11[2]）</p>
-</li>
-<li><p>当前事务尝试更新目标元组；但是，另一个并发事务已更新目标行并已提交。在这种情况下，如果当前事务处于READ COMMITTED级别，则会更新目标行；否则，当前事务将立即中止以防止丢失更新。</p>
-</li>
-<li><p>[3] 没有冲突（图5.11[3]）</p>
-</li>
-<li><p>当没有冲突时，当前事务可以更新目标行。</p>
-</li>
 </ul>
+<p>[2]目标行已被并发事务更新（图5.11[2]）</p>
+<ul>
+<li>当前事务尝试更新目标元组；但是，另一个并发事务已更新目标行并已提交。在这种情况下，如果当前事务处于READ COMMITTED级别，则会更新目标行；否则，当前事务将立即中止以防止丢失更新。</li>
+</ul>
+<p>[3] 没有冲突（图5.11[3]）</p>
+<ul>
+<li>当没有冲突时，当前事务可以更新目标行。</li>
+</ul>
+<blockquote>
 <p><em>第一个更新者获胜/第一个提交者获胜</em></p>
 <p>PostgreSQL的基于SI的并发控制采用了<em>first-updater-win</em>方案。相比之下，如下一节所述，PostgreSQL的SSI使用第<em>一个提交者获胜的</em>方案。</p>
-<h3 id="5-8-2-例子"><a href="#5-8-2-例子" class="headerlink" title="5.8.2 例子"></a>5.8.2 例子</h3><p>下面显示了三个示例。第一个和第二个示例显示更新目标行时的行为，第三个示例显示更新目标行时的行为。</p>
+</blockquote>
+<h3 id="5-8-2-例子"><a href="#5-8-2-例子" class="headerlink" title="5.8.2 例子"></a>5.8.2 例子</h3><p>下面显示了三个示例。第一和第二示例显示了目标行正在更新时的行为，第三示例显示了更新目标行时的行为。</p>
 <p><strong>示例 1：</strong></p>
 <p>事务Tx_A和Tx_B更新同一个表中的同一行，它们的隔离级别是READ COMMITTED。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_A</span>
+<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_A</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL READ COMMITTED;</span>
 START TRANSACTION
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># UPDATE tbl SET name = 'Hyde';</span>
 UPDATE 1
-
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
 COMMIT
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_B</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL READ COMMITTED;</span>
 START TRANSACTION
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># UPDATE tbl SET name = 'Utterson';</span>
     ↓ 
     ↓ this transaction is being blocked
     ↓ 
 UPDATE 1
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>Tx_B 执行如下。</p>
-<ul>
-<li><ol>
-<li>执行UPDATE命令后，Tx_B应该等待Tx_A的终止，因为目标元组正在被Tx_A更新（ExecUpdate中的步骤（4））。</li>
-</ol>
-</li>
-<li><ol start="2">
-<li>提交Tx_A后，Tx_B尝试更新目标行（ExecUpdate 中的步骤（7））。</li>
-</ol>
-</li>
-<li><ol start="3">
-<li>在第二轮ExecUpdate中，目标行被Tx_B再次更新（ExecUpdate中的步骤（2），（8），（9），（10））。</li>
-</ol>
-</li>
-</ul>
+<p>1）执行UPDATE命令后，Tx_B应该等待Tx_A的终止，因为目标元组正在被Tx_A更新（ExecUpdate中的步骤（4））。</p>
+<p>2）提交Tx_A后，Tx_B尝试更新目标行（ExecUpdate 中的步骤（7））。</p>
+<p>3）在第二轮ExecUpdate中，目标行被Tx_B再次更新（ExecUpdate中的步骤（2），（8），（9），（10））。</p>
 <p><strong>示例 2：</strong></p>
 <p>Tx_A 和 Tx_B 更新同一个表中的同一行，它们的隔离级别分别为 READ COMMITTED和REPEATABLE READ。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_A</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL READ COMMITTED;</span>
 START TRANSACTION
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># UPDATE tbl SET name = 'Hyde';</span>
 UPDATE 1
-
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
 COMMIT
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_B</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL REPEATABLE READ;</span>
 START TRANSACTION
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># UPDATE tbl SET name = 'Utterson';</span>
     ↓ 
     ↓ this transaction is being blocked
     ↓
 ERROR:couldn't serialize access due to concurrent update
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>Tx_B 的行为描述如下。</p>
-<ul>
-<li><p>1）执行UPDATE命令后，Tx_B应该等待Tx_A的终止（ExecUpdate中的步骤（4））。</p>
-</li>
-<li><p>2）Tx_A提交后，Tx_B被中止解决冲突，因为目标行已经更新，并且这个事务的隔离级别是REPEATABLE READ（ExecUpdate中的步骤（5）和（6））。</p>
-</li>
-</ul>
+<p>1）执行UPDATE命令后，Tx_B应该等待Tx_A的终止（ExecUpdate中的步骤（4））。</p>
+<p>2）Tx_A提交后，Tx_B被中止解决冲突，因为目标行已经更新，并且这个事务的隔离级别是REPEATABLE READ（ExecUpdate中的步骤（5）和（6））。</p>
 <p><strong>示例 3：</strong></p>
 <p>Tx_B (REPEATABLE READ) 尝试更新已由提交的Tx_A更新的目标行。在这种情况下，Tx_B被中止（ExecUpdate 中的步骤 (2)、(8)、(9) 和 (11)）。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_A</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL READ COMMITTED;</span>
 START TRANSACTION
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># UPDATE tbl SET name = 'Hyde';</span>
 UPDATE 1
-
-
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
 COMMIT
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># -- Tx_B</span>
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># START TRANSACTION</span>
 testdb-<span class="token comment" spellcheck="true">#    ISOLATION LEVEL REPEATABLE READ;</span>
@@ -1160,19 +1073,19 @@ ERROR:couldn't serialize access due to concurrent update
 </ol>
 <h3 id="5-9-2-在-PostgreSQL-中实现-SSI"><a href="#5-9-2-在-PostgreSQL-中实现-SSI" class="headerlink" title="5.9.2 在 PostgreSQL 中实现 SSI"></a>5.9.2 在 PostgreSQL 中实现 SSI</h3><p>为了实现上述策略，PostgreSQL 实现了很多功能和数据结构。但是，这里我们仅使用两种数据结构：<strong>SIREAD 锁</strong>和<strong>rw-conflicts</strong>来描述 SSI 机制。它们存储在共享内存中。</p>
 <p>为简单起见，本文档中省略了一些重要的数据结构，例如 SERIALIZABLEXACT。因此，CheckTargetForConflictOut、CheckTargetForConflictIn和PreCommit_CheckForSerializationFailure等函数的解释也极其简化。例如，我们指出哪些函数检测冲突；但是，没有详细说明如何检测冲突。如果想了解详细内容，请参考源代码：predicate.c。</p>
+<p><strong>SIREAD 锁：</strong></p>
 <ul>
-<li><p><strong>SIREAD 锁：</strong></p>
-</li>
 <li><p>SIREAD 锁，内部称为谓词锁，是一对对象和（虚拟）txid，用于存储有关谁访问了哪个对象的信息。请注意，省略了虚拟 txid 的描述。使用 txid 而不是虚拟 txid 来简化以下说明。</p>
 </li>
-<li><p>SIREAD 锁由 CheckTargetForConflictsOut 函数创建，每当在 SERIALIZABLE 模式下执行一个 DML 命令时。例如，如果 txid 100 读取给定表的 Tuple_1，则会创建一个 SIREAD 锁 {Tuple_1, {100}}。如果另一个事务，例如 txid 101，读取 Tuple_1，则 SIREAD 锁更新为 {Tuple_1, {100,101}}。请注意，在读取索引页时也会创建 SIREAD 锁，因为当应用<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql07.html#_7.2.">第 7.2 节中</a>描述<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/indexes-index-only-scans.html">的仅索引扫描</a>功能时，只读取索引页而不读取表页。</p>
+<li><p>SIREAD 锁由 CheckTargetForConflictsOut 函数创建，每当在 SERIALIZABLE 模式下执行一个 DML 命令时。例如，如果 txid 100 读取给定表的 Tuple_1，则会创建一个 SIREAD 锁 {Tuple_1, {100}}。如果另一个事务，例如 txid 101，读取 Tuple_1，则 SIREAD 锁更新为 {Tuple_1, {100,101}}。请注意，在读取索引页时也会创建 SIREAD 锁，因为当应用<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql07.html#_7.2.">第 7.2 节</a>中描述的<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/indexes-index-only-scans.html">仅索引扫描</a>功能时，只读取索引页而不读取表页。</p>
 </li>
 <li><p>SIREAD 锁具有三个级别：元组、页面和关系。如果创建了单个页面内所有元组的 SIREAD 锁，它们将聚合到该页面的单个 SIREAD 锁中，并释放（移除）关联元组的所有 SIREAD 锁，以减少内存空间。对于所有读取的页面也是如此。</p>
 </li>
 <li><p>为索引创建 SIREAD 锁时，会从头创建页级 SIREAD 锁。使用顺序扫描时，无论是否存在索引和/或 WHERE 子句，都会从头创建关系级 SIREAD 锁。请注意，在某些情况下，此实现可能会导致序列化异常的误报检测。详细信息在第 5.9.4 节中描述。</p>
 </li>
-<li><p><strong>rw-冲突：</strong></p>
-</li>
+</ul>
+<p><strong>rw-冲突：</strong></p>
+<ul>
 <li><p>rw-conflict 是一个 SIREAD 锁和两个读写 SIREAD 锁的 txid 的三元组。</p>
 </li>
 <li><p>每当在 SERIALIZABLE 模式下执行 INSERT、UPDATE 或 DELETE 命令时，都会调用 CheckTargetForConflictsIn 函数，并在通过检查 SIREAD 锁检测冲突时创建 rw-conflicts。</p>
@@ -1206,46 +1119,48 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 </ul>
 <p>图 5.15 展示了 PostgreSQL 如何检测和解决上述场景中描述的 Write-Skew 异常。</p>
 <p><img src="/medias/image/fig-5-15.png" alt="图 5.15 SIREAD 锁和 rw 冲突，以及图 5.13 所示场景的时间表"></p>
+<p><strong>T1：</strong></p>
 <ul>
-<li><p><strong>T1：</strong></p>
-</li>
 <li><p>在执行 Tx_A 的 SELECT 命令时，CheckTargetForConflictsOut 创建 SIREAD 锁。在这种情况下，该函数创建两个 SIREAD 锁：L1 和 L2。</p>
 </li>
 <li><p>L1 和 L2 分别与 Pkey_2 和 Tuple_2000 相关联。</p>
 </li>
-<li><p><strong>T2：</strong></p>
-</li>
+</ul>
+<p><strong>T2：</strong></p>
+<ul>
 <li><p>在执行 Tx_B 的 SELECT 命令时，CheckTargetForConflictsOut 创建两个 SIREAD 锁：L3 和 L4。</p>
 </li>
 <li><p>L3 和 L4 分别与 Pkey_1 和 Tuple_1 相关联。</p>
 </li>
-<li><p><strong>T3：</strong></p>
-</li>
+</ul>
+<p><strong>T3：</strong></p>
+<ul>
 <li><p>执行Tx_A的UPDATE命令时，在ExecUpdate前后都会调用CheckTargetForConflictsOut和CheckTargetForConflictsIN。</p>
 </li>
 <li><p>在这种情况下，CheckTargetForConflictsOut 什么也不做。</p>
 </li>
 <li><p>CheckTargetForConflictsIn 创建 rw-conflict C1，也就是 Tx_B 和 Tx_A 之间 Pkey_1 和 Tuple_1 的冲突，因为 Pkey_1 和 Tuple_1 都被 Tx_B 读取，被 Tx_A 写入。</p>
 </li>
-<li><p><strong>T4：</strong></p>
-</li>
+</ul>
+<p><strong>T4：</strong></p>
+<ul>
 <li><p>在执行Tx_B的UPDATE命令时，CheckTargetForConflictsIn创建了rw-conflict C2，即Tx_A和Tx_B之间Pkey_2和Tuple_2000的冲突。</p>
 </li>
 <li><p>在这个场景中，C1 和 C2 在优先级图中创建了一个循环；因此，Tx_A 和 Tx_B 处于不可串行化状态。但是，事务 Tx_A 和 Tx_B 尚未提交，因此 CheckTargetForConflictsIn 不会中止 Tx_B。请注意，发生这种情况是因为 PostgreSQL 的 SSI 实现基于<em>先提交者获胜</em>方案。</p>
 </li>
-<li><p><strong>T5：</strong></p>
-</li>
-<li><p>当 Tx_A 尝试提交时，会调用 PreCommit_CheckForSerializationFailure。此函数可以检测序列化异常，并在可能的情况下执行提交操作。在这种情况下，Tx_A 已提交，因为 Tx_B 仍在进行中。</p>
-</li>
-<li><p><strong>T6：</strong></p>
-</li>
-<li><p>当 Tx_B 尝试提交时，PreCommit_CheckForSerializationFailure 检测到序列化异常并且 Tx_A 已经提交；因此，Tx_B 被中止。</p>
-</li>
+</ul>
+<p><strong>T5：</strong></p>
+<ul>
+<li>当 Tx_A 尝试提交时，会调用 PreCommit_CheckForSerializationFailure。此函数可以检测序列化异常，并在可能的情况下执行提交操作。在这种情况下，Tx_A 已提交，因为 Tx_B 仍在进行中。</li>
+</ul>
+<p><strong>T6：</strong></p>
+<ul>
+<li>当 Tx_B 尝试提交时，PreCommit_CheckForSerializationFailure 检测到序列化异常并且 Tx_A 已经提交；因此，Tx_B 被中止。</li>
 </ul>
 <p>此外，如果在 Tx_A 提交后（在<strong>T5 处</strong>）由 Tx_B 执行 UPDATE 命令，则 Tx_B 会立即中止，因为 Tx_B 的 UPDATE 命令调用的 CheckTargetForConflictsIn 检测到序列化异常（图 5.16（1））。</p>
 <p>如果在<strong>T6</strong>执行 SELECT 命令而不是 COMMIT ，Tx_B 会立即中止，因为 Tx_B 的 SELECT 命令调用的 CheckTargetForConflictsOut 检测到序列化异常（图 5.16（2））。</p>
 <p><img src="/medias/image/fig-5-16.png" alt="图 5.16 其他 Write-Skew 场景"></p>
-<p><a target="_blank" rel="noopener" href="https://wiki.postgresql.org/wiki/SSI">这个 Wiki</a>解释了几个更复杂的异常。</p>
+<p>这个<a target="_blank" rel="noopener" href="https://wiki.postgresql.org/wiki/SSI"> Wiki</a>解释了几个更复杂的异常。</p>
 <h3 id="5-9-4-误报序列化异常"><a href="#5-9-4-误报序列化异常" class="headerlink" title="5.9.4 误报序列化异常"></a>5.9.4 误报序列化异常</h3><p>在SERIALIZABLE模式下，始终完全保证并发事务的可序列化性，因为永远不会检测到假阴性序列化异常。但是，在某些情况下，可以检测到假阳性异常；因此，用户在使用SERIALIZABLE模式时应牢记这一点。下面介绍PostgreSQL检测误报异常的情况。</p>
 <p>图 5.17 显示了发生假阳性序列化异常的场景。</p>
 <p><img src="/medias/image/fig-5-17.png" alt="图 5.16 其他 Write-Skew 场景"></p>
@@ -1254,7 +1169,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <p>即使在使用索引扫描时，如果事务 Tx_A 和 Tx_B 获得相同的索引 SIREAD 锁，PostgreSQL 也会检测到误报异常。图 5.19 显示了这种情况。假设索引页Pkey_1包含两个索引项，一个指向Tuple_1，另一个指向Tuple_2。当 Tx_A 和 Tx_B 分别执行 SELECT 和 UPDATE 命令时，Pkey_1 被 Tx_A 和 Tx_B 读写。在这种情况下，rw-conflicts C1 和 C2，两者都与 Pkey_1 相关联，在优先级图中创建一个循环；因此，检测到了假阳性 Write-Skew 异常。（如果 Tx_A 和 Tx_B 获得不同索引页的 SIREAD 锁，则不会检测到误报并且可以提交两个事务。）</p>
 <p><img src="/medias/image/fig-5-19.png" alt="图 5.19 假阳性异常 (2) – 使用相同索引页的索引扫描"></p>
 <hr>
-<h2 id="5-10-所需的维护进程"><a href="#5-10-所需的维护进程" class="headerlink" title="5.10 所需的维护进程"></a>5.10 所需的维护进程</h2><p>PostgreSQL的并发控制机制需要以下维护流程。</p>
+<h2 id="5-10-所需的维护进程"><a href="#5-10-所需的维护进程" class="headerlink" title="5.10 所需的维护进程"></a>5.10 所需的维护进程</h2><p>PostgreSQL的并发控制机制需要以下维护流程：</p>
 <ol>
 <li><p>删除指向相应死元组的死元组和索引元组</p>
 </li>
@@ -1265,14 +1180,14 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><p>更新FSM、VM和统计信息</p>
 </li>
 </ol>
-<p>第<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.2.">5.3.2 节</a>和第<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.3.">5.4.3</a>节分别解释了对第一个和第二个过程的需求。第三个过程与事务id回绕问题有关，在下面的小节中简要描述。</p>
+<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.2.">第5.3.2 节</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.3.">第5.4.3节</a>分别解释了对第一个和第二个过程的需求。第三个过程与事务id回绕问题有关，在下面的小节中简要描述。</p>
 <p>在PostgreSQL中，<strong>VACUUM</strong>处理负责这些进程。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>描述了vacuum进程。</p>
 <h3 id="5-10-1-冻结处理"><a href="#5-10-1-冻结处理" class="headerlink" title="5.10.1 冻结处理"></a>5.10.1 冻结处理</h3><p>在这里，我们描述txid环绕问题。</p>
 <p>假设插入tuple Tuple_1，txid为100，即Tuple_1的t_xmin为100，服务器已经运行了很长时间，Tuple_1没有被修改。当前的txid为21亿+100，并且执行了SELECT 命令。这时候Tuple_1是<em>可见的，</em>因为txid 100是<em>过去的</em>。然后，执行相同的 SELECT 命令；因此，当前的txid是21亿+101。但是，由于txid 100<em>在未来</em>（图 5.20），因此 Tuple_1<em>不再可见</em>。这就是PostgreSQL 中所谓的<em>事务环绕问题</em>。</p>
 <p><img src="/medias/image/fig-5-20.png" alt="图 5.20 环绕问题"></p>
 <p>为了解决这个问题，PostgreSQL引入了一个叫做<em>freeze txid</em>的概念，并实现了一个叫做<em>FREEZE</em>的过程。</p>
 <p>在PostgreSQL中，一个冻结的txid，它是一个特殊的保留txid 2，被定义为总是比所有其他txid旧。换句话说，冻结的txid始终处于非活动状态且可见。</p>
-<p>冻结过程由vacuum进程调用。如果t_xmin值早于当前txid减去<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-MIN-AGE">vacuum_freeze_min_age</a>（默认值为 5000 万），则冻结进程会扫描所有表文件并将元组的t_xmin重写为冻结的 txid 。这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章有</a>更详细的解释。</p>
+<p>冻结过程由vacuum进程调用。如果t_xmin值早于当前txid减去<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-MIN-AGE">vacuum_freeze_min_age</a>（默认值为 5000 万），则冻结进程会扫描所有表文件并将元组的t_xmin重写为冻结的 txid 。这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>有更详细的解释。</p>
 <p>例如，如图5.21a)所示，当前txid为5000万，冻结过程由VACUUM命令调用。在这种情况下，Tuple_1和Tuple_2 的t_xmin都被重写为 2。</p>
 <p>在版本9.4或更高版本中，将元组的t_infomask字段设置为XMIN_FROZEN，而不是将元组的t_xmin重写为冻结的 txid（图 5.21 b）。</p>
 <p><img src="/medias/image/fig-5-21.png" alt="图 5.21 冻结过程"></p>
@@ -1432,19 +1347,20 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                <a href="/2021/6.vacuum-jin-cheng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
                         
-                        <span class="card-title">第2章 进程和内存架构</span>
+                        <span class="card-title">第6章 vacuum进程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                            vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
+有简要介绍。
                         
                     </div>
                     <div class="publish-info">

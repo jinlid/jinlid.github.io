@@ -594,52 +594,6 @@ WHERE c.relname not like <span class="token string">'pg%'</span><span class="tok
 <span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在缓冲区不再脏了。</p>
-<h2 id="Checkpoint进程"><a href="#Checkpoint进程" class="headerlink" title="Checkpoint进程"></a><strong>Checkpoint进程</strong></h2><p>检查点是一个强制过程。为了理解这一点，让我们讨论块。PostgreSQL 总是以块的形式读写数据。考虑emp表。它只有一个记录。这条记录中的数据加起来应该是几个字节；我们在列id中有值1 ，在列first_name中有值Newname。但是，此表将占用 8K 磁盘空间，因为 PostgreSQL 使用 8K 块。块也称为页面。很容易验证 PostgreSQL 使用块。确保我们的表只有一条记录如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM emp;</span>
- <span class="token function">id</span> <span class="token operator">|</span> first_name
-----+------------
-  1 <span class="token operator">|</span> Newname
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>然后，我们找到文件名：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_relation_filepath('emp');</span>
- pg_relation_filepath
-----------------------
- base/16420/16436
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>现在，我们检查文件的大小：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \! ls -l /home/pg10/postgresql10.23/data/base/16420/16436</span>
--rw-------. 1 pg10 postgres 8192 Feb 11 22:15 /home/pg10/postgresql10.23/data/base/16420/16436
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>8192 字节 = 8K。所以，一张只有一条记录的表就占用了8K。让我们尝试插入一些数据，看看会发生什么：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> emp<span class="token punctuation">(</span>id <span class="token punctuation">,</span> first_name<span class="token punctuation">)</span> <span class="token keyword">SELECT</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">5000000</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'A longer name '</span><span class="token punctuation">;</span>
-<span class="token keyword">INSERT</span> <span class="token number">0</span> <span class="token number">5000000</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>执行几次前面的查询后，让我们从 shell 提示符下检查文件的大小：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \! ls -lh base/16420/16436*</span>
--rw-------. 1 pg10 postgres 249M Feb 11 22:18 base/16420/16436
--rw-------. 1 pg10 postgres  80K Feb 11 22:17 base/16420/16436_fsm
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>因此，我们有数据库目录和表文件。在文件中，数据以块为单位进行管理。简而言之，PostgreSQL 集群的物理布局如下所示：</p>
-<p><img src="/medias/image/image-20230211210706429.png" alt="image-20230211210706429"></p>
-<p>一旦用户更改了数据（已在缓冲区中可用），该缓冲区就变脏了。如前所述，用户提交了更改并不意味着更改已写入数据文件。将更改写入数据文件是检查点进程的工作。当检查点发生时，所有脏（修改）页面都被写入表和索引文件。该过程还将页面标记为干净。它还将预写日志标记为应用到此时。</p>
-<p>检查点是事务序列中的点，在这些点上可以保证堆和索引数据文件已使用在此检查点之前写入的所有信息进行了更新。在检查点时间，所有脏数据页都被刷新到磁盘，并将特殊的检查点记录写入日志文件。到目前为止，更改记录只写入了预写日志文件。在发生崩溃时，崩溃恢复过程会查看最新的检查点记录，以确定日志中的点（称为重做记录），它应该从该点开始重做操作。</p>
-<p>在此之前对数据文件所做的任何更改都保证已经在磁盘上。因此，在检查点之后，不再需要包含重做记录的日志段之前的日志段，并且可以回收来自<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/wal-configuration.html">http://www.postgresql.org/docs/current/static/wal-configuration.html</a>.</p>
-<p>现在的问题是：检查点何时发生？在某种程度上，我们决定了这一点。有几个参数决定检查点应该何时发生： checkpoint_segments、 checkpoint_timeout和checkpoint_completion_target。</p>
-<p>第一个是checkpoint_segments。默认值为3。一旦3 个WAL 段被填充，就会出现检查点。每个 WAL 段为 16 MB。一旦完成了3个 16 MB 的 WAL 段的更改，就应该出现一个检查点。我们将在下一节介绍 WAL。</p>
-<p>第二个参数checkpoint_timeout是一个超时值，可以设置为秒（默认）、分钟或小时。当出现以下任一情况时，将出现检查点：</p>
-<ul>
-<li>checkpoint_timeout期限已过。</li>
-<li>checkpoint_segments数量的WAL 已被填满。</li>
-</ul>
-<p>让我们考虑一个具有大约 16 GB 共享缓冲区的服务器。这是一台可承受大量负载的服务器。如果此负载的很大一部分由写入组成，那么这个 16 GB 缓冲区的大部分可能会在几分钟内变脏。检查点段的低设置将导致可用段快速填充并频繁检查点。同样，将checkpoint_timeout设置得较低也会导致频繁检查点。这会导致磁盘吞吐量过大。另一方面，如果我们将这些值保持得非常</p>
-<p>高，这将导致不频繁的检查点。在写入密集型系统中，这会导致检查点期间出现显着的 I/O 峰值，从而影响其他查询的性能。可以调整另一个参数： checkpoint_completion_target以在一定程度上缓解这种情况。</p>
-<p>这个参数告诉 PostgreSQL 在每次迭代中它必须多快尝试完成检查点过程。使用默认值0.5， PostgreSQL 可以预期在下一个检查点开始之前的大约一半时间内完成每个检查点。</p>
-<p>当我们将此值增加到0.9 时，检查点产生的写入会分散到更长的时间段内。因此，I/O 尖峰变得平坦。</p>
-<p>非常不频繁的检查点和大量脏缓冲区的一个问题是恢复时间可能会增加。在数据库重启的情况下，比如崩溃，它会找出最后的检查点信息。然后它将重播在最后一个检查点之后发生的所有事务，直到最后一次提交。事务/更改是从 WAL 中读取的。如果系统宕机时脏数据量很大，这意味着在数据库开放业务之前需要重放大量事务。这意味着更长的停机时间。同样从这个角度来看，拥有更频繁的检查点比不频繁的检查点更好。恢复时间可能与checkpoint_timeout值一样长。有关此参数的精彩帖子可在</p>
-<p><a target="_blank" rel="noopener" href="https://www.depesz.com/2010/11/03/checkpoint_completion_target/">https://www.depesz.com/2010/11/03/checkpoint_completion_target/</a> 找到。</p>
-<p>一旦启动子进程完成，或者如果我们正在执行数据库恢复，一旦恢复开始，检查点是一个由 postmaster 启动的进程。它一直保持活动状态，直到postmaster令它终止。</p>
 <h2 id="WAL-和-WAL-writer-进程"><a href="#WAL-和-WAL-writer-进程" class="headerlink" title="WAL 和 WAL writer 进程"></a>WAL 和 WAL writer 进程</h2><p>当我们对数据进行更改时，更改不会立即写入数据文件，如前所述（可能多次）。对缓冲区中的块进行更改，并将这些更改的记录写入 WAL 缓冲区（一旦对数据进行更改）。当更改被提交时，更改被刷新到 WAL 段。</p>
 <p>在pg_xlog目录中，每个 WAL 段的大小为 16 MB：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>postgres@host1 pg_xlog<span class="token punctuation">]</span>$ <span class="token function">pwd</span>
@@ -1365,19 +1319,19 @@ Time: 0.413 ms
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
+                <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="postgresql流复制四（查询冲突）">
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
                         
-                        <span class="card-title">postgresql流复制四（查询冲突）</span>
+                        <span class="card-title">流复制三（延迟备库）</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
                         
                     </div>
                     <div class="publish-info">
