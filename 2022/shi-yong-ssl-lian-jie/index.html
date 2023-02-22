@@ -553,10 +553,11 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span class="token keyword">echo</span> <span class="token string">'01'</span> <span class="token operator">></span> demoCA/serial
 <span class="token comment" spellcheck="true"># --创建文件index.txt</span>
 <span class="token function">touch</span> demoCA/index.txt
-<span class="token comment" spellcheck="true"># 修改openssl.cnf配置文件中的参数</span>
+<span class="token comment" spellcheck="true"># 修改openssl.cnf配置文件中的 </span>
+参数
 <span class="token function">dir</span> <span class="token operator">=</span> ./demoCA
 default_md <span class="token operator">=</span> sha256
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>2，生成根私钥和证书</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成根私钥</span>
 openssl genrsa -aes256 -passout pass:postgresql@123 -out demoCA/private/cakey.pem 2048
