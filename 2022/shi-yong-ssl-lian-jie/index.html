@@ -5,10 +5,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="使用SSL连接, jinlid&#39;s blog">
-    <meta name="description" content="
+    <meta name="description" content="用 SSL 进行安全的 TCP/IP 连接，对网络传输的数据进行加密，保证网络传输中数据的安全。
 
-1 SSL 概念介绍1.1 SSL 介绍用 SSL 进行安全的 TCP/IP 连接，对网络传输的数据进行加密，保证网络传输中数据的安全。
-PG有一个对使用 SSL 连接加密客户端/服务器通讯的本地支持，它可以增加安全性。这个特性要求在客">
+
+1 SSL 概念介绍1.1 SSL 介绍PG有一个对使用 SSL 连接加密客户端/服务器通讯的本地支持，它可以增加安全性。这个特性要求在客">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -415,10 +415,10 @@ PG有一个对使用 SSL 连接加密客户端/服务器通讯的本地支持，
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <span id="more"></span>
+                <p>用 SSL 进行安全的 TCP/IP 连接，对网络传输的数据进行加密，保证网络传输中数据的安全。</p>
+<span id="more"></span>
 
-<h2 id="1-SSL-概念介绍"><a href="#1-SSL-概念介绍" class="headerlink" title="1 SSL 概念介绍"></a>1 SSL 概念介绍</h2><h3 id="1-1-SSL-介绍"><a href="#1-1-SSL-介绍" class="headerlink" title="1.1 SSL 介绍"></a>1.1 SSL 介绍</h3><p>用 SSL 进行安全的 TCP/IP 连接，对网络传输的数据进行加密，保证网络传输中数据的安全。</p>
-<p>PG有一个对使用 SSL 连接加密客户端/服务器通讯的本地支持，它可以增加安全性。这个特性要求在客户端和服务器端都安装 OpenSSL 并且在编译的时候打开这个支持。编译配置时增加–with-openssl参数，让postgresql支持ssl认证方式，即</p>
+<h2 id="1-SSL-概念介绍"><a href="#1-SSL-概念介绍" class="headerlink" title="1 SSL 概念介绍"></a>1 SSL 概念介绍</h2><h3 id="1-1-SSL-介绍"><a href="#1-1-SSL-介绍" class="headerlink" title="1.1 SSL 介绍"></a>1.1 SSL 介绍</h3><p>PG有一个对使用 SSL 连接加密客户端/服务器通讯的本地支持，它可以增加安全性。这个特性要求在客户端和服务器端都安装 OpenSSL 并且在编译的时候打开这个支持。编译配置时增加–with-openssl参数，让postgresql支持ssl认证方式，即</p>
 <pre class="line-numbers language-bash"><code class="language-bash">./configure <span class="token punctuation">..</span>. --with-openssl
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <h3 id="1-2-openssl-的req-参数说明"><a href="#1-2-openssl-的req-参数说明" class="headerlink" title="1.2 openssl 的req 参数说明"></a>1.2 openssl 的req 参数说明</h3><p>openssl req 参数说明：</p>
