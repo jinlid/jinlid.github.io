@@ -494,7 +494,7 @@ gmake install-world
 <span class="token function">chown</span> -R pg10:postgres /home/pg10
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>gmake world 表示编译所有能编译的东西，包括文档和附加模块 ，而 gmake 命令不会安装这些内容， gmake world 相比 gmake 编译时间长很多。之后通过 gmake install-world命令安装 PostgreSQL 软件到目录/home/pg10/postgresql10.23 ，安装后/home/pg10/postgresql10.23/share 目录下生成 /doc 文档目录，并且 /home/pg10/postgresql10.23/share/extension 目录下生成了大量的扩展模块文件，这些扩展模块提供的功能能够丰富 PostgreSQL 特性，在生产环境下推荐 gmake world 编译安装。</p>
-<p>编译安装 PostgreSQL 软件过程使用的是 root 操作系账号 ，之后的部署步骤使用操作系统普通账号 pg10 即可 ，在 host1 上使用 pg10系统账号执行 initdb 命令初始化数据库，如下所示：</p>
+<p>xxxxxxxxxx&nbsp;from selenium import webdriverfrom selenium.common.exceptions import TimeoutException,NoSuchElementException​browser = webdriver.Chrome()try: &nbsp; &nbsp;browser.get(‘<a target="_blank" rel="noopener" href="https://www.baidu.com')except/">https://www.baidu.com')except</a> TimeoutException: &nbsp; &nbsp;print(‘Time Out’)try: &nbsp; &nbsp;browser.find_element_by_id(‘hello’)except NoSuchElementException: &nbsp; &nbsp;print(‘No Element’)finally: &nbsp; &nbsp;browser.close()python</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">su</span> - pg10
 initdb -D /home/pg10/postgresql10.23/data -E UTF8 --locale<span class="token operator">=</span>C -U pg10 -W
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>

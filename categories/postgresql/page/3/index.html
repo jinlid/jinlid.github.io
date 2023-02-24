@@ -395,11 +395,11 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 22">
+                <a href="/categories/postgresql/" title="postgresql: 23">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">22</span>
+                        <span class="tag-length">23</span>
                     </span>
                 </a>
                 
@@ -413,11 +413,11 @@
                 </a>
                 
                 
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 2">
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 3">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #D5F5E3;">数据库
-                        <span class="tag-length">2</span>
+                        <span class="tag-length">3</span>
                     </span>
                 </a>
                 
@@ -466,6 +466,57 @@
                         <div class="summary block-with-text">
                             
                                 事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改和操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
+                            
+                            <span class="card-title">第5章 并发控制</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+
+
+[TOC]
+
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
@@ -549,23 +600,23 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/6.vacuum-jin-cheng/">
+                    <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
+                            <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="第7章 仅堆元组和仅索引扫描">
                             
-                            <span class="card-title">第6章 vacuum进程</span>
+                            <span class="card-title">第7章 仅堆元组和仅索引扫描</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
-有简要介绍。
+                                本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
 
 
-为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
+[TOC]
+7.1 仅堆元组（热）当更新的行存储在存储旧行的同一表页中时，HOT 在 8.3 版中实现，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的必
                             
                         </div>
                         <div class="publish-info">
@@ -599,24 +650,23 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/5.bing-fa-kong-zhi/">
+                    <a href="/2021/6.vacuum-jin-cheng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
+                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
                             
-                            <span class="card-title">第5章 并发控制</span>
+                            <span class="card-title">第6章 vacuum进程</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
+有简要介绍。
 
 
-[TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
+为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
                             
                         </div>
                         <div class="publish-info">
