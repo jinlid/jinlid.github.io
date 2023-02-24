@@ -852,7 +852,7 @@ server starting
 </tbody></table>
 <p>请注意， log_line_prefix参数不适用于csvlog选项。</p>
 <blockquote>
-<p>如果您正在记录所有 SQL 语句，则日志文件在活动服务器中往往会增长得非常快。如果您要记录所有 SQL 语句，则可能需要一个过程来压缩和删除生产服务器中的文件。另一种选择是将日志写入单独的分区，最好是便宜的大容量磁盘。</p>
+<p>xxxxxxxxxx&nbsp;iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp –dport 22 -j ACCEPTbash</p>
 </blockquote>
 <h2 id="stats-collector进程"><a href="#stats-collector进程" class="headerlink" title="stats collector进程"></a><strong>stats collector进程</strong></h2><p>顾名思义，此过程收集有关数据库的统计信息。这是一个可选过程，默认值为 on。该过程跟踪对磁盘块和单个行项中的表和索引的访问。它还会跟踪表的记录计数，并跟踪 vacuum 和分析操作。重要的是要注意，各个进程在进入空闲状态之前将新的统计计数传输到收集器。因此，许多柜台不会反映飞行中的交易活动。</p>
 <p>数据被记录在一组表中，我们可以通过提供的多个视图访问它。视图以pg_stat 开头。键入以下命令：</p>
