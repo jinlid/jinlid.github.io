@@ -4,12 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="如何检查 PostgreSQL 中操作所采用的锁定级别, jinlid&#39;s blog">
-    <meta name="description" content="PostgreSQL 的手册通常对各种操作所采用的锁非常清楚——但没有什么是完美的。如果需要，也可以直接问PostgreSQL。
-
-
-您可以使用psql或 PgAdmin 简单地检查锁定级别。
-比如看什么锁alter table some_">
+    <meta name="keywords" content="PostgreSQL锁，第1部分:行锁, jinlid&#39;s blog">
+    <meta name="description" content="理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -21,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>如何检查 PostgreSQL 中操作所采用的锁定级别 | jinlid&#39;s blog</title>
+    <title>PostgreSQL锁，第1部分:行锁 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -341,12 +337,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/11.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">如何检查 PostgreSQL 中操作所采用的锁定级别</h1>
+                    <h1 class="description center-align post-title">PostgreSQL锁，第1部分:行锁</h1>
                 </div>
             </div>
         </div>
@@ -370,8 +366,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                <span class="chip bg-color">开发语言</span>
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
                             </a>
                         
                     </div>
@@ -382,8 +378,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/python/" class="post-category">
-                                python
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
                             </a>
                         
                     </div>
@@ -395,7 +391,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-02-23
+                    2023-02-26
                 </div>
                 
 
@@ -416,58 +412,90 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>PostgreSQL 的手册<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/explicit-locking.html">通常对各种操作所采用的锁非常清楚</a>——但没有什么是完美的。如果需要，也可以直接问PostgreSQL。</p>
+                <p>理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，我们需要能够阻止来自并发进程的访问，同时更改共享内存结构或行。一个线程更新结构，而其他线程等待(独占锁)，或者多个线程读取结构，所有写入等待。等待的副作用是锁定争用和服务器资源浪费。因此，理解为什么会发生等待以及涉及哪些锁是很重要的。在本文中，我将回顾PostgreSQL行级锁。</p>
 <span id="more"></span>
 
-<p>您可以使用<code>psql</code>或 PgAdmin 简单地检查锁定级别。</p>
-<p>比如看什么锁<code>alter table some_table disable trigger some_trigger;</code>需要：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
+<p>[TOC]</p>
+<p>在后续的文章中，我将研究<a target="_blank" rel="noopener" href="https://www.percona.com/blog/2018/10/24/postgresql-locking-part-2-heavyweight-locks/">表级锁</a>和<a target="_blank" rel="noopener" href="https://www.percona.com/blog/2018/10/30/postgresql-locking-part-3-lightweight-locks/">锁存器</a>保护内部数据库结构。</p>
+<h3 id="行锁-概述"><a href="#行锁-概述" class="headerlink" title="行锁-概述"></a>行锁-概述</h3><p>PostgreSQL在不同的抽象级别上有许多锁。应用程序中最重要的锁与<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>实现行级锁相关。其次——在维护任务期间(在备份/数据库迁移模式更改期间)出现的锁——表级锁。在低级PostgreSQL锁上也有可能看到等待，但这种情况很少见。更常见的情况是，CPU使用率很高，有许多并发查询正在运行，但与正常的并行查询数量相比，整体服务器性能下降。</p>
+<h3 id="示例环境"><a href="#示例环境" class="headerlink" title="示例环境"></a>示例环境</h3><p>接下来，你需要一个PostgreSQL服务器，它有一个单列表，包含几行：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE locktest (c INT);</span>
+CREATE TABLE
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># INSERT INTO locktest VALUES (1), (2);</span>
+INSERT 0 2
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>场景：两个并发事务试图选择要更新的一行。</p>
+<p>PostgreSQL在这种情况下使用行级锁。行级锁定与<code>MVCC</code>实现紧密集成，并使用隐藏的<code>xmin</code>和<code>xmax</code>字段。<code>xmin</code>和<code>xmax</code>存储事务id。所有需要行级锁的语句都会修改<code>xmax</code>字段(甚至包括<code>SELECT FOR UPDATE</code>)。修改发生在查询返回结果之后，所以为了看到<code>xmax</code>的变化，我们需要运行两次<code>SELECT FOR UPDATE</code>。通常，<code>xmax</code>字段用于将一行标记为过期(要么被某些事务完全删除，要么用于更新的行版本)，但它也用于行级锁定基础结构。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># BEGIN;</span>
 BEGIN
-test<span class="token operator">=</span><span class="token operator">></span> ALTER TABLE some_table DISABLE TRIGGER some_trigger<span class="token punctuation">;</span>
-ALTER TABLE
-test<span class="token operator">=</span><span class="token operator">></span> SELECT locktype, mode FROM pg_locks WHERE pid <span class="token operator">=</span> pg_backend_pid<span class="token punctuation">(</span><span class="token punctuation">)</span> AND relation <span class="token operator">=</span> <span class="token string">'some_table'</span>::regclass<span class="token punctuation">;</span>
- locktype <span class="token operator">|</span>         mode          
-----------+-----------------------
- relation <span class="token operator">|</span> ShareRowExclusiveLock
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT xmin,xmax, txid_current(), c FROM locktest WHERE c=1 FOR UPDATE;</span>
+   xmin   <span class="token operator">|</span> xmax <span class="token operator">|</span> txid_current <span class="token operator">|</span> c
+----------+------+--------------+---
+ 12594472 <span class="token operator">|</span>    0 <span class="token operator">|</span>     12594473 <span class="token operator">|</span> 1
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>那是为了锁定一张表。从这里很容易看出我们采取了<code>SHARE ROW EXCLUSIVE</code>锁，根据手册：</p>
-<p>…保护表免受并发数据更改，并且是自排他的，因此一次只有一个会话可以保存它。</p>
-<h2 id="pg-locks的其他用途"><a href="#pg-locks的其他用途" class="headerlink" title="pg_locks的其他用途"></a><code>pg_locks</code>的其他用途</h2><p>您还可以通过其他方式过滤<code>pg_locks</code>以查看事务持有的其他锁。你必须在<code>pg_class</code>等上做一些连接来解码关系 OID 到名称，这就是为什么我们真的需要PostgreSQL 中的<code>pg_stat_locks</code>视图来使这更容易。</p>
-<p>人们使用各种不同质量的固定查询来查看当前哪些进程阻塞了其他进程。在 9.6 中添加了<a target="_blank" rel="noopener" href="http://git.postgresql.org/gitweb/?p=postgresql.git;a=commitdiff;h=53be0b1a">更详细的锁等待信息</a>和<a target="_blank" rel="noopener" href="http://git.postgresql.org/gitweb/?p=postgresql.git;a=commit;h=52f5d578d6c29bf254e93c69043b817d4047ca67"><code>pg_blocking_pids()</code></a>，这将变得容易得多，尽管 9.6 还没有添加辅助视图。</p>
-<h2 id="什么是virtualxid和transactionid锁？"><a href="#什么是virtualxid和transactionid锁？" class="headerlink" title="什么是virtualxid和transactionid锁？"></a>什么是<code>virtualxid</code>和<code>transactionid</code>锁？</h2><p><code>您将在pg_locks</code>中看到的一个重要且可能令人困惑的事情是每个事务都持有一个特殊的锁，称为<code>virtualxid</code>锁：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
-BEGIN
-test<span class="token operator">=</span><span class="token operator">></span> SELECT * FROM pg_locks WHERE pid <span class="token operator">=</span> pg_backend_pid<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  locktype  <span class="token operator">|</span> database <span class="token operator">|</span> relation <span class="token operator">|</span> page <span class="token operator">|</span> tuple <span class="token operator">|</span> virtualxid <span class="token operator">|</span> transactionid <span class="token operator">|</span> classid <span class="token operator">|</span> objid <span class="token operator">|</span> objsubid <span class="token operator">|</span> virtualtransaction <span class="token operator">|</span>  pid  <span class="token operator">|</span>      mode       <span class="token operator">|</span> granted <span class="token operator">|</span> fastpath 
-------------+----------+----------+------+-------+------------+---------------+---------+-------+----------+--------------------+-------+-----------------+---------+----------
- relation   <span class="token operator">|</span>    16386 <span class="token operator">|</span>    11673 <span class="token operator">|</span>      <span class="token operator">|</span>       <span class="token operator">|</span>            <span class="token operator">|</span>               <span class="token operator">|</span>         <span class="token operator">|</span>       <span class="token operator">|</span>          <span class="token operator">|</span> 2/3983             <span class="token operator">|</span> 24250 <span class="token operator">|</span> AccessShareLock <span class="token operator">|</span> t       <span class="token operator">|</span> t
- virtualxid <span class="token operator">|</span>          <span class="token operator">|</span>          <span class="token operator">|</span>      <span class="token operator">|</span>       <span class="token operator">|</span> 2/3983     <span class="token operator">|</span>               <span class="token operator">|</span>         <span class="token operator">|</span>       <span class="token operator">|</span>          <span class="token operator">|</span> 2/3983             <span class="token operator">|</span> 24250 <span class="token operator">|</span> ExclusiveLock   <span class="token operator">|</span> t       <span class="token operator">|</span> t
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-test<span class="token operator">=</span><span class="token operator">></span> <span class="token keyword">select</span> <span class="token string">'11673'</span>::regclass<span class="token punctuation">;</span>
- regclass 
-----------
- pg_locks
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT xmin,xmax, txid_current(), c FROM locktest WHERE c=1 FOR UPDATE;</span>
+   xmin   <span class="token operator">|</span>   xmax   <span class="token operator">|</span> txid_current <span class="token operator">|</span> c
+----------+----------+--------------+---
+ 12594472 <span class="token operator">|</span> 12594473 <span class="token operator">|</span>     12594473 <span class="token operator">|</span> 1
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>如您所见，关系 AccessShareLock 只是我们在查询时对<code>pg_locks</code>采取的锁，因此您可以忽略它。</p>
-<p><code>virtualxid</code>锁很特殊<code>。</code>它是对每个交易始终持有的交易自己的虚拟交易 ID（上面的“2/3983”）的独占锁。在事务运行时，没有其他事务可以获取它。这样做的目的是让一个事务等待另一个事务使用 PostgreSQL 的锁定机制提交或回滚，并且它在内部使用。您通常不需要自己使用它，但是当您在<code>pg_locks</code>中看到它时，了解它是什么很有用。</p>
-<p>事务有一个类似的条目，它获得一个真正的读/写事务 ID，其他事务可以使用它来等待它们提交或回滚：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> <span class="token keyword">select</span> txid_current<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
- txid_current 
---------------
-         2774
+<p>如果语句试图修改同一行，则检查未完成事务列表。语句必须等待修改，直到<code>id=xmax</code>的事务完成。</p>
+<p>没有用于等待特定行的基础设施，但是事务可以等待事务id。</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- second connection</span>
+<span class="token keyword">SELECT</span> xmin<span class="token punctuation">,</span>xmax<span class="token punctuation">,</span>txid_current<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> locktest <span class="token keyword">WHERE</span> <span class="token number">c</span><span class="token operator">=</span><span class="token number">1</span> <span class="token keyword">FOR</span> <span class="token keyword">UPDATE</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>在第二个连接中运行的<code>SELECT FOR UPDATE</code>查询未完成，正在等待第一个事务完成。</p>
+<h3 id="pg-locks"><a href="#pg-locks" class="headerlink" title="pg_locks"></a>pg_locks</h3><p>这样的等待和锁可以通过查询<code>pg_locks</code>来查看:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT locktype,transactionid,virtualtransaction,pid,mode,granted,fastpath FROM pg_locks WHERE transactionid=12594473;</span>
+   locktype    <span class="token operator">|</span> transactionid <span class="token operator">|</span> virtualtransaction <span class="token operator">|</span>  pid  <span class="token operator">|</span>     mode      <span class="token operator">|</span> granted <span class="token operator">|</span> fastpath
+---------------+---------------+--------------------+-------+---------------+---------+----------
+ transactionid <span class="token operator">|</span>      12594473 <span class="token operator">|</span> 5/48               <span class="token operator">|</span> 33358 <span class="token operator">|</span> ShareLock     <span class="token operator">|</span> f       <span class="token operator">|</span> f
+ transactionid <span class="token operator">|</span>      12594473 <span class="token operator">|</span> 4/13981            <span class="token operator">|</span> 33325 <span class="token operator">|</span> ExclusiveLock <span class="token operator">|</span> t       <span class="token operator">|</span> f
+<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>您可以看到locktype=transactionid == 12594473的写入器事务id。让我们获取持有锁的pid和后端id:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT id,pg_backend_pid() FROM pg_stat_get_backend_idset() AS t(id) WHERE pg_stat_get_backend_pid(id) = pg_backend_pid();</span>
+ <span class="token function">id</span> <span class="token operator">|</span> pg_backend_pid
+----+----------------
+  5 <span class="token operator">|</span>          33418
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-test<span class="token operator">=</span><span class="token operator">></span> SELECT * FROM pg_locks WHERE pid <span class="token operator">=</span> pg_backend_pid<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-   locktype    <span class="token operator">|</span> database <span class="token operator">|</span> relation <span class="token operator">|</span> page <span class="token operator">|</span> tuple <span class="token operator">|</span> virtualxid <span class="token operator">|</span> transactionid <span class="token operator">|</span> classid <span class="token operator">|</span> objid <span class="token operator">|</span> objsubid <span class="token operator">|</span> virtualtransaction <span class="token operator">|</span>  pid  <span class="token operator">|</span>      mode       <span class="token operator">|</span> granted <span class="token operator">|</span> fastpath 
----------------+----------+----------+------+-------+------------+---------------+---------+-------+----------+--------------------+-------+-----------------+---------+----------
- relation      <span class="token operator">|</span>    16386 <span class="token operator">|</span>    11673 <span class="token operator">|</span>      <span class="token operator">|</span>       <span class="token operator">|</span>            <span class="token operator">|</span>               <span class="token operator">|</span>         <span class="token operator">|</span>       <span class="token operator">|</span>          <span class="token operator">|</span> 2/3984             <span class="token operator">|</span> 24250 <span class="token operator">|</span> AccessShareLock <span class="token operator">|</span> t       <span class="token operator">|</span> t
- virtualxid    <span class="token operator">|</span>          <span class="token operator">|</span>          <span class="token operator">|</span>      <span class="token operator">|</span>       <span class="token operator">|</span> 2/3984     <span class="token operator">|</span>               <span class="token operator">|</span>         <span class="token operator">|</span>       <span class="token operator">|</span>          <span class="token operator">|</span> 2/3984             <span class="token operator">|</span> 24250 <span class="token operator">|</span> ExclusiveLock   <span class="token operator">|</span> t       <span class="token operator">|</span> t
- transactionid <span class="token operator">|</span>          <span class="token operator">|</span>          <span class="token operator">|</span>      <span class="token operator">|</span>       <span class="token operator">|</span>            <span class="token operator">|</span>          2774 <span class="token operator">|</span>         <span class="token operator">|</span>       <span class="token operator">|</span>          <span class="token operator">|</span> 2/3984             <span class="token operator">|</span> 24250 <span class="token operator">|</span> ExclusiveLock   <span class="token operator">|</span> t       <span class="token operator">|</span> f
-<span class="token punctuation">(</span>3 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>所以如果你曾经想知道它们是什么，现在你知道了。</p>
-<p>当两个并发事务尝试将相同的键插入唯一索引（或主键）时，您会看到一个<code>transactionid</code>锁等待。在那种情况下，第二个事务必须等到第一个事务提交或回滚才能知道它是应该因错误而失败还是继续插入。</p>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>每个后端都有一个OS进程标识符(PID)和内部PostgreSQL标识符(backend id)。PostgreSQL可以处理许多事务，但是锁定只能发生在后端之间，并且每个后端执行一个事务。内部簿记只需要一个虚拟事务标识符：后端内部的一对后端id和一个序列号。</p>
+<p>不管被锁的行数是多少，PostgreSQL在<code>pg_locks</code>表中只有一个相关的锁。查询可能修改数十亿行，但PostgreSQL不会为冗余锁结构浪费内存。</p>
+<p>写入线程在其<code>transactionid</code>上设置<code>ExclusiveLock</code>。所有行级锁等待器都设置了<code>ShareLock</code>。一旦写入器释放锁，锁管理器将恢复之前锁定的所有后端锁。</p>
+<p><code>transactionid</code>的锁释放发生在提交或回滚时。</p>
+<h3 id="pg-stat-activity"><a href="#pg-stat-activity" class="headerlink" title="pg_stat_activity"></a>pg_stat_activity</h3><p>另一个获取锁定相关细节的好方法是从pg_stat_activity表中选择：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pid,backend_xid,wait_event_type,wait_event,state,query FROM pg_stat_activity WHERE pid IN (33358, 33325);</span>
+-<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>---+------------------------------------------------------------------------
+pid             <span class="token operator">|</span> 33325
+backend_xid     <span class="token operator">|</span> 12594473
+wait_event_type <span class="token operator">|</span>
+wait_event      <span class="token operator">|</span>
+state           <span class="token operator">|</span> idle <span class="token keyword">in</span> transaction
+query           <span class="token operator">|</span> SELECT xmin,xmax, txid_current<span class="token punctuation">(</span><span class="token punctuation">)</span>, c FROM locktest WHERE c<span class="token operator">=</span>1 FOR UPDATE<span class="token punctuation">;</span>
+-<span class="token punctuation">[</span> RECORD 2 <span class="token punctuation">]</span>---+------------------------------------------------------------------------
+pid             <span class="token operator">|</span> 33358
+backend_xid     <span class="token operator">|</span> 12594474
+wait_event_type <span class="token operator">|</span> Lock
+wait_event      <span class="token operator">|</span> transactionid
+state           <span class="token operator">|</span> active
+query           <span class="token operator">|</span> SELECT xmin,xmax,txid_current<span class="token punctuation">(</span><span class="token punctuation">)</span> FROM locktest WHERE c<span class="token operator">=</span>1 FOR UPDATE<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="源代码级调查"><a href="#源代码级调查" class="headerlink" title="源代码级调查"></a>源代码级调查</h3><p>让我们用gdb和<a target="_blank" rel="noopener" href="https://www.percona.com/doc/percona-toolkit/LATEST/pt-pmp.html">pt-pmp</a>工具检查服务员的堆栈跟踪：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># pt-pmp -p 33325</span>
+Sat Jul 28 10:10:25 UTC 2018
+30	<span class="token punctuation">..</span>/sysdeps/unix/sysv/linux/epoll_wait.c: No such <span class="token function">file</span> or directory.
+1 epoll_wait,WaitEventSetWaitBlock,WaitEventSetWait,WaitLatchOrSocket,WaitLatch,ProcSleep,WaitOnLock,LockAcquireExtended,LockAcquire,XactLockTableWait,heap_lock_tuple,ExecLockRows,ExecProcNode,ExecutePlan,standard_ExecutorRun,PortalRunSelect,PortalRun,exec_simple_query,PostgresMain,BackendRun,BackendStartup,ServerLoop,PostmasterMain,main
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>WaitOnLock</code>函数导致等待。函数位于lock.c文件(POSTGRES主锁机制)中。</p>
+<p>锁表是一个共享内存哈希表。冲突进程在存储区<code>/lmgr/proc.c</code>中休眠。在大多数情况下，应该通过<code>lmgr.c</code>或其他锁管理模块调用此代码，而不是直接调用。</p>
+<p>接下来，在pg_stat_activity中作为“Lock”列出的锁也称为重量级锁，并由锁管理器控制。<code>hwlock</code>也用于许多高级操作。</p>
+<p>顺便说一下，完整的描述可以在这里找到:<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/explicit-locking.html">https://www.postgresql.org/docs/current/static/explicit-locking.html</a></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>避免长时间运行的事务修改频繁更新的行或修改过多的行</li>
+<li>其次，不要在MVCC数据库中使用热点(由多个应用程序客户端连接并行更新的单行或多行)。这种工作负载更适合于内存中的数据库，并且通常可以与主要业务逻辑分离。</li>
+</ul>
 
                 
             </div>
@@ -494,7 +522,7 @@ test<span class="token operator">=</span><span class="token operator">></span> S
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/ru-he-jian-cha-postgresql-zhong-cao-zuo-suo-cai-yong-de-suo-ding-ji-bie/">https://jinlid.github.io/2023/ru-he-jian-cha-postgresql-zhong-cao-zuo-suo-cai-yong-de-suo-ding-ji-bie/</a>
+                    <a href="https://jinlid.github.io/2023/postgresql-suo-1-xing-suo/">https://jinlid.github.io/2023/postgresql-suo-1-xing-suo/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -532,8 +560,8 @@ test<span class="token operator">=</span><span class="token operator">></span> S
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                    <span class="chip bg-color">开发语言</span>
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
                                 </a>
                             
                         </div>
@@ -612,29 +640,30 @@ test<span class="token operator">=</span><span class="token operator">></span> S
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2023/autovacuum-bu-shi-di-ren/">
+                <a href="/2023/postgresql-suo-1-xing-suo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="autovacuum 不是敌人">
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="PostgreSQL锁，第1部分:行锁">
                         
-                        <span class="card-title">autovacuum 不是敌人</span>
+                        <span class="card-title">PostgreSQL锁，第1部分:行锁</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PostgreSQL中大量的读写工作负载不可避免地会导致数据库效率低下，这是一个常见的误解。然而，只要配置正确，PostgreSQL可以毫无问题地处理这些工作负载。
+                            理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-26
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -647,6 +676,7 @@ test<span class="token operator">=</span><span class="token operator">></span> S
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -665,24 +695,24 @@ test<span class="token operator">=</span><span class="token operator">></span> S
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/dang-autovacuum-bu-gong-zuo-shi/">
+                <a href="/2023/postgresql-suo-2-chong-liang-ji-suo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="当 autovacuum 不工作时">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="PostgreSQL锁，第2部分:重量级锁">
                         
-                        <span class="card-title">当 autovacuum 不工作时</span>
+                        <span class="card-title">PostgreSQL锁，第2部分:重量级锁</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            快速回顾一下，autovacuum后台进程清理死行，例如旧的已删除行版本。您也可以通过运行手动执行清理VACUUM，但autovacuum会根据表中死行的数量在适当的时候自动执行清理，不要太频繁但足够频繁以控制“垃圾”的数量。
+                            应用程序开发人员和dba的PostgreSQL锁可见性在大多数情况下与重量级锁相关。复杂的数据库锁定操作需要使用来自系统目录的视图进行完整的检测。应该清楚哪个对象被特定的数据库“后端”进程锁定。任何锁的另一个名称是“瓶颈”。为了使数据库操作
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-26
                             </span>
                         <span class="publish-author">
                             

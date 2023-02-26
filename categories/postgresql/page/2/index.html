@@ -395,20 +395,20 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 23">
+                <a href="/categories/postgresql/" title="postgresql: 25">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">23</span>
+                        <span class="tag-length">25</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/python/" title="python: 5">
+                <a href="/categories/python/" title="python: 4">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #F5EEF8;">python
-                        <span class="tag-length">5</span>
+                        <span class="tag-length">4</span>
                     </span>
                 </a>
                 
@@ -422,19 +422,19 @@
                 </a>
                 
                 
-                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统: 2">
+                <a href="/categories/%E7%9B%91%E6%8E%A7/" title="监控: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #E8F8F5;">操作系统
-                        <span class="tag-length">2</span>
+                            style="background-color: #E8F8F5;">监控
+                        <span class="tag-length">1</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/%E7%9B%91%E6%8E%A7/" title="监控: 1">
+                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #FEF9E7;">监控
+                            style="background-color: #FEF9E7;">操作系统
                         <span class="tag-length">1</span>
                     </span>
                 </a>
@@ -453,24 +453,26 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-liu-fu-zhi-yi-huan-jing-da-jian/">
+                    <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="流复制一（环境搭建）">
+                            <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="流复制四（查询冲突）">
                             
-                            <span class="card-title">流复制一（环境搭建）</span>
+                            <span class="card-title">流复制四（查询冲突）</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了
+                                部署流复制环境后，备库可提供只读操作，通常会将一些执行时间较长的分析任务、统计 SQL 跑在备库上，从而减轻主库压力，在备库上执行一些长时间 SQL 时，可能会出现以下错误并被中止：
+
+FATAL:  terminating connect
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-08
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-09
                             </span>
                             <span class="publish-author">
                                 
@@ -499,24 +501,74 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/shi-yong-libpq-yu-postgresql-tong-xin/">
+                    <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="使用 LibPQ 与 PostgreSQL 通信">
+                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
                             
-                            <span class="card-title">使用 LibPQ 与 PostgreSQL 通信</span>
+                            <span class="card-title">流复制三（延迟备库）</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                libpq库是一个 PostgreSQL 客户端库，用于与 PostgreSQL 服务器通信。本章的目的是编写 C 程序以连接到 PostgreSQL 服务器并使用 C 编程语言执行查询。在本章中，我们将探索使用libpq 与 Postgr
+                                延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
+
+
+[TOC]
+延迟备库1 延迟备库的意义PostgreSQL 流复制
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-01-12
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-09
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2023/postgresql-liu-fu-zhi-yi-huan-jing-da-jian/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="流复制一（环境搭建）">
+                            
+                            <span class="card-title">流复制一（环境搭建）</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-08
                             </span>
                             <span class="publish-author">
                                 
@@ -788,86 +840,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                    <a href="/2022/autovacuum-nei-bu-diao-you/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                            <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="autovacuum内部调优">
                             
-                            <span class="card-title">第2章 进程和内存架构</span>
+                            <span class="card-title">autovacuum内部调优</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
-
-
-[TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
-
+                                PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2021/1.shu-ju-ku-ji-qun-shu-ju-ku-he-biao/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="第1章 数据库集群、数据库和表">
-                            
-                            <span class="card-title">第1章 数据库集群、数据库和表</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                本章和下一章总结了PostgreSQL的基础知识，以帮助阅读后续章节。
-
-
-[TOC]
-在本章中，描述了以下主题：
-
-数据库集群的逻辑结构
-数据库集群的物理结构
-堆表文件的内部布局
-向表中写入和读取数据的方法
-
-如果您已经熟悉它们，您可以跳
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
                             </span>
                             <span class="publish-author">
                                 

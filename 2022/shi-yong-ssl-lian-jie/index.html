@@ -485,7 +485,7 @@ dbhost.yourdomain.com"</span>
 <span class="token function">chmod</span> og-rwx root.key
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>然后，使用密钥对请求进行签名以创建根证书颁发机构（使用Linux上的默认OpenSSL配置文件位置）：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">openssl x509 -req -in root.csr -text -days 3650 -extfile /etc/ssl/openssl.cnf -extensions v3_ca -signkey root.key -out root.crt
+<pre class="line-numbers language-bash"><code class="language-bash">openssl x509 -req -in root.csr -text -days 3650 -extfile /etc/pki/tls/openssl.cnf -extensions v3_ca -signkey root.key -out root.crt
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>openssl.cnf并位于openssl version -d报告的目录中，上面生成两个有用的文件 root.key (根CA的私钥）, root.crt(根CA证书）。<br>最后，创建由新的根证书颁发机构签名的服务器证书：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">openssl req -new -nodes -text -out server.csr -keyout server.key -subj <span class="token string">"/CN=dbhost.yourdomain.com"</span>
