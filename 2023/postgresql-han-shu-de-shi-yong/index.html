@@ -4,8 +4,30 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="argparse模块的使用, jinlid&#39;s blog">
-    <meta name="description" content="argparse是一个用来解析命令行参数的 Python 库，它是 Python 标准库的一部分。argparse 模块使编写用户友好的命令行界面变得容易。程序定义了所需的参数，而 argparse 将找出如何从 sys.argv （命令行">
+    <meta name="keywords" content="jinlid&#39;s blog">
+    <meta name="description" content="1 数据函数
+
+
+函数名
+功能
+示例
+结果
+
+
+
+abs(x)
+计算 x 的绝对值
+abs(-17.4)
+17.4
+
+
+ceil(dp)/ceiling(dp)
+计算大于或等于 dp 的最小整数
+ceil(-42.8)
+-42
+
+
+floo">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -17,7 +39,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>argparse模块的使用 | jinlid&#39;s blog</title>
+    <title>jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -337,12 +359,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">argparse模块的使用</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -364,25 +386,12 @@
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                    <div class="article-tag">
-                        
-                            <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                <span class="chip bg-color">开发语言</span>
-                            </a>
-                        
-                    </div>
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
                     
                 </div>
                 <div class="col s5 right-align">
-                    
-                    <div class="post-cate">
-                        <i class="fas fa-bookmark fa-fw icon-category"></i>
-                        
-                            <a href="/categories/python/" class="post-category">
-                                python
-                            </a>
-                        
-                    </div>
                     
                 </div>
             </div>
@@ -391,7 +400,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-01-12
+                    2023-03-01
                 </div>
                 
 
@@ -412,50 +421,329 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>argparse是一个用来解析命令行参数的 Python 库，它是 Python 标准库的一部分。argparse 模块使编写用户友好的命令行界面变得容易。程序定义了所需的参数，而 argparse 将找出如何从 sys.argv （命令行）中解析这些参数。argparse 模块还会自动生成帮助和使用消息，并在用户为程序提供无效参数时发出错误。</p>
-<span id="more"></span>
-
-<h4 id="三步法"><a href="#三步法" class="headerlink" title="三步法"></a>三步法</h4><ol>
-<li><p><strong>构造解析器</strong></p>
-<pre class="line-numbers language-python"><code class="language-python">parser <span class="token operator">=</span> argparse<span class="token punctuation">.</span>ArgumentParser<span class="token punctuation">(</span>description<span class="token operator">=</span><span class="token string">'caculateing the area of rectangle'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-</li>
-<li><p><strong>添加参数</strong></p>
-<pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">'--length'</span><span class="token punctuation">,</span> type<span class="token operator">=</span>int<span class="token punctuation">,</span> default<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">'长方形的长（类型int）'</span><span class="token punctuation">)</span>
-parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">'--width'</span><span class="token punctuation">,</span> type<span class="token operator">=</span>int<span class="token punctuation">,</span> default<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">'长方形的宽（类型int）'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-</li>
-<li><p><strong>解析参数</strong></p>
-<pre class="line-numbers language-python"><code class="language-python">args <span class="token operator">=</span> parser<span class="token punctuation">.</span>parse_args<span class="token punctuation">(</span><span class="token punctuation">)</span>
-result <span class="token operator">=</span> args<span class="token punctuation">.</span>length <span class="token operator">*</span> args<span class="token punctuation">.</span>width
-<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'长方形的面积是：'</span><span class="token punctuation">,</span>result<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-</li>
-</ol>
-<h4 id="位置参数"><a href="#位置参数" class="headerlink" title="位置参数"></a>位置参数</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"some"</span><span class="token punctuation">)</span>
-args <span class="token operator">=</span> parser<span class="token punctuation">.</span>parse_args<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>args<span class="token punctuation">.</span>some<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<h4 id="指定参数类型"><a href="#指定参数类型" class="headerlink" title="指定参数类型"></a>指定参数类型</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"square"</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">"返回值的平方"</span><span class="token punctuation">,</span> type<span class="token operator">=</span>int<span class="token punctuation">)</span>
-args <span class="token operator">=</span> parser<span class="token punctuation">.</span>parse_args<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>args<span class="token punctuation">.</span>square <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<h4 id="可选参数"><a href="#可选参数" class="headerlink" title="可选参数"></a>可选参数</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"--v"</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">"可选参数"</span><span class="token punctuation">)</span>
-args <span class="token operator">=</span> parser<span class="token punctuation">.</span>parse_args<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">if</span> args<span class="token punctuation">.</span>v<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'传入了参数v'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="action选项"><a href="#action选项" class="headerlink" title="action选项"></a>action选项</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"--v"</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">"可选参数"</span><span class="token punctuation">,</span> action<span class="token operator">=</span><span class="token string">"store_true"</span><span class="token punctuation">)</span>
-args <span class="token operator">=</span> parser<span class="token punctuation">.</span>parse_args<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">if</span> args<span class="token punctuation">.</span>v<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'传入了参数v'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="短选项"><a href="#短选项" class="headerlink" title="短选项"></a>短选项</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"-s"</span><span class="token punctuation">,</span><span class="token string">"--square"</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">"返回值的平方"</span><span class="token punctuation">,</span> type<span class="token operator">=</span>int<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="可选选项"><a href="#可选选项" class="headerlink" title="可选选项"></a>可选选项</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"-v"</span><span class="token punctuation">,</span> help<span class="token operator">=</span><span class="token string">"可选参数"</span><span class="token punctuation">,</span> type<span class="token operator">=</span>int<span class="token punctuation">,</span> choices<span class="token operator">=</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="count选项"><a href="#count选项" class="headerlink" title="count选项"></a>count选项</h4><pre class="line-numbers language-python"><code class="language-python">parser<span class="token punctuation">.</span>add_argument<span class="token punctuation">(</span><span class="token string">"-v"</span><span class="token punctuation">,</span> action<span class="token operator">=</span><span class="token string">"count"</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+                <h2 id="1-数据函数"><a href="#1-数据函数" class="headerlink" title="1 数据函数"></a>1 数据函数</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+<th>示例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>abs(x)</strong></td>
+<td>计算 x 的绝对值</td>
+<td>abs(-17.4)</td>
+<td>17.4</td>
+</tr>
+<tr>
+<td><strong>ceil(dp)</strong>/<strong>ceiling(dp)</strong></td>
+<td>计算大于或等于 dp 的最小整数</td>
+<td>ceil(-42.8)</td>
+<td>-42</td>
+</tr>
+<tr>
+<td><strong>floor(dp)</strong></td>
+<td>计算小于或等于 dp 的最大整数</td>
+<td>floor(-42.8)</td>
+<td>-43</td>
+</tr>
+<tr>
+<td><strong>round(dp)</strong></td>
+<td>四舍五入为整数</td>
+<td>round(12.45)</td>
+<td>12</td>
+</tr>
+<tr>
+<td><strong>trunc(dp)</strong></td>
+<td>向零取整</td>
+<td>trunc(12.8)</td>
+<td>12</td>
+</tr>
+<tr>
+<td><strong>power(a, b)</strong></td>
+<td>计算 a 的 b 次方</td>
+<td>power(2, 3)</td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>div(y, x)</strong></td>
+<td>计算 y 除以 x 的整数商</td>
+<td>div(9,4)</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>mod(y, x)</strong></td>
+<td>计算 y 除以 x 的余数</td>
+<td>mod(9,4)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>sign(dp)</strong></td>
+<td>返回参数的正负号</td>
+<td>sign(-8.4)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>random()</strong></td>
+<td>返回一个随机数</td>
+<td>random()</td>
+<td>0.07772749848663807</td>
+</tr>
+</tbody></table>
+<h2 id="2-字符串函数"><a href="#2-字符串函数" class="headerlink" title="2 字符串函数"></a>2 字符串函数</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+<th>示例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>concat(str, …)</strong></td>
+<td>用于连接字符串，并且忽略其中的 NULL 参数</td>
+<td>concat(2, NULL, 22)</td>
+<td>222</td>
+</tr>
+<tr>
+<td><strong>concat_ws(sep, str, …)</strong></td>
+<td>使用指定分隔符 sep 连接字符串</td>
+<td>concat_ws(‘ and ‘, 2, NULL, 22)</td>
+<td>2 and 22</td>
+</tr>
+<tr>
+<td><strong>length(string)</strong></td>
+<td>计算字符串包含的字符数</td>
+<td>length(‘jose’)</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>char_length(string)</strong></td>
+<td>计算字符串包含的字节数</td>
+<td>octet_length(‘jose’)</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>lower(string)</strong></td>
+<td>将字符串转换为小写形式</td>
+<td>lower(‘TOM’)</td>
+<td>tom</td>
+</tr>
+<tr>
+<td><strong>upper(string)</strong></td>
+<td>将字符串转换为大写形式</td>
+<td>upper(‘tom’)</td>
+<td>TOM</td>
+</tr>
+<tr>
+<td><strong>initcap(string)</strong></td>
+<td>将每个单词的首字母大写，其他字母小写</td>
+<td>initcap(‘hi THOMAS’)</td>
+<td>Hi Thomas</td>
+</tr>
+<tr>
+<td><strong>substring(string [FROM] [for])</strong></td>
+<td>用于提取从位置 FROM 开始的 for 个字符子串，位置从1 开始计算</td>
+<td>substring(‘Thomas’ FROM 2 for 3)</td>
+<td>hom</td>
+</tr>
+<tr>
+<td><strong>left(str, n)</strong></td>
+<td>返回字符串左边的 n 个字符</td>
+<td>left(‘abcde’, 2)</td>
+<td>ab</td>
+</tr>
+<tr>
+<td><strong>right(str, n)</strong></td>
+<td>返回字符串右边的 n 个字符</td>
+<td>right(‘abcde’, 2)</td>
+<td>de</td>
+</tr>
+<tr>
+<td><strong>position(substring in string)</strong></td>
+<td>返回子串的位置</td>
+<td>position(‘om’ in ‘Thomas’)</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>strpos(string, substring)</strong></td>
+<td>返回子串的位置</td>
+<td>strpos(‘Thomas’, ‘om’)</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>starts_with(string, prefix)</strong></td>
+<td>判断 string 是否以 prefix 开头</td>
+<td>starts_with(‘alphabet’, ‘alph’)</td>
+<td>true</td>
+</tr>
+<tr>
+<td><strong>replace(string, FROM, to)</strong></td>
+<td>将字符串 string 中的 FROM 子串替换为 to 子串</td>
+<td>replace(‘abcdefabcdef’, ‘cd’, ‘XX’)</td>
+<td>abXXefabXXef</td>
+</tr>
+<tr>
+<td><strong>translate(string , FROM , to)</strong></td>
+<td>将字符串 string 中出现在 FROM 中的字符串替换成 to 中相应位置的字符</td>
+<td>translate(‘12345’, ‘143’, ‘ax’)</td>
+<td>a2x5</td>
+</tr>
+<tr>
+<td><strong>overlay(string placing substring FROM [for])</strong></td>
+<td>使用 substring 覆盖字符串 string 中从FROM 开始的 for 个字符</td>
+<td>overlay(‘Txxxxas’ placing ‘hom’ FROM 2 for 4)</td>
+<td>Thomas</td>
+</tr>
+<tr>
+<td><strong>trim([leading trailing both] [characters] FROM string)</strong></td>
+<td>从字符串的开头（leading）、结尾（trailing）或者两端（both）删除由指定字符 characters（默认为空格）组成的最长子串</td>
+<td>trim(both ‘xyz’ FROM ‘yxTomxx’)</td>
+<td>Tom</td>
+</tr>
+<tr>
+<td><strong>ltrim(string [,</strong> <strong>characters])</strong></td>
+<td>与上面 trim 函数的 leading 选项相同</td>
+<td>ltrim(‘yxTomxx’, ‘xyz’)</td>
+<td>Tomxx</td>
+</tr>
+<tr>
+<td><strong>rtrim(string [, characters])</strong></td>
+<td>与上面 trim 函数的trailing 选项相同</td>
+<td>rtrim(‘yxTomxx’,</td>
+<td>yxTom</td>
+</tr>
+<tr>
+<td><strong>lpad(string, length [, fill ])</strong></td>
+<td>在 string 左侧使用 fill 中的字符（默认空格）进行填充，直到长度为 length</td>
+<td>lpad(‘hi’, 5, ‘xy’)</td>
+<td>xyxhi</td>
+</tr>
+<tr>
+<td><strong>rpad(string, length [, fill ])</strong></td>
+<td>函数在 string 右侧使用 fill 中的字符（默认空格）进行填充，直到长度为 length</td>
+<td>rpad(‘hi’, 5, ‘xy’)</td>
+<td>hixyx</td>
+</tr>
+<tr>
+<td><strong>repeat(string, number)</strong></td>
+<td>函数将字符串 string 重复 N 次</td>
+<td>repeat(‘Pg’, 4)</td>
+<td>PgPgPgPg</td>
+</tr>
+<tr>
+<td><strong>format(formatstr , formatarg)</strong></td>
+<td>用于对字符串格式化，类似于 C 语言中的 sprintf 函数</td>
+<td>format(‘Hello %s, %1$s’, ‘World’)</td>
+<td>Hello World, World</td>
+</tr>
+<tr>
+<td><strong>md5(string)</strong></td>
+<td>用于返回十六进制格式的 MD5 值</td>
+<td>md5(‘abc’)</td>
+<td>900150983cd24fb0d6963f7d28e17f72</td>
+</tr>
+<tr>
+<td><strong>regexp_split_to_table(string, pattern[, flags])</strong></td>
+<td>数用于拆分字符串，使用 POSIX 正则表达式作为分隔符。函数的返回类型是 text 集合</td>
+<td>regexp_split_to_table(‘hello world’, ‘\s+’)</td>
+<td>hello<br>world</td>
+</tr>
+<tr>
+<td><strong>split_part(string, delimiter, field)</strong></td>
+<td>数使用 delimiter 拆分字符串，并返回指定项（从 1 开始计数）</td>
+<td>split_part(‘abc<del>@</del>def<del>@</del>ghi’, ‘<del>@</del>‘, 2)</td>
+<td>def</td>
+</tr>
+<tr>
+<td><strong>reverse(str)</strong></td>
+<td>用于将字符串反转</td>
+<td>reverse(‘上海自来水’)</td>
+<td>水来自海上</td>
+</tr>
+</tbody></table>
+<h2 id="日期函数"><a href="#日期函数" class="headerlink" title="日期函数"></a>日期函数</h2><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能</th>
+<th>示例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>age(timestamp, timestamp)</strong></td>
+<td>计算两个时间点之间的间隔</td>
+<td>age(timestamp ‘2020-12-31’, timestamp ‘2020-01-01’)</td>
+<td>11 mons 30 days</td>
+</tr>
+<tr>
+<td><strong>age(timestamp)</strong></td>
+<td>计算当前日期的凌晨 12 点到该时间点之间的间隔</td>
+<td>age(timestamp ‘2020-01-01’)</td>
+<td>2 mons 2 days</td>
+</tr>
+<tr>
+<td><strong>date_part(text, timestamp)<strong>或者</strong>extract(field FROM timestamp)</strong></td>
+<td>用于获取日期时间中的某一部分，例如年份、月份、小时等</td>
+<td>date_part(‘year’, timestamp ‘2020-03-03 20:38:40’)</td>
+<td>2020</td>
+</tr>
+<tr>
+<td><strong>date_trunc(field, source [, time_zone ])</strong></td>
+<td>用于将 timestamp、timestamp WITH time zone、date、time 或者 interval 数据截断到指定的精度</td>
+<td>date_trunc(‘year’, timestamp ‘2020-03-03 20:38:40’)</td>
+<td>2020-01-01 00:00:00</td>
+</tr>
+<tr>
+<td><strong>to_timestamp(double precision)</strong></td>
+<td>函数将 Unix 时间戳（自从 1970-01-01 00:00:00+00 以来的秒数）转换为 PostgreSQL 时间戳数据</td>
+<td>to_timestamp(1583152349)</td>
+<td>2020-03-02 20:32:29+08</td>
+</tr>
+</tbody></table>
+<p>date_trunc函数支持以下截断精度：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('microseconds', now()) as _microseconds,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('milliseconds', now()) as _milliseconds,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('second'      , now()) as _second      ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('minute'      , now()) as _minute      ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('hour'        , now()) as _hour        ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('day'         , now()) as _day         ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('week'        , now()) as _week        ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('month'       , now()) as _month       ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('quarter'     , now()) as _quarter     ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('year'        , now()) as _year        ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('decade'      , now()) as _decade      ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('century'     , now()) as _century     ,</span>
+postgres-<span class="token comment" spellcheck="true"># date_trunc('millennium'  , now()) as _millennium  ;</span>
+-<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>-+------------------------------
+_microseconds <span class="token operator">|</span> 2023-03-01 23:46:15.627772+08
+_milliseconds <span class="token operator">|</span> 2023-03-01 23:46:15.627+08
+_second       <span class="token operator">|</span> 2023-03-01 23:46:15+08
+_minute       <span class="token operator">|</span> 2023-03-01 23:46:00+08
+_hour         <span class="token operator">|</span> 2023-03-01 23:00:00+08
+_day          <span class="token operator">|</span> 2023-03-01 00:00:00+08
+_week         <span class="token operator">|</span> 2023-02-27 00:00:00+08
+_month        <span class="token operator">|</span> 2023-03-01 00:00:00+08
+_quarter      <span class="token operator">|</span> 2023-01-01 00:00:00+08
+_year         <span class="token operator">|</span> 2023-01-01 00:00:00+08
+_decade       <span class="token operator">|</span> 2020-01-01 00:00:00+08
+_century      <span class="token operator">|</span> 2001-01-01 00:00:00+08
+_millennium   <span class="token operator">|</span> 2001-01-01 00:00:00+08
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>其他日期函数：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select current_date,current_time,current_timestamp,clock_timestamp(),localtimestamp,now(),statement_timestamp();</span>
+-<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>-------+-----------------------------
+<span class="token function">date</span>                <span class="token operator">|</span> 2023-03-01
+timetz              <span class="token operator">|</span> 23:38:31.86062+08
+now                 <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
+clock_timestamp     <span class="token operator">|</span> 2023-03-01 23:38:31.86076+08
+timestamp           <span class="token operator">|</span> 2023-03-01 23:38:31.86062
+now                 <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
+statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -482,7 +770,7 @@ args <span class="token operator">=</span> parser<span class="token punctuation"
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2022/argparse-mo-kuai-de-shi-yong/">https://jinlid.github.io/2022/argparse-mo-kuai-de-shi-yong/</a>
+                    <a href="https://jinlid.github.io/2023/postgresql-han-shu-de-shi-yong/">https://jinlid.github.io/2023/postgresql-han-shu-de-shi-yong/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -519,11 +807,7 @@ args <span class="token operator">=</span> parser<span class="token punctuation"
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            
-                                <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                    <span class="chip bg-color">开发语言</span>
-                                </a>
-                            
+                            <span class="chip bg-color">无标签</span>
                         </div>
                     
                 </div>
@@ -600,49 +884,39 @@ args <span class="token operator">=</span> parser<span class="token punctuation"
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2022/shi-yong-ssl-lian-jie/">
+                <a href="/2023/postgresql-han-shu-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="使用SSL连接">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">使用SSL连接</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            用 SSL 进行安全的 TCP/IP 连接，对网络传输的数据进行加密，保证网络传输中数据的安全。
+                            
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-03-11
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-03-01
+                            </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                    数据库
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
                             
                         </span>
                     </div>
                 </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
+
                 
             </div>
         </div>
@@ -653,24 +927,24 @@ args <span class="token operator">=</span> parser<span class="token punctuation"
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/autovacuum-nei-bu-diao-you/">
+                <a href="/2023/postgresql-suo-2-chong-liang-ji-suo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="autovacuum内部调优">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="PostgreSQL锁，第2部分:重量级锁">
                         
-                        <span class="card-title">autovacuum内部调优</span>
+                        <span class="card-title">PostgreSQL锁，第2部分:重量级锁</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
+                            应用程序开发人员和dba的PostgreSQL锁可见性在大多数情况下与重量级锁相关。复杂的数据库锁定操作需要使用来自系统目录的视图进行完整的检测。应该清楚哪个对象被特定的数据库“后端”进程锁定。任何锁的另一个名称是“瓶颈”。为了使数据库操作
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-26
                             </span>
                         <span class="publish-author">
                             

@@ -430,13 +430,13 @@
  1923 ? Ss 0:00 \_ postgres: autovacuum launcher process 
  1924 ? Ss 0:00 \_ postgres: stats collector process
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="从守护进程开始"><a href="#从守护进程开始" class="headerlink" title="从守护进程开始"></a>从守护进程开始</h2><p>我们启动PostgreSQL时启动的第一个进程是/usr/local/pgsql/bin/postgres。这个进程有很多职责，例如执行恢复、初始化共享数据结构/内存空间，以及启动强制和可选进程。这些进程也称为实用程序进程，包括bgwriter、checkpointer、autovacuum launcher、log writer、stats collector 进程等。守护进程还监听连接请求，接收来自客户端的连接请求，并为客户端生成服务器进程。很明显，守护进程本身是一个强制进程，用户连接到数据库时应该运行它。</p>
+<h2 id="从守护进程开始"><a href="#从守护进程开始" class="headerlink" title="从守护进程开始"></a>从守护进程开始</h2><p>我们启动PostgreSQL时启动的第一个进程是<code>/usr/local/pgsql/bin/postgres</code>。这个进程有很多职责，例如执行恢复、初始化共享数据结构/内存空间，以及启动强制和可选进程。这些进程也称为实用程序进程，包括<code>bgwriter</code>、<code>checkpointer</code>、<code>autovacuum launcher</code>、<code>log writer</code>、<code>stats collector</code> 进程等。守护进程还监听连接请求，接收来自客户端的连接请求，并为客户端生成服务器进程。很明显，守护进程本身是一个强制进程，用户连接到数据库时应该运行它。</p>
 <p>让我们关注用户连接‑发布‑命令场景，其他部分应该就位。下图向您展示了守护进程如何接收连接请求并启动（分叉）后端进程的过程。后端进程将在身份验证成功后开始处理来自该客户端的请求：</p>
 <p><img src="/medias/image/image-20230211204819519.png"></p>
-<p>对所有连接请求重复该过程（除非我们达到max_connections设置，在这种情况下我们会收到错误）。</p>
+<p>对所有连接请求重复该过程（除非我们达到<code>max_connections</code>设置，在这种情况下我们会收到错误）。</p>
 <p>因此，一个活动的服务器，在一段时间后，将拥有服务器启动时存在的进程，以及相当多的服务于客户端连接的进程，如下图所示：</p>
 <p><img src="/medias/image/image-20230211204949864.png" alt="image-20230211204949864"></p>
-<p>一旦用户连接到数据库，用户通常希望读取(SELECT)数据或写入(UPDATE/DELETE/INSERT)数据，更不用说更改表结构、添加索引等。例如，用户登录 Amazon 并搜索最新的 iPad、其价格和可用性。这听起来很简单。假设最简单（难以置信的简单）表结构，这个搜索将成为查询：</p>
+<p>一旦用户连接到数据库，用户通常希望读取(SELECT)数据或写入(<code>UPDATE/DELETE/INSERT</code>)数据，更不用说更改表结构、添加索引等。例如，用户登录 Amazon 并搜索最新的 iPad、其价格和可用性。这听起来很简单。假设最简单（难以置信的简单）表结构，这个搜索将成为查询：</p>
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> price<span class="token punctuation">,</span> available_count <span class="token keyword">FROM</span> product_tbl <span class="token keyword">WHERE</span> product <span class="token operator">=</span> <span class="token string">'iPad'</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>然而，当我们考虑到可能有成千上万的用户想要这样做时，事情就变得有点复杂了。前面的查询同时执行了几千次。当数以千计的用户搜索不同的产品时，iPad 就会更改为数以千计的不同产品名称。到目前为止，一切都很好。</p>
@@ -445,7 +445,7 @@
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>考虑到这些可能性后，让我们继续了解其余的 PostgreSQL 进程和内存管理。</p>
 <h3 id="了解共享缓冲区"><a href="#了解共享缓冲区" class="headerlink" title="了解共享缓冲区"></a>了解共享缓冲区</h3><p>当有成千上万的用户试图向许多不同的表读取/写入数据时，从目录/文件中读取（我们在安装 PostgreSQL 并创建一个包含几个表的数据库时看到的）将导致非常糟糕的非可扩展的系统。读取和写入将导致搜索许多文件，打开这些文件，使用fseek()查找特定数据记录，锁定，编辑和解锁。</p>
-<p>为了使其更具可扩展性和更快，引入了共享缓冲区（内存区域）的概念。现在，后端进程不再读取文件和写入文件，而是处理缓冲区或 RAM，性能有了显着提高。要分配的内存量由postgresql.conf中的shared_buffers参数决定。这个固定大小的共享内存块是在服务器启动时分配的。不仅仅是这个内存块负责改善响应时间，操作系统缓存也有助于保持大量数据随时可用。这两个缓存共同导致物理读写的实际数量和容量显着减少。除了这两个级别的缓存之外，还可以有磁盘控制器缓存、磁盘驱动器缓存等。底线是这些缓存通过减少必要的物理 I/O 来提高性能。</p>
+<p>为了使其更具可扩展性和更快，引入了共享缓冲区（内存区域）的概念。现在，后端进程不再读取文件和写入文件，而是处理缓冲区或 RAM，性能有了显着提高。要分配的内存量由postgresql.conf中的 <code>shared_buffers</code> 参数决定。这个固定大小的共享内存块是在服务器启动时分配的。不仅仅是这个内存块负责改善响应时间，操作系统缓存也有助于保持大量数据随时可用。这两个缓存共同导致物理读写的实际数量和容量显着减少。除了这两个级别的缓存之外，还可以有磁盘控制器缓存、磁盘驱动器缓存等。底线是这些缓存通过减少必要的物理 I/O 来提高性能。</p>
 <p>当大量数据从缓冲区刷新到磁盘时，还存在与巨大缓存相关的风险，例如 I/O 峰值。让我们只考虑一个简单的SELECT语句可能采用的可能路径，仅考虑共享缓冲区缓存和操作系统缓存。</p>
 <p>进程将检查的第一件事是它想要的数据是否在数据库缓冲区缓存中可用。如果它在数据库缓冲区缓存中不可用，则会向操作系统发出请求以获取特定文件/块。操作系统缓存有可能已经有文件/块并将其传递给数据库缓存。在这两种情况下，都避免了物理 I/O。只有当数据不存在于这些缓存（或其他缓存）中时，用户初始化的读/写才会真正导致物理 I/O。这三种可能性如下图所示：</p>
 <p><img src="/medias/image/image-20230211205436690.png" alt="image-20230211205436690"></p>
@@ -609,7 +609,7 @@ drwx------.  3 postgres postgres      188 Jan 15 22:48 <span class="token keywor
 drwx------. 19 postgres postgres     4096 Feb 11 22:11 <span class="token punctuation">..</span>
 -rw-------.  1 postgres postgres 16777216 Feb 11 22:16 000000010000000000000006
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>我们可以使用pg_current_xlog_location函数找出 PostgreSQL 正在写入的段：</p>
+<p>我们可以使用<code>pg_current_xlog_location</code>函数找出 PostgreSQL 正在写入的段：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>postgres@host1 pg_xlog<span class="token punctuation">]</span>$ psql
 psql <span class="token punctuation">(</span>9.6.24<span class="token punctuation">)</span>
 Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
@@ -661,11 +661,11 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span class="token comment" spellcheck="true">#wal_receiver_timeout = 60s             # time that receiver waits for</span>
 <span class="token comment" spellcheck="true">#wal_retrieve_retry_interval = 5s       # time to wait before retrying to</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>wal_level是一个重要的参数，因为这个设置直接影响我们可以用 WAL 做什么，我们是否可以只将它用于从崩溃中恢复，或者我们也可以将它用于归档以进行时间点恢复，或者我们是否可以使用它来创建备用服务器。此设置确定写入 WAL 的信息量。这是一个枚举类型的值，这意味着它可以有一个可能的值列表。可能的值为minimal、 archive和hot_standby。默认值为minimal，它只写入从崩溃或立即关闭中恢复所需的信息。 archive值添加了 WAL 归档所需的日志记录，而hot_standby进一步添加了在备用服务器上运行只读查询所需的信息。此参数只能在服务器启动时设置。在最低级别，可以安全地跳过一些批量操作的 WAL 日志记录，这可以使操作更快。 minimal WAL 不包含足够的信息来从基本备份和 WAL 日志中重建数据，因此应使用 archive 或hot_standby级别来启用 WAL 归档（archive_mode）和流复制。</p>
-<p>在hot_standby级别，记录与存档相同的信息，以及从 WAL 重建运行事务状态所需的信息。要在备用服务器上启用只读查询，必须在主服务器上将 wal_level设置为hot_standby ，并且必须在备用服务器上启用hot_standby设置。</p>
-<p>当fsync打开时，PostgreSQL 服务器会尝试确保数据真正刷新到磁盘（还记得不同级别的缓存吗？）。将fsync设置为关闭可能会显着提高性能，但也会带来风险。如果发生电源故障或系统崩溃，这可能会导致无法恢复的数据损坏。在关闭fsync的情况下， wal_sync_method根本不相关。当fsync开启时，我们可以从许多选项中选择一个，例如open_datasync、 fdatasync、 fsync等等；每个都有不同的方法来确保数据被刷新到磁盘。有关这些方法的说明，请访问<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/runtime-config-wal.html#GUC-WAL-SYNC-METHOD">http://www.postgresql.org/docs/current/static/runtime-config-wal.html#GUC-WAL-SYNC-METHOD</a>.</p>
-<p>wal_buffers内存是为 WAL 缓冲区预留的共享内存量。将此设置为‑1将导致基于shared_buffers设置的自动选择。在自动设置中，该值的范围可以从 64 KB 到 16 MB。手动设置时，最小可能值为 32 KB。</p>
-<p>另一个决定是 WAL 编写器应多久将 WAL 刷新到磁盘。我们需要记住的是，这将比检查点频率更频繁。 WAL 刷新间隔由al_writer_delay 指示。默认值为 200 毫秒。</p>
+<p><code>wal_level</code> 是一个重要的参数，因为这个设置直接影响我们可以用 WAL 做什么，我们是否可以只将它用于从崩溃中恢复，或者我们也可以将它用于归档以进行时间点恢复，或者我们是否可以使用它来创建备用服务器。此设置确定写入 WAL 的信息量。这是一个枚举类型的值，这意味着它可以有一个可能的值列表。可能的值为<code>minimal</code>、 <code>archive</code>和<code>hot_standby</code>。默认值为<code>minimal</code>，它只写入从崩溃或立即关闭中恢复所需的信息。 archive值添加了 WAL 归档所需的日志记录，而<code>hot_standby</code>进一步添加了在备用服务器上运行只读查询所需的信息。此参数只能在服务器启动时设置。在最低级别，可以安全地跳过一些批量操作的 WAL 日志记录，这可以使操作更快。 minimal WAL 不包含足够的信息来从基本备份和 WAL 日志中重建数据，因此应使用 archive 或<code>hot_standby</code>级别来启用 WAL 归档（<code>archive_mode</code>）和流复制。</p>
+<p>在<code>hot_standby</code>级别，记录与存档相同的信息，以及从 WAL 重建运行事务状态所需的信息。要在备用服务器上启用只读查询，必须在主服务器上将 <code>wal_level</code> 设置为 <code>hot_standby</code> ，并且必须在备用服务器上启用 <code>hot_standby</code> 设置。</p>
+<p>当<code>fsync</code>打开时，PostgreSQL 服务器会尝试确保数据真正刷新到磁盘（还记得不同级别的缓存吗？）。将<code>fsync</code>设置为关闭可能会显着提高性能，但也会带来风险。如果发生电源故障或系统崩溃，这可能会导致无法恢复的数据损坏。在关闭<code>fsync</code>的情况下， <code>wal_sync_method</code>根本不相关。当fsync开启时，我们可以从许多选项中选择一个，例如<code>open_datasync</code>、 <code>fdatasync</code>、 <code>fsync</code>等等；每个都有不同的方法来确保数据被刷新到磁盘。有关这些方法的说明，请访问<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/runtime-config-wal.html#GUC-WAL-SYNC-METHOD">http://www.postgresql.org/docs/current/static/runtime-config-wal.html#GUC-WAL-SYNC-METHOD</a>.</p>
+<p><code>wal_buffers</code> 内存是为 WAL 缓冲区预留的共享内存量。将此设置为‑1将导致基于 <code>shared_buffers</code> 设置的自动选择。在自动设置中，该值的范围可以从 64 KB 到 16 MB。手动设置时，最小可能值为 32 KB。</p>
+<p>另一个决定是 WAL 编写器应多久将 WAL 刷新到磁盘。我们需要记住的是，这将比检查点频率更频繁。 WAL 刷新间隔由<code>wal_writer_delay</code> 指示。默认值为 200 毫秒。</p>
 <p>还有一些与复制相关的参数，参考流复制章节。</p>
 <h2 id="background-writer进程"><a href="#background-writer进程" class="headerlink" title="background writer进程"></a><strong>background writer</strong>进程</h2><p>后台写入器负责根据算法写入磁盘特定的脏缓冲区，而检查点写入所有脏缓冲区。该过程考虑了共享内存使用数据以及有关最近使用/访问（最近最少使用）哪些块的信息。此过程的主要目标是确保有空闲缓冲区可供使用。相关参数如下：</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#bgwriter_delay = 200ms                 # 10-10000ms between rounds</span>
@@ -673,21 +673,20 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span class="token comment" spellcheck="true">#bgwriter_lru_multiplier = 2.0          # 0-10.0 multiplier on buffers scanned/round</span>
 <span class="token comment" spellcheck="true">#bgwriter_flush_after = 512kB           # measured in pages, 0 disables</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p>如我们所见，延迟的默认值为 200 毫秒。此参数指定进程在连续执行之间应等待的时间。 bgwriter_lru_maxpages参数指定每次迭代中进程将写入的最大缓冲区数。第三个参数也用于计算所需缓冲区的数量。如果此值设置为2并且平均最近需要（缓冲区数）估计为10，脏缓冲区将被清除，直到有 20 个缓冲区可用或直到bgwriter_lru_maxpages已被写入。</p>
-<p>bgwriter函数在启动子进程完成后立即由 postmaster 启动，或者如果我们正在执行存档恢复，则在恢复开始后立即启动。它一直保持活动状态，直到postmaster命令它终止。可以快速比较提交、检查点和后台编写器，如下图所示：</p>
+<p>如我们所见，延迟的默认值为 200 毫秒。此参数指定进程在连续执行之间应等待的时间。 <code>bgwriter_lru_maxpages</code> 参数指定每次迭代中进程将写入的最大缓冲区数。第三个参数也用于计算所需缓冲区的数量。如果此值设置为2并且平均最近需要（缓冲区数）估计为10，脏缓冲区将被清除，直到有 20 个缓冲区可用或直到 <code>bgwriter_lru_maxpages</code> 已被写入。</p>
+<p><code>bgwriter</code>函数在启动子进程完成后立即由 postmaster 启动，或者如果我们正在执行存档恢复，则在恢复开始后立即启动。它一直保持活动状态，直到postmaster命令它终止。可以快速比较提交、检查点和后台编写器，如下图所示：</p>
 <p><img src="/medias/image/image-20230211212514993.png" alt="image-20230211212514993"></p>
-<h2 id="autovacuum-launcher进程"><a href="#autovacuum-launcher进程" class="headerlink" title="autovacuum  launcher进程"></a>autovacuum  <strong>launcher</strong>进程</h2><p>这是一个可选过程。 postgresql中在postgresql.conf有一个参数叫做autovacuum 。 默认值为ON。此过程会自动执行 </p>
-<p>vacuum 并根据一些参数分析命令。要了解 autovacuum，首先，我们必须了解vacuum。</p>
-<p>假设我们从表中删除几条记录。 PostgreSQL 不会立即从数据文件中删除已删除的元组。这些被标记为已删除。同理，更新一条记录时，大致相当于一次删除，一次插入。先前版本的记录继续存在于数据文件中。数据库行的每次更新都会生成该行的新版本。原因很简单：可以有活跃的交易，想要看到数据之前的样子。由于此活动，数据文件中将有大量无法使用的空间。一段时间后，这些死记录变得无关紧要，因为没有交易可以查看旧数据。但是，由于空间未标记为可重用，插入和更新（导致插入）发生在数据文件的其他页面中。</p>
+<h2 id="autovacuum-launcher进程"><a href="#autovacuum-launcher进程" class="headerlink" title="autovacuum  launcher进程"></a>autovacuum  <strong>launcher</strong>进程</h2><p>这是一个可选过程。 postgresql中在postgresql.conf有一个参数叫做<code>autovacuum</code> 。 默认值为ON。此过程会根据一些参数自动执行 <code>vacuum</code> 和 <code>analyze</code> 命令。要了解 <code>autovacuum</code>，首先，我们必须了解 <code>vacuum</code>。</p>
+<p>假设我们从表中删除几条记录。 PostgreSQL 不会立即从数据文件中删除已删除的元组，这些被标记为已删除。同理，更新一条记录时，大致相当于一次删除，一次插入，先前版本的记录继续存在于数据文件中。数据库行的每次更新都会生成该行的新版本。原因很简单：可能有活跃的事务，想要看到数据之前的样子。由于此动作，数据文件中将有大量无法使用的空间。一段时间后，这些死记录变得无关紧要，因为没有事务可以查看旧数据。但是，由于空间未标记为可重用，插入和更新（导致插入）发生在数据文件的其他页面中。</p>
 <blockquote>
-<p>PostgreSQL 可以为并发用户提供不同版本的数据。这样做是为了让读不会写，反之亦然。这是通过称为多版本并发控制(MVCC) 的机制实现的。</p>
+<p>PostgreSQL 可以为并发用户提供不同版本的数据。这样做是为了让读不会阻塞写，反之亦然。这是通过称为多版本并发控制(MVCC) 的机制实现的。</p>
 </blockquote>
-<p>vacuum 进程将之前删除（或更新）的记录使用的空间标记为可在表中重复使用。有一个 vacuum 命令可以手动执行此操作。 Vacuum 不会锁定表。</p>
-<p>VACUUM FULL除了将空间标记为可重用外，还会移除已删除或更新的记录并对表数据重新排序。这需要对表进行独占锁定。</p>
-<p>使用带“analyze”的vacuum 选项执行会读取表中的记录并生成查询计划器使用的统计信息。</p>
-<p>autovacuum 使vacuum进程自动化。建议让 autovacuum 进程清理数据文件，除非有特定原因不这样做。如果一天中的大部分时间数据库负载很重，可以在非高峰时段安排 vacuum。尽管集群中很少或没有删除/更新，但进行例行清理很有用，因为清理会更新规划器使用的数据统计信息。</p>
+<p><code>vacuum</code> 进程将之前删除（或更新）的记录使用的空间标记为可在表中重复使用。有一个 <code>vacuum</code> 命令可以手动执行此操作， <code>vacuum</code> 不会锁定表。</p>
+<p><code>VACUUM FULL</code> 除了将空间标记为可重用外，还会移除已删除或更新的记录并对表数据重新排序，这需要对表进行独占锁定。</p>
+<p>使用带“analyze”的 <code>vacuum</code> 选项执行会读取表中的记录并生成查询计划器使用的统计信息。</p>
+<p><code>autovacuum</code> 使 <code>vacuum</code> 进程自动化。建议让 <code>autovacuum</code> 进程清理数据文件，除非有特定原因不这样做。如果一天中的大部分时间数据库负载很重，可以在非高峰时段安排 <code>vacuum</code>。尽管集群中很少或没有删除/更新，但进行例行清理很有用，因为清理会更新规划器使用的数据统计信息。</p>
 <p>更多细节参考：<a href="https://jinlid.github.io/2022/autovacuum-jin-cheng/">https://jinlid.github.io/2022/autovacuum-jin-cheng/</a></p>
-<h2 id="logging进程"><a href="#logging进程" class="headerlink" title="logging进程"></a><strong>logging</strong>进程</h2><p>这是一个可选过程，默认设置为关闭。我们必须将logging_collector参数设置为 on 才能启动此过程：</p>
+<h2 id="logging进程"><a href="#logging进程" class="headerlink" title="logging进程"></a><strong>logging</strong>进程</h2><p>这是一个可选过程，默认设置为关闭。我们必须将 <code>logging_collector</code> 参数设置为 on 才能启动此过程：</p>
 <pre><code>cd $PGDATA
 </code></pre>
 <p>编辑postgresql.conf文件并进行一些更改：</p>
@@ -773,8 +772,8 @@ server starting
 <p>我们将看到一些有用的选项并继续：</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">log_min_duration_statement&amp;nbsp;</span><span class="token punctuation">=</span><span class="token attr-value">&amp;nbsp;0</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>如果语句至少运行了指定的毫秒数，则此设置会导致记录每个已完成语句的持续时间。默认值为‑1，它禁用记录语句的持续时间。将该值设置为0会导致记录所有语句的持续时间。这种方法，连同使用诸如pgbadger 之类的工具进行分析，有助于快速跟踪缓慢的查询。但是，在每秒执行数百个查询的系统中，此设置会导致日志文件增长得非常快。因此，最好有一个流程将日志文件移动到另一个位置，在那里可以使用诸如pgbadger之类的工具来挖掘日志文件并生成用户友好的报告。</p>
-<p>log_line_prefix参数是另一个值得关注的参数。这个参数让我们用格式代码自定义日志语句，以显示有关已执行语句的信息。可以捕获的信息包括哪个用户执行了查询、在哪个数据库、来自哪个主机、执行时间（精确到毫秒）等等。我们可以看到如下值：</p>
+<p>如果语句至少运行了指定的毫秒数，则此设置会导致记录每个已完成语句的持续时间。默认值为‑1，它禁用记录语句的持续时间。将该值设置为0会导致记录所有语句的持续时间。这种方法，连同使用诸如 <code>pgbadger</code> 之类的工具进行分析，有助于快速跟踪缓慢的查询。但是，在每秒执行数百个查询的系统中，此设置会导致日志文件增长得非常快。因此，最好有一个流程将日志文件移动到另一个位置，在那里可以使用诸如 <code>pgbadger</code>之类的工具来挖掘日志文件并生成用户友好的报告。</p>
+<p><code>log_line_prefix</code> 参数是另一个值得关注的参数。这个参数让我们用格式代码自定义日志语句，以显示有关已执行语句的信息。可以捕获的信息包括哪个用户执行了查询、在哪个数据库、来自哪个主机、执行时间（精确到毫秒）等等。我们可以看到如下值：</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">log_line_prefix</span> <span class="token punctuation">=</span> <span class="token attr-value">'time=%t:db=%d;user=%u '</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>当我们在文件中进行上述设置时，将导致类似于以下的日志条目：</p>
@@ -789,7 +788,7 @@ server starting
 <p><strong>time=2013-11-16 20:28:57 IST:db=postgres;user=postgres type=SELECT</strong> <strong>LOG: duration: 0.151 ms statement: select now();</strong></p>
 <p><strong>time=2013-11-16 20:28:58 IST:db=postgres;user=postgres type=INSERT</strong> <strong>LOG: duration: 3.385 ms statement: insert into myt values(1);</strong></p>
 </blockquote>
-<p>log_line_prefix参数是另一个非常有用的参数，它可以非常详细地启用自定义格式的日志记录。我们可以使用日志文件对数据库中发生的事情进行分析。一些有用的前缀选项如下：</p>
+<p><code>log_line_prefix</code> 参数是另一个非常有用的参数，它可以非常详细地启用自定义格式的日志记录。我们可以使用日志文件对数据库中发生的事情进行分析。一些有用的前缀选项如下：</p>
 <table>
 <thead>
 <tr>
@@ -850,12 +849,12 @@ server starting
 <td>session start timestamp</td>
 </tr>
 </tbody></table>
-<p>请注意， log_line_prefix参数不适用于csvlog选项。</p>
+<p>请注意， <code>log_line_prefix</code> 参数不适用于csvlog选项。</p>
 <blockquote>
 <p>xxxxxxxxxx&nbsp;iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp –dport 22 -j ACCEPTbash</p>
 </blockquote>
-<h2 id="stats-collector进程"><a href="#stats-collector进程" class="headerlink" title="stats collector进程"></a><strong>stats collector进程</strong></h2><p>顾名思义，此过程收集有关数据库的统计信息。这是一个可选过程，默认值为 on。该过程跟踪对磁盘块和单个行项中的表和索引的访问。它还会跟踪表的记录计数，并跟踪 vacuum 和分析操作。重要的是要注意，各个进程在进入空闲状态之前将新的统计计数传输到收集器。因此，许多柜台不会反映飞行中的交易活动。</p>
-<p>数据被记录在一组表中，我们可以通过提供的多个视图访问它。视图以pg_stat 开头。键入以下命令：</p>
+<h2 id="stats-collector进程"><a href="#stats-collector进程" class="headerlink" title="stats collector进程"></a><strong>stats collector进程</strong></h2><p>顾名思义，此过程收集有关数据库的统计信息。这是一个可选过程，默认值为 on。该过程跟踪对磁盘块和单个行项中的表和索引的访问。它还会跟踪表的记录计数，并跟踪 <code>vacuum</code> 和 <code>analyze</code> 操作。重要的是要注意，各个进程在进入空闲状态之前将新的统计计数传输到收集器。因此，许多柜台不会反映飞行中的交易活动。</p>
+<p>数据被记录在一组表中，我们可以通过提供的多个视图访问它。视图以 pg_stat 开头。键入以下命令：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">\d<span class="token operator">&amp;</span>nbsp<span class="token punctuation">;</span><span class="token operator">&amp;</span>nbsp<span class="token punctuation">;</span>pg_stat
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>按两次Tab键将列出所有视图，如以下命令所示：</p>
@@ -900,7 +899,7 @@ View definition:
    FROM pg_statio_all_tables
   WHERE <span class="token punctuation">(</span>pg_statio_all_tables.schemaname <span class="token operator">&lt;</span><span class="token operator">></span> ALL <span class="token punctuation">(</span>ARRAY<span class="token punctuation">[</span><span class="token string">'pg_catalog'</span>::name, <span class="token string">'information_schema'</span>::name<span class="token punctuation">]</span><span class="token punctuation">))</span> AND pg_statio_all_tables.schemaname <span class="token operator">!</span>~ <span class="token string">'^pg_toast'</span>::text<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>因此，它是来自pg_statio_all_tables视图的数据子集。 pg_statio_all_tables 呢？</p>
+<p>因此，它是来自 <code>pg_statio_all_tables</code> 视图的数据子集。 <code>pg_statio_all_tables</code> 呢？</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d+ pg_statio_all_tables</span>
             View <span class="token string">"pg_catalog.pg_statio_all_tables"</span>
      Column      <span class="token operator">|</span>  Type  <span class="token operator">|</span> Modifiers <span class="token operator">|</span> Storage <span class="token operator">|</span> Description
@@ -936,7 +935,7 @@ View definition:
   WHERE c.relkind <span class="token operator">=</span> ANY <span class="token punctuation">(</span>ARRAY<span class="token punctuation">[</span><span class="token string">'r'</span>::<span class="token string">"char"</span>, <span class="token string">'t'</span>::<span class="token string">"char"</span>, <span class="token string">'m'</span>::<span class="token string">"char"</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
   GROUP BY c.oid, n.nspname, c.relname, t.oid, x.indrelid<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>简而言之，统计信息收集器进程跟踪许多项目，在一些表中更新它们，并且我们在这些表之上构建了视图，以提供关于数据库活动的合理格式良好的输出。跟踪统计视图有助于放大经常访问的表，识别要索引的列，还可以帮助提供有关配置服务器参数（例如shared_buffers和其他内存区域）的输入。一些(pg_stat_replication)视图提供了关于复制状态的信息（WAL 发送进程）。</p>
+<p>简而言之，统计信息收集器进程跟踪许多项目，在一些表中更新它们，并且我们在这些表之上构建了视图，以提供关于数据库活动的合理格式良好的输出。跟踪统计视图有助于放大经常访问的表，识别要索引的列，还可以帮助提供有关配置服务器参数（例如 <code>shared_buffers</code> 和其他内存区域）的输入。一些视图(<code>pg_stat_replication</code>)提供了关于复制状态的信息（WAL 发送进程）。</p>
 <p>有一些函数可用于管理统计信息。例如， pg_stat_reset()将当前数据库的所有统计计数器重置为零：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT relname, n_tup_ins FROM pg_stat_user_tables;</span>
   relname   <span class="token operator">|</span> n_tup_ins
@@ -969,9 +968,9 @@ test<span class="token operator">=</span><span class="token comment" spellcheck=
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>计数器已递增。</p>
 <p>对于统计数据收集，也有一组参数。其中一些是默认的值设置为打开，其他设置为关闭。我们将看看其中的一些。</p>
-<p>默认禁用的计数器是： log_statement_stats、 log_parser_stats、 log_planner_stats、 log_executor_stats和track_io_timing。</p>
-<p>track_activities 、 update_process_title和track_counts设置是默认启用的设置。</p>
-<p>WAL sender和WAL receiver这是PostgreSQL最近版本引入的两个进程，主要是为了支持复制进程。 sender进程将WALs发送给standby server，slave端的receiver接收。</p>
+<p>默认禁用的计数器是： <code>log_statement_stats</code>、<code> log_parser_stats</code>、 <code>log_planner_stats</code>、 <code>log_executor_stats</code>和<code>track_io_timing</code>。</p>
+<p><code>track_activities</code> 、 <code>update_process_title</code>和<code>track_counts</code> 设置是默认启用的设置。</p>
+<p><code>WAL sender</code> 和 <code>WAL receiver</code>这是PostgreSQL最近版本引入的两个进程，主要是为了支持复制进程。 sender进程将WAL发送给standby server，slave端的receiver接收。</p>
 <p>更多统计信息细节参考：<a href="https://jinlid.github.io/2022/stats-collector-jin-cheng/">https://jinlid.github.io/2022/stats-collector-jin-cheng/</a></p>
 <p>到目前为止，我们涵盖了大部分关键进程和一个大内存区域： shared_buffers。然而，我们还有几个重要的内存区域有待讨论。在我们进入下一节之前，让我们这样做。</p>
 <h3 id="使用-work-mem-在内存中排序"><a href="#使用-work-mem-在内存中排序" class="headerlink" title="使用 work_mem 在内存中排序"></a>使用 work_mem 在内存中排序</h3><p>PostgreSQL 使用两个重要参数在会话级别分配和使用内存。我们可以通过在 PostgreSQL 数据目录中执行以下命令来获取它们，如下所示：</p>
@@ -979,9 +978,9 @@ test<span class="token operator">=</span><span class="token comment" spellcheck=
 <span class="token comment" spellcheck="true">#work_mem = 1MB # min 64kB</span>
 <span class="token comment" spellcheck="true">#maintenance_work_mem = 16MB # min 1MB</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>第一个是work_mem。默认值设置为 1 MB，最小 64 KB。</p>
+<p>第一个是<code>work_mem</code>。默认值设置为 1 MB，最小 64 KB。</p>
 <p>这是在切换到临时磁盘文件之前内部排序操作和哈希表要使用的内存量。最后一部分是至关重要的（如果没有分配足够的内存，就会导致物理 I/O），这肯定会导致响应时间激增。所以听起来设置这个相当高会很好。然而，问题是这不是在服务器级别分配的，就像为shared_buffers 所做的那样。</p>
-<p>这是为每个用户分配的。即使在一个查询中，如果有多个并行排序操作，每个排序操作都可能达到此参数设置的最大值。因此，如果我们保留默认的max_connections (100) 并决定将其增加到 32 MB，那么如果许多单独的会话都在进行繁重的排序，我们最终可能会使用超过 3 GB 的内存。</p>
+<p>这是为每个用户分配的。即使在一个查询中，如果有多个并行排序操作，每个排序操作都可能达到此参数设置的最大值。因此，如果我们保留默认的<code>max_connections</code> (100) 并决定将其增加到 32 MB，那么如果许多单独的会话都在进行繁重的排序，我们最终可能会使用超过 3 GB 的内存。</p>
 <p>更好的选择是在我们知道要处理的数据量会很大但仍然需要较短响应时间的情况下在会话级别增加此值：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># INSERT INTO myt select generate_series (1,1000000);</span>
 postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE myt (id serial);</span>
@@ -1033,7 +1032,7 @@ datname <span class="token operator">=</span> <span class="token string">'postgr
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>临时文件的数量没有增加。</p>
-<h3 id="使用-maintenance-work-mem-进行维护"><a href="#使用-maintenance-work-mem-进行维护" class="headerlink" title="使用 maintenance_work_mem 进行维护"></a>使用 maintenance_work_mem 进行维护</h3><p>此内存区域由 vacuum 等操作使用。与work_mem 的情况一样，分配的空间将影响维护活动的完成速度。使用此区域的典型活动包括分析、清理、创建索引、重建索引等。</p>
+<h3 id="使用-maintenance-work-mem-进行维护"><a href="#使用-maintenance-work-mem-进行维护" class="headerlink" title="使用 maintenance_work_mem 进行维护"></a>使用 maintenance_work_mem 进行维护</h3><p>此内存区域由 <code>vacuum</code> 等操作使用。与 <code>work_mem</code> 的情况一样，分配的空间将影响维护活动的完成速度。使用此区域的典型活动包括分析、清理、创建索引、重建索引等。</p>
 <p>显示此值的影响非常简单，如以下命令所示：</p>
 <pre><code>postgres=# \timing on
 Timing is on.
@@ -1101,7 +1100,7 @@ WHERE datname <span class="token operator">=</span> <span class="token string">'
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 Time: 11.328 ms
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>没有更多的临时文件。让我们重置maintenance_work_mem。</p>
+<p>没有更多的临时文件。让我们重置<code>maintenance_work_mem</code>。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># RESET maintenance_work_mem;</span>
 RESET
 Time: 0.425 ms
@@ -1112,7 +1111,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 Time: 0.413 ms
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>由于使用pg_restore恢复数据库通常会涉及创建索引，所以建议在使用pg_restore时增加maintenance_work_mem 。</p>
+<p>由于使用<code>pg_restore</code>恢复数据库通常会涉及创建索引，所以建议在使用<code>pg_restore</code>时增加<code>maintenance_work_mem</code>。</p>
 <blockquote>
 <p>pg_restore 实用程序用于从 pg_dump 创建的归档文件中恢复 PostgreSQL 数据库。</p>
 </blockquote>

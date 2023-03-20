@@ -4,11 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="pyautogui模块的使用, jinlid&#39;s blog">
-    <meta name="description" content="PyAutoGUI是一个纯Python的GUI自动化工具，其目的是可以用程序自动控制鼠标和键盘操作，多平台支持（Windows，OS X，Linux）。
+    <meta name="keywords" content="autovacuum调优, jinlid&#39;s blog">
+    <meta name="description" content="这篇博问介绍关于autovacuum调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。
 
 
-1 PyAutoGUI 安装PyAutoGUI支持Python2和3。如果您使用p">
+[TOC]
+死元组首先，让我们简要地解释什么是“死元组”">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +21,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>pyautogui模块的使用 | jinlid&#39;s blog</title>
+    <title>autovacuum调优 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -340,12 +341,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/4.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">pyautogui模块的使用</h1>
+                    <h1 class="description center-align post-title">autovacuum调优</h1>
                 </div>
             </div>
         </div>
@@ -369,8 +370,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                <span class="chip bg-color">开发语言</span>
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
                             </a>
                         
                     </div>
@@ -381,8 +382,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/python/" class="post-category">
-                                python
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
                             </a>
                         
                     </div>
@@ -394,7 +395,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-01-12
+                    2023-02-22
                 </div>
                 
 
@@ -415,188 +416,111 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>PyAutoGUI是一个纯Python的GUI自动化工具，其目的是可以用程序自动控制鼠标和键盘操作，多平台支持（Windows，OS X，Linux）。</p>
+                <p>这篇博问介绍关于<code>autovacuum</code>调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。</p>
 <span id="more"></span>
 
-<h3 id="1-PyAutoGUI-安装"><a href="#1-PyAutoGUI-安装" class="headerlink" title="1 PyAutoGUI 安装"></a>1 PyAutoGUI 安装</h3><p>PyAutoGUI支持Python2和3。如果您使用pip从PyPI安装PyAutoGUI：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">pip <span class="token function">install</span> pyautogui
+<p>[TOC]</p>
+<h2 id="死元组"><a href="#死元组" class="headerlink" title="死元组"></a>死元组</h2><p>首先，让我们简要地解释什么是“死元组”和“膨胀”。</p>
+<p>当你在PostgreSQL中执行<code>DELETE</code>操作时，行(又名元组)不会立即从数据文件中删除。相反，它仅通过在表头中设置xmax字段标记为已删除。<code>UPDATE</code>也是如此，在PostgreSQL中可以看作是<code>DELETE</code> + <code>INSERT</code>。</p>
+<p>这是PostgreSQL MVCC背后的基本思想之一，因为它允许在不同进程之间只有最小的锁的情况下实现更高的并发性。当然，这种MVCC实现的缺点是它会留下已删除的元组，即使在所有可能看到这些版本的事务完成之后。</p>
+<p>如果不清理，这些“死元组”(实际上对任何事务都不可见)将永远留在数据文件中，浪费磁盘空间，对于具有许多<code>DELETE</code>和<code>UPDATE</code>的表，死元组可能很容易占据绝大多数磁盘空间。当然，这些死元组也会从索引中引用，这进一步增加了浪费的磁盘空间。这就是我们在PostgreSQL中所说的“膨胀”。当然，需要处理的数据查询越多(即使99%的数据立即被视为“死亡”而丢弃)，查询就越慢。</p>
+<h2 id="VACUUM和autovacuum"><a href="#VACUUM和autovacuum" class="headerlink" title="VACUUM和autovacuum"></a>VACUUM和autovacuum</h2><p>回收死元组占用的空间(并使其可用于新行)的最直接方法是手动运行<code>VACUUM</code>命令。这个维护命令将扫描表并从表和索引中删除死元组——它通常不会将磁盘空间返回给操作系统，但它将使其可用于新行。</p>
+<p><strong>注意</strong>：<code>VACUUM FULL</code>会回收空间并将其返回给操作系统，但它有一些缺点。首先，它在表上获得排他锁，阻塞所有操作(包括select)。其次，它实际上创建了表的副本，将所需的磁盘空间增加了一倍，因此在磁盘空间已经用完的情况下，这种方法不太实用。</p>
+<p><code>VACUUM</code>的问题是它完全是手动操作，它只发生在你决定运行它的时候，而不是在需要它的时候。您可以将其放入cron中，并每5分钟对所有表运行一次，但大多数运行实际上不会清理任何东西，唯一的影响是系统上的CPU和I/O使用率更高。或者您可以每天晚上只运行一次，在这种情况下，您可能会积累更多您想要的死元组。</p>
+<p>这就引出了自动真空的主要目的，根据需要进行清理，以控制浪费的空间量。数据库确实知道随着时间的推移产生了多少死元组(每个事务报告它删除和更新的元组的数量)，因此当表积累了一定数量的死元组时(我们将看到默认情况下是表的20%)，可以触发清理。因此，它将在繁忙期间更频繁地执行，而在数据库大部分空闲时则较少执行。</p>
+<h2 id="autoanalyze"><a href="#autoanalyze" class="headerlink" title="autoanalyze"></a>autoanalyze</h2><p>清除死元组并不是<code>autovacuum</code>的唯一任务，它还负责更新优化器在计划查询时使用的数据分布统计信息。您可以通过运行手动收集这些信息<code>ANALYZE</code>，但它会遇到类似<code>VACUUM</code>的问题，您可能运行得太频繁或不够频繁。</p>
+<p>解决方案也类似，数据库可以观察表中有多少行发生了变化，并<code>ANALYZE</code>自动运行。</p>
+<p><strong>注意</strong>：对<code>ANALYZE</code>来说，负面影响更严重一些，因为<code>VACUUM</code>的成本与死元组的数量成正比(所以当死元组很少或没有时相当低)，<code>ANALYZE</code>必须在每次执行时从头开始重建统计数据。另一方面，如果你不经常运行它，糟糕的计划选择的成本可能同样严重。</p>
+<p>为了简洁起见，在本文的其余部分，我将基本忽略这个autovacuum任务。无论如何，配置与清理非常相似，并且遵循大致相同的推理。</p>
+<h2 id="监控"><a href="#监控" class="headerlink" title="监控"></a>监控</h2><p>在进行任何类型的调优之前，您需要能够收集相关数据，否则您怎么能说您需要进行任何调优或者评估配置更改的影响呢?</p>
+<p>换句话说，您应该有一些基本的监控，从数据库中收集指标。为了清理，你至少需要查看这些值:</p>
+<ul>
+<li><code>pg_stat_all_tables.n_dead_tup</code> ——每个表(包括用户表和系统表)中死亡元组的数量</li>
+</ul>
+<ul>
+<li><code>(n_dead_tup / n_live_tup)</code> ——每个表中死元组和活元组的比例</li>
+</ul>
+<ul>
+<li><code>(pg_class.relpages / pg_class.reltuples )</code>——“每行”的空间</li>
+</ul>
+<p>如果您已经部署了一个监视系统(您应该这样做)，那么您很可能已经在收集这些指标。总体目标是获得稳定的行为，任何这些指标都没有突然/重大的变化。</p>
+<p>还有一个方便的<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/pgstattuple.html">pgstattuple</a>扩展，允许您对表和索引执行分析，包括计算空闲空间的数量，死元组等。</p>
+<h2 id="调整目标"><a href="#调整目标" class="headerlink" title="调整目标"></a>调整目标</h2><p>在查看实际的配置参数之前，让我们简单地讨论一下高级调优目标是什么，即在更改参数时我们想要实现什么:</p>
+<ul>
+<li><p>清理死元组——保持合理的低磁盘空间量，不浪费不合理的磁盘空间量，防止索引膨胀并保持查询速度。</p>
+</li>
+<li><p>尽量减少清理的影响——不要太频繁地执行清理，因为这会浪费资源(CPU、I/O和RAM)，并可能严重损害性能。</p>
+</li>
+</ul>
+<p>也就是说，你需要找到正确的平衡，太频繁地运行它可能和不够频繁地运行它一样糟糕。平衡在很大程度上取决于您管理的数据量，您正在处理的工作负载类型(<code>DELETE/UPDATE</code>的数量)。</p>
+<p>postgresql.conf中的大多数默认值都相当保守，原因有二。首先，默认值是几年前确定的，基于当时常见的资源(CPU, RAM，…)。其次，我们希望默认配置可以在任何地方工作，包括像树莓派这样的小型机器或小型VPS服务器。然而，对于许多部署(特别是较小的部署和处理以读取为主的工作负载)，默认配置参数可以很好地工作。</p>
+<p>随着数据库大小和写入量的增加，问题开始出现。典型的问题是清理不够频繁，当它发生时，它会严重破坏性能，因为它必须处理大量垃圾。如果是这种情况，你应该遵循以下简单的规则:</p>
+<p>如果出现，那是因为你做得不够频繁。也就是说，调优参数，以便更频繁地进行清理，并且每次处理的死元组数量更少。</p>
+<p><strong>注意</strong>：人们有时遵循不同的规则——如果疼，就不要做。并完全禁用<code>autovacuum</code>。请不要这样做，除非你真的知道你在做什么，并且有定期的清理脚本。否则，您将陷入困境，您将不得不处理性能严重下降甚至可能停机的问题，而不是性能有所下降。</p>
+<h2 id="阈值和比例因子"><a href="#阈值和比例因子" class="headerlink" title="阈值和比例因子"></a>阈值和比例因子</h2><p>当然，您可能调整的第一件事是何时触发清理，这受到两个参数的影响：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">50</span>
+<span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.2</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>当死亡元组的数量超过(可以看到pg_stat_all_tables.n_dead_tup)时，就会触发清理</p>
+<pre class="line-numbers language-bash"><code class="language-bash">threshold + pg_class.reltuples * scale_factor
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>Windows 没有依赖项。不需要安装 Win32 扩展。</p>
-<p>macOS 需要安装 pyobjc-core 和 pyobjc 模块（按此顺序）。</p>
-<p>Linux 需要安装 python3-xlib（或 Python 2 的 python-xlib）模块。</p>
-<p>在这些依赖安装后，运行 pip install pyautogui（或在 OS X 和 Linux 上运行 pip3），安装 pyautogui。</p>
-<h3 id="2-暂停和自动防故障装置"><a href="#2-暂停和自动防故障装置" class="headerlink" title="2 暂停和自动防故障装置"></a>2 暂停和自动防故障装置</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> pyautogui
-<span class="token comment" spellcheck="true"># 将pyautogui.PAUSE 设置为1，即每次函数调用后暂停一秒。</span>
-pyautogui<span class="token punctuation">.</span>PAUSE <span class="token operator">=</span> <span class="token number">1</span>
-<span class="token comment" spellcheck="true"># 将 pyautogui.FAILSAFE 设置为True，启动自动防故障功能。</span>
-pyautogui<span class="token punctuation">.</span>FAILSAFE <span class="token operator">=</span> <span class="token boolean">True</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-控制鼠标移动"><a href="#3-控制鼠标移动" class="headerlink" title="3 控制鼠标移动"></a>3 控制鼠标移动</h3><p>pyautogui 的鼠标函数使用 x、y 坐标。原点的 x、y 都是零，在屏幕的左上角。向右 x 坐标增加，向下 y 坐标增加。所有坐标都是正整数，没有负数坐标。以下是分辨率为 1920 ×1080 的计算机屏幕上的坐标。</p>
-<p><img src="/medias/image/images.png"></p>
-<p>pyautogui.moveTo() 函数将鼠标立即移动到屏幕的指定位置。表示 x、y 坐标的整数值分别构成了函数的第一个和第二个参数。可选的 duration 整数或浮点数关键字参数，指定了将鼠标移到目的位置所需的秒数。如果不指定，默认值是零，表示立即移动。</p>
-<p>pyautogui.moveRel() 函数相对于当前的位置移动鼠标。也接受 3 个参数：向右水平移动多少个像素，向下垂直移动多少个像素，以及（可选的）花多少时间完成移动。为第一第二个参数提供负整数，鼠标将向左或向上移动。</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 获取屏幕的宽和高的像素数,屏幕左上开始为(0,0)</span>
-screenWidth<span class="token punctuation">,</span> screenHeight <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>size<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token comment" spellcheck="true"># 获取当前鼠标位置</span>
-currentMouseX<span class="token punctuation">,</span> currentMouseY <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>position<span class="token punctuation">(</span><span class="token punctuation">)</span>
-
-<span class="token comment" spellcheck="true"># 移动鼠标</span>
-pyautogui<span class="token punctuation">.</span>moveTo<span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> duration<span class="token operator">=</span><span class="token number">0.25</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true">#将鼠标移动到指定的x、y坐标</span>
-pyautogui<span class="token punctuation">.</span>moveRel<span class="token punctuation">(</span>xOffset<span class="token punctuation">,</span> yOffset<span class="token punctuation">,</span> duration<span class="token operator">=</span><span class="token number">0.25</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#相对于当前位置移动鼠标</span>
-
-<span class="token comment" spellcheck="true"># 获取鼠标位置</span>
-pyautogui<span class="token punctuation">.</span>position<span class="token punctuation">(</span><span class="token punctuation">)</span>
-
-<span class="token comment" spellcheck="true"># 点击鼠标</span>
-pyautogui<span class="token punctuation">.</span>click<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true">#模拟点击（默认是左键）</span>
-pyautogui<span class="token punctuation">.</span>click<span class="token punctuation">(</span>x<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> y<span class="token operator">=</span><span class="token number">150</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#点击指定位置</span>
-pyautogui<span class="token punctuation">.</span>click<span class="token punctuation">(</span>x<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> y<span class="token operator">=</span><span class="token number">150</span>，button<span class="token operator">=</span><span class="token string">'left'</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#点击左键</span>
-pyautogui<span class="token punctuation">.</span>rightClick<span class="token punctuation">(</span>x<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> y<span class="token operator">=</span><span class="token number">150</span>，button<span class="token operator">=</span><span class="token string">'right'</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#点击右键</span>
-pyautogui<span class="token punctuation">.</span>click<span class="token punctuation">(</span>x<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> y<span class="token operator">=</span><span class="token number">150</span>，button<span class="token operator">=</span><span class="token string">'middle'</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#点击中键</span>
-pyautogui<span class="token punctuation">.</span>mouseDown<span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#模拟在x、y处按下指定鼠标按键</span>
-pyautogui<span class="token punctuation">.</span>mouseUp<span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#模拟在x、y处释放指定键</span>
-
-pyautogui<span class="token punctuation">.</span>doubleClick<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#模拟左键双击</span>
-pyautogui<span class="token punctuation">.</span>rightClick<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true">#模拟中键点击</span>
-pyautogui<span class="token punctuation">.</span>middleClick<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#双击鼠标中键</span>
-
-<span class="token comment" spellcheck="true"># 拖动鼠标</span>
-pyautogui<span class="token punctuation">.</span>dragTo<span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> duration<span class="token operator">=</span><span class="token number">0.25</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true">#按下左键移动鼠标</span>
-pyautogui<span class="token punctuation">.</span>dragRel<span class="token punctuation">(</span>xOffset<span class="token punctuation">,</span> yOffset<span class="token punctuation">,</span> duration<span class="token operator">=</span><span class="token number">0.25</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true">#按下左键，相对于当前位置移动鼠标</span>
-
-<span class="token comment" spellcheck="true"># 滚动鼠标</span>
-pyautogui<span class="token punctuation">.</span>scroll<span class="token punctuation">(</span>units<span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#模拟滚动滚轮。正参数表示向上滚动，负参数表示向下滚动。</span>
-pyautogui<span class="token punctuation">.</span>hscroll<span class="token punctuation">(</span>units<span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#向右/左滚动 </span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-处理屏幕"><a href="#4-处理屏幕" class="headerlink" title="4 处理屏幕"></a>4 处理屏幕</h3><p>pyautogui 拥有屏幕快照的功能，可以根据当前屏幕的内容创建图形文件。这些函数也可以返回一个 Pillow 的Image 对象，包含当前屏幕的内容。需要安装 pillow 模块。</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 获取屏幕快照,im变量将包含一个屏幕快照的Image对象</span>
-im1 <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>screenshot<span class="token punctuation">(</span><span class="token punctuation">)</span>
-im1<span class="token punctuation">.</span>save<span class="token punctuation">(</span><span class="token string">'my_screenshot.png'</span><span class="token punctuation">)</span>
-im2 <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>screenshot<span class="token punctuation">(</span><span class="token string">'my_screenshot2.png'</span><span class="token punctuation">)</span>
-<span class="token comment" spellcheck="true"># 截取部分屏幕</span>
-im <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>screenshot<span class="token punctuation">(</span>r<span class="token string">'C:\screenshot.png'</span><span class="token punctuation">,</span>region<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">300</span><span class="token punctuation">,</span> <span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 截屏并设置保存图片的位置和名称</span>
-<span class="token comment" spellcheck="true"># 根据图片定位在图片在屏幕上的中点</span>
-x<span class="token punctuation">,</span> y <span class="token operator">=</span> pyautogui<span class="token punctuation">.</span>locateCenterOnScreen<span class="token punctuation">(</span>r<span class="token string">'C:\submit.png'</span><span class="token punctuation">)</span>
-
-<span class="token comment" spellcheck="true"># getpixel()函数的返回值是一个RGB元组，包含3个整数，表示像素的红绿蓝值</span>
-im<span class="token punctuation">.</span>getpixel<span class="token punctuation">(</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">)</span>
-    
-<span class="token comment" spellcheck="true"># 屏幕上指定的x、y坐标处的像素与指定的颜色匹配,PyAutoGUI的pixelMatchesColor()函数将返回True</span>
-pyautogui<span class="token punctuation">.</span>pixelMatchesColor<span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token number">205</span><span class="token punctuation">,</span> <span class="token number">255</span><span class="token punctuation">,</span> <span class="token number">245</span><span class="token punctuation">)</span><span class="token punctuation">,</span> tolerance<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">)</span>
-
-<span class="token comment" spellcheck="true"># 返回屏幕快照后的图像所在处的坐标</span>
-pyautogui<span class="token punctuation">.</span>locateAllOnScreen<span class="token punctuation">(</span>r<span class="token string">'C:\submit.png'</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 匹配到返回一个包含一个元组的列表，匹配不到返回None</span>
-list<span class="token punctuation">(</span>pyautogui<span class="token punctuation">.</span>locateAllOnScreen<span class="token punctuation">(</span>r<span class="token string">'C:\submit.png'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 返回多个函数将返回一个Generator对象。可以将它传递给list()，返回一个 4 整数元组的列表</span>
-pyautogui<span class="token punctuation">.</span>center<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">643</span><span class="token punctuation">,</span> <span class="token number">745</span><span class="token punctuation">,</span> <span class="token number">70</span><span class="token punctuation">,</span> <span class="token number">29</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 将匹配到的元组返回该区域中心的x、y坐标</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="5-键盘操作"><a href="#5-键盘操作" class="headerlink" title="5 键盘操作"></a>5 键盘操作</h3><p>pyautogui.typewrite() 函数向计算机发送虚拟按键。</p>
-<pre class="line-numbers language-python"><code class="language-python">pyautogui<span class="token punctuation">.</span>typewrite<span class="token punctuation">(</span><span class="token string">'Hello world!'</span><span class="token punctuation">,</span> interval<span class="token operator">=</span><span class="token number">0.25</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#键入给定消息字符串中的字符</span>
-pyautogui<span class="token punctuation">.</span>typewrite<span class="token punctuation">(</span><span class="token punctuation">[</span>key1，key2，key3<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#键入给定键字符串</span>
-pyautogui<span class="token punctuation">.</span>typewrite<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">,</span><span class="token string">'b'</span><span class="token punctuation">,</span><span class="token string">'left'</span><span class="token punctuation">,</span><span class="token string">'left'</span><span class="token punctuation">,</span><span class="token string">'X'</span><span class="token punctuation">,</span><span class="token string">'Y'</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># XYab</span>
-
-pyautogui<span class="token punctuation">.</span>press<span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#按下并释放给定键</span>
-pyautogui<span class="token punctuation">.</span>press<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'left'</span><span class="token punctuation">,</span> <span class="token string">'left'</span><span class="token punctuation">,</span> <span class="token string">'left'</span><span class="token punctuation">,</span> <span class="token string">'left'</span><span class="token punctuation">,</span> <span class="token string">'left'</span><span class="token punctuation">,</span> <span class="token string">'left'</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#连续多次按下并释放left</span>
-
-pyautogui<span class="token punctuation">.</span>keyDown<span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 模拟按下给定键</span>
-pyautogui<span class="token punctuation">.</span>keyUp<span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># 模拟释放给定键</span>
-pyautogui<span class="token punctuation">.</span>hotkey<span class="token punctuation">(</span><span class="token punctuation">[</span>key1，key2，key3<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">#模拟按顺序按下给定键字符串，然后以相反的顺序释放</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>PyKeyboard 属性</p>
-<table>
-<thead>
-<tr>
-<th align="left">键盘键字符串</th>
-<th align="left">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">‘a’, ‘b’, ‘c’, ‘A’, ‘B’, ‘C’, ‘1’, ‘2’, ‘3’,’!’, ‘@’, ‘#’，等等</td>
-<td align="left">单个字符的键</td>
-</tr>
-<tr>
-<td align="left">‘enter’（or ‘return’ or ‘\n’）</td>
-<td align="left">回车键</td>
-</tr>
-<tr>
-<td align="left">‘esc’</td>
-<td align="left">Esc 键</td>
-</tr>
-<tr>
-<td align="left">‘shiftleft’, ‘shiftright’</td>
-<td align="left">左右 Shift 键</td>
-</tr>
-<tr>
-<td align="left">‘altleft’, ‘altright’</td>
-<td align="left">左右 Alt 键</td>
-</tr>
-<tr>
-<td align="left">‘ctrlleft’, ‘ctrlright’</td>
-<td align="left">左右 Ctrl 键</td>
-</tr>
-<tr>
-<td align="left">‘tab’（or ‘\t’）</td>
-<td align="left">Tab 键</td>
-</tr>
-<tr>
-<td align="left">‘backspace’, ‘delete’</td>
-<td align="left">Backspace 和 Delete 键</td>
-</tr>
-<tr>
-<td align="left">‘pageup’, ‘pagedown’</td>
-<td align="left">Page Up 和 Page Down 键</td>
-</tr>
-<tr>
-<td align="left">‘home’, ‘end’</td>
-<td align="left">Home 和 End 键</td>
-</tr>
-<tr>
-<td align="left">‘up’, ‘down’, ‘left’, ‘right’</td>
-<td align="left">上下左右箭头键</td>
-</tr>
-<tr>
-<td align="left">‘f1’, ‘f2’, ‘f3’，等等</td>
-<td align="left">F1 至 F12 键</td>
-</tr>
-<tr>
-<td align="left">‘volumemute’, ‘volumedown’, ‘volumeup’</td>
-<td align="left">静音、减小音量、放大音量键（有些键盘没有这些键，但你的操作系统仍能理解这些模拟的按键）</td>
-</tr>
-<tr>
-<td align="left">‘pause’</td>
-<td align="left">Pause 键</td>
-</tr>
-<tr>
-<td align="left">‘capslock’, ‘numlock’, ‘scrolllock’</td>
-<td align="left">Caps Lock，Num Lock 和 Scroll Lock 键</td>
-</tr>
-<tr>
-<td align="left">‘insert’</td>
-<td align="left">Ins 或 Insert 键</td>
-</tr>
-<tr>
-<td align="left">‘printscreen’</td>
-<td align="left">Prtsc 或 Print Screen 键</td>
-</tr>
-<tr>
-<td align="left">‘winleft’, ‘winright’</td>
-<td align="left">左右 Win 键（在 Windows 上）</td>
-</tr>
-<tr>
-<td align="left">‘command’</td>
-<td align="left">Command 键（在 OS X 上）</td>
-</tr>
-<tr>
-<td align="left">option’</td>
-<td align="left">Option 键（在 OS X 上）</td>
-</tr>
-</tbody></table>
-<h3 id="6-消息弹窗提醒"><a href="#6-消息弹窗提醒" class="headerlink" title="6 消息弹窗提醒"></a>6 消息弹窗提醒</h3><p>程序运行的过程中，还可以弹窗让你干预自动执行的流程：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">pyautogui.alert<span class="token punctuation">(</span><span class="token string">'This is an alert box.'</span><span class="token punctuation">)</span>
-pyautogui.confirm<span class="token punctuation">(</span><span class="token string">'Shall I proceed?'</span><span class="token punctuation">)</span>
-pyautogui.confirm<span class="token punctuation">(</span><span class="token string">'Enter option.'</span>, buttons<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'A'</span>, <span class="token string">'B'</span>, <span class="token string">'C'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
-pyautogui.prompt<span class="token punctuation">(</span><span class="token string">'What is your name?'</span><span class="token punctuation">)</span>
-pyautogui.password<span class="token punctuation">(</span><span class="token string">'Enter password (text will be hidden)'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这张表将被认为需要清理。这个公式基本上是说，在一个表被清理之前，高达20%的表可能是死元组(50行的阈值是为了防止非常频繁地清理小表)。</p>
+<p>默认的比例因子适用于小型和中型表，但不适用于非常大的表，在10GB的表上大约有2GB的死元组，而在1TB的表上大约有200GB。</p>
+<p>这是一个积累大量死元组的例子，并一次性处理所有这些元组，这是很麻烦的。根据之前提到的规则，解决方案是通过显著降低比例因子来更经常地做这件事，甚至可能像这样:</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.01</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这将限制减少到表的1%。另一种解决方案是完全放比例因子，只使用阈值</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0</span>
+<span class="token attr-name">autovacuum_vacuum_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">10000</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>它应该在生成10000个死元组后触发清理。</p>
+<p>一个问题是，postgresql.conf中的这些更改会影响所有表(实际上是整个集群)，并且可能会不利地影响小表的清理，包括例如系统表。</p>
+<p>当更频繁地清理小表时，最简单的解决方案是完全忽略这个问题。清理小表的成本相当低，对大表的改进通常非常显著，即使忽略小表上的小效率，总体效果仍然是非常积极的。</p>
+<p>但是，如果你决定以一种会显著延迟小表清理的方式更改配置(例如设置scale_factor=0和threshold=10000)，最好只使用ALTER TABLE将这些更改应用到特定的表:</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_scale_factor <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_threshold <span class="token operator">=</span> <span class="token number">10000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>尽量保持配置尽可能简单，并覆盖尽可能少的表的参数。将其包括在内部文档中也是一个好主意，包括特定值的推理。</p>
+<h2 id="节流"><a href="#节流" class="headerlink" title="节流"></a>节流</h2><p><code>autovacuum</code>内置的一个很好的功能是节流。清理是在后台运行的维护任务，对用户查询等的影响最小。换句话说，它不应该消耗太多资源(CPU和磁盘I/O)，这正是autovacuum内置节流的目的。</p>
+<p>清理过程相当简单，它从数据文件中读取页面(8kB数据块)，并检查是否需要清理。如果没有死元组，页面将不做任何更改而直接丢弃。否则它将被清除(死元组将被删除)，被标记为“脏”并最终被写入。成本计算基于三个基本操作定义：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">vacuum_cost_page_hit</span> <span class="token punctuation">=</span> <span class="token attr-value">1</span>
+<span class="token attr-name">vacuum_cost_page_miss</span> <span class="token punctuation">=</span> <span class="token attr-value">10</span>
+<span class="token attr-name">vacuum_cost_page_dirty</span> <span class="token punctuation">=</span> <span class="token attr-value">20</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>也就是说，如果从<code>shared_buffers</code>中读取页面，则将其计数为1。如果在<code>shared_buffers</code>中没有找到它，需要从操作系统中读取，它将被计算为10(它可能仍然从RAM中提供，但我们不知道)。最后，如果页面被清理弄脏了，它被算作20。这使我们能够计算<code>autovacuum</code>所做的“工作成本”。</p>
+<p>然后通过限制一次性可以完成的工作量来完成节流，默认设置为200，每次清理工作完成这么多工作时，它将休眠20毫秒:</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_cost_delay</span> <span class="token punctuation">=</span> <span class="token attr-value">20ms</span>
+<span class="token attr-name">autovacuum_vacuum_cost_limit</span> <span class="token punctuation">=</span> <span class="token attr-value">200</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>那么，这实际上允许做多少功呢？在20ms的延迟下，清理每秒可以进行50轮，每轮200个token，这意味着每秒10000个token。意味着:</p>
+<ul>
+<li>80 MB/s从<code>shared_buffer</code>读取(假设它没有被脏)</li>
+<li>8MB/s从操作系统读取(可能是从磁盘)</li>
+<li>4MB/s写入(被<code>autovacuum</code>进程弄脏的页面)</li>
+</ul>
+<p>考虑到当前硬件的能力，并且读/写大多是顺序的，这些限制太低了。</p>
+<p>我们通常所做的是增加<code>cost_limit</code>参数，例如增加到1000(或2000)，这将使吞吐量增加 5 倍(或 10 倍)。当然，您可以调整其他参数(每页操作成本、睡眠延迟)，但我们很少这样做，改变成本限制就足够了。</p>
+<h2 id="Autovacuum-Workers"><a href="#Autovacuum-Workers" class="headerlink" title="Autovacuum Workers"></a>Autovacuum Workers</h2><p>尚未提及的一个配置选项是<code>autovacuum_max_workers</code>，那么它是关于什么的呢，好吧，清理不会在单个<code>autovacuum</code>进程中发生，但是数据库允许启动<code>autovacuum_max_workers</code>进程，这些进程实际上对不同的数据库/表进行清理。</p>
+<p>这是有用的，因为您不希望在清理单个大表之前停止清理小表(由于节流，这可能需要相当多的时间)。</p>
+<p>问题是用户认为工人的数量与可能发生的清理量成正比。如果你将自动清理的工人数量增加到6个，它肯定会比默认的3个工人多做两倍的工作，对吗?</p>
+<p>嗯，没有。前几段所述的成本限制是全局的，由所有自动清理工人共享。每个工作进程只能获得总成本限制的<code>1/autovacuum_max_workers</code>，因此增加工作进程的数量只会使它们运行得更慢。</p>
+<p>这有点像高速公路，将汽车数量增加一倍，但让它们以一半的速度行驶，每小时到达目的地的人数大约相同。</p>
+<p>因此，如果您的数据库清理跟不上用户活动，那么增加工作人员数量不是解决方案，除非您还调整其他参数。</p>
+<h2 id="每表节流"><a href="#每表节流" class="headerlink" title="每表节流"></a>每表节流</h2><p>事实上，当我说成本限制是全局的，并且是由所有自动清理工人共享的，我一直在说谎(有点)。类似于缩放因子和阈值，可以设置每个表的成本限制和延迟：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_cost_limit <span class="token operator">=</span> <span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_cost_delay <span class="token operator">=</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>然后，处理这些表的工人不包括在全局成本计算中，而会被独立控制。</p>
+<p>这给了你相当大的灵活性和权力，但别忘了，权力越大，责任越大!</p>
+<p>在实践中，我们几乎从不使用这个特性，有两个基本原因。首先，您通常希望在后台清理上使用一个全局限制。其次，多个工作人员有时被限制在一起，有时是独立的，这使得监视和分析系统的行为变得更加困难。</p>
+<h2 id="概括"><a href="#概括" class="headerlink" title="概括"></a>概括</h2><p>这就是调整<code>autovacuum</code>的方法。如果我必须把它总结成几条基本规则，那就是这五条:</p>
+<ul>
+<li>不要禁用<code>autovacuum</code>，除非你真的知道你在做什么，认真对待。</li>
+<li>对于繁忙的数据库(执行大量<code>UPDATE</code>s和<code>DELETE</code>)，尤其是大型数据库，您可能应该降低比例因子，以便更频繁地进行清理。</li>
+<li>在合理的硬件(良好的存储、多核)上，您可能应该增加节流参数，以便清理工作能够跟上。</li>
+<li>在大多数情况下，仅仅增加<code>autovacuum_max_workers</code>并不能真正起作用，你会得到更多缓慢的进程。</li>
+<li>可以使用<code>ALTER TABLE</code>设置每个表的参数，但如果确实需要这样做，请三思。它使系统更复杂，更难以检查。</li>
+</ul>
 
                 
             </div>
@@ -623,7 +547,7 @@ pyautogui.password<span class="token punctuation">(</span><span class="token str
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2022/pyautogui-mo-kuai-de-shi-yong/">https://jinlid.github.io/2022/pyautogui-mo-kuai-de-shi-yong/</a>
+                    <a href="https://jinlid.github.io/2023/autovacuum-diao-you/">https://jinlid.github.io/2023/autovacuum-diao-you/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -661,8 +585,8 @@ pyautogui.password<span class="token punctuation">(</span><span class="token str
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/">
-                                    <span class="chip bg-color">开发语言</span>
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
                                 </a>
                             
                         </div>
@@ -745,24 +669,24 @@ pyautogui.password<span class="token punctuation">(</span><span class="token str
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2022/autovacuum-jin-cheng/">
+                <a href="/2023/dang-autovacuum-bu-gong-zuo-shi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="autovacuum进程">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="当 autovacuum 不工作时">
                         
-                        <span class="card-title">autovacuum进程</span>
+                        <span class="card-title">当 autovacuum 不工作时</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            autovacuum 是 postgresql 里非常重要的一个服务端进程，能够自动地执行，在一定条件下自动地对 dead tuples 进行清理并对表进行分析。
+                            快速回顾一下，autovacuum后台进程清理死行，例如旧的已删除行版本。您也可以通过运行手动执行清理VACUUM，但autovacuum会根据表中死行的数量在适当的时候自动执行清理，不要太频繁但足够频繁以控制“垃圾”的数量。
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
                         </span>
                         <span class="publish-author">
                             
@@ -794,31 +718,31 @@ pyautogui.password<span class="token punctuation">(</span><span class="token str
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/postgresql-fu-zhi/">
+                <a href="/2023/checkpoint-jin-cheng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="PostgreSQL 复制">
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="checkpoint进程">
                         
-                        <span class="card-title">PostgreSQL 复制</span>
+                        <span class="card-title">checkpoint进程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            检查点是一个强制进程。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-20
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             
