@@ -404,11 +404,11 @@
                 </a>
                 
                 
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 3">
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 4">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #F5EEF8;">数据库
-                        <span class="tag-length">3</span>
+                        <span class="tag-length">4</span>
                     </span>
                 </a>
                 
@@ -733,22 +733,22 @@ PostgreSQL中的版本控制是什么?让我们考虑Oracle或My
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/autovacuum-bu-shi-di-ren/">
+                    <a href="/2023/vacuum-he-analyze-zui-jia-shi-jian-ji-qiao/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="autovacuum 不是敌人">
+                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="VACUUM和ANALYZE最佳实践技巧">
                             
-                            <span class="card-title">autovacuum 不是敌人</span>
+                            <span class="card-title">VACUUM和ANALYZE最佳实践技巧</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL中大量的读写工作负载不可避免地会导致数据库效率低下，这是一个常见的误解。然而，只要配置正确，PostgreSQL可以毫无问题地处理这些工作负载。
+                                VACUUM 和 ANALYZE 是PostgreSQL 数据库两个最重要的维护操作。 
 
 
-这些问题源于所谓的“膨胀”，这是PostgreSQL和其他MVCC数据
+VACUUM 用于回收表中“死元组”占用的空间。当删除或更新记录（先删除后插入）时，会生成死元组。PostgreSQL 不会从表中物理删除旧行，而
                             
                         </div>
                         <div class="publish-info">
@@ -782,22 +782,22 @@ PostgreSQL中的版本控制是什么?让我们考虑Oracle或My
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/vacuum-he-analyze-zui-jia-shi-jian-ji-qiao/">
+                    <a href="/2023/autovacuum-bu-shi-di-ren/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="VACUUM和ANALYZE最佳实践技巧">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="autovacuum 不是敌人">
                             
-                            <span class="card-title">VACUUM和ANALYZE最佳实践技巧</span>
+                            <span class="card-title">autovacuum 不是敌人</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                VACUUM 和 ANALYZE 是PostgreSQL 数据库两个最重要的维护操作。 
+                                PostgreSQL中大量的读写工作负载不可避免地会导致数据库效率低下，这是一个常见的误解。然而，只要配置正确，PostgreSQL可以毫无问题地处理这些工作负载。
 
 
-VACUUM 用于回收表中“死元组”占用的空间。当删除或更新记录（先删除后插入）时，会生成死元组。PostgreSQL 不会从表中物理删除旧行，而
+这些问题源于所谓的“膨胀”，这是PostgreSQL和其他MVCC数据
                             
                         </div>
                         <div class="publish-info">

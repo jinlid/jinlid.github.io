@@ -404,11 +404,11 @@
                 </a>
                 
                 
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 3">
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 4">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #F5EEF8;">数据库
-                        <span class="tag-length">3</span>
+                        <span class="tag-length">4</span>
                     </span>
                 </a>
                 
@@ -587,23 +587,23 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                    <a href="/2021/8.huan-chong-qu-guan-li-qi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="第7章 仅堆元组和仅索引扫描">
+                            <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="第8章 缓冲区管理器">
                             
-                            <span class="card-title">第7章 仅堆元组和仅索引扫描</span>
+                            <span class="card-title">第8章 缓冲区管理器</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                                缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
 
 
 [TOC]
-7.1 仅堆元组（热）当更新的行存储在与存储旧行的同一表页中时，HOT 在 8.3 版中实现，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
+在本章中，描述了 PostgreSQL 缓冲区管理器。第一部分提供概述，随后的部
                             
                         </div>
                         <div class="publish-info">
@@ -687,23 +687,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/8.huan-chong-qu-guan-li-qi/">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="第8章 缓冲区管理器">
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
                             
-                            <span class="card-title">第8章 缓冲区管理器</span>
+                            <span class="card-title">第5章 并发控制</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
 
 
 [TOC]
-在本章中，描述了 PostgreSQL 缓冲区管理器。第一部分提供概述，随后的部
+
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
@@ -737,24 +738,23 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/5.bing-fa-kong-zhi/">
+                    <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
+                            <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="第7章 仅堆元组和仅索引扫描">
                             
-                            <span class="card-title">第5章 并发控制</span>
+                            <span class="card-title">第7章 仅堆元组和仅索引扫描</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                                本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
 
 
 [TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
+7.1 仅堆元组（热）当更新的行存储在与存储旧行的同一表页中时，HOT 在 8.3 版中实现，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
                             
                         </div>
                         <div class="publish-info">
