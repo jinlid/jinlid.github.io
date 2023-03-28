@@ -404,11 +404,11 @@
                 </a>
                 
                 
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 4">
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 5">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #F5EEF8;">数据库
-                        <span class="tag-length">4</span>
+                        <span class="tag-length">5</span>
                     </span>
                 </a>
                 
@@ -444,24 +444,19 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2022/postgresql-fu-zhi/">
+                    <a href="/2022/stats-collector-jin-cheng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="PostgreSQL 复制">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
                             
-                            <span class="card-title">PostgreSQL 复制</span>
+                            <span class="card-title">stats collector进程</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                
-
-[TOC]
-1 理解复制概念复制分为同步复制和异步复制这是什么意思？假设我们有两台服务器，我们想将数据从一台服务器（主服务器）复制到第二台服务器（从服务器）。下图说明了同步和异步复制的概念：
- 
-在异步复制的情况下，可以在主服务器上提交
+                                PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
                             
                         </div>
                         <div class="publish-info">
@@ -495,19 +490,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2022/stats-collector-jin-cheng/">
+                    <a href="/2022/postgresql-fu-zhi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
+                            <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="PostgreSQL 复制">
                             
-                            <span class="card-title">stats collector进程</span>
+                            <span class="card-title">PostgreSQL 复制</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
+                                
+
+[TOC]
+1 理解复制概念复制分为同步复制和异步复制这是什么意思？假设我们有两台服务器，我们想将数据从一台服务器（主服务器）复制到第二台服务器（从服务器）。下图说明了同步和异步复制的概念：
+ 
+在异步复制的情况下，可以在主服务器上提交
                             
                         </div>
                         <div class="publish-info">
@@ -563,107 +563,6 @@
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2021/6.vacuum-jin-cheng/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
-                            
-                            <span class="card-title">第6章 vacuum进程</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
-有简要介绍。
-
-
-为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2021/5.bing-fa-kong-zhi/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
-                            
-                            <span class="card-title">第5章 并发控制</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
-
-
-[TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
                             </span>
                             <span class="publish-author">
                                 
@@ -792,6 +691,56 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
+                    <a href="/2021/6.vacuum-jin-cheng/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
+                            
+                            <span class="card-title">第6章 vacuum进程</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
+有简要介绍。
+
+
+为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
                     <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                         <div class="card-image tag-image">
                             
@@ -810,6 +759,57 @@
 [TOC]
 2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
 
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
+                            
+                            <span class="card-title">第5章 并发控制</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+
+
+[TOC]
+
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">

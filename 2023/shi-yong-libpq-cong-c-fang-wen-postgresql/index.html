@@ -1,0 +1,2077 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="使用libpq从C访问PostgreSQL, jinlid&#39;s blog">
+    <meta name="description" content="如果我们想完全控制我们的客户端应用程序，我们需要可以考虑创建自定义接口。这就是libpq的作用。
+
+
+libpq库提供的函数分为三类。
+
+数据库连接和连接管理
+
+SQL语句执行;
+
+检索查询结果集
+
+
+就像许多产品在许多版本中成长和发展一样">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>使用libpq从C访问PostgreSQL | jinlid&#39;s blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">jinlid&#39;s blog</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">jinlid&#39;s blog</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/11.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">使用libpq从C访问PostgreSQL</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2023-03-21
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>如果我们想完全控制我们的客户端应用程序，我们需要可以考虑创建自定义接口。这就是libpq的作用。</p>
+<span id="more"></span>
+
+<p>libpq库提供的函数分为三类。</p>
+<ul>
+<li><p>数据库连接和连接管理</p>
+</li>
+<li><p>SQL语句执行;</p>
+</li>
+<li><p>检索查询结果集</p>
+</li>
+</ul>
+<p>就像许多产品在许多版本中成长和发展一样，经常有在libpq中执行相同操作的方法不止一种。在本章中，我们将专注于最常见的方法，并提供有关任何替代方案和实例的提示它们可能特别适用。</p>
+<p><strong>使用libpq库</strong></p>
+<p>所有使用libpq库的PostgreSQL客户端应用程序都必须这样编写源代码，代码包括定义libpq提供的函数的适当头文件和应用程序必须连接到正确的库，其中包含这些函数的代码。</p>
+<p>客户端应用程序被称为PostgreSQL的前端程序，必须包含头文件<code>libpq-fe.h </code>(fe用于前端)。此头文件提供了libpq函数和隐藏PostgreSQL的内部工作方式。坚持使用<code>libpq-fe.h</code>将确保程序能够在未来的版本中编译libpq。头文件安装在PostgreSQL安装的include子目录中(在UNIX和Linux上，默认是<code>/usr/local/pgsql/include</code>)。我们需要引导C编译器到这个目录，以便它可以使用-L选项找到头文件。</p>
+<blockquote>
+<p>PostgreSQL发布版提供的头文件<code>libpq-int.h</code>包含libpq使用的内部结构的定义，但不建议在普通客户端中使用它</p>
+</blockquote>
+<p>libpq库将安装在PostgreSQL安装的lib目录下默认为<code>/usr/local/pgsql/lib</code>)。为了将libpq函数合并到应用程序中，我们需要</p>
+<p>连接到该库。最简单的方法是告诉编译器使用<code>-lpq</code>进行连接，并使用-L选项指定PostgreSQL库目录作为查找库的地方。</p>
+<p>一个典型的libpq程序具有以下结构:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+ <span class="token comment" spellcheck="true">/* Connect to a PostgreSQL database */</span>
+ LOOP<span class="token punctuation">:</span>
+ <span class="token comment" spellcheck="true">/* Execute SQL statement */</span>
+ <span class="token comment" spellcheck="true">/* Read query results */</span>
+ 
+ <span class="token comment" spellcheck="true">/* Disconnect from database */</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>程序将通过使用类似这样的命令行:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">gcc -o program program.c -I /usr/local/pgsql/include -L /usr/local/pgsql/lib -lpq
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果您使用的是Linux发行版(如Red)中的PostgreSQL安装在Linux上，您可能会发现libpq库安装在编译器搜索的默认位置，所以只需要指定include directory选项，如下所示:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ gcc -o program program.c -I /usr/local/pgsql/include -lpq
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>其他Linux发行版和其他平台安装可能会放置包含文件和不同地libpq。通常，它们将位于基础目录的include和lib目录中d额PostgreSQL安装目录。</p>
+<p><strong>建立数据库连接</strong></p>
+<p>一般来说，PostgreSQL客户端应用程序在运行时可以连接到一个或多个数据库。事实上，我们甚至可以在同样的时间连接到由许多不同服务器管理的许多数据库。libpq库提供了创建和维护这些连接的函数。</p>
+<p>当我们连接到服务器上的PostgreSQL数据库时，libpq会返回一个句柄数据库连接。这表示为头文件中定义的一个内部结构 <code>PGconn</code>，我们可以将其视为类似于文件句柄。许多libpq函数需要 <code>PGconn</code> 指针参数用于标识目标数据库连接，方式与此类似C语言中的标准I/O库使用文件指针。</p>
+<p><strong>创建一个新的数据库连接</strong></p>
+<p>使用PQconnectdb创建一个新的数据库连接，如下所示：</p>
+<pre class="line-numbers language-c"><code class="language-c">PGconn <span class="token operator">*</span><span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>conninfo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><code>PQconnectdb</code>函数返回一个指向新连接描述符的指针。返回如果无法分配新的描述符，可能是因为缺少描述符，result将为NULL</p>
+<p>分配新的描述符所需的内存。从<code>PQconnectdb</code>返回的非空指针可以做到这一点。然而，这并不意味着连接成功。我们得检查一下连接器的状态。</p>
+<p><code>PQconnectdb</code>的单个参数是一个字符串，指定要连接到哪个数据库。其中嵌入了各种选项，我们可以使用它们来修改连接的方式。</p>
+<p><code>Conninfo</code> 字符串参数由空格分隔的选项组成，形式为<code>option=value</code>。表1列出了最常用的选项及其含义。该表格还显示未指定连接选项时默认使用的环境变量。</p>
+<p><strong>表1 常见的PQconnectdb连接选项</strong></p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>含义</th>
+<th>默认环境变量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>host</td>
+<td>要连接的服务器的名称</td>
+<td>$PGHOST或localhost（如果没有设置）</td>
+</tr>
+<tr>
+<td>hostaddr</td>
+<td>要连接的服务器IP地址</td>
+<td>$PGHOSTADDR</td>
+</tr>
+<tr>
+<td>dbname</td>
+<td>连接的数据库</td>
+<td>$PGDATABASE或用户名（如果没有设置）</td>
+</tr>
+<tr>
+<td>port</td>
+<td>服务器上要连接的TCP/IP端口</td>
+<td>$PGPORT或5432（如果没有设置）</td>
+</tr>
+<tr>
+<td>user</td>
+<td>连接时使用的用户名</td>
+<td>$PGUSER或用户名（如果没有设置）</td>
+</tr>
+<tr>
+<td>password</td>
+<td>指定用户的密码</td>
+<td>$PGPASSWORD或none（如果没有设置）</td>
+</tr>
+</tbody></table>
+<p>例如，要连接到本地机器上的db数据库，我们将使用<code>Conninfo</code>字符串，像这样:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token string">"dbname=db"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>若要在选项值中包含空格，或输入空值，该值必须加引号使用单引号，如下所示:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token string">"host=db password='123456' user=postgres"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>host选项指定要连接的服务器。<code>PQconnectdb</code>调用将导致查找名称以确定服务器的IP地址，以便建立连接。</p>
+<p>通常，这是通过使用域名服务(DNS)完成的，可能需要一段时间来完成。如果你已经知道服务器的IP地址，可以使用<code>hostaddr</code>选项</p>
+<p>指定地址并避免名称查找发生时的任何延迟。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token string">"hostaddr=192.168.137.129 dbname=db"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果没有指定 <code>host</code> 或 <code>hostaddr</code> 选项，<code>PQconnectdb</code>将尝试连接到本地机器。</p>
+<p>默认情况下，PostgreSQL服务器将在TCP 5432端口上监听客户端连接。如果你如果需要连接到侦听非默认端口号的服务器，可以使用</p>
+<p>端口选项。</p>
+<p><strong>使用环境变量进行连接</strong></p>
+<p>这些选项也可以通过环境变量来指定，如表1所示。例如，如果 <code>conninfo</code> 参数中没有设置 <code>host</code> 选项，那么 <code>PQconnectdb</code> 将进行查询</p>
+<p>检查环境是否设置了变量 <code>PGHOST</code>。如果是，值 <code>$PGHOST</code> 将被用作要连接的主机名。我们可以编写一个客户端程序，用一个空值调用<code>PQconnectdb</code> 字符串并通过环境变量提供所有选项:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+ PGconn <span class="token operator">*</span>conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>We could then assign a few environment variables and execute the program like so:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ PGHOST<span class="token operator">=</span>beast PGUSER<span class="token operator">=</span>neil ./program
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>检查连接状态</strong></p>
+<p>如前所述，<code>PQconnectdb</code> 返回一个非空的连接句柄并不会表示连接没有错误。我们需要使用另一个函数 <code>PQstatus</code> 来检查连接的状态：</p>
+<pre class="line-numbers language-c"><code class="language-c">ConnStatusType <span class="token function">PQstatus</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><code>ConnStatusType</code> 是一种枚举类型，其中包括一些常量 <code>CONNECTION_OK </code>和 <code>CONNECTION_BAD</code>。<code>PQconnectdb</code> 将返回这两个值之一，具体取决于连接是否成功。对于其他连接方法使用 <code>ConnStatusType</code> 中的其他状态值，例如使用 <code>PQconnectStart</code> 进行异步连接。</p>
+<p><strong>关闭连接</strong></p>
+<p>当我们完成一个数据库连接时，我们必须关闭它，就像以前一样打开文件描述符。我们通过将连接描述符指针传递给 <code>PQfinish</code> 来实现:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">PQfinish</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>对 <code>PQfinish</code> 的调用允许由libpq库释放连接。</p>
+<p><strong>重置连接</strong></p>
+<p>如果连接出现问题，尝试重置它可能是有用的。<code>PQreset</code> 函数为为此目的而设的。它将关闭到后端服务器的连接，并尝试创建一个新的连接，参数与原来的连接设置相同：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">PQreset</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>编写连接程序</strong></p>
+<p>我们现在可以编写可能最短有用的 <code>PostgreSQL</code> 程序(<code>connect.c</code>)，它可以用于检查是否可以与特定数据库建立连接。我们将使用环境变量来将选项传递给 <code>PQconnectdb</code>，我们可以考虑使用命令行参数甚至硬编码，如果它适合我们的应用程序。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGconn <span class="token operator">*</span>myconnection <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK<span class="token punctuation">)</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">else</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">PQfinish</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>让我们来执行这个程序，首先不带必需的选项，然后在分配 <code>PGDATABASE</code> 和 <code>PGUSER</code> 环境变量:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ gcc -o connect -I /home/postgres/pg96/include connect.c -L /home/postgres/pg96/lib -lpq
+$ ./connect
+connection made
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><strong>使用Makefile</strong></p>
+<p>在前面的例子中，我们对编译器使用了适当的 <code>-L</code> 和 <code>-I</code> 选项。这些总是需要使用libpq编译程序。如果我们使用makefile来控制编译，我们可以将这些选项分别添加到 <code>CFLAGS</code> 和 <code>LDLIBS</code> 变量中，这简化了编译。</p>
+<p>下面是一个非常简单的makefile，可用于编译其中的所有示例程序。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 示例程序的Makefile</span>
+<span class="token comment" spellcheck="true"># 在PostgreSQL开始时</span>
+<span class="token comment" spellcheck="true"># 编辑基本目录</span>
+<span class="token comment" spellcheck="true"># PostgreSQL安装</span>
+INC<span class="token operator">=</span>/home/postgres/pg96/include
+LIB<span class="token operator">=</span>/home/postgres/pg96/lib
+CFLAGS<span class="token operator">=</span>-I<span class="token variable"><span class="token variable">$(</span>INC<span class="token variable">)</span></span>
+LDLIBS<span class="token operator">=</span>-L<span class="token variable"><span class="token variable">$(</span>LIB<span class="token variable">)</span></span> -lpq
+ALL<span class="token operator">=</span>async1 async2 connect create cursor cursor2 print select1 select2 <span class="token function">import</span>
+all: <span class="token variable"><span class="token variable">$(</span>ALL<span class="token variable">)</span></span>
+clean <span class="token keyword">:</span> 
+ @rm -f *.o *~ <span class="token variable"><span class="token variable">$(</span>ALL<span class="token variable">)</span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>现在我们可以通过简单地运行make(作为所有的程序)一次构建所有的程序，在<code>makefile:all</code>中作为第一个目标的依赖项指定)。我们可以建一个使用命令 <code>make * Program</code> 编程(其中 <code>Program</code> 是我们想要的程序的名称构建)。</p>
+<p><strong>检索连接错误的信息</strong></p>
+<p>注意，<code>PQstatus</code> 和 <code>PQfinish</code> 都可以处理连接描述符为NULL的指针，因此，在我们的示例中，我们之前没有检查 <code>PQconnectdb</code> 的返回结果是否有效。调用 <code>PQstatus</code> 和 <code>PQfinish</code>。可以获取可读字符串连接的状态或通过调用 <code>PQerrorMessage</code> 描述发生的错误：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQerrorMessage</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这个函数返回一个指向描述性字符串的指针。这个字符串将被其他libpq函数覆盖，因此应该在调用 <code>PQerrorMessage</code> 后立即使用或在调用其他libpq函数之前复制。</p>
+<p>例如，我们可以让连接失败消息更有帮助，如下所示:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed: %s"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后我们会看到如下信息更丰富的错误消息：</p>
+<blockquote>
+<p>connection failed: FATAL: database “neil” does not exist</p>
+</blockquote>
+<p><strong>学习连接参数</strong></p>
+<p>如果我们在建立连接之后需要更多关于连接的信息，我们可能会考虑直接使用 <code>PGconn</code> 结构的成员(定义在 <code>libpq-fe.h</code> 中)，但这将是</p>
+<p>这是个坏主意。这是因为代码可能在libpq的未来版本中出现错误 <code>PGconn</code> 内部结构发生变化。尽管如此，我们可能确实需要了解更多</p>
+<p>关于连接，因此libpq提供了许多访问函数，这些函数返回值连接的属性：</p>
+<ul>
+<li>char *PQdb(const PGconn *conn): Returns the database name.</li>
+<li>char *PQuser(const PGconn *conn): Returns the username.</li>
+<li>char *PQpass(const PGconn *conn): Returns the user password.</li>
+<li>char *PQhost(const PGconn *conn): Returns the server name.</li>
+<li>char *PQport(const PGconn *conn): Returns the server port number.</li>
+<li>char *PQoptions(const PGconn *conn): Returns the options associated with a connection.</li>
+</ul>
+<p>所有这些值在连接的生命周期内都不会改变。</p>
+<p><strong>使用libpq执行SQL</strong></p>
+<p>由 <code>PQexec</code> 函数发起查询过程:</p>
+<pre class="line-numbers language-c"><code class="language-c">PGresult <span class="token operator">*</span><span class="token function">PQexec</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>sql_string<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>将SQL语句传递给 <code>PQexec</code>，通过非null连接到服务器 <code>Connection conn</code> 执行它。结果通过 <code>PGresult</code> 结构表示。当没有数据返回时，<code>PQexec</code> 将返回一个指向result结构的有效非空指针，它不包含数据记录。</p>
+<blockquote>
+<p>在极少数情况下，如果没有足够的内存分配新的result结构，<code>PQexec</code> 可能会返回NULL指针。</p>
+</blockquote>
+<p>传递给 <code>PQexec</code> 的字符串可以包含任何有效的SQL语句，包括查询，插入、更新和数据库管理命令。它们相当于SQL语句使用PSQL命令行工具运行，只是我们不需要在字符串中以分号结尾来标记语句的结束。下面是稍后会用到的一些例子:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span> <span class="token string">"SELECT customer_id FROM customer"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span> <span class="token string">"CREATE TABLE number (value INTEGER, name VARCHAR)"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span> <span class="token string">"INSERT INTO number VALUES (42, 'The Answer')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>注意，SQL语句中的任何双引号都需要用反斜杠进行转义，这在psql中是必要的。</p>
+<p>与连接结构一样，result对象在使用完毕后也必须被释放，可以使用 <code>PQclear</code> 来实现这一点，它也可以处理NULL指针。请注意，即使连接关闭，结果也不会自动清除，因此可以在需要时无限期保存：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">PQclear</span><span class="token punctuation">(</span>PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>确定查询状态</strong></p>
+<p>我们可以使用 <code>PQresultStatus</code> 函数探测SQL语句的执行状态，该函数返回构成枚举类型 <code>ExecStatusType</code> 的多个值中的一个:</p>
+<pre class="line-numbers language-c"><code class="language-c">ExecStatusType <span class="token function">PQresultStatus</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>表2列出了最常见的状态类型。其他状态类型表示服务器出现了一些意想不到的问题，例如正在备份或脱机。</p>
+<p><strong>表2 常见<code>PQresultStatus</code>状态类型</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>状态类型</strong></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PGRES_EMPTY_QUERY</td>
+<td>不需要数据库访问;通常是一个空查询字符串的结果。这种状态通常表明客户端程序有问题，发送的查询不需要服务器做任何工作。</td>
+</tr>
+<tr>
+<td>PGRES_COMMAND_OK</td>
+<td>成功;命令不返回数据。这种状态意味着SQL执行正确，而且语句的类型是不返回数据的，例如CREATE TABLE。</td>
+</tr>
+<tr>
+<td>PGRES_TUPLES_OK</td>
+<td>成功;查询返回零行或多行。这种状态意味着SQL执行正确，而且语句的类型可能返回数据，例如SELECT。在本例中，这并不意味着有数据可以返回。需要进一步调查，以确定实际有多少数据可用。</td>
+</tr>
+<tr>
+<td>PGRES_BAD_RESPONSE</td>
+<td>失败；服务器响应不清楚。这表明SQL执行失败了。</td>
+</tr>
+<tr>
+<td>PGRES_NONFATAL_ERROR</td>
+<td>失败；非致命的，可以重试。这表明SQL执行失败了。</td>
+</tr>
+<tr>
+<td>PGRES_FATAL_ERROR</td>
+<td>失败；致命的，不能重试。这表明SQL执行失败了。</td>
+</tr>
+</tbody></table>
+<p>下面是一个代码片段的例子，它使用 <code>PQresultStatus</code> 来确定调用 <code>PQexec</code> 的精确结果:</p>
+<pre class="line-numbers language-c"><code class="language-c">PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span> <span class="token string">"SELECT customer_id FROM customer"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">switch</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">case</span> PGRES_TUPLES_OK<span class="token punctuation">:</span>
+     <span class="token comment" spellcheck="true">/* may have some data to process, find out */</span>
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token comment" spellcheck="true">/* process data */</span>
+         <span class="token keyword">break</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+     <span class="token comment" spellcheck="true">/* no data, drop through to no data case */</span>
+    <span class="token keyword">case</span> PGRES_COMMAND_OK<span class="token punctuation">:</span>
+         <span class="token comment" spellcheck="true">/* all OK, no data to process */</span>
+         <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> PGRES_EMPTY_QUERY<span class="token punctuation">:</span>
+         <span class="token comment" spellcheck="true">/* server had nothing to do, a bug maybe? */</span>
+         <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> PGRES_NONFATAL_ERROR<span class="token punctuation">:</span>
+         <span class="token comment" spellcheck="true">/* can continue, possibly retry the command */</span>
+         <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> PGRES_BAD_RESPONSE<span class="token punctuation">:</span>
+    <span class="token keyword">case</span> PGRES_FATAL_ERROR<span class="token punctuation">:</span>
+    <span class="token keyword">default</span><span class="token punctuation">:</span>
+     <span class="token comment" spellcheck="true">/* fatal or unknown error, cannot continue */</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在本章后面的“从查询结果中提取数据”一节中，当我们返回到 <code>SELECT</code> 的 <code>PGRES_TUPLES_OK</code> 案例时，将更详细地介绍 <code>PQntuples</code>。</p>
+<p><code>PQresStatus</code> 是一个有用的函数，可以帮助解决故障。这个函数将结果状态码转换为可读字符串:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQresStatus</span><span class="token punctuation">(</span>ExecStatusType status<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>当发生错误时，我们可以通过调用 <code>PQresultErrorMessage</code>，和连接时调用的方式差不多：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>使用PQexec执行查询</strong></p>
+<p>让我们看一些执行SQL语句的简单例子。在数据库中使用一个非常小的表作为尝试。稍后，将在示例客户表上执行一些操作，以返回大量数据。</p>
+<p>创建一个名为number的数据库表，它存储数字和英文描述。表中的条目如下所示:</p>
+<pre class="line-numbers language-bash"><code class="language-bash"> value <span class="token operator">|</span> name
+-------+-------------
+ 42 <span class="token operator">|</span> The Answer
+ 29 <span class="token operator">|</span> My Age
+ 29 <span class="token operator">|</span> Anniversary
+ 66 <span class="token operator">|</span> Clickety-Click
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>为了创建表并向表中插入值，我们只需要调用 <code>PQexec</code>，使用包含需要执行的SQL查询的适当字符串。程序将包含这样的调用:</p>
+<pre class="line-numbers language-c"><code class="language-c">PGconn <span class="token operator">*</span>myconnection<span class="token punctuation">;</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span><span class="token string">"CREATE TABLE number (value INTEGER, name VARCHAR)"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>myconnection<span class="token punctuation">,</span><span class="token string">"INSERT INTO number VALUES (42, 'The Answer')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>我们需要处理出现的错误。例如，如果表已经存在，我们尝试创建它时会得到错误。在创建已经存在的数字表时，<code>PQresultErrorMessage</code> 将返回这样一个字符串:</p>
+<blockquote>
+<p>ERROR: Relation ‘number’ already exists</p>
+</blockquote>
+<p>为了让事情变得更简单，开发一个自己的函数来执行SQL语句，检查结果并打印错误。</p>
+<p>有了它，我们几乎可以像在psql中输入命令一样轻松地执行SQL查询。将这段代码保存在文件 <code>create.c</code> 中</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span><span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span><span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">void</span> <span class="token function">doSQL</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>command<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"status is %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresStatus</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"result message: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+     conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token comment" spellcheck="true">/* doSQL(conn, "DROP TABLE number"); */</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"CREATE TABLE number ( \
+         value INTEGER, \
+         name VARCHAR \
+         )"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"INSERT INTO number values(42, 'The Answer')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"INSERT INTO number values(29, 'My Age')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"INSERT INTO number values(29, 'Anniversary')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"INSERT INTO number values(66, 'Clickety-Click')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+     <span class="token keyword">else</span> 
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里，我们创建了一个表，并向其中添加了一些元素。如果重新运行程序，会看到一个致命错误，因为我们无法第二次创建表。取消DROP TABLE命令的注释，将程序更改为每次运行时销毁并重新创建表的程序。</p>
+<p>当然，在生产环境的代码中，我们不会如此轻率地对待错误。在这里，为了简洁起见，我们省略了从doSQL返回结果，不管失败与否，我们都继续执行。</p>
+<p>编译和运行时，程序应该显示一些执行和状态信息:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">make</span> create
+$ PGDATABASE<span class="token operator">=</span>bpfinal ./create
+connection made
+<span class="token punctuation">..</span>.
+
+INSERT INTO number VALUES<span class="token punctuation">(</span>66, <span class="token string">'Clickety-Click'</span><span class="token punctuation">)</span>
+status is PGRES_COMMAND_OK
+result message:
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>创建一个变量查询</strong></p>
+<p>为了在SQL中包含用户指定的数据，可以创建一个字符串来传递给 <code>PQexec</code>，其中包含我们想要的值。要将所有个位数的整数相加，可以这样写：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> <span class="token number">10</span><span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">sprintf</span><span class="token punctuation">(</span>buffer<span class="token punctuation">,</span><span class="token string">"INSERT INTO number VALUES(%d, 'single digit')"</span><span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">PQexec</span><span class="token punctuation">(</span>buffer<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>更新和删除行</strong></p>
+<p>如果想更新或删除表中的行，可以分别使用update和delete命令：</p>
+<pre class="line-numbers language-c"><code class="language-c">UPDATE number SET name <span class="token operator">=</span> <span class="token string">'Zaphod'</span> WHERE value <span class="token operator">=</span> <span class="token number">42</span>
+DELETE FROM number WHERE value <span class="token operator">=</span> <span class="token number">29</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>如果要在程序中添加对 <code>PQexec</code>(或doSQL)的适当调用，这些命令会首先将数字42的描述文本改为 <code>Zaphod</code>，然后将29的两个条目都删除。我们可以使用psql检查更改的结果:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ psql -d bpfinal
+bpfinal<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM number;</span>
+ value <span class="token operator">|</span> name
+-------+-----------------
+ 66 <span class="token operator">|</span> Clickety-Click
+ 42 <span class="token operator">|</span> Zaphod
+<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>删除和更新可能会影响表中的不止一行(或者PostgreSQL喜欢称之为元组);因此，知道有多少行被修改了通常是很有用的。我们可以通过调用 <code>PQcmdTuples</code> 来获取这些信息：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQcmdTuples</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>奇怪的是，<code>PQcmdTuples</code> 返回的不是你预期的整数，而是包含数字的字符串。我们可以修改doSQL函数，简单地报告受影响的行:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#rows affected %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQcmdTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>我们现在会看到，<code>PQcmdTuples</code> 返回一个空字符串，对于那些对行没有任何影响的命令，比如CREATE table，返回字符串”1”和”2”，对于那些对行有影响的命令，比如INSERT和DELETE。我们必须仔细区分真正不影响任何行的命令和那些失败因而不影响任何行的命令。我们必须始终检查结果状态以确定错误，而不仅仅是受影响的行数。</p>
+<p><strong>从查询结果中提取数据</strong></p>
+<p>到目前为止，我们只关注没有返回任何数据的SQL语句。现在来考虑如何处理 <code>PQexec</code> 调用返回的数据，也就是SELECT语句的结果。当使用 <code>PQexec</code> 执行SELECT时，结果集将包含查询返回的数据的信息。查询结果处理起来可能有点麻烦，因为我们并不总是确切地知道预期会发生什么。如果执行SELECT，我们事先不知道返回的是0、1还是数百万行。如果在SELECT查询中使用通配符(*)，我们甚至不知道将返回哪些列，以及它们的名称是什么。一般来说，我们希望应用程序只选择指定的列。这样，如果数据库的设计发生了变化，比如添加新列时，不依赖于新列的函数仍然可以正常工作。有时，如果我们正在编写一个通用的SQL程序，它如果能接受以通用的方式编程就更好了，使用libpq，我们可以做到。还有几个函数需要学习：</p>
+<p>当 <code>PQexec</code> 执行SELECT语句没有错误时，我们希望看到结果的状态 <code>PGRES_TUPLES_OK</code>。下一步是确定结果中有多少行集。我们通过调用 <code>PQntuples</code> 来获取结果中的总行数可以是零</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>可以通过调用 <code>PQnfields</code> 获取元组中字段(属性或列)的数量</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>结果中的字段从0开始编号，可以通过 <code>PQfname</code> 取得字段的名称</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQfname</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">int</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>字段的长度由 <code>PQfsize</code> 给出</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQfsize</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">int</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>对于固定大小的字段，<code>PQfsize</code> 返回特定列中某个值占用的字节数。对于变长字段，<code>PQfsize</code> 返回-1。</p>
+<p>给定名称的列的索引号可以通过调用 <code>PQfnumber</code> 取得:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQfnumber</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>field<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>让我们修改一下doSQL函数，打印出一些关于SELECT查询返回数据的信息。这是我们的下一个版本:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">doSQL</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">{</span>
+     PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"status is %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresStatus</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#rows affected %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQcmdTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"result message: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">switch</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">case</span> PGRES_TUPLES_OK<span class="token punctuation">:</span>
+        <span class="token punctuation">{</span>
+            <span class="token keyword">int</span> n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+            <span class="token keyword">int</span> nrows <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">int</span> nfields <span class="token operator">=</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of rows returned = %d\n"</span><span class="token punctuation">,</span> nrows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of fields returned = %d\n"</span><span class="token punctuation">,</span> nfields<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">/* Print the field names */</span>
+            <span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s:%d"</span><span class="token punctuation">,</span> <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token function">PQfsize</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+     <span class="token punctuation">}</span>
+     <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>现在，当执行SELECT时，可以看到返回数据的特征：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"SELECT * FROM number WHERE value = 29"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这个调用的输出如下：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">status is PGRES_TUPLES_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message:
+number of rows returned <span class="token operator">=</span> 2
+number of fields returned <span class="token operator">=</span> 2
+value:4 name:-1
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>注意，<code>PQcmdTuples</code> 对不能影响行的查询返回一个空字符串，而 <code>PQresultErrorMessage</code> 在没有错误的情况下返回一个空字符串。现在我们可以从结果集中每行返回的字段中提取数据了，行从0开始编号。</p>
+<p>通常，所有数据都以字符串的形式从服务器传输。我们可以通过调用 <code>PQgetvalue</code> 函数得到数据的字符表示:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">char</span> <span class="token operator">*</span><span class="token function">PQgetvalue</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">int</span> tuple<span class="token punctuation">,</span> <span class="token keyword">int</span> field<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果需要提前知道 <code>PQgetvalue</code> 返回的字符串有多长，可以调用 <code>PQgetlength</code>：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQgetlength</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">int</span> tuple<span class="token punctuation">,</span> <span class="token keyword">int</span> field<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如前所述，元组(行)号和字段(列)号都从0开始。</p>
+<p>让我们在doSQL函数中添加一些数据显示：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">doSQL</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>command<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"status is %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresStatus</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#rows affected %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQcmdTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"result message: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     
+     <span class="token keyword">switch</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token keyword">case</span> PGRES_TUPLES_OK<span class="token punctuation">:</span>
+         <span class="token punctuation">{</span>
+             <span class="token keyword">int</span> r<span class="token punctuation">,</span> n<span class="token punctuation">;</span>
+             <span class="token keyword">int</span> nrows <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token keyword">int</span> nfields <span class="token operator">=</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of rows returned = %d\n"</span><span class="token punctuation">,</span> nrows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of fields returned = %d\n"</span><span class="token punctuation">,</span> nfields<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token keyword">for</span><span class="token punctuation">(</span>r <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> r <span class="token operator">&lt;</span> nrows<span class="token punctuation">;</span> r<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                 <span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span>
+                     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s = %s(%d),"</span><span class="token punctuation">,</span>
+                     <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                     <span class="token function">PQgetvalue</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                     <span class="token function">PQgetlength</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                 <span class="token punctuation">}</span>
+             <span class="token punctuation">}</span>
+         <span class="token punctuation">}</span>
+     <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>输出SELECT查询的完整结果，包括包含数据的字符串的长度：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">SELECT * FROM number WHERE value <span class="token operator">=</span> 29
+Status is PGRES_TUPLES_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message:
+number of rows returned <span class="token operator">=</span> 2
+number of fields returned <span class="token operator">=</span> 2
+value <span class="token operator">=</span> 29<span class="token punctuation">(</span>2<span class="token punctuation">)</span>, name <span class="token operator">=</span> My Age<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+value <span class="token operator">=</span> 29<span class="token punctuation">(</span>2<span class="token punctuation">)</span>, name <span class="token operator">=</span> Anniversary<span class="token punctuation">(</span>11<span class="token punctuation">)</span>,
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>注意，数据字符串的长度不包括末尾的null(字符’\0’，而不是SQL值null)，后者出现在 <code>PQgetvalue</code> 返回的字符串中。</p>
+<blockquote>
+<p>字符串数据，比如在定义为 <code>char(n)</code> 的列中使用的数据，需要用空格填充。如果你检查一个特定的字符串值或比较排序中的值，可能会得到意想不到的结果。如果你将值Zaphod插入到一个定义为 <code>char(8)</code> 的列中，你会得到Zaphod，但如果使用C库函数 <code>strcmp</code>，它不会与Zaphod相等。这个小问题一直困扰着非常有经验的开发人员。</p>
+</blockquote>
+<p><strong>处理NULL结果</strong></p>
+<p>在我们进一步讨论之前，有一个小问题必须解决。事实上，返回给我们的查询结果是编码在字符串中的，这意味着我们无法轻易区分空字符串和SQL NULL值。幸运的是，libpq库为我们提供了一个函数，我们可以调用该函数来确定结果集中某个字段的特定值是否为NULL:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQgetisnull</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">int</span> tuple<span class="token punctuation">,</span> <span class="token keyword">int</span> field<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>当检索任何可能为NULL的字段时，我们应该调用 <code>PQgetisnull</code>。如果字段为NULL，返回1;0。上述示例程序的内循环就会变成下面这样：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQgetisnull</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s is NULL,"</span><span class="token punctuation">,</span> <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">else</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s = %s(%d),"</span><span class="token punctuation">,</span> 
+         <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span> 
+         <span class="token function">PQgetvalue</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+         <span class="token function">PQgetlength</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>打印查询结果</strong></p>
+<p>到目前为止，我们介绍的函数已经足够从PostgreSQL数据库中查询和提取数据了。如果我们想要做的只是打印结果，我们可以考虑利用libpq提供的打印函数，该函数以相当基本的形式输出结果集。这是 <code>PQprint</code> 函数，它将结果集格式化为类似于psql使用的表格形式，并将其发送到指定的输出流：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">void</span> <span class="token function">PQprint</span><span class="token punctuation">(</span>FILE <span class="token operator">*</span>output<span class="token punctuation">,</span> <span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">,</span> <span class="token keyword">const</span> PQprintOpt <span class="token operator">*</span>options<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然而，PostgreSQL的维护者不再积极支持 <code>PQprint</code>，因此您不应该在生产代码中依赖它。它在开发和测试期间非常有用，也许在客户端程序中创建更复杂的显示结果的方式之前。</p>
+<p><code>PQprint</code> 参数是一个要打印的打开文件句柄(<code>output</code>)、一个结果集(<code>result</code>)和一个指向结构体的指针，该结构体包含控制打印格式的选项(<code>options</code>)。该结构如下：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">struct</span> <span class="token punctuation">{</span>
+    pqbool header<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* print out names of columns in a header */</span>
+    pqbool align<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* pad out the values to make them line up */</span>
+    pqbool html3<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* format as an HTML table */</span>
+    pqbool expanded<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* expand tables */</span>
+    pqbool pager<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* use pager for output if needed */</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>fieldSep<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* field separator */</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>tableOpt<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* options for HTML table - place in &lt;TABLE …> */</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span>caption<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* HTML &lt;caption> */</span>
+    <span class="token keyword">char</span> <span class="token operator">*</span><span class="token operator">*</span>fieldName<span class="token punctuation">;</span> <span class="token comment" spellcheck="true">/* Replacement set of field names */</span>
+<span class="token punctuation">}</span> PQprintOpt<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>PQprintOpt</code> 结构的成员相当简单。如果 <code>header</code> 成员设置为非零值，则导致输出表的第一行由字段名组成，可以通过设置字符串的<code>fieldName</code> 列表来覆盖这些字段名。</p>
+<p>输出表中的每一行都由字段值组成，字段值由字符串 <code>fieldSep</code> 分隔，如果 <code>align</code> 为非零，则填充字段值以与其他行对齐。下面是<code>PQprintOpt</code> 的输出示例:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">+-------------+-------+-----------+--------------+----------+----------+
+<span class="token operator">|</span> customer_id <span class="token operator">|</span> title <span class="token operator">|</span> fname <span class="token operator">|</span> town <span class="token operator">|</span> zipcode <span class="token operator">|</span> phone <span class="token operator">|</span>
++-------------+-------+-----------+--------------+----------+----------+
+<span class="token operator">|</span> 1 <span class="token operator">|</span> Miss <span class="token operator">|</span> Jenny <span class="token operator">|</span> Hightown <span class="token operator">|</span> NT2 1AQ <span class="token operator">|</span> 023 9876 <span class="token operator">|</span>
++-------------+-------+-----------+--------------+----------+----------+
+<span class="token operator">|</span> 3 <span class="token operator">|</span> Miss <span class="token operator">|</span> Alex <span class="token operator">|</span> Nicetown <span class="token operator">|</span> NT2 2TX <span class="token operator">|</span> 010 4567 <span class="token operator">|</span>
++-------------+-------+-----------+--------------+----------+----------+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>如果输出很长，可以将 <code>pager</code> 设置为非零值，要求对输出进行分页;也就是说，通过一个过滤器，在每一页左右暂停输出。如果<code>expanded</code> 设置为非零值，则输出格式更改为在一行中单独列出每行中的每个字段。</p>
+<p>我们可以通过设置html3为非零值来生成适合网页包含的HTML输出。我们可以通过设置 <code>tableOpt</code> 和 <code>caption</code> 字符串来指定表选项和标题。下面是一个程序示例(<code>print.c</code>)，使用 <code>PQprint</code> 生成HTML输出:</p>
+<pre><code>#include &lt;stdlib.h&gt;
+#include &lt;libpq-fe.h&gt;
+int main()
+{
+    PGresult *result;
+    PGconn *conn;
+    conn = PQconnectdb("");
+    if(PQstatus(conn) == CONNECTION_OK) {
+        printf("connection made\n");
+         result = PQexec(conn, "SELECT \* FROM customer WHERE town = 'Bingham'");
+         { 
+             PQprintOpt pqp;
+             pqp.header = 1;
+            pqp.align = 1;
+            pqp.html3 = 1;
+            pqp.expanded = 0;
+            pqp.pager = 0;
+            pqp.fieldSep = "";
+            pqp.tableOpt = "align=center";
+            pqp.caption = "Bingham Customer List";
+            pqp.fieldName = NULL;
+            printf("&lt;html&gt;&lt;head&gt;&lt;title&gt;Customers&lt;/title&gt;&lt;/head&gt;&lt;body&gt;\n");
+            PQprint(stdout, result, &amp;pqp);
+            printf("&lt;/body&gt;&lt;/html&gt;\n");
+         }
+
+    }
+    PQfinish(conn);
+    return EXIT_SUCCESS;
+
+}
+</code></pre>
+<p>这个程序的输出是HTML代码，显示在屏幕上(stdout)。输出如下:</p>
+<p>$ <strong>PGDATABASE=bpfinal ./print</strong></p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>title</span><span class="token punctuation">></span></span>Customers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>title</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>table</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>center</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>caption</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>high</span><span class="token punctuation">></span></span>Bingham Customer List<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>caption</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>tr</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>customer_id<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>title<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>fnam
+e<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>lname<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>addressline<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>tow
+n<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>zipcode<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>th</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>phone<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>th</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>tr</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>tr</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>7<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Mr <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Richard<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span>
+ <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Stones<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>34 Holly Way<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Bingham<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>t</span>
+<span class="token attr-name">d</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>BG4 2WE <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>342 5982<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>tr</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>tr</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>8<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Mrs <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Ann<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">ali</span>
+<span class="token attr-name">gn</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Stones<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>34 Holly Way<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Bingham<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>t</span>
+<span class="token attr-name">d</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>BG4 2WE <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>342 5982<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>tr</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>tr</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>11<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Mr <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Dave<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">a</span>
+<span class="token attr-name">lign</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Jones<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>54 Vale Rise<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>left</span><span class="token punctuation">></span></span>Bingham<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span>&lt;
+td align=left>BG3 8GD <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>td</span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation">=</span>right</span><span class="token punctuation">></span></span>342 8264<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>td</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>tr</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>table</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>要在浏览器中看到这一点，我们需要做的就是将程序的输出重定向到一个文件(list.html):</p>
+<pre><code> $ PGDATABASE=bpfinal ./print &gt; list.html 
+</code></pre>
+<p>然后我们查看输出。图1展示了HTML页面在浏览器中的样子。</p>
+<p><strong>图1 示例网页输出</strong> </p>
+<p><img src="/../themes/hexo-theme-matery/source/medias/image/image-20230325093044264.png" alt="image-20230325093044264"></p>
+<p><strong>管理事务</strong></p>
+<p>有时，我们希望确保一组SQL命令作为一个组执行，以便在发生错误时一起对数据库进行更改，或者完全不进行更改。这种形式的查询分组被称为事务。</p>
+<p>与标准SQL一样，我们可以使用libpq的事务支持来管理它。事务行为通过使用包含 <code>BEGIN</code>、<code>COMMIT</code> 和 <code>ROLLBACK</code> 的SQL语句调用<code>PQexec</code> 来实现:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"BEGIN WORK"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">/* Make changes */</span>
+<span class="token keyword">if</span><span class="token punctuation">(</span>we changed our minds<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+     <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"ROLLBACK WORK"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">else</span> <span class="token punctuation">{</span>
+    <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"COMMIT WORK"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>通过向 <code>PQexec</code> 传递适当的SQL查询字符串，我们的libpq程序可以使用所有功能。</p>
+<p><strong>使用游标</strong></p>
+<p>在编写实际应用程序时，我们可能需要处理大量数据。值得庆幸的是，PostgreSQL数据库能够存储包含大量行的表。然而，在处理产生大量数据的查询结果时，客户端应用程序及其操作环境就会对我们产生影响。桌面PC在处理一次SELECT返回的一百万个元组时很可能遇到麻烦。一个大的结果集可能会消耗大量的内存，如果应用程序是这样的话在网络上运行，可能会消耗大量的带宽，并需要大量的时间来传输。</p>
+<p>我们真正需要做的是执行查询并一点一点地处理结果。例如，如果在我们的应用程序中，我们想要显示完整的客户列表，我们可以一次检索所有客户列表。但是，更聪明的做法是每次获取25个页面，并在我们的应用程序中逐页显示。</p>
+<p>我们可以通过使用libpq的游标来实现这一点。游标是一种极好的通用方式，用于容纳返回未知数量的行。如果我们搜索特定的邮政编码，特别是用户提供的邮政编码，则不可能提前知道返回的是零、一还是多行。</p>
+<p>一般来说，你应该避免编写假设SELECT语句返回单行或不返回任何行的代码，除非这条语句是一个简单的聚合操作，例如类型查询的SELECT count(*)，或者主键的SELECT，这些操作可以保证结果总是只返回一行。当有疑问时，使用游标。</p>
+<p>为了演示如何处理从查询中返回的多行数据，我们将探索如何使用 <code>FETCH</code> 一次检索一个(或多个)行数据，并以与all-at-once SELECT语句相同的方式将列值接收到结果集中。</p>
+<p>我们将逐步开发一个示例程序，该程序使用游标从bpfinal数据库逐页查询和处理客户列表。我们将声明一个游标，用于在返回的行集合中滚动。游标将充当我们的书签，我们将获取这些行，直到没有更多数据可用。要使用游标，必须声明它并指定与之相关的查询。我们只能在PostgreSQL事务中使用游标声明，所以我们也必须开始一个事务:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"BEGIN work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"DECLARE mycursor CURSOR FOR SELECT ..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>现在可以开始检索结果行了。我们通过执行 <code>FETCH</code> 来实现这一点，每次提取尽可能多的数据行(包括剩余的所有行):</p>
+<pre class="line-numbers language-c"><code class="language-c">result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"FETCH 1 IN mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"FETCH 4 IN mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"FETCH ALL IN mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>当检索到查询中的所有行时，结果集将表明它不包含任何行。使用完游标后，关闭游标并结束事务:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"COMMIT work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"CLOSE mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>我们花点时间研究一下使用游标时使用的一般结构:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+     <span class="token comment" spellcheck="true">/* Connect to a PostgreSQL database */</span>
+     <span class="token comment" spellcheck="true">/* Create cursor for SQL SELECT statement */</span>
+     DO
+     <span class="token comment" spellcheck="true">/* Fetch batch of query results */</span>
+     <span class="token comment" spellcheck="true">/* Process query results */</span>
+     UNTIL no more results
+     <span class="token comment" spellcheck="true">/* close cursor */</span>
+     <span class="token comment" spellcheck="true">/* Disconnect from database */</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>对于我们获取的每批查询结果，我们都可以访问一个 <code>PGresult</code> 指针，我们可以像以前一样使用它。</p>
+<p><strong>一次性获取所有结果</strong></p>
+<p>首先，让我们看看使用游标(在 <code>cursor.c</code> 中)一次性获取所有结果，以确保我们有正确的SQL。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">void</span> <span class="token function">doSQL</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>command<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"status is %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresStatus</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#rows affected %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQcmdTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"result message: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">switch</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+     <span class="token keyword">case</span> PGRES_TUPLES_OK<span class="token punctuation">:</span>
+     <span class="token punctuation">{</span>
+         <span class="token keyword">int</span> r<span class="token punctuation">,</span> n<span class="token punctuation">;</span>
+         <span class="token keyword">int</span> nrows <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> nfields <span class="token operator">=</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of rows returned = %d\n"</span><span class="token punctuation">,</span> nrows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of fields returned = %d\n"</span><span class="token punctuation">,</span> nfields<span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token keyword">for</span><span class="token punctuation">(</span>r <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> r <span class="token operator">&lt;</span> nrows<span class="token punctuation">;</span> r<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+             <span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span>
+                 <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s = %s(%d),"</span><span class="token punctuation">,</span> 
+                 <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span> 
+                 <span class="token function">PQgetvalue</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                 <span class="token function">PQgetlength</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                 <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token punctuation">}</span>
+         <span class="token punctuation">}</span>
+     <span class="token punctuation">}</span>
+     <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+     PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+     conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"BEGIN work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"DECLARE mycursor CURSOR FOR "</span>
+        <span class="token string">"SELECT fname, lname FROM customer"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"FETCH ALL IN mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"CLOSE mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"COMMIT work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+     <span class="token keyword">else</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>执行这个程序时，我们会看到所有客户同时被列出：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">connection made
+BEGIN work
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+DECLARE mycursor CURSOR FOR SELECT fname, lname FROM customer
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message:
+FETCH ALL IN mycursor
+status is PGRES_TUPLES_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+number of rows returned <span class="token operator">=</span> 15
+number of fields returned <span class="token operator">=</span> 2
+ fname <span class="token operator">=</span> Jenny<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Andrew<span class="token punctuation">(</span>6<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Adrian<span class="token punctuation">(</span>6<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Simon<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Cozens<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Neil<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Richard<span class="token punctuation">(</span>7<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Ann<span class="token punctuation">(</span>3<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Christine<span class="token punctuation">(</span>9<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hickman<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Mike<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Howard<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Dave<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Jones<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Richard<span class="token punctuation">(</span>7<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Neill<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Laura<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hardy<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Bill<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> O'Neill<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> David<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hudson<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Alex<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+CLOSE mycursor
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+COMMIT work
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>分批获取结果</strong></p>
+<p>要修改程序以处理结果(比如一次处理4个结果)，我们需要能够判断何时取得了所有结果。当我们同时处理所有结果时，这很容易，因为<code>PQntuples</code> 会告诉我们集合中有多少个结果。如果我们一次获取4个结果，那么 <code>PQntuples</code> 将为每批结果返回4个结果，但最后一批结果将是小于4(可能为0)。这是我们将要使用的测试(在 <code>cursor2.c</code> 中)。由于我们的doSQL函数没有返回结果，我们将直接使用 <code>PQexec</code> 处理批次。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">void</span> <span class="token function">printTuples</span><span class="token punctuation">(</span>PGresult \<span class="token operator">*</span>result<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">int</span> r<span class="token punctuation">,</span> n<span class="token punctuation">;</span>
+    <span class="token keyword">int</span> nrows <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> nfields <span class="token operator">=</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of rows returned = %d\n"</span><span class="token punctuation">,</span> nrows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of fields returned = %d\n"</span><span class="token punctuation">,</span> nfields<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span><span class="token punctuation">(</span>r <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> r <span class="token operator">&lt;</span> nrows<span class="token punctuation">;</span> r<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s = %s(%d),"</span><span class="token punctuation">,</span> 
+            <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span> 
+            <span class="token function">PQgetvalue</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token function">PQgetlength</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">void</span> <span class="token function">doSQL</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>command<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%s\n"</span><span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"status is %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresStatus</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#rows affected %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQcmdTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"result message: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQresultErrorMessage</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">switch</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+     <span class="token keyword">case</span> PGRES_TUPLES_OK<span class="token punctuation">:</span>
+         <span class="token function">printTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token keyword">break</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+     <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+    
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+    <span class="token keyword">int</span> ntuples <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"BEGIN work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"DECLARE mycursor CURSOR FOR "</span>
+     <span class="token string">"SELECT fname, lname FROM customer"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">do</span> <span class="token punctuation">{</span>
+        result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"FETCH 4 IN mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQresultStatus</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span> <span class="token operator">==</span> PGRES_TUPLES_OK<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        ntuples <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">printTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+     <span class="token keyword">else</span> ntuples <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span> <span class="token keyword">while</span><span class="token punctuation">(</span>ntuples<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"CLOSE mycursor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">doSQL</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"COMMIT work"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+     <span class="token keyword">else</span> 
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在这个版本的程序中，我们可以看到一次处理4个结果的几批处理，然后是一小批处理：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">connection made
+<span class="token punctuation">..</span>.
+DECLARE mycursor CURSOR FOR SELECT fname, lname FROM customer
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+number of rows returned <span class="token operator">=</span> 4
+number of fields returned <span class="token operator">=</span> 2
+ fname <span class="token operator">=</span> Jenny<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Andrew<span class="token punctuation">(</span>6<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Adrian<span class="token punctuation">(</span>6<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Simon<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Cozens<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+number of rows returned <span class="token operator">=</span> 4
+number of fields returned <span class="token operator">=</span> 2
+ fname <span class="token operator">=</span> Neil<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Richard<span class="token punctuation">(</span>7<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Ann<span class="token punctuation">(</span>3<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Stones<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Christine<span class="token punctuation">(</span>9<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hickman<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+number of rows returned <span class="token operator">=</span> 4
+number of fields returned <span class="token operator">=</span> 2
+ fname <span class="token operator">=</span> Mike<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Howard<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Dave<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Jones<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Richard<span class="token punctuation">(</span>7<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Neill<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Laura<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hardy<span class="token punctuation">(</span>5<span class="token punctuation">)</span>,
+number of rows returned <span class="token operator">=</span> 3
+number of fields returned <span class="token operator">=</span> 2
+ fname <span class="token operator">=</span> Bill<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> O'Neill<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> David<span class="token punctuation">(</span>5<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Hudson<span class="token punctuation">(</span>6<span class="token punctuation">)</span>,
+ fname <span class="token operator">=</span> Alex<span class="token punctuation">(</span>4<span class="token punctuation">)</span>, lname <span class="token operator">=</span> Matthew<span class="token punctuation">(</span>7<span class="token punctuation">)</span>,
+number of rows returned <span class="token operator">=</span> 0
+number of fields returned <span class="token operator">=</span> 2
+CLOSE mycursor
+status is PGRES_COMMAND_OK
+<span class="token comment" spellcheck="true">#rows affected </span>
+result message: 
+<span class="token punctuation">..</span>.
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>我们可以使用前面看到的 <code>FETCH</code> 的所有选项，一次获取一个结果(使用下一个选项)，一次获取一个结果(通过指定一个数字)，或者一次性获取所有结果(使用all)。</p>
+<p>处理二进制值本章中处理的所有数据都以字符串形式传输。我们创建了以字符串形式存储值的INSERT语句，并再次以字符串形式处理SELECT的结果。</p>
+<p>您可能认为所有这些格式之间的转换都是浪费。使用二进制接口不是更好吗?如果想插入或选择一个浮点数，比如平均油耗，直接将它从C double类型的值转换到C double类型的值不是更好吗?</p>
+<p>答案既是肯定的，也是否定的。PostgreSQL在libpq中确实有一些处理二进制值的能力，但好处可能相当少。目前，我们只能在使用游标并在其声明中包含二进制选项的情况下获取二进制值:</p>
+<pre class="line-numbers language-c"><code class="language-c">DECLARE mycursor BINARY CURSOR FOR<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后 <code>PQbinaryTuples</code> 函数将确认从该游标获取返回的结果集包含二进制数据：</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQbinaryTuples</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>现在，在使用二进制元组的情况下，<code>PQgetvalue</code> 将返回一个指向字段二进制表示形式的指针，而不是字符串指针，这种二进制表示形式是服务器原生的二进制格式。</p>
+<p>处理变长数据和多字节值的字节排序(如货币数据)等问题很快就会变得非常混乱。建议你在使用libpq时坚持使用字符串表示。使用嵌入式SQL可以更容易地处理二进制值。</p>
+<p><strong>异步工作</strong></p>
+<p>到目前为止，我们看到的所有例子都是在阻塞模式下使用libpq函数。这意味着我们的程序调用libpq函数并等待它返回值。正如我们之前看到的，我们可能会请求大量的数据，可能需要一段时间才能接收到。在单线程(普通)应用程序中，如果我们使用 <code>PQexec</code>，在此之前我们什么都不能做<code>PQexec</code> 回报。用户必须等待。如果不再需要查询结果，取消查询也很棘手。但对大多数程序来说，这就足够了，较短的等待不是问题。一次使用游标获取少量结果可能就足够了。在本节中，我们将介绍一种更高级的技术，如果需要，它可以让我们精确控制应用程序的行为。</p>
+<p>阻塞的另一种方式，通常用于具有图形用户界面的应用程序，是在非阻塞模式下运行。在这种类型的程序中，当发生某些事情时，会向我们发送消息，我们的应用程序必须对这些消息作出响应。因此，在指向点击应用程序中，我们可能会被告知用户何时按下了鼠标按钮、何时在字段中输入数据、何时移动了窗口等等。</p>
+<p>非阻塞程序的结构通常围绕着一个事件循环:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    LOOP<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token comment" spellcheck="true">/* Wait for an event to occur */</span>
+        <span class="token comment" spellcheck="true">/* Find out what has event has occurred */</span>
+        <span class="token keyword">switch</span><span class="token punctuation">(</span>event type<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment" spellcheck="true">/* Process event */</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在某些事件发生之前，我们基本上什么都不做。当我们收到某件事发生的通知时，我们准确地找出发生了什么，并执行适当的操作。</p>
+<p>有时，我们使用的编程语言隐藏了事件循环，我们只需要在特定事件发生时调用我们编写的特定函数。这些函数通常被称为回调函数，构成应用程序核心的主循环在有话要说的时候会回调我们。例如，在Visual Basic中就是这样。</p>
+<p>在libpq中，PostgreSQL对这种非阻塞编程方式有一定的支持。它被称为异步工作，因为在服务器上执行的数据库操作不与客户端应用程序同步，客户端应用程序可以执行其他任务，而不是简单的等待。相反，我们必须询问PostgreSQL是否发生了任何事情，以及什么时候发生了，我们恢复处理。</p>
+<p><strong>以异步模式执行查询</strong></p>
+<p>让我们看看如何在异步模式中执行查询。我们将使用 <code>PQexec</code> 用来完成工作的一对函数：<code>PQsendQuery</code> 和 <code>PQgetResult</code>。</p>
+<p>我们的想法是调用 <code>PQsendQuery</code> 将我们的SQL发送到服务器。一旦它在路上，我们可以继续做其他事情。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQsendQuery</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>query<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果没有分派查询，<code>PQsendQuery</code> 返回0，并设置一个错误条件，我们可以通过 <code>PQerrorMessage</code> 检索。否则，返回1表示查询成功发送。如果服务器立即响应，结果集将一直等待我们，直到我们准备好检索它。准备好后，调用 <code>PQgetResult</code> 一次或多次，获取查询结果:</p>
+<pre class="line-numbers language-c"><code class="language-c">PGresult <span class="token operator">*</span><span class="token function">PQgetResult</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><code>PQgetResult</code> 每次调用都会返回一个结果集，直到活动查询的所有结果都被返回为止。如果没有进一步的数据立即可用，结果集可能不包含元组，但这并不意味着所有数据都已经接收到。此时，<code>PQgetResult</code> 返回一个NULL指针。当我们调用 <code>PQclear</code> 时，<code>PQgetResult</code> 返回的每一个结果集都必须被清空。</p>
+<p>为了让它工作，我们必须确保 <code>PQsendQuery</code> 和 <code>PQgetResult</code> 都不会阻塞，让我们的应用程序等待它们。为了帮助使用 <code>PQsendQuery</code>，我们可以通过调用 <code>PQsetnonblocking</code> 将连接本身设置为非阻塞状态:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQsetnonblocking</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">,</span> <span class="token keyword">int</span> arg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>为了防止 <code>PQsendQuery</code> 阻塞，我们使用一个非零参数调用 <code>PQsetnonblocking</code>。然后，如果<code> PQsendQuery</code> 被阻塞，它将返回一个错误，应用程序可能在稍后重试。</p>
+<p>如果成功，<code>PQsetnonblocking</code> 返回0，如果在改变连接模式时出现问题，则返回-1。我们可以通过调用 <code>PQisnonblocking</code> 来检查连接的阻塞模式:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQisnonblocking</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果连接处于非阻塞模式，我们会得到一个非零值。</p>
+<p>运行这个非阻塞操作需要的编程是这样的(<code>async1.c</code>):</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">void</span> <span class="token function">printTuples</span><span class="token punctuation">(</span>PGresult <span class="token operator">*</span>result<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">int</span> r<span class="token punctuation">,</span> n<span class="token punctuation">;</span>
+    <span class="token keyword">int</span> nrows <span class="token operator">=</span> <span class="token function">PQntuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> nfields <span class="token operator">=</span> <span class="token function">PQnfields</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of rows returned = %d\n"</span><span class="token punctuation">,</span> nrows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"number of fields returned = %d\n"</span><span class="token punctuation">,</span> nfields<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span><span class="token punctuation">(</span>r <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> r <span class="token operator">&lt;</span> nrows<span class="token punctuation">;</span> r<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">for</span><span class="token punctuation">(</span>n <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> n <span class="token operator">&lt;</span> nfields<span class="token punctuation">;</span> n<span class="token operator">++</span><span class="token punctuation">)</span>
+             <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" %s = %s(%d),"</span><span class="token punctuation">,</span> 
+             <span class="token function">PQfname</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span> 
+             <span class="token function">PQgetvalue</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">,</span>
+             <span class="token function">PQgetlength</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> r<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+    conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK <span class="token operator">&amp;&amp;</span> <span class="token function">PQsetnonblocking</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token function">PQsendQuery</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"SELECT \* FROM customer"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token keyword">while</span><span class="token punctuation">(</span>result <span class="token operator">=</span> <span class="token function">PQgetResult</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+             <span class="token function">printTuples</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token function">PQclear</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token punctuation">}</span>
+     <span class="token punctuation">}</span>
+    <span class="token keyword">else</span> 
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>该程序发送一个查询，然后无阻塞地收集结果。与前面使用游标的例子一样，我们现在没有简单的方法来确定总共返回多少行，但这在实践中很少成为问题。</p>
+<p>仍然有一些罕见的情况下 <code>PQgetResult</code> 会阻塞，其中之一是在后端服务器繁忙时。有一些方法可以解决这个问题，使用一些较低级别的libpq函数。如果您需要对连接进行非常精确的控制，并且正在执行非常复杂的查询，这会导致服务器长时间繁忙，你可以使用表3中的函数。</p>
+<p>请查看PostgreSQL文档，该文档包含在源代码分发版中，或在<a target="_blank" rel="noopener" href="http://www.postgresql.org上了解有关使用/">http://www.postgresql.org上了解有关使用</a> <code>PQisBusy</code>、<code>PQconsumeInput</code> 和 <code>PQflush</code> 函数的详细信息。</p>
+<p>如果您的应用程序使用select系统调用(不要与SQL select语句混淆)来响应文件描述符或网络套接字上的读写事件，您也可以在select中包含PostgreSQL连接。为此，必须获取数据库连接正在使用的套接字。这可以从 <code>PQsocket</code> 中获得:</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">PQsocket</span><span class="token punctuation">(</span><span class="token keyword">const</span> PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>表3 libpq用于控制阻塞的函数</strong></p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>int PQisBusy(PGconn *conn);</td>
+<td>如果当前查询繁忙，则返回1，如果调用 <code>PQgetResult</code>，则会阻塞。</td>
+</tr>
+<tr>
+<td>int PQflush(PGconn *conn);</td>
+<td>尝试发送任何等待发送到服务器的未完成数据。如果成功清空了队列，或者队列已经为空，则返回0。</td>
+</tr>
+<tr>
+<td>int PQconsumeInput(PGconn *conn);</td>
+<td>将等待在数据库连接上读取的数据传输到内部的libpq数据结构中。它通常由 <code>PQexec</code> 之类的函数调用，但当需要控制应用程序的阻塞行为时，可以显式地调用它。</td>
+</tr>
+</tbody></table>
+<p>当有需要处理的后端数据时，套接字会发出活动信号，但要做到这一点，必须满足几个条件：</p>
+<ul>
+<li><p>必须没有未完成的数据要发送到服务器。我们可以通过调用 <code>PQflush</code> 直到它返回0来确保这一点。</p>
+</li>
+<li><p>在调用 <code>PQgetResult</code> 之前，<code>PQconsumeInput</code> 必须从连接中读取数据。</p>
+</li>
+</ul>
+<p><strong>取消异步查询</strong></p>
+<p>如果需要在读取所有结果之前取消查询，可以调用 <code>PQrequestCancel</code>，它会向服务器发送一个停止查询处理的通知:</p>
+<pre><code>int PQrequestCancel(PGconn *conn);
+</code></pre>
+<p>如果 <code>PQrequestCancel</code> 能够发送取消请求，则返回1;如果无法发送取消请求，则返回0，原因可能是查询已经完成。一个被取消的查询将显示为一个带有错误的结果集。无论 <code>QrequestCancel</code> 的结果如何，我们都可能来不及阻止结果出现，并且可能在结果集中看不到任何错误。</p>
+<p>虽然 <code>PQrequestCancel</code> 在非阻塞模式下很有用，但也可以从信号处理程序中调用它来终止阻塞连接上的长时间运行的查询。</p>
+<p><strong>建立异步数据库连接</strong></p>
+<p>也可以使用 <code>PQconnectStart</code> 和 <code>PQconnectPoll</code> 以非阻塞的方式建立到数据库的初始连接:</p>
+<pre class="line-numbers language-c"><code class="language-c">PGconn <span class="token operator">*</span><span class="token function">PQconnectStart</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span>conninfo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+PostgresPollingStatusType <span class="token operator">*</span><span class="token function">PQconnectPoll</span><span class="token punctuation">(</span>PGconn <span class="token operator">*</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p><code>PQconnectStart</code> 类似于 <code>PQconnectdb</code>，不同的是它会在 <code>conninfo</code> 字符串中请求的连接建立之前立即返回。只要主机名参数不导致DNS查找，<code>PQconnectStart</code> 就不会阻塞。</p>
+<p>在使用新连接之前，我们必须确保它已经准备好。首先，我们必须调用 <code>PQstatus</code> 来确保对 <code>PQconnectStart</code> 的调用不会失败，从而使连接的状态为 <code>CONNECTION_BAD</code>。然后，我们可以使用 <code>PQconnectPoll</code> 检查连接的条件，它不会阻塞。<code>PQconnectPoll</code> 返回的结果如下所示。</p>
+<blockquote>
+<p>PGRES_POLLING_FAILED <em>连接失败</em></p>
+<p>PGRES_POLLING_OK <em>连接已经建立</em></p>
+</blockquote>
+<p>轮询的结果不是 <code>PGRES_POLLING_FAILED</code>，直到变成 <code>PGRES_POLLING_OK</code>，我们就可以以非阻塞的方式检测连接建立过程的结束。</p>
+<p>下面是一个建立异步数据库连接的示例程序(<code>async2.c</code>):</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">/* Start an asynchronous connection */</span>
+    conn <span class="token operator">=</span> <span class="token function">PQconnectStart</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_BAD<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">" cannot start connect: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">else</span> <span class="token punctuation">{</span>
+        <span class="token comment" spellcheck="true">/* do some work, calling PQconnectPoll from time to time */</span>
+        PostgresPollingStatusType status<span class="token punctuation">;</span>
+        <span class="token keyword">do</span> <span class="token punctuation">{</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"polling\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            status <span class="token operator">=</span> <span class="token function">PQconnectPoll</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">while</span><span class="token punctuation">(</span>status <span class="token operator">!=</span> PGRES_POLLING_FAILED <span class="token operator">&amp;&amp;</span> status <span class="token operator">!=</span> PGRES_POLLING_OK<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span>status <span class="token operator">==</span> PGRES_POLLING_OK<span class="token punctuation">)</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made!\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">else</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection failed: %s\n"</span><span class="token punctuation">,</span> <span class="token function">PQerrorMessage</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>当我们运行这个程序时，我们会看到许多轮询消息，在连接被报告为成功或失败之前：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ PGDATABASE<span class="token operator">=</span>bpfinal ./async2
+polling
+polling
+<span class="token punctuation">..</span>.
+connection made<span class="token operator">!</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<blockquote>
+<p>如果多次运行此程序，您可能会看到在建立连接之前出现不同数量的轮询消息，确切的数字取决于服务器响应连接请求所需的时间。</p>
+</blockquote>
+<p><strong>总结</strong></p>
+<p>在本章中，我们学习了如何用c语言创建PostgreSQL应用程序，了解了libpq库如何访问PostgreSQL的底层函数，允许我们通过网络连接本地机器或服务器上的数据库。我们已经使用了示例程序来建立和关闭连接，并执行SQL语句来查询、插入或更新数据库表中的行。</p>
+<p>我们已经考虑了处理大量数据的问题，并研究了如何使用游标将查询结果编组为可管理的单元。我们已经了解了阻塞的问题，并考虑了创建应用程序的方法，以便在访问数据库服务器时继续为用户提供服务。</p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://jinlid.github.io/2023/shi-yong-libpq-cong-c-fang-wen-postgresql/">https://jinlid.github.io/2023/shi-yong-libpq-cong-c-fang-wen-postgresql/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">JINLID</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2023/postgresql-luo-ji-fu-zhi/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="PostgreSQL 逻辑复制">
+                        
+                        <span class="card-title">PostgreSQL 逻辑复制</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            PostgreSQL 10 一重量新特性为逻辑复制（ Logical Replication ），这一新特性的主要提交者来自于 2ndquadrant 开发者，感谢他们的付出！
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-03-22
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2023/postgresql-suo-1-xing-suo/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="PostgreSQL锁，第1部分:行锁">
+                        
+                        <span class="card-title">PostgreSQL锁，第1部分:行锁</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-26
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2023</span>
+            
+            <a href="/about" target="_blank">JINLID</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/jinlid" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:845401160@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=845401160" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 845401160" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
