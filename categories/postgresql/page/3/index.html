@@ -395,11 +395,11 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 27">
+                <a href="/categories/postgresql/" title="postgresql: 28">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">27</span>
+                        <span class="tag-length">28</span>
                     </span>
                 </a>
                 
@@ -541,24 +541,28 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/9.yu-xie-ri-zhi-wal/">
+                    <a href="/2022/autovacuum-jin-cheng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="第9章 预写日志—WAL">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="autovacuum进程">
                             
-                            <span class="card-title">第9章 预写日志—WAL</span>
+                            <span class="card-title">autovacuum进程</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改和操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的
+                                autovacuum 是 postgresql 里非常重要的一个服务端进程，能够自动地执行，在一定条件下自动地对 dead tuples 进行清理并对表进行分析。
+
+
+[TOC]
+1.1 什么是autovacuum？autocuum是启动p
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
                             </span>
                             <span class="publish-author">
                                 
@@ -637,24 +641,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/5.bing-fa-kong-zhi/">
+                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
+                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
                             
-                            <span class="card-title">第5章 并发控制</span>
+                            <span class="card-title">第2章 进程和内存架构</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
 
 
 [TOC]
+2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
 
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
@@ -788,24 +792,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第5章 并发控制">
                             
-                            <span class="card-title">第2章 进程和内存架构</span>
+                            <span class="card-title">第5章 并发控制</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
 
 
 [TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
 
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
@@ -910,11 +914,12 @@
             
         </div>
         <div class="page-info col m4 l4 hide-on-small-only">
-            <div class="center-align b-text-gray">3 / 3</div>
+            <div class="center-align b-text-gray">3 / 4</div>
         </div>
         <div class="col s6 m4 l4">
             
-            <a class="right btn-floating btn-large disabled">
+            <a href="/categories/postgresql/page/4/"
+               class="right btn-floating btn-large waves-effect waves-light bg-color">
                 <i class="fas fa-angle-right"></i>
             </a>
             

@@ -4,30 +4,17 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="jinlid&#39;s blog">
-    <meta name="description" content="1 数据函数
+    <meta name="keywords" content="PostgreSQL控制文件管理, jinlid&#39;s blog">
+    <meta name="description" content="
 
+[TOC]
+控制文件的位置与大小
+逻辑位置：存放在pg_global表空间中
+物理位置与名字：$PGDATA/global/pg_control
+控制文件的大小是8K
+控制文件内容尽量保持小于512个字节
 
-函数名
-功能
-示例
-结果
-
-
-
-abs(x)
-计算 x 的绝对值
-abs(-17.4)
-17.4
-
-
-ceil(dp)/ceiling(dp)
-计算大于或等于 dp 的最小整数
-ceil(-42.8)
--42
-
-
-floo">
+initdb时生成的静态信息">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -39,7 +26,7 @@ floo">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>jinlid&#39;s blog</title>
+    <title>PostgreSQL控制文件管理 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -359,12 +346,12 @@ floo">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
+                    <h1 class="description center-align post-title">PostgreSQL控制文件管理</h1>
                 </div>
             </div>
         </div>
@@ -386,12 +373,25 @@ floo">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                          <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
-                          </div>
+                    <div class="article-tag">
+                        
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
+                            </a>
+                        
+                    </div>
                     
                 </div>
                 <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
+                            </a>
+                        
+                    </div>
                     
                 </div>
             </div>
@@ -400,7 +400,7 @@ floo">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-03-01
+                    2023-02-09
                 </div>
                 
 
@@ -421,329 +421,165 @@ floo">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="1-数据函数"><a href="#1-数据函数" class="headerlink" title="1 数据函数"></a>1 数据函数</h2><table>
-<thead>
-<tr>
-<th>函数名</th>
-<th>功能</th>
-<th>示例</th>
-<th>结果</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>abs(x)</strong></td>
-<td>计算 x 的绝对值</td>
-<td>abs(-17.4)</td>
-<td>17.4</td>
-</tr>
-<tr>
-<td><strong>ceil(dp)</strong>/<strong>ceiling(dp)</strong></td>
-<td>计算大于或等于 dp 的最小整数</td>
-<td>ceil(-42.8)</td>
-<td>-42</td>
-</tr>
-<tr>
-<td><strong>floor(dp)</strong></td>
-<td>计算小于或等于 dp 的最大整数</td>
-<td>floor(-42.8)</td>
-<td>-43</td>
-</tr>
-<tr>
-<td><strong>round(dp)</strong></td>
-<td>四舍五入为整数</td>
-<td>round(12.45)</td>
-<td>12</td>
-</tr>
-<tr>
-<td><strong>trunc(dp)</strong></td>
-<td>向零取整</td>
-<td>trunc(12.8)</td>
-<td>12</td>
-</tr>
-<tr>
-<td><strong>power(a, b)</strong></td>
-<td>计算 a 的 b 次方</td>
-<td>power(2, 3)</td>
-<td>8</td>
-</tr>
-<tr>
-<td><strong>div(y, x)</strong></td>
-<td>计算 y 除以 x 的整数商</td>
-<td>div(9,4)</td>
-<td>2</td>
-</tr>
-<tr>
-<td><strong>mod(y, x)</strong></td>
-<td>计算 y 除以 x 的余数</td>
-<td>mod(9,4)</td>
-<td>1</td>
-</tr>
-<tr>
-<td><strong>sign(dp)</strong></td>
-<td>返回参数的正负号</td>
-<td>sign(-8.4)</td>
-<td>-</td>
-</tr>
-<tr>
-<td><strong>random()</strong></td>
-<td>返回一个随机数</td>
-<td>random()</td>
-<td>0.07772749848663807</td>
-</tr>
-</tbody></table>
-<h2 id="2-字符串函数"><a href="#2-字符串函数" class="headerlink" title="2 字符串函数"></a>2 字符串函数</h2><table>
-<thead>
-<tr>
-<th>函数名</th>
-<th>功能</th>
-<th>示例</th>
-<th>结果</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>concat(str, …)</strong></td>
-<td>用于连接字符串，并且忽略其中的 NULL 参数</td>
-<td>concat(2, NULL, 22)</td>
-<td>222</td>
-</tr>
-<tr>
-<td><strong>concat_ws(sep, str, …)</strong></td>
-<td>使用指定分隔符 sep 连接字符串</td>
-<td>concat_ws(‘ and ‘, 2, NULL, 22)</td>
-<td>2 and 22</td>
-</tr>
-<tr>
-<td><strong>length(string)</strong></td>
-<td>计算字符串包含的字符数</td>
-<td>length(‘jose’)</td>
-<td>4</td>
-</tr>
-<tr>
-<td><strong>char_length(string)</strong></td>
-<td>计算字符串包含的字节数</td>
-<td>octet_length(‘jose’)</td>
-<td>4</td>
-</tr>
-<tr>
-<td><strong>lower(string)</strong></td>
-<td>将字符串转换为小写形式</td>
-<td>lower(‘TOM’)</td>
-<td>tom</td>
-</tr>
-<tr>
-<td><strong>upper(string)</strong></td>
-<td>将字符串转换为大写形式</td>
-<td>upper(‘tom’)</td>
-<td>TOM</td>
-</tr>
-<tr>
-<td><strong>initcap(string)</strong></td>
-<td>将每个单词的首字母大写，其他字母小写</td>
-<td>initcap(‘hi THOMAS’)</td>
-<td>Hi Thomas</td>
-</tr>
-<tr>
-<td><strong>substring(string [FROM] [for])</strong></td>
-<td>用于提取从位置 FROM 开始的 for 个字符子串，位置从1 开始计算</td>
-<td>substring(‘Thomas’ FROM 2 for 3)</td>
-<td>hom</td>
-</tr>
-<tr>
-<td><strong>left(str, n)</strong></td>
-<td>返回字符串左边的 n 个字符</td>
-<td>left(‘abcde’, 2)</td>
-<td>ab</td>
-</tr>
-<tr>
-<td><strong>right(str, n)</strong></td>
-<td>返回字符串右边的 n 个字符</td>
-<td>right(‘abcde’, 2)</td>
-<td>de</td>
-</tr>
-<tr>
-<td><strong>position(substring in string)</strong></td>
-<td>返回子串的位置</td>
-<td>position(‘om’ in ‘Thomas’)</td>
-<td>3</td>
-</tr>
-<tr>
-<td><strong>strpos(string, substring)</strong></td>
-<td>返回子串的位置</td>
-<td>strpos(‘Thomas’, ‘om’)</td>
-<td>3</td>
-</tr>
-<tr>
-<td><strong>starts_with(string, prefix)</strong></td>
-<td>判断 string 是否以 prefix 开头</td>
-<td>starts_with(‘alphabet’, ‘alph’)</td>
-<td>true</td>
-</tr>
-<tr>
-<td><strong>replace(string, FROM, to)</strong></td>
-<td>将字符串 string 中的 FROM 子串替换为 to 子串</td>
-<td>replace(‘abcdefabcdef’, ‘cd’, ‘XX’)</td>
-<td>abXXefabXXef</td>
-</tr>
-<tr>
-<td><strong>translate(string , FROM , to)</strong></td>
-<td>将字符串 string 中出现在 FROM 中的字符串替换成 to 中相应位置的字符</td>
-<td>translate(‘12345’, ‘143’, ‘ax’)</td>
-<td>a2x5</td>
-</tr>
-<tr>
-<td><strong>overlay(string placing substring FROM [for])</strong></td>
-<td>使用 substring 覆盖字符串 string 中从FROM 开始的 for 个字符</td>
-<td>overlay(‘Txxxxas’ placing ‘hom’ FROM 2 for 4)</td>
-<td>Thomas</td>
-</tr>
-<tr>
-<td><strong>trim([leading trailing both] [characters] FROM string)</strong></td>
-<td>从字符串的开头（leading）、结尾（trailing）或者两端（both）删除由指定字符 characters（默认为空格）组成的最长子串</td>
-<td>trim(both ‘xyz’ FROM ‘yxTomxx’)</td>
-<td>Tom</td>
-</tr>
-<tr>
-<td><strong>ltrim(string [,</strong> <strong>characters])</strong></td>
-<td>与上面 trim 函数的 leading 选项相同</td>
-<td>ltrim(‘yxTomxx’, ‘xyz’)</td>
-<td>Tomxx</td>
-</tr>
-<tr>
-<td><strong>rtrim(string [, characters])</strong></td>
-<td>与上面 trim 函数的trailing 选项相同</td>
-<td>rtrim(‘yxTomxx’,</td>
-<td>yxTom</td>
-</tr>
-<tr>
-<td><strong>lpad(string, length [, fill ])</strong></td>
-<td>在 string 左侧使用 fill 中的字符（默认空格）进行填充，直到长度为 length</td>
-<td>lpad(‘hi’, 5, ‘xy’)</td>
-<td>xyxhi</td>
-</tr>
-<tr>
-<td><strong>rpad(string, length [, fill ])</strong></td>
-<td>函数在 string 右侧使用 fill 中的字符（默认空格）进行填充，直到长度为 length</td>
-<td>rpad(‘hi’, 5, ‘xy’)</td>
-<td>hixyx</td>
-</tr>
-<tr>
-<td><strong>repeat(string, number)</strong></td>
-<td>函数将字符串 string 重复 N 次</td>
-<td>repeat(‘Pg’, 4)</td>
-<td>PgPgPgPg</td>
-</tr>
-<tr>
-<td><strong>format(formatstr , formatarg)</strong></td>
-<td>用于对字符串格式化，类似于 C 语言中的 sprintf 函数</td>
-<td>format(‘Hello %s, %1$s’, ‘World’)</td>
-<td>Hello World, World</td>
-</tr>
-<tr>
-<td><strong>md5(string)</strong></td>
-<td>用于返回十六进制格式的 MD5 值</td>
-<td>md5(‘abc’)</td>
-<td>900150983cd24fb0d6963f7d28e17f72</td>
-</tr>
-<tr>
-<td><strong>regexp_split_to_table(string, pattern[, flags])</strong></td>
-<td>数用于拆分字符串，使用 POSIX 正则表达式作为分隔符。函数的返回类型是 text 集合</td>
-<td>regexp_split_to_table(‘hello world’, ‘\s+’)</td>
-<td>hello<br>world</td>
-</tr>
-<tr>
-<td><strong>split_part(string, delimiter, field)</strong></td>
-<td>数使用 delimiter 拆分字符串，并返回指定项（从 1 开始计数）</td>
-<td>split_part(‘abc<del>@</del>def<del>@</del>ghi’, ‘<del>@</del>‘, 2)</td>
-<td>def</td>
-</tr>
-<tr>
-<td><strong>reverse(str)</strong></td>
-<td>用于将字符串反转</td>
-<td>reverse(‘上海自来水’)</td>
-<td>水来自海上</td>
-</tr>
-</tbody></table>
-<h2 id="日期函数"><a href="#日期函数" class="headerlink" title="日期函数"></a>日期函数</h2><table>
-<thead>
-<tr>
-<th>函数名</th>
-<th>功能</th>
-<th>示例</th>
-<th>结果</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>age(timestamp, timestamp)</strong></td>
-<td>计算两个时间点之间的间隔</td>
-<td>age(timestamp ‘2020-12-31’, timestamp ‘2020-01-01’)</td>
-<td>11 mons 30 days</td>
-</tr>
-<tr>
-<td><strong>age(timestamp)</strong></td>
-<td>计算当前日期的凌晨 12 点到该时间点之间的间隔</td>
-<td>age(timestamp ‘2020-01-01’)</td>
-<td>2 mons 2 days</td>
-</tr>
-<tr>
-<td><strong>date_part(text, timestamp)<strong>或者</strong>extract(field FROM timestamp)</strong></td>
-<td>用于获取日期时间中的某一部分，例如年份、月份、小时等</td>
-<td>date_part(‘year’, timestamp ‘2020-03-03 20:38:40’)</td>
-<td>2020</td>
-</tr>
-<tr>
-<td><strong>date_trunc(field, source [, time_zone ])</strong></td>
-<td>用于将 timestamp、timestamp WITH time zone、date、time 或者 interval 数据截断到指定的精度</td>
-<td>date_trunc(‘year’, timestamp ‘2020-03-03 20:38:40’)</td>
-<td>2020-01-01 00:00:00</td>
-</tr>
-<tr>
-<td><strong>to_timestamp(double precision)</strong></td>
-<td>函数将 Unix 时间戳（自从 1970-01-01 00:00:00+00 以来的秒数）转换为 PostgreSQL 时间戳数据</td>
-<td>to_timestamp(1583152349)</td>
-<td>2020-03-02 20:32:29+08</td>
-</tr>
-</tbody></table>
-<p>date_trunc函数支持以下截断精度：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('microseconds', now()) as _microseconds,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('milliseconds', now()) as _milliseconds,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('second'      , now()) as _second      ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('minute'      , now()) as _minute      ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('hour'        , now()) as _hour        ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('day'         , now()) as _day         ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('week'        , now()) as _week        ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('month'       , now()) as _month       ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('quarter'     , now()) as _quarter     ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('year'        , now()) as _year        ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('decade'      , now()) as _decade      ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('century'     , now()) as _century     ,</span>
-postgres-<span class="token comment" spellcheck="true"># date_trunc('millennium'  , now()) as _millennium  ;</span>
--<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>-+------------------------------
-_microseconds <span class="token operator">|</span> 2023-03-01 23:46:15.627772+08
-_milliseconds <span class="token operator">|</span> 2023-03-01 23:46:15.627+08
-_second       <span class="token operator">|</span> 2023-03-01 23:46:15+08
-_minute       <span class="token operator">|</span> 2023-03-01 23:46:00+08
-_hour         <span class="token operator">|</span> 2023-03-01 23:00:00+08
-_day          <span class="token operator">|</span> 2023-03-01 00:00:00+08
-_week         <span class="token operator">|</span> 2023-02-27 00:00:00+08
-_month        <span class="token operator">|</span> 2023-03-01 00:00:00+08
-_quarter      <span class="token operator">|</span> 2023-01-01 00:00:00+08
-_year         <span class="token operator">|</span> 2023-01-01 00:00:00+08
-_decade       <span class="token operator">|</span> 2020-01-01 00:00:00+08
-_century      <span class="token operator">|</span> 2001-01-01 00:00:00+08
-_millennium   <span class="token operator">|</span> 2001-01-01 00:00:00+08
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>其他日期函数：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select current_date,current_time,current_timestamp,clock_timestamp(),localtimestamp,now(),statement_timestamp();</span>
--<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>-------+-----------------------------
-<span class="token function">date</span>                <span class="token operator">|</span> 2023-03-01
-timetz              <span class="token operator">|</span> 23:38:31.86062+08
-now                 <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
-clock_timestamp     <span class="token operator">|</span> 2023-03-01 23:38:31.86076+08
-timestamp           <span class="token operator">|</span> 2023-03-01 23:38:31.86062
-now                 <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
-statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86062+08
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+                <span id="more"></span>
+
+<p>[TOC]</p>
+<h2 id="控制文件的位置与大小"><a href="#控制文件的位置与大小" class="headerlink" title="控制文件的位置与大小"></a>控制文件的位置与大小</h2><ul>
+<li>逻辑位置：存放在pg_global表空间中</li>
+<li>物理位置与名字：<code>$PGDATA/global/pg_control</code></li>
+<li>控制文件的大小是8K</li>
+<li>控制文件内容尽量保持小于512个字节</li>
+</ul>
+<h2 id="initdb时生成的静态信息"><a href="#initdb时生成的静态信息" class="headerlink" title="initdb时生成的静态信息"></a>initdb时生成的静态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">pg_control</span> <span class="token attr-value">version number:            960</span>
+<span class="token attr-name">Catalog</span> <span class="token attr-value">version number:               201608131</span>
+<span class="token attr-name">Database</span> <span class="token attr-value">system identifier:           7188464634205259812</span>
+<span class="token attr-name">Maximum</span> <span class="token attr-value">data alignment:               8</span>
+<span class="token attr-name">Database</span> <span class="token attr-value">block size:                  8192</span>
+<span class="token attr-name">Blocks</span> <span class="token attr-value">per segment of large relation: 131072</span>
+<span class="token attr-name">WAL</span> <span class="token attr-value">block size:                       8192</span>
+<span class="token attr-name">Bytes</span> <span class="token attr-value">per WAL segment:                16777216</span>
+<span class="token attr-name">Maximum</span> <span class="token attr-value">length of identifiers:        64</span>
+<span class="token attr-name">Maximum</span> <span class="token attr-value">columns in an index:          32</span>
+<span class="token attr-name">Maximum</span> <span class="token attr-value">size of a TOAST chunk:        1996</span>
+<span class="token attr-name">Size</span> <span class="token attr-value">of a large-object chunk:         2048</span>
+<span class="token attr-name">Date/time</span> <span class="token attr-value">type storage:               64-bit integers</span>
+<span class="token attr-name">Float4</span> <span class="token attr-value">argument passing:              by value</span>
+<span class="token attr-name">Float8</span> <span class="token attr-value">argument passing:              by value</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="postgresql-conf中的配置信息"><a href="#postgresql-conf中的配置信息" class="headerlink" title="postgresql.conf中的配置信息"></a>postgresql.conf中的配置信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">wal_level</span> <span class="token attr-value">setting:                    minimal</span>
+<span class="token attr-name">wal_log_hints</span> <span class="token attr-value">setting:                off</span>
+<span class="token attr-name">max_connections</span> <span class="token attr-value">setting:              100</span>
+<span class="token attr-name">max_worker_processes</span> <span class="token attr-value">setting:         8</span>
+<span class="token attr-name">max_prepared_xacts</span> <span class="token attr-value">setting:           0</span>
+<span class="token attr-name">max_locks_per_xact</span> <span class="token attr-value">setting:           64</span>
+<span class="token attr-name">track_commit_timestamp</span> <span class="token attr-value">setting:       off</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="write-ahead-logging以及checkpoint的动态信息"><a href="#write-ahead-logging以及checkpoint的动态信息" class="headerlink" title="write-ahead logging以及checkpoint的动态信息"></a>write-ahead logging以及checkpoint的动态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's REDO location:    0/5DF46AC8</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's REDO WAL file:    00000001000000000000005D</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's TimeLineID:       1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's PrevTimeLineID:   1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's full_page_writes: on</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextXID:          0:12595119</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextOID:          50047</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextMultiXactId:  1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextMultiOffset:  0</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestXID:        1754</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestXID's DB:   1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestActiveXID:  0</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestMultiXid:   1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestMulti's DB: 1</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestCommitTsXid:0</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's newestCommitTsXid:0</span>
+<span class="token attr-name">Time</span> <span class="token attr-value">of latest checkpoint:            Mon 27 Mar 2023 12:31:46 AM CST</span>
+<span class="token attr-name">Fake</span> <span class="token attr-value">LSN counter for unlogged rels:   0/1</span>
+<span class="token attr-name">Minimum</span> <span class="token attr-value">recovery ending location:     0/0</span>
+<span class="token attr-name">Min</span> <span class="token attr-value">recovery ending loc's timeline:   0</span>
+<span class="token attr-name">Backup</span> <span class="token attr-value">start location:                0/0</span>
+<span class="token attr-name">Backup</span> <span class="token attr-value">end location:                  0/0</span>
+<span class="token attr-name">End-of-backup</span> <span class="token attr-value">record required:        no</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="控制文件维护"><a href="#控制文件维护" class="headerlink" title="控制文件维护"></a>控制文件维护</h2><ol>
+<li><p>固定部分</p>
+<p>初始化数据库时产生，固定不变</p>
+</li>
+<li><p>有些信息随时更新</p>
+<p>如果发生检查点、备份、日志切换等操作，则自动更新</p>
+</li>
+<li><p>postgresql.conf相关参数被更新</p>
+<p>如果配置文件中重要的参数被修改，则也会自动更新</p>
+</li>
+<li><p>数据库备份时会一起备份</p>
+</li>
+<li><p>不能手动修改该文件</p>
+</li>
+<li><p>启动和恢复数据库时需要，当前没有避免发生单一故障点而设计的保护策略</p>
+</li>
+</ol>
+<h2 id="控制文件备份"><a href="#控制文件备份" class="headerlink" title="控制文件备份"></a>控制文件备份</h2><ol>
+<li><p>冷备</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">tar</span> -jcv -f baseline.tar.bz2 <span class="token variable">$PGDATA</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>pg_basebackup命令</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_basebackup -D bk1 -Ft -z -P
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>pg_rman命令</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_rman backup --backup-mode<span class="token operator">=</span>full -B /home/postgres/pg_rman_bk/ -C -P
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+</ol>
+<h2 id="重建控制文件"><a href="#重建控制文件" class="headerlink" title="重建控制文件"></a>重建控制文件</h2><blockquote>
+<p>pg10版本以前使用pg_resetxlog工具</p>
+<p>pg10及以后版本使用pg_resetwal工具</p>
+</blockquote>
+<p>pg_resetxlog工具需要下面四个参数</p>
+<ul>
+<li><p>-x XID           		   set next transaction ID</p>
+<p>在pg_clog下面，找到最大的文件编号，+1后面跟上5个0</p>
+<p>如：0000</p>
+<p>-x=0x000100000</p>
+<p>步骤：</p>
+<p>1、进入相应目录</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_clog
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>2、查看文件</p>
+<pre class="line-numbers language-bash"><code class="language-bash">ll
+-rw-------. 1 postgres postgres 262144 Feb 21 22:46 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>3、计算-x值</p>
+<p>-x=0x000100000</p>
+</li>
+<li><p>-m MXID,MXID      set next and oldest multitransaction ID</p>
+<p>在pg_multixact_offsets下面，找到最大的文件编号，+1后面跟上4个0</p>
+<p>如：0000</p>
+<p>-m=0x00010000,0x00010000</p>
+<p>步骤：</p>
+<p>1、进入相应目录</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_multixact_offsets
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>2、查看文件</p>
+<pre class="line-numbers language-bash"><code class="language-bash">ll
+-rw-------. 1 postgres postgres 8192 Mar 25 09:06 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>3、计算结果</p>
+<p>-m=0x00010000,0x00010000</p>
+</li>
+<li><p>-O OFFSET              set next multitransaction offset</p>
+<p>在pg_multixact/members下面，取最大值加1然后乘以65536转换成16进制为100000，然后末尾添加4个0</p>
+<p>-O=0x1000000000</p>
+<p>步骤：</p>
+<p>1、进入相应目录</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_multixact/members/
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>2、查看文件</p>
+<pre class="line-numbers language-bash"><code class="language-bash">ll
+-rw-------. 1 postgres postgres 8192 Jan 14 19:14 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>3、计算结果</p>
+<p>-O=0x1000000000</p>
+</li>
+<li><p>-l WALFILE              force minimum WAL starting location for new write-ahead log</p>
+<p>(XLOGFILE强制新事务日志的最小WAL起始位置）</p>
+<p>定位办法：pg_xlog下面创建的最大的日志文件，编号+1</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>postgres@localhost ~<span class="token punctuation">]</span>$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_xlog
+<span class="token punctuation">[</span>postgres@localhost pg_xlog<span class="token punctuation">]</span>$ <span class="token function">ls</span> -ltr
+drwx------. 2 postgres postgres        6 Jan 14 19:14 archive_status
+-rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000062
+-rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000063
+-rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000064
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>确定-l的参数值为：</p>
+<p>-l 000000010000000000000065</p>
+</li>
+</ul>
+<p>执行重建控制文件语句</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/global
+<span class="token function">touch</span> pg_control
+pg_resetxlog -l 000000010000000000000065 -O 0x1000000000 -m 0x00010000,0x00010000 -x 0x000100000 -f <span class="token variable">$PGDATA</span>
+pg_controldata
+pg_ctl start
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -770,7 +606,7 @@ statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/postgresql-han-shu-de-shi-yong/">https://jinlid.github.io/2023/postgresql-han-shu-de-shi-yong/</a>
+                    <a href="https://jinlid.github.io/2023/postgresql-kong-zhi-wen-jian-guan-li/">https://jinlid.github.io/2023/postgresql-kong-zhi-wen-jian-guan-li/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -807,7 +643,11 @@ statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
+                            
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
                         </div>
                     
                 </div>
@@ -888,24 +728,24 @@ statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/postgresql-luo-ji-fu-zhi/">
+                <a href="/2023/postgresql-fu-wu-qi-jia-gou/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="PostgreSQL 逻辑复制">
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="PostgreSQL服务器架构">
                         
-                        <span class="card-title">PostgreSQL 逻辑复制</span>
+                        <span class="card-title">PostgreSQL服务器架构</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PostgreSQL 10 一重量新特性为逻辑复制（ Logical Replication ），这一新特性的主要提交者来自于 2ndquadrant 开发者，感谢他们的付出！
+                            PostgreSQL 集群启动时会启动几个进程。这些进程管理相当多的文件 I/O，管理其他进程，并处理内存分配和许多其他工作。在本文中，我们将重点关注进程及其角色、内存管理以及它们如何协同工作。我们将从再次列出流程开始。
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-03-22
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-11
                         </span>
                         <span class="publish-author">
                             
@@ -937,24 +777,24 @@ statement_timestamp <span class="token operator">|</span> 2023-03-01 23:38:31.86
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-suo-1-xing-suo/">
+                <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="PostgreSQL锁，第1部分:行锁">
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
                         
-                        <span class="card-title">PostgreSQL锁，第1部分:行锁</span>
+                        <span class="card-title">流复制三（延迟备库）</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，
+                            延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-26
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-09
                             </span>
                         <span class="publish-author">
                             
