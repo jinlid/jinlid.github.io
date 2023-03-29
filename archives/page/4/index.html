@@ -637,24 +637,23 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                        <a href="/2021/6.vacuum-jin-cheng/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                                <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
                                 
-                                <span class="card-title">第2章 进程和内存架构</span>
+                                <span class="card-title">第6章 vacuum进程</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                                    vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
+有简要介绍。
 
 
-[TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
-
+为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
                                 
                             </div>
                             <div class="publish-info">
@@ -701,23 +700,24 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/6.vacuum-jin-cheng/">
+                        <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="第6章 vacuum进程">
+                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
                                 
-                                <span class="card-title">第6章 vacuum进程</span>
+                                <span class="card-title">第2章 进程和内存架构</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
-有简要介绍。
+                                    本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
 
 
-为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac
+[TOC]
+2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
+
                                 
                             </div>
                             <div class="publish-info">
