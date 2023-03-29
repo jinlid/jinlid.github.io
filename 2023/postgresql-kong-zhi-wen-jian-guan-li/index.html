@@ -11,10 +11,8 @@
 控制文件的位置与大小
 逻辑位置：存放在pg_global表空间中
 物理位置与名字：$PGDATA/global/pg_control
-控制文件的大小是8K
-控制文件内容尽量保持小于512个字节
-
-initdb时生成的静态信息">
+代码位置：src/include/catalog/pg_control.h
+控制文件的大小">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -427,25 +425,58 @@ initdb时生成的静态信息">
 <h2 id="控制文件的位置与大小"><a href="#控制文件的位置与大小" class="headerlink" title="控制文件的位置与大小"></a>控制文件的位置与大小</h2><ul>
 <li>逻辑位置：存放在pg_global表空间中</li>
 <li>物理位置与名字：<code>$PGDATA/global/pg_control</code></li>
+<li>代码位置：<code>src/include/catalog/pg_control.h</code></li>
 <li>控制文件的大小是8K</li>
 <li>控制文件内容尽量保持小于512个字节</li>
 </ul>
-<h2 id="initdb时生成的静态信息"><a href="#initdb时生成的静态信息" class="headerlink" title="initdb时生成的静态信息"></a>initdb时生成的静态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">pg_control</span> <span class="token attr-value">version number:            960</span>
+<h2 id="什么是控制文件"><a href="#什么是控制文件" class="headerlink" title="什么是控制文件"></a>什么是控制文件</h2><p>控制文件里存储了数据库唯一系统标识符、系统状态数据、数据库启动前系统必须恢复到的检查点信息、数据库的配置兼容backend进程执行的参数、指明类型timestamp、interval、time内部格式的标志、指明不同类型传值（pass-by-value）状态的标志以及一些数据库的重要信息。</p>
+<p>控制文件内容主要分为是三部分，初始化静态信息、WAL及检查点的动态信息、一些数据库配置信息。</p>
+<h2 id="initdb时生成的静态信息"><a href="#initdb时生成的静态信息" class="headerlink" title="initdb时生成的静态信息"></a>initdb时生成的静态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#控制文件版本号</span>
+<span class="token attr-name">pg_control</span> <span class="token attr-value">version number:            960</span>
+<span class="token comment" spellcheck="true">#系统表版本号，格式是yyyymmddN。记录系统不兼容性的改变。**N是yyymmdd当天改变的次数。**具体可以查看源码文件src/include/catalog/catversion.h</span>
 <span class="token attr-name">Catalog</span> <span class="token attr-value">version number:               201608131</span>
+<span class="token comment" spellcheck="true">#数据库系统号，这个标识串是一个64bit的整数，其中包含了创建数据库的时间戳和initdb时初始化的进程号，具体初始化方法可查看源码文件src/backend/access/transam/xlog.c。创建时间可以通过to_timestamp转换查看到（这个时间就是数据库安装的时间）</span>
 <span class="token attr-name">Database</span> <span class="token attr-value">system identifier:           7188464634205259812</span>
+<span class="token comment" spellcheck="true">#记录实例的状态。源码文件中看到数据库的几种状态，源码在pg_control.h中</span>
+<span class="token attr-name">Database</span> <span class="token attr-value">cluster state: 				in production</span>
+<span class="token comment" spellcheck="true">#元组的对齐要求，数据结构最大的对齐值</span>
 <span class="token attr-name">Maximum</span> <span class="token attr-value">data alignment:               8</span>
+<span class="token comment" spellcheck="true">#数据块的大小，参数block_size</span>
 <span class="token attr-name">Database</span> <span class="token attr-value">block size:                  8192</span>
+<span class="token comment" spellcheck="true">#每段大关系的块，参数segment_size</span>
 <span class="token attr-name">Blocks</span> <span class="token attr-value">per segment of large relation: 131072</span>
+<span class="token comment" spellcheck="true">#文件中的块大小，参数wal_block_size</span>
 <span class="token attr-name">WAL</span> <span class="token attr-value">block size:                       8192</span>
+<span class="token comment" spellcheck="true">#每个WAL段的大小，数据库初始化时通过--wal-segsize参数进行修改</span>
 <span class="token attr-name">Bytes</span> <span class="token attr-value">per WAL segment:                16777216</span>
+<span class="token comment" spellcheck="true">#目录名称字段宽度，是指一些数据库对象名称的最大长度，如表名、索引名的最大长度，目前是64，src/include/pg_config_manual.h中的NAMEDATALEN</span>
 <span class="token attr-name">Maximum</span> <span class="token attr-value">length of identifiers:        64</span>
+<span class="token comment" spellcheck="true">#表示一个索引最多多少列，目前为32个, 参考：src/include/pg_config_manual.h中的INDEX_MAX_KEYSsrc/include/pg_config_manual.h记录PostgreSQL一些限制信息。Maximum length of identifiers和Maximum columns in an index可以通过修改源码文件重新编译进行重置</span>
 <span class="token attr-name">Maximum</span> <span class="token attr-value">columns in an index:          32</span>
+<span class="token comment" spellcheck="true">#TOAST表中的块大小，是TOAST chunk的最大长度。TOAST是解决当列的内容太长，在一个数据块中存不下时的一种行外存储的方式，这个值的计算方式详见src/include/access/tuptoaster.h</span>
 <span class="token attr-name">Maximum</span> <span class="token attr-value">size of a TOAST chunk:        1996</span>
+<span class="token comment" spellcheck="true">#大对象的块的大小，这个值的计算方式详见utils/snapshot.h</span>
 <span class="token attr-name">Size</span> <span class="token attr-value">of a large-object chunk:         2048</span>
+<span class="token comment" spellcheck="true">#Date/time表示类型</span>
 <span class="token attr-name">Date/time</span> <span class="token attr-value">type storage:               64-bit integers</span>
+<span class="token comment" spellcheck="true">#参数传递方式，按值传递</span>
 <span class="token attr-name">Float4</span> <span class="token attr-value">argument passing:              by value</span>
 <span class="token attr-name">Float8</span> <span class="token attr-value">argument passing:              by value</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span class="token comment" spellcheck="true">#数据页是否受校验和保护？如果没有校验和版本则为零，数据块checksum的版本，默认为0，数据块没有使用checksum，1是启用。运行initdb时加了-k参数，PG才会在数据块上启用checksum功能</span>
+<span class="token attr-name">Data</span> <span class="token attr-value">page checksum version:           0			</span>
+<span class="token comment" spellcheck="true">#用于需要进行的认证请求基于集群唯一的值</span>
+<span class="token attr-name">Mock</span> <span class="token attr-value">authentication nonce:            aaa8abf569631ec60ba05e3f625495da70007738b831e46e1cfda0d26c370987  </span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>数据库状态的几种含义：</p>
+<ul>
+<li>starting up：表示数据库正在启动状态。</li>
+<li>shut down：数据库实例（非Standby）正常关闭后控制文件中就是此状态。</li>
+<li>shut down in recovery：Standby实例正常关闭后控制文件中就是此状态。</li>
+<li>shutting down：正常停库时，先做checkpoint，开始做checkpoint时，会把状态设置为此状态，做完后把状态设置为shut down。</li>
+<li>in crash recovery：数据库实例非异常停止后，重新启动后，会先进行实例的恢复，在实例恢复时的状态就是此状态。</li>
+<li>in archive recovery：Standby实例正常启动后，就是此状态。</li>
+<li>in production：数据库实例正常启动后就是此状态。Standby数据库正常启动后in archive recovery状态。</li>
+</ul>
 <h2 id="postgresql-conf中的配置信息"><a href="#postgresql-conf中的配置信息" class="headerlink" title="postgresql.conf中的配置信息"></a>postgresql.conf中的配置信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">wal_level</span> <span class="token attr-value">setting:                    minimal</span>
 <span class="token attr-name">wal_log_hints</span> <span class="token attr-value">setting:                off</span>
 <span class="token attr-name">max_connections</span> <span class="token attr-value">setting:              100</span>
@@ -454,30 +485,52 @@ initdb时生成的静态信息">
 <span class="token attr-name">max_locks_per_xact</span> <span class="token attr-value">setting:           64</span>
 <span class="token attr-name">track_commit_timestamp</span> <span class="token attr-value">setting:       off</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="write-ahead-logging以及checkpoint的动态信息"><a href="#write-ahead-logging以及checkpoint的动态信息" class="headerlink" title="write-ahead logging以及checkpoint的动态信息"></a>write-ahead logging以及checkpoint的动态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's REDO location:    0/5DF46AC8</span>
+<h2 id="WAL及检查点的动态信息"><a href="#WAL及检查点的动态信息" class="headerlink" title="WAL及检查点的动态信息"></a>WAL及检查点的动态信息</h2><pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#最后一次检查点</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint location:           0/5DF46AC8</span>
+<span class="token comment" spellcheck="true">#记录数据库日志文件上检查点，数据库异常关闭后会从这个点开始恢复。当数据库刚启动时Latest checkpoint location与Latest checkpoint's REDO location一致，随着时间的变化Latest checkpoint's REDO location会随之变化</span>
+<span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's REDO location:    0/5DF46AC8</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's REDO WAL file:    00000001000000000000005D</span>
+<span class="token comment" spellcheck="true">#当前时间线</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's TimeLineID:       1</span>
+<span class="token comment" spellcheck="true">#前一个时间线，如果这个记录开始一个新的时间线（否则等于 ThisTimeLineID）</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's PrevTimeLineID:   1</span>
+<span class="token comment" spellcheck="true">#数据库参数，默认值为on</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's full_page_writes: on</span>
+<span class="token comment" spellcheck="true">#下一个空闲XID，前面是新纪元值，冒号后面是下一个事务ID，当前事务号最大值安全值可以在pg_xact目录下通过文件名计算出来安全值</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextXID:          0:12595119</span>
+<span class="token comment" spellcheck="true">#下一个空闲OID（OID，object 是pg内部使用，作为系统表的主键）</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextOID:          50047</span>
+<span class="token comment" spellcheck="true">#下一个空闲的MultiXactId，多事务ID，可以通过pg_multixact/offsets文件名计算出来安全值</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextMultiXactId:  1</span>
+<span class="token comment" spellcheck="true">#下一个空闲的MultiXact偏移，多事务偏移量，通pg_multixact/members文件夹下计算出此参数的安全值</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's NextMultiOffset:  0</span>
+<span class="token comment" spellcheck="true">#集群范围的最小datfrozenxid，WAL中存储的是oldest XID之后的XID，也就是说这个XID之后的事务，都保留了事务提交的状态值，之前的WAL可能被删除或者正在被删除</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestXID:        1754</span>
+<span class="token comment" spellcheck="true">#具有最小datfrozenxid的数据库，可以通过pg_database表进行查看</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestXID's DB:   1</span>
+<span class="token comment" spellcheck="true">#最旧的的仍在运行的事务ID</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestActiveXID:  0</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestMultiXid:   1</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestMulti's DB: 1</span>
+<span class="token comment" spellcheck="true">#有效提交的最旧Xid时间戳</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's oldestCommitTsXid:0</span>
+<span class="token comment" spellcheck="true">#有效提交的最新Xid*时间戳</span>
 <span class="token attr-name">Latest</span> <span class="token attr-value">checkpoint's newestCommitTsXid:0</span>
+<span class="token comment" spellcheck="true">#最后一次执行检查点时间</span>
 <span class="token attr-name">Time</span> <span class="token attr-value">of latest checkpoint:            Mon 27 Mar 2023 12:31:46 AM CST</span>
+<span class="token comment" spellcheck="true">#当前假 LSN 值，用于未记录的rels</span>
 <span class="token attr-name">Fake</span> <span class="token attr-value">LSN counter for unlogged rels:   0/1</span>
+<span class="token comment" spellcheck="true">#standby节点最小恢复结束位置</span>
 <span class="token attr-name">Minimum</span> <span class="token attr-value">recovery ending location:     0/0</span>
+<span class="token comment" spellcheck="true">#standby节点最小恢复结束时间线</span>
 <span class="token attr-name">Min</span> <span class="token attr-value">recovery ending loc's timeline:   0</span>
+<span class="token comment" spellcheck="true">#备库开始同步主库时重做日志的位置</span>
 <span class="token attr-name">Backup</span> <span class="token attr-value">start location:                0/0</span>
+<span class="token comment" spellcheck="true">#备库同步结束后重做日志的位置</span>
 <span class="token attr-name">Backup</span> <span class="token attr-value">end location:                  0/0</span>
+<span class="token comment" spellcheck="true">#记录了备库恢复过程中的一些中间状态（yes正在恢复/no未恢复）</span>
 <span class="token attr-name">End-of-backup</span> <span class="token attr-value">record required:        no</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h2 id="控制文件维护"><a href="#控制文件维护" class="headerlink" title="控制文件维护"></a>控制文件维护</h2><ol>
 <li><p>固定部分</p>
 <p>初始化数据库时产生，固定不变</p>
@@ -509,77 +562,290 @@ initdb时生成的静态信息">
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 </li>
 </ol>
-<h2 id="重建控制文件"><a href="#重建控制文件" class="headerlink" title="重建控制文件"></a>重建控制文件</h2><blockquote>
-<p>pg10版本以前使用pg_resetxlog工具</p>
-<p>pg10及以后版本使用pg_resetwal工具</p>
-</blockquote>
-<p>pg_resetxlog工具需要下面四个参数</p>
+<h2 id="重建控制文件"><a href="#重建控制文件" class="headerlink" title="重建控制文件"></a>重建控制文件</h2><p>重建控制文件在pg9.6前使用 <code>pg_resetxlog</code>，pg10之后使用 <code>pg_resetwal</code> 清理wal日志或重置控制文件中一些控制信息。配置指导详见源码 <code>doc/src/sgml/html/app-pgresetwal.html</code>。</p>
+<p>下面看下命令各个参数具体含义：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost ~<span class="token punctuation">]</span>$ pg_waldump --help
+pg_waldump decodes and displays PostgreSQL write-ahead logs <span class="token keyword">for</span> debugging.
+
+Usage:
+  pg_waldump <span class="token punctuation">[</span>OPTION<span class="token punctuation">]</span><span class="token punctuation">..</span>. <span class="token punctuation">[</span>STARTSEG <span class="token punctuation">[</span>ENDSEG<span class="token punctuation">]</span><span class="token punctuation">]</span>
+
+Options:
+  -b, --bkp-details      output detailed information about backup blocks
+  -e, --end<span class="token operator">=</span>RECPTR       stop reading at WAL location RECPTR
+  -f, --follow           keep retrying after reaching end of WAL
+  -n, --limit<span class="token operator">=</span>N          number of records to display
+  -p, --path<span class="token operator">=</span>PATH        directory <span class="token keyword">in</span> <span class="token function">which</span> to <span class="token function">find</span> log segment files or a
+                         directory with a ./pg_wal that contains such files
+                         <span class="token punctuation">(</span>default: current directory, ./pg_wal, <span class="token variable">$PGDATA</span>/pg_wal<span class="token punctuation">)</span>
+  -r, --rmgr<span class="token operator">=</span>RMGR        only show records generated by resource manager RMGR<span class="token punctuation">;</span>
+                         use --rmgr<span class="token operator">=</span>list to list valid resource manager names
+  -s, --start<span class="token operator">=</span>RECPTR     start reading at WAL location RECPTR
+  -t, --timeline<span class="token operator">=</span>TLI     timeline from <span class="token function">which</span> to <span class="token function">read</span> log records
+                         <span class="token punctuation">(</span>default: 1 or the value used <span class="token keyword">in</span> STARTSEG<span class="token punctuation">)</span>
+  -V, --version          output version information, <span class="token keyword">then</span> <span class="token keyword">exit</span>
+  -x, --xid<span class="token operator">=</span>XID          only show records with transaction ID XID
+  -z, --stats<span class="token punctuation">[</span><span class="token operator">=</span>record<span class="token punctuation">]</span>   show statistics instead of records
+                         <span class="token punctuation">(</span>optionally, show per-record statistics<span class="token punctuation">)</span>
+  -?, --help             show this help, <span class="token keyword">then</span> <span class="token keyword">exit</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <ul>
-<li><p>-x XID           		   set next transaction ID</p>
-<p>在pg_clog下面，找到最大的文件编号，+1后面跟上5个0</p>
-<p>如：0000</p>
-<p>-x=0x000100000</p>
-<p>步骤：</p>
-<p>1、进入相应目录</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_clog
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>2、查看文件</p>
-<pre class="line-numbers language-bash"><code class="language-bash">ll
--rw-------. 1 postgres postgres 262144 Feb 21 22:46 0000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>3、计算-x值</p>
-<p>-x=0x000100000</p>
-</li>
-<li><p>-m MXID,MXID      set next and oldest multitransaction ID</p>
-<p>在pg_multixact_offsets下面，找到最大的文件编号，+1后面跟上4个0</p>
-<p>如：0000</p>
-<p>-m=0x00010000,0x00010000</p>
-<p>步骤：</p>
-<p>1、进入相应目录</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_multixact_offsets
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>2、查看文件</p>
-<pre class="line-numbers language-bash"><code class="language-bash">ll
--rw-------. 1 postgres postgres 8192 Mar 25 09:06 0000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>3、计算结果</p>
-<p>-m=0x00010000,0x00010000</p>
-</li>
-<li><p>-O OFFSET              set next multitransaction offset</p>
-<p>在pg_multixact/members下面，取最大值加1然后乘以65536转换成16进制为100000，然后末尾添加4个0</p>
-<p>-O=0x1000000000</p>
-<p>步骤：</p>
-<p>1、进入相应目录</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_multixact/members/
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>2、查看文件</p>
-<pre class="line-numbers language-bash"><code class="language-bash">ll
--rw-------. 1 postgres postgres 8192 Jan 14 19:14 0000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>3、计算结果</p>
-<p>-O=0x1000000000</p>
-</li>
-<li><p>-l WALFILE              force minimum WAL starting location for new write-ahead log</p>
-<p>(XLOGFILE强制新事务日志的最小WAL起始位置）</p>
-<p>定位办法：pg_xlog下面创建的最大的日志文件，编号+1</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>postgres@localhost ~<span class="token punctuation">]</span>$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>/pg_xlog
-<span class="token punctuation">[</span>postgres@localhost pg_xlog<span class="token punctuation">]</span>$ <span class="token function">ls</span> -ltr
-drwx------. 2 postgres postgres        6 Jan 14 19:14 archive_status
--rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000062
--rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000063
--rw-------. 1 postgres postgres 16777216 Feb 21 22:47 000000010000000000000064
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>确定-l的参数值为：</p>
-<p>-l 000000010000000000000065</p>
-</li>
+<li>-f, –force      force update to be done</li>
 </ul>
-<p>执行重建控制文件语句</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>/global
-<span class="token function">touch</span> pg_control
-pg_resetxlog -l 000000010000000000000065 -O 0x1000000000 -m 0x00010000,0x00010000 -x 0x000100000 -f <span class="token variable">$PGDATA</span>
-pg_controldata
-pg_ctl start
+<p>即使 <code>pg_resetwal</code> 无法从 <code>pg_control</code> 中确定有效的数据（也可以说成此时控制文件损坏或者缺失），也强迫 <code>pg_resetwal</code> 继续运行。</p>
+<ul>
+<li>-n, –dry-run     no update, just show what would be done</li>
+</ul>
+<p><code>pg_resetwal</code> 打印从 <code>pg_control</code> 重构出来的值以及要被改变的值，然后不修改任何东西退出。这主要是一个调试工具，但是可以用来在允许pg_resetwal真正执行下去之前进行完整性检查。</p>
+<ul>
+<li>-V, –version     output version information, then exit</li>
+</ul>
+<p>显示版本信息然后退出。</p>
+<ul>
+<li>-?, –help      show this help, then exit</li>
+</ul>
+<p>只有当 <code>pg_resetwal</code> 无法通过读取 <code>pg_control</code> 确定合适的值时，才需要下列选项。安全值可以按下文所述来确定。对于接收数字参数的值，可以使用前缀0x指定16进制值。</p>
+<ul>
+<li>-c, –commit-timestamp-ids=XID,XID  set oldest and newest transactions bearing</li>
+</ul>
+<p>手工设置提交时间可以检索到的最老的和最新的事务ID。</p>
+<p>能检索到提交时间的最老事务 ID 的安全值（第一部分）可以通过在数据目录下 <code>pg_commit_ts</code> 目录中数字上最小的文件名来决定。反过来，能检索到提交时间的最新事务 ID 的安全值（第二部分）可以通过同一个目录中数字上最大的文件名来决定。文件名都是十六进制的。对应控制文件中，查看 <code>pg_commit_ts</code> 目录，一般情况下该目录均为空，需要开启 <code>track_commit_timestamp</code> 参数才会记录事物提交时间，在未开启的情况下：</p>
+<p>Latest checkpoint’s oldestCommitTsXid:0</p>
+<p>Latest checkpoint’s newestCommitTsXid:0</p>
+<ul>
+<li>[-D, –pgdata=]DATADIR   data directory</li>
+</ul>
+<p>数据库目录。</p>
+<ul>
+<li>-e, –epoch=XIDEPOCH    set next transaction ID epoch</li>
+</ul>
+<p>手工设置下一个事务 ID 的 epoch。事务 ID 的 epoch 实际上并没有存储在数据库中的任何地方，除了被 <code>pg_resetwal</code> 设置在这个域中，所以只要关心的是数据库本身，任何值都可以用，可以不用设置。</p>
+<ul>
+<li>-l, –next-wal-file=WALFILE  set minimum starting location for new WAL</li>
+</ul>
+<p>参数通过指定下一个WAL段文件的名称，手动设置WAL启动位置<strong>。</strong>该选项使用WAL文件名，而不是LSN。下一个段的名字应该大于当前存在pg_wal目录下的任何WAL段文件名。</p>
+<p>通过指定下一个WAL段文件名称来手工设置WAL开始位置。下一个WAL段文件的名称应该比当前存在于数据目录下pg_wal目录中的任意 WAL 段文件名更大。这些名称也是十六进制的并且有三个部分。第一部分是“时间线 ID”并且通常应该被保持相同。例如，如果00000001000000320000004A是 <code>pg_wal</code> 中最大的项，则使用-l 00000001000000320000004B或更高的值。</p>
+<p>注意在使用非默认WAL段尺寸时，WAL文件名中的数字与系统函数和系统视图报告的LSN不同。这个选项要的是WAL文件名而不是LSN。</p>
+<p>注意 <code>pg_resetwal</code> 本身查看pg_wal中的文件并选择一个超出最新现存文件名的默认-l设置。因此，只有当你知道 WAL 段文件当前不在pg_wal中时，或者当 <code>pg_wal</code> 的内容完全丢失时，才需要对-l的手工调整，例如一个离线归档中的项。</p>
+<p>这些名称也是十六进制的，文件名包含三部分 ，第一部分时间线号（timeline ID） ，第二部分逻辑日志号 ，第三部分日志段号。</p>
+<p>000000030000000A000000CA</p>
+<ul>
+<li>-m, –multixact-ids=MXID,MXID set next and oldest multitransaction ID</li>
+</ul>
+<p>手工设置下一个多事物ID和最老的多事务ID。确定下一个多事务 ID（第一部分）的安全值的方法：在数据目录下的<code>pg_multixact/offsets</code> 目录中查找最大的数字文件名，然后在它的基础上加一并且乘以 65536(0x10000)。反过来，确定最老的多事务 ID（-m的第二部分）的方法：在同一个目录中查找最小的数字文件名并且乘以 65536。文件名是十六进制的数字，因此实现上述方法最简单的方式是以十六进制指定选项值并且追加四个零*。所以下一个多事务号为(0000+1)<em>65536，最旧的多事务号为0000</em>65536。</p>
+<ul>
+<li>-o, –next-oid=OID    set next OID</li>
+</ul>
+<p>参数是设置下一个OID（OID，object 是pg内部使用，作为系统表的主键），我们恢复时可以不设置这个参数，因为设置一个超过数据库中最大值OID没有好的办法。</p>
+<ul>
+<li>-O, –multixact-offset=OFFSET set next multitransaction offset</li>
+</ul>
+<p>手工设置下一个多事务偏移量。</p>
+<p>确定安全值的方法：查找数据目录下 <code>pg_multixact/members</code> 目录中最大的数字文件名，然后在它的基础上加一并且乘以 52352 (0xCC80)。文件名是十六进制数字。没有像其他选项那样追加零的简单方法。</p>
+<ul>
+<li>-x, –next-transaction-id=XID set next transaction ID</li>
+</ul>
+<p>手工设置下一个事务 ID。</p>
+<p>确定安全值的方法：在数据目录下的 <code>pg_xact</code> 目录中查找最大的数字文件名，然后在它的基础上加一并且乘以 1048576 (0x100000)。注意文件名是十六进制的数字。通常以十六进制的形式指定该选项值也是最容易的。例如，如果0011是 <code>pg_xact</code> 中的最大项，-x 0x1200000就可以（五个尾部的零就表示了前面说的乘数）。</p>
+<ul>
+<li>–wal-segsize=SIZE   size of WAL segments, in megabytes</li>
+</ul>
+<p>设置新的WAL段尺寸，以兆字节为单位。这个值必须被设为2的1次幂和10次幂（兆字节）之间。更多信息请参考initdb的相同选项。</p>
+<p>注意虽然 <code>pg_resetwal</code> 将把WAL起始地址设置成超过最新的现有WAL段文件，但一些段尺寸的改变可能导致之前的WAL文件名被重用。如果WAL文件名重叠会导致归档策略出现问题，推荐把-l和这个选项一起使用来手动设置WAL起始地址。参数设置新的WAL段大小，默认16M 。</p>
+<p>实例如下：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pg_resetwal -c 0x00000,0x00000 -D /opt/pg12/pgdata -l 000000030000000A000000CA -m 0x10000,0x00001 -O 0xCC80 --wal-segsize<span class="token operator">=</span>16 -x 0x100000
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/640.png" alt="图片"></p>
+<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/640-16801052406188.png" alt="图片"></p>
+<h2 id="恢复实例"><a href="#恢复实例" class="headerlink" title="恢复实例"></a>恢复实例</h2><p>按照上边的方法，我们来实做一个恢复：</p>
+<p>我们先把旧的 <code>pg_control</code> 文件重命名一下：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost ~<span class="token punctuation">]</span>$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>/global
+<span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ ll pg_control
+-rw-------. 1 pg10 postgres 8.0K Mar 22 22:04 pg_control
+<span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ <span class="token function">mv</span> pg_control pg_control_bak
+<span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ pg_controldata
+pg_controldata: could not <span class="token function">open</span> <span class="token function">file</span> <span class="token string">"/home/pg10/postgresql10.23/data/global/pg_control"</span> <span class="token keyword">for</span> reading: No such <span class="token function">file</span> or directory
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>1、计算命令行各项参数值</strong></p>
+<p>对着命令行：pg_resetwal -c {}} -D {} -l {} -m {} -O {}  –wal-segsize={} -x {}</p>
+<p>仔细求证各项的值，以求恢复。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">e.g.  pg_resetwal -c 0x00000,0x00000 -D <span class="token variable">$PGDATA</span>  -l 000000030000000A000000CA -m 0x10000,0x00001 -O 0xCC80 --wal-segsize<span class="token operator">=</span>16 -x 0x100000
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<ol>
+<li><p>-c 不用指定。因为目录下边没有文件。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ <span class="token function">ls</span> <span class="token variable">$PGDATA</span>/pg_commit_ts
+<span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p>-D  $PGDATA</p>
+<p>这个用环境变量即可。</p>
+</li>
+<li><p>-l  找出最新的WAL文件名: 000000010000000000000022</p>
+<p>所以它的值应该是再+1，000000010000000000000023</p>
+</li>
+<li><p>-m multitx的下一个，以及最旧的xid</p>
+<p>找到目录：<code>$PGDATA/pg_multixact/offsets</code>,</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ ll <span class="token variable">$PGDATA</span>/pg_multixact/offsets
+total 8.0K
+-rw-------. 1 pg10 postgres 8.0K Mar 22 20:49 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>所以下一个值是：(0000+1) * 65536，最旧的多事务号为0000*65536。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select to_hex(65536);</span>
+ to_hex
+--------
+ 10000
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>所以-m 后边的值应该是 -m  0x10000,0x00001。</p>
+</li>
+<li><p>-O 手工设置下一个多事务偏移量</p>
+<p>查找数据目录下 <code>pg_multixact/members</code> 目录中最大的数字文件名，然后在它的基础上加一并且乘以 52352 (0xCC80)。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ ll <span class="token variable">$PGDATA</span>/pg_multixact/members
+total 8.0K
+-rw-------. 1 pg10 postgres 8.0K Feb  9 19:46 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>所以，它的值应该就是：52352,  -O 0xCC80。</p>
+</li>
+<li><p>-x 下一个事务ID</p>
+<p>在数据目录下的pg_xact目录中查找最大的数字文件名，然后在它的基础上加一并且乘以 1048576 (0x100000)。注意文件名是十六进制的数字。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost global<span class="token punctuation">]</span>$ ll <span class="token variable">$PGDATA</span>/pg_xact
+total 8.0K
+-rw-------. 1 pg10 postgres 8.0K Mar 22 22:04 0000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>这样得到的值应该是0x0100000,  -x 0x0100000</p>
+</li>
+<li><p>–wal-segsize=</p>
+<p>这个比较容易， 直接查看大小，就能得知。</p>
+</li>
+</ol>
+<p><strong>2、完整的命令行：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ <span class="token function">touch</span> <span class="token variable">$PGDATA</span>/global/pg_control
+<span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ pg_resetwal -D <span class="token variable">$PGDATA</span> -l 000000010000000000000023 -m 0x10000,0x00001 -O 0xCC80 -x 0x0100000 -f
+pg_resetwal: pg_control exists but is broken or wrong version<span class="token punctuation">;</span> ignoring it
+Write-ahead log reset
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>3、尝试启动</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true">#检验下控制文件内容</span>
+<span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ pg_controldata
+pg_control version number:            1002
+Catalog version number:               201707211
+Database system identifier:           7216000336784156990
+Database cluster state:               shut down
+pg_control last modified:             Thu 30 Mar 2023 12:06:43 AM CST
+Latest checkpoint location:           0/2E000028
+Prior checkpoint location:            0/0
+Latest checkpoint<span class="token string">'s REDO location:    0/2E000028
+Latest checkpoint'</span>s REDO WAL file:    00000001000000000000002E
+Latest checkpoint<span class="token string">'s TimeLineID:       1
+Latest checkpoint'</span>s PrevTimeLineID:   1
+Latest checkpoint<span class="token string">'s full_page_writes: off
+Latest checkpoint'</span>s NextXID:          0:1048576
+Latest checkpoint<span class="token string">'s NextOID:          10000
+Latest checkpoint'</span>s NextMultiXactId:  65536
+Latest checkpoint<span class="token string">'s NextMultiOffset:  52352
+Latest checkpoint'</span>s oldestXID:        3
+Latest checkpoint<span class="token string">'s oldestXID'</span>s DB:   0
+Latest checkpoint<span class="token string">'s oldestActiveXID:  0
+Latest checkpoint'</span>s oldestMultiXid:   1
+Latest checkpoint<span class="token string">'s oldestMulti'</span>s DB: 0
+Latest checkpoint<span class="token string">'s oldestCommitTsXid:0
+Latest checkpoint'</span>s newestCommitTsXid:0
+Time of latest checkpoint:            Thu 30 Mar 2023 12:06:43 AM CST
+Fake LSN counter <span class="token keyword">for</span> unlogged rels:   0/1
+Minimum recovery ending location:     0/0
+Min recovery ending loc's timeline:   0
+Backup start location:                0/0
+Backup end location:                  0/0
+End-of-backup record required:        no
+wal_level setting:                    minimal
+wal_log_hints setting:                off
+max_connections setting:              100
+max_worker_processes setting:         8
+max_prepared_xacts setting:           0
+max_locks_per_xact setting:           64
+track_commit_timestamp setting:       off
+Maximum data alignment:               8
+Database block size:                  8192
+Blocks per segment of large relation: 131072
+WAL block size:                       8192
+Bytes per WAL segment:                16777216
+Maximum length of identifiers:        64
+Maximum columns <span class="token keyword">in</span> an index:          32
+Maximum size of a TOAST chunk:        1996
+Size of a large-object chunk:         2048
+Date/time <span class="token function">type</span> storage:               64-bit integers
+Float4 argument passing:              by value
+Float8 argument passing:              by value
+Data page checksum version:           0
+Mock authentication nonce:            0000000000000000000000000000000000000000000000000000000000000000
+<span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ pg_ctl start
+waiting <span class="token keyword">for</span> server to start<span class="token punctuation">..</span><span class="token punctuation">..</span>2023-03-30 00:07:48.471 CST <span class="token punctuation">[</span>59717<span class="token punctuation">]</span> LOG:  listening on IPv4 address <span class="token string">"0.0.0.0"</span>, port 1921
+2023-03-30 00:07:48.471 CST <span class="token punctuation">[</span>59717<span class="token punctuation">]</span> LOG:  listening on IPv6 address <span class="token string">"::"</span>, port 1921
+2023-03-30 00:07:48.472 CST <span class="token punctuation">[</span>59717<span class="token punctuation">]</span> LOG:  listening on Unix socket <span class="token string">"/tmp/.s.PGSQL.1921"</span>
+2023-03-30 00:07:48.508 CST <span class="token punctuation">[</span>59718<span class="token punctuation">]</span> LOG:  database system was shut down at 2023-03-30 00:06:43 CST
+2023-03-30 00:07:48.513 CST <span class="token punctuation">[</span>59717<span class="token punctuation">]</span> LOG:  database system is ready to accept connections
+ <span class="token keyword">done</span>
+server started
+<span class="token comment" spellcheck="true">#成功的启动了。</span>
+<span class="token comment" spellcheck="true">#再重新看看control文件的信息：</span>
+<span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ pg_controldata
+pg_control version number:            1002
+Catalog version number:               201707211
+Database system identifier:           7216000336784156990
+Database cluster state:               <span class="token keyword">in</span> production
+pg_control last modified:             Thu 30 Mar 2023 12:07:48 AM CST
+Latest checkpoint location:           0/2E000028
+Prior checkpoint location:            0/0
+Latest checkpoint<span class="token string">'s REDO location:    0/2E000028
+Latest checkpoint'</span>s REDO WAL file:    00000001000000000000002E
+Latest checkpoint<span class="token string">'s TimeLineID:       1
+Latest checkpoint'</span>s PrevTimeLineID:   1
+Latest checkpoint<span class="token string">'s full_page_writes: off
+Latest checkpoint'</span>s NextXID:          0:1048576
+Latest checkpoint<span class="token string">'s NextOID:          10000
+Latest checkpoint'</span>s NextMultiXactId:  65536
+Latest checkpoint<span class="token string">'s NextMultiOffset:  52352
+Latest checkpoint'</span>s oldestXID:        3
+Latest checkpoint<span class="token string">'s oldestXID'</span>s DB:   0
+Latest checkpoint<span class="token string">'s oldestActiveXID:  0
+Latest checkpoint'</span>s oldestMultiXid:   1
+Latest checkpoint<span class="token string">'s oldestMulti'</span>s DB: 0
+Latest checkpoint<span class="token string">'s oldestCommitTsXid:0
+Latest checkpoint'</span>s newestCommitTsXid:0
+Time of latest checkpoint:            Thu 30 Mar 2023 12:06:43 AM CST
+Fake LSN counter <span class="token keyword">for</span> unlogged rels:   0/1
+Minimum recovery ending location:     0/0
+Min recovery ending loc's timeline:   0
+Backup start location:                0/0
+Backup end location:                  0/0
+End-of-backup record required:        no
+wal_level setting:                    logical
+wal_log_hints setting:                off
+max_connections setting:              100
+max_worker_processes setting:         8
+max_prepared_xacts setting:           0
+max_locks_per_xact setting:           64
+track_commit_timestamp setting:       off
+Maximum data alignment:               8
+Database block size:                  8192
+Blocks per segment of large relation: 131072
+WAL block size:                       8192
+Bytes per WAL segment:                16777216
+Maximum length of identifiers:        64
+Maximum columns <span class="token keyword">in</span> an index:          32
+Maximum size of a TOAST chunk:        1996
+Size of a large-object chunk:         2048
+Date/time <span class="token function">type</span> storage:               64-bit integers
+Float4 argument passing:              by value
+Float8 argument passing:              by value
+Data page checksum version:           0
+Mock authentication nonce:            0000000000000000000000000000000000000000000000000000000000000000
+<span class="token punctuation">[</span>pg10@localhost data<span class="token punctuation">]</span>$ ll pg_wal
+total 17M
+-rw-------. 1 pg10 postgres 305 Mar 22 20:29 000000010000000000000020.00000028.backup
+-rw-------. 1 pg10 postgres 16M Mar 30 00:08 00000001000000000000002E
+drwx------. 2 pg10 postgres  59 Mar 30 00:06 archive_status
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
