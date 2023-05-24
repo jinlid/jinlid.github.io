@@ -572,7 +572,7 @@ celery -A testcelery worker -l info -P eventlet
 celery -A testcelery beat -l info -S django
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>定时任务启动后，django_celery_beat_periodictask表中所有的定时任务都会进入等待状态，只有Django的系统时间到达定时任务的触发时间，Celery才会运行符合触发条件的定时任务。比如定时任务Mytiming，它是每隔5秒会执行分布式任务timing，我们在终端或者表django_celery_results_taskresult中都可以查看定时任务的执行情况，如图：</p>
-<p><img src="/medias/image/image-20230524235734298-16849440896692.png" alt="image-20230524235734298"></p>
+<p> <img src="/medias/image/image-20230525000817317.png" alt="image-20230525000817317"></p>
 
                 
             </div>

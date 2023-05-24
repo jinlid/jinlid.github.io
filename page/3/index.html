@@ -392,22 +392,20 @@
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
+                    <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="流复制四（查询冲突）">
+                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
                             
-                            <span class="card-title">流复制四（查询冲突）</span>
+                            <span class="card-title">流复制三（延迟备库）</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                部署流复制环境后，备库可提供只读操作，通常会将一些执行时间较长的分析任务、统计 SQL 跑在备库上，从而减轻主库压力，在备库上执行一些长时间 SQL 时，可能会出现以下错误并被中止：
-
-FATAL:  terminating connect
+                                延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
                             
                         </div>
                         <div class="publish-info">
