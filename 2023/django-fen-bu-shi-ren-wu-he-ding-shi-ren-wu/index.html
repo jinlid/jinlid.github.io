@@ -4,12 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="autovacuum调优, jinlid&#39;s blog">
-    <meta name="description" content="这篇博问介绍关于autovacuum调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。
-
-
-[TOC]
-死元组首先，让我们简要地解释什么是“死元组”">
+    <meta name="keywords" content="Django的分布式任务和定时任务, jinlid&#39;s blog">
+    <meta name="description" content="Django 的分布式任务主要由 Celery 框架实现，这是 Python 开发的分布式任务队列。它支持使用任务队列的方式在分布的机器、进程和线程上执行任务调度。Celery 本身不提供信息存储服务。它使用第三方数据库来传递任务，目前第三">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -21,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>autovacuum调优 | jinlid&#39;s blog</title>
+    <title>Django的分布式任务和定时任务 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -346,7 +342,7 @@
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">autovacuum调优</h1>
+                    <h1 class="description center-align post-title">Django的分布式任务和定时任务</h1>
                 </div>
             </div>
         </div>
@@ -370,8 +366,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/postgresql/">
-                                <span class="chip bg-color">postgresql</span>
+                            <a href="/tags/flask/">
+                                <span class="chip bg-color">flask</span>
                             </a>
                         
                     </div>
@@ -382,8 +378,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/postgresql/" class="post-category">
-                                postgresql
+                            <a href="/categories/python/" class="post-category">
+                                python
                             </a>
                         
                     </div>
@@ -395,7 +391,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-02-22
+                    2023-02-16
                 </div>
                 
 
@@ -416,111 +412,167 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>这篇博问介绍关于<code>autovacuum</code>调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。</p>
+                <p><code>Django</code> 的分布式任务主要由 <code>Celery</code> 框架实现，这是 <code>Python</code> 开发的分布式任务队列。它支持使用任务队列的方式在分布的机器、进程和线程上执行任务调度。<code>Celery</code> 本身不提供信息存储服务。它使用第三方数据库来传递任务，目前第三方数据库支持 <code>RabbitMQ</code>、<code>Redis</code>和 <code>MongoDB</code>等。定时任务是一种比较特殊的分布式任务，它在特定的某个时间内触发并执行某个分布式任务。</p>
 <span id="more"></span>
 
 <p>[TOC]</p>
-<h2 id="死元组"><a href="#死元组" class="headerlink" title="死元组"></a>死元组</h2><p>首先，让我们简要地解释什么是“死元组”和“膨胀”。</p>
-<p>当你在PostgreSQL中执行<code>DELETE</code>操作时，行(又名元组)不会立即从数据文件中删除。相反，它仅通过在表头中设置xmax字段标记为已删除。<code>UPDATE</code>也是如此，在PostgreSQL中可以看作是<code>DELETE</code> + <code>INSERT</code>。</p>
-<p>这是PostgreSQL MVCC背后的基本思想之一，因为它允许在不同进程之间只有最小的锁的情况下实现更高的并发性。当然，这种MVCC实现的缺点是它会留下已删除的元组，即使在所有可能看到这些版本的事务完成之后。</p>
-<p>如果不清理，这些“死元组”(实际上对任何事务都不可见)将永远留在数据文件中，浪费磁盘空间，对于具有许多<code>DELETE</code>和<code>UPDATE</code>的表，死元组可能很容易占据绝大多数磁盘空间。当然，这些死元组也会从索引中引用，这进一步增加了浪费的磁盘空间。这就是我们在PostgreSQL中所说的“膨胀”。当然，需要处理的数据查询越多(即使99%的数据立即被视为“死亡”而丢弃)，查询就越慢。</p>
-<h2 id="VACUUM和autovacuum"><a href="#VACUUM和autovacuum" class="headerlink" title="VACUUM和autovacuum"></a>VACUUM和autovacuum</h2><p>回收死元组占用的空间(并使其可用于新行)的最直接方法是手动运行<code>VACUUM</code>命令。这个维护命令将扫描表并从表和索引中删除死元组——它通常不会将磁盘空间返回给操作系统，但它将使其可用于新行。</p>
-<p><strong>注意</strong>：<code>VACUUM FULL</code>会回收空间并将其返回给操作系统，但它有一些缺点。首先，它在表上获得排他锁，阻塞所有操作(包括select)。其次，它实际上创建了表的副本，将所需的磁盘空间增加了一倍，因此在磁盘空间已经用完的情况下，这种方法不太实用。</p>
-<p><code>VACUUM</code>的问题是它完全是手动操作，它只发生在你决定运行它的时候，而不是在需要它的时候。您可以将其放入cron中，并每5分钟对所有表运行一次，但大多数运行实际上不会清理任何东西，唯一的影响是系统上的CPU和I/O使用率更高。或者您可以每天晚上只运行一次，在这种情况下，您可能会积累更多您想要的死元组。</p>
-<p>这就引出了自动真空的主要目的，根据需要进行清理，以控制浪费的空间量。数据库确实知道随着时间的推移产生了多少死元组(每个事务报告它删除和更新的元组的数量)，因此当表积累了一定数量的死元组时(我们将看到默认情况下是表的20%)，可以触发清理。因此，它将在繁忙期间更频繁地执行，而在数据库大部分空闲时则较少执行。</p>
-<h2 id="autoanalyze"><a href="#autoanalyze" class="headerlink" title="autoanalyze"></a>autoanalyze</h2><p>清除死元组并不是<code>autovacuum</code>的唯一任务，它还负责更新优化器在计划查询时使用的数据分布统计信息。您可以通过运行手动收集这些信息<code>ANALYZE</code>，但它会遇到类似<code>VACUUM</code>的问题，您可能运行得太频繁或不够频繁。</p>
-<p>解决方案也类似，数据库可以观察表中有多少行发生了变化，并<code>ANALYZE</code>自动运行。</p>
-<p><strong>注意</strong>：对<code>ANALYZE</code>来说，负面影响更严重一些，因为<code>VACUUM</code>的成本与死元组的数量成正比(所以当死元组很少或没有时相当低)，<code>ANALYZE</code>必须在每次执行时从头开始重建统计数据。另一方面，如果你不经常运行它，糟糕的计划选择的成本可能同样严重。</p>
-<p>为了简洁起见，在本文的其余部分，我将基本忽略这个autovacuum任务。无论如何，配置与清理非常相似，并且遵循大致相同的推理。</p>
-<h2 id="监控"><a href="#监控" class="headerlink" title="监控"></a>监控</h2><p>在进行任何类型的调优之前，您需要能够收集相关数据，否则您怎么能说您需要进行任何调优或者评估配置更改的影响呢?</p>
-<p>换句话说，您应该有一些基本的监控，从数据库中收集指标。为了清理，你至少需要查看这些值:</p>
-<ul>
-<li><code>pg_stat_all_tables.n_dead_tup</code> ——每个表(包括用户表和系统表)中死亡元组的数量</li>
-</ul>
-<ul>
-<li><code>(n_dead_tup / n_live_tup)</code> ——每个表中死元组和活元组的比例</li>
-</ul>
-<ul>
-<li><code>(pg_class.relpages / pg_class.reltuples )</code>——“每行”的空间</li>
-</ul>
-<p>如果您已经部署了一个监视系统(您应该这样做)，那么您很可能已经在收集这些指标。总体目标是获得稳定的行为，任何这些指标都没有突然/重大的变化。</p>
-<p>还有一个方便的<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/pgstattuple.html">pgstattuple</a>扩展，允许您对表和索引执行分析，包括计算空闲空间的数量，死元组等。</p>
-<h2 id="调整目标"><a href="#调整目标" class="headerlink" title="调整目标"></a>调整目标</h2><p>在查看实际的配置参数之前，让我们简单地讨论一下高级调优目标是什么，即在更改参数时我们想要实现什么:</p>
-<ul>
-<li><p>清理死元组——保持合理的低磁盘空间量，不浪费不合理的磁盘空间量，防止索引膨胀并保持查询速度。</p>
-</li>
-<li><p>尽量减少清理的影响——不要太频繁地执行清理，因为这会浪费资源(CPU、I/O和RAM)，并可能严重损害性能。</p>
-</li>
-</ul>
-<p>也就是说，你需要找到正确的平衡，太频繁地运行它可能和不够频繁地运行它一样糟糕。平衡在很大程度上取决于您管理的数据量，您正在处理的工作负载类型(<code>DELETE/UPDATE</code>的数量)。</p>
-<p>postgresql.conf中的大多数默认值都相当保守，原因有二。首先，默认值是几年前确定的，基于当时常见的资源(CPU, RAM，…)。其次，我们希望默认配置可以在任何地方工作，包括像树莓派这样的小型机器或小型VPS服务器。然而，对于许多部署(特别是较小的部署和处理以读取为主的工作负载)，默认配置参数可以很好地工作。</p>
-<p>随着数据库大小和写入量的增加，问题开始出现。典型的问题是清理不够频繁，当它发生时，它会严重破坏性能，因为它必须处理大量垃圾。如果是这种情况，你应该遵循以下简单的规则:</p>
-<p>如果出现，那是因为你做得不够频繁。也就是说，调优参数，以便更频繁地进行清理，并且每次处理的死元组数量更少。</p>
-<p><strong>注意</strong>：人们有时遵循不同的规则——如果疼，就不要做。并完全禁用<code>autovacuum</code>。请不要这样做，除非你真的知道你在做什么，并且有定期的清理脚本。否则，您将陷入困境，您将不得不处理性能严重下降甚至可能停机的问题，而不是性能有所下降。</p>
-<h2 id="阈值和比例因子"><a href="#阈值和比例因子" class="headerlink" title="阈值和比例因子"></a>阈值和比例因子</h2><p>当然，您可能调整的第一件事是何时触发清理，这受到两个参数的影响：</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">50</span>
-<span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.2</span>
+<h2 id="1-Celery的安装与配置"><a href="#1-Celery的安装与配置" class="headerlink" title="1 Celery的安装与配置"></a>1 Celery的安装与配置</h2><p>本节使用第三方应用 Django Celery Results、Django Celery Beat、Celery 和 Redis 数据库实现 Django 的分布式任务和定时任务。值得注意的是，定时任务是分布式任务的一种特殊类型的任务。</p>
+<p>1，安装redis数据库</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">wget</span> http://download.redis.io/releases/redis-6.2.8.tar.gz
+<span class="token function">tar</span> xf redis-6.2.8.tar.gz
+<span class="token function">cd</span> src/
+./redis-server <span class="token punctuation">..</span>/redis.conf
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>2，安装分布式任务所需要的模块</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pip <span class="token function">install</span> celery
+pip <span class="token function">install</span> redis
+pip <span class="token function">install</span> django-celery-results
+pip <span class="token function">install</span> django-celery-beat
+pip <span class="token function">install</span> eventlet
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>每个功能模块负责实现不同的功能，简单说明如下：</p>
+<ol>
+<li>celery：安装Celery框架，实现分布式任务和定时任务的调度控制</li>
+<li>redis：使Python与Redis数据库实现连接</li>
+<li>django_celery_results：基于Celery封装的分布式任务功能</li>
+<li>django_celery_beat：基于Celery封装的定时任务功能</li>
+<li>eventlet：Python的协程并发库，这是Celery实现的分布式并发运行模式之一</li>
+</ol>
+<p>3，在testcelery项目中创建应用index，并且在index里创建文件tasks.py，该文件用于定义分布式任务；在testcelery文件夹创建celery.py，该文件用于将Celery框架引入Django框架，如下：</p>
+<p> <img src="/medias/image/image-20230524224335662.png" alt="image-20230524224335662"></p>
+<p>4，然后在配置文件settings.py中配置分布式任务和定时任务的功能模块和功能设置，配置代码如下：</p>
+<pre class="line-numbers language-python"><code class="language-python">INSTALLED_APPS <span class="token operator">=</span> <span class="token punctuation">[</span>
+    <span class="token string">'django.contrib.admin'</span><span class="token punctuation">,</span>
+    <span class="token string">'django.contrib.auth'</span><span class="token punctuation">,</span>
+    <span class="token string">'django.contrib.contenttypes'</span><span class="token punctuation">,</span>
+    <span class="token string">'django.contrib.sessions'</span><span class="token punctuation">,</span>
+    <span class="token string">'django.contrib.messages'</span><span class="token punctuation">,</span>
+    <span class="token string">'django.contrib.staticfiles'</span><span class="token punctuation">,</span>
+    <span class="token string">'index'</span><span class="token punctuation">,</span>
+    <span class="token comment" spellcheck="true"># 添加分布式任务功能</span>
+    <span class="token string">'django_celery_results'</span><span class="token punctuation">,</span>
+    <span class="token comment" spellcheck="true"># 添加定时任务功能</span>
+    <span class="token string">'django_celery_beat'</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span>
+
+DEFAULT_AUTO_FIELD <span class="token operator">=</span> <span class="token string">'django.db.models.BigAutoField'</span>
+<span class="token comment" spellcheck="true"># 设置存储Celery任务队列的Redis数据库</span>
+CELERY_BROKER_URL <span class="token operator">=</span> <span class="token string">'redis://IP:PORT/0'</span>
+CELERY_ACCEPT_CONTENT <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'json'</span><span class="token punctuation">]</span>
+CELERY_TASK_SERIALIZER <span class="token operator">=</span> <span class="token string">'json'</span>
+<span class="token comment" spellcheck="true"># 设置存储Celery任务结果的数据库</span>
+CELERY_RESULT_BACKEND <span class="token operator">=</span> <span class="token string">'django-db'</span>
+
+<span class="token comment" spellcheck="true"># 设置定时任务相关配置</span>
+CELERY_ENABLE_UTC <span class="token operator">=</span> <span class="token boolean">False</span>
+CELERY_BEAT_SCHEDULER <span class="token operator">=</span> <span class="token string">'django_celery_beat.schedulers:DatabaseScheduler'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>5，最后在index的models.py中定义模型PersonInfo，利用分布式任务实现模型PersonInfo的数据修改功能。</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">from</span> django<span class="token punctuation">.</span>db <span class="token keyword">import</span> models
+
+<span class="token keyword">class</span> <span class="token class-name">Personinfo</span><span class="token punctuation">(</span>models<span class="token punctuation">.</span>Model<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    id <span class="token operator">=</span> models<span class="token punctuation">.</span>AutoField<span class="token punctuation">(</span>primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    name <span class="token operator">=</span> models<span class="token punctuation">.</span>CharField<span class="token punctuation">(</span>max_length<span class="token operator">=</span><span class="token number">20</span><span class="token punctuation">)</span>
+    age <span class="token operator">=</span> models<span class="token punctuation">.</span>IntegerField<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    hireDate <span class="token operator">=</span> models<span class="token punctuation">.</span>DateField<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">def</span> <span class="token function">__str__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>name
+    <span class="token keyword">class</span> <span class="token class-name">Meta</span><span class="token punctuation">:</span>
+        verbose_name <span class="token operator">=</span> <span class="token string">'人员信息'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>6，在数据迁移完之后，在index_personinfo表插入几条测试人员信息，如图：</p>
+<p> <img src="/medias/image/image-20230524232241698.png" alt="image-20230524232241698"></p>
+<h2 id="2-分布式任务"><a href="#2-分布式任务" class="headerlink" title="2 分布式任务"></a>2 分布式任务</h2><p>1，在testcelery的celery.py文件中实现Celery框架和Django框架组合使用。Celery框架根据Django的运行环境进行实例化并生成app对象。celery.py的代码如下：</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> os
+<span class="token keyword">from</span> celery <span class="token keyword">import</span> Celery
+<span class="token comment" spellcheck="true"># 获取settings.py的配置信息</span>
+os<span class="token punctuation">.</span>environ<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span><span class="token string">'DJANGO_SETTINGS_MODULE'</span><span class="token punctuation">,</span> <span class="token string">'testcelery.settings'</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 定义Celery对象，并将项目配置信息加载到对象中，Celery的参数一般以项目名称命名</span>
+app <span class="token operator">=</span> Celery<span class="token punctuation">(</span><span class="token string">'testcelery'</span><span class="token punctuation">)</span>
+app<span class="token punctuation">.</span>config_from_object<span class="token punctuation">(</span><span class="token string">'django.conf:settings'</span><span class="token punctuation">,</span> namespace<span class="token operator">=</span><span class="token string">'CELERY'</span><span class="token punctuation">)</span>
+app<span class="token punctuation">.</span>autodiscover_tasks<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>2，在testcelery的初始化文件__init__.py中编写加载过程，使Django运行的时候能自动加载Celery框架的实例化对象app。因此，代码如下：</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">from</span> <span class="token punctuation">.</span>celery <span class="token keyword">import</span> app <span class="token keyword">as</span> celery_app
+__all__ <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'celery_app'</span><span class="token punctuation">]</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>当死亡元组的数量超过(可以看到pg_stat_all_tables.n_dead_tup)时，就会触发清理</p>
-<pre class="line-numbers language-bash"><code class="language-bash">threshold + pg_class.reltuples * scale_factor
+<p>3，在index的tasks.py中定义updateData，将testcelery定义的函数与Celery框架的实例化对象app进行绑定，使该函数变为分布式任务。</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">from</span> celery <span class="token keyword">import</span> shared_task
+<span class="token keyword">from</span> <span class="token punctuation">.</span>models <span class="token keyword">import</span> <span class="token operator">*</span>
+<span class="token keyword">import</span> time
+<span class="token comment" spellcheck="true"># 带参数的分布式任务</span>
+@shared_task
+<span class="token keyword">def</span> <span class="token function">updateData</span><span class="token punctuation">(</span>id<span class="token punctuation">,</span> info<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        Personinfo<span class="token punctuation">.</span>objects<span class="token punctuation">.</span>filter<span class="token punctuation">(</span>id<span class="token operator">=</span>id<span class="token punctuation">)</span><span class="token punctuation">.</span>update<span class="token punctuation">(</span><span class="token operator">**</span>info<span class="token punctuation">)</span>
+        <span class="token keyword">return</span>  <span class="token string">'Done'</span>
+    <span class="token keyword">except</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span>  <span class="token string">'Failed'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>函数updateData由装饰器shared_task转化成分布式任务updateData，它设有参数id和info，分别代表模型Personinfo的主键id和模型字段的修改内容。分布式任务没有要求函数设置返回值，如果函数设有返回值，它就作为分布式任务的执行结果，否则将执行结果设为None，所有的执行结果都会记录在数据表django_celery_results_taskresult的result字段中。</p>
+<p>最后在testcelery中编写分布式任务updateData的触发条件，换句话说，当用户访问特定的网址时，视图函数或视图类将调用分布式任务updateData，由Celery框架执行分布式任务，视图函数或视图类只需返回响应内容即可，无需等待分布式任务的执行过程。</p>
+<p>4，在testcelery的urls.py和index的urls.py中定义路由</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># estcelery的urls.py</span>
+<span class="token keyword">from</span> django<span class="token punctuation">.</span>contrib <span class="token keyword">import</span> admin
+<span class="token keyword">from</span> django<span class="token punctuation">.</span>urls <span class="token keyword">import</span> path<span class="token punctuation">,</span>include
+
+urlpatterns <span class="token operator">=</span> <span class="token punctuation">[</span>
+    path<span class="token punctuation">(</span><span class="token string">'admin/'</span><span class="token punctuation">,</span> admin<span class="token punctuation">.</span>site<span class="token punctuation">.</span>urls<span class="token punctuation">)</span><span class="token punctuation">,</span>
+    path<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">,</span> include<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token string">'index.urls'</span><span class="token punctuation">,</span> <span class="token string">'index'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> namespace<span class="token operator">=</span><span class="token string">'index'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span>
+
+<span class="token comment" spellcheck="true">#index的urls.py</span>
+<span class="token keyword">from</span> django<span class="token punctuation">.</span>urls <span class="token keyword">import</span> path
+<span class="token keyword">from</span> <span class="token punctuation">.</span>views <span class="token keyword">import</span> <span class="token operator">*</span>
+
+urlpatterns<span class="token operator">=</span><span class="token punctuation">[</span>
+    path<span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">,</span> index<span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">'index'</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>5，路由index为分布式任务updateData的触发条件提供路由地址，路由的请求处理由视图函数index执行，因此在index的view.py中定义视图函数index，代码如下：</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">from</span> django<span class="token punctuation">.</span>shortcuts <span class="token keyword">import</span> render
+<span class="token keyword">from</span> django<span class="token punctuation">.</span>http <span class="token keyword">import</span> HttpResponse
+<span class="token keyword">from</span> <span class="token punctuation">.</span>tasks <span class="token keyword">import</span> updateData
+
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 传递参数执行分布式任务</span>
+    id <span class="token operator">=</span> request<span class="token punctuation">.</span>GET<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'id'</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+    info <span class="token operator">=</span> dict<span class="token punctuation">(</span>name<span class="token operator">=</span><span class="token string">'May'</span><span class="token punctuation">,</span> age<span class="token operator">=</span><span class="token number">19</span><span class="token punctuation">,</span> hireDate<span class="token operator">=</span><span class="token string">'2019-10-10'</span><span class="token punctuation">)</span>
+    updateData<span class="token punctuation">.</span>delay<span class="token punctuation">(</span>id<span class="token punctuation">,</span> info<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> HttpResponse<span class="token punctuation">(</span><span class="token string">"Hello Celery"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>视图函数index设置变量id和info，分布式任务updateData调用delay方法创建任务队列，由Celery框架完成执行过程，如果分布式任务设有参数，那么可以在delay方法里添加分布式任务的函数参数。</p>
+<p>6，启动分布式任务的运行环境。因为分布式任务由Celery框架执行，除了启动testcelery之外，还要启动Celery框架。先启动testcelery，然后在终端中输入以下指令启动Celery：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">celery -A testcelery worker -l info -P eventlet
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>这张表将被认为需要清理。这个公式基本上是说，在一个表被清理之前，高达20%的表可能是死元组(50行的阈值是为了防止非常频繁地清理小表)。</p>
-<p>默认的比例因子适用于小型和中型表，但不适用于非常大的表，在10GB的表上大约有2GB的死元组，而在1TB的表上大约有200GB。</p>
-<p>这是一个积累大量死元组的例子，并一次性处理所有这些元组，这是很麻烦的。根据之前提到的规则，解决方案是通过显著降低比例因子来更经常地做这件事，甚至可能像这样:</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0.01</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>这将限制减少到表的1%。另一种解决方案是完全放比例因子，只使用阈值</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_scale_factor</span> <span class="token punctuation">=</span> <span class="token attr-value">0</span>
-<span class="token attr-name">autovacuum_vacuum_threshold</span> <span class="token punctuation">=</span> <span class="token attr-value">10000</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>它应该在生成10000个死元组后触发清理。</p>
-<p>一个问题是，postgresql.conf中的这些更改会影响所有表(实际上是整个集群)，并且可能会不利地影响小表的清理，包括例如系统表。</p>
-<p>当更频繁地清理小表时，最简单的解决方案是完全忽略这个问题。清理小表的成本相当低，对大表的改进通常非常显著，即使忽略小表上的小效率，总体效果仍然是非常积极的。</p>
-<p>但是，如果你决定以一种会显著延迟小表清理的方式更改配置(例如设置scale_factor=0和threshold=10000)，最好只使用ALTER TABLE将这些更改应用到特定的表:</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_scale_factor <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_threshold <span class="token operator">=</span> <span class="token number">10000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>尽量保持配置尽可能简单，并覆盖尽可能少的表的参数。将其包括在内部文档中也是一个好主意，包括特定值的推理。</p>
-<h2 id="节流"><a href="#节流" class="headerlink" title="节流"></a>节流</h2><p><code>autovacuum</code>内置的一个很好的功能是节流。清理是在后台运行的维护任务，对用户查询等的影响最小。换句话说，它不应该消耗太多资源(CPU和磁盘I/O)，这正是autovacuum内置节流的目的。</p>
-<p>清理过程相当简单，它从数据文件中读取页面(8kB数据块)，并检查是否需要清理。如果没有死元组，页面将不做任何更改而直接丢弃。否则它将被清除(死元组将被删除)，被标记为“脏”并最终被写入。成本计算基于三个基本操作定义：</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">vacuum_cost_page_hit</span> <span class="token punctuation">=</span> <span class="token attr-value">1</span>
-<span class="token attr-name">vacuum_cost_page_miss</span> <span class="token punctuation">=</span> <span class="token attr-value">10</span>
-<span class="token attr-name">vacuum_cost_page_dirty</span> <span class="token punctuation">=</span> <span class="token attr-value">20</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>也就是说，如果从<code>shared_buffers</code>中读取页面，则将其计数为1。如果在<code>shared_buffers</code>中没有找到它，需要从操作系统中读取，它将被计算为10(它可能仍然从RAM中提供，但我们不知道)。最后，如果页面被清理弄脏了，它被算作20。这使我们能够计算<code>autovacuum</code>所做的“工作成本”。</p>
-<p>然后通过限制一次性可以完成的工作量来完成节流，默认设置为200，每次清理工作完成这么多工作时，它将休眠20毫秒:</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">autovacuum_vacuum_cost_delay</span> <span class="token punctuation">=</span> <span class="token attr-value">20ms</span>
-<span class="token attr-name">autovacuum_vacuum_cost_limit</span> <span class="token punctuation">=</span> <span class="token attr-value">200</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>那么，这实际上允许做多少功呢？在20ms的延迟下，清理每秒可以进行50轮，每轮200个token，这意味着每秒10000个token。意味着:</p>
-<ul>
-<li>80 MB/s从<code>shared_buffer</code>读取(假设它没有被脏)</li>
-<li>8MB/s从操作系统读取(可能是从磁盘)</li>
-<li>4MB/s写入(被<code>autovacuum</code>进程弄脏的页面)</li>
-</ul>
-<p>考虑到当前硬件的能力，并且读/写大多是顺序的，这些限制太低了。</p>
-<p>我们通常所做的是增加<code>cost_limit</code>参数，例如增加到1000(或2000)，这将使吞吐量增加 5 倍(或 10 倍)。当然，您可以调整其他参数(每页操作成本、睡眠延迟)，但我们很少这样做，改变成本限制就足够了。</p>
-<h2 id="Autovacuum-Workers"><a href="#Autovacuum-Workers" class="headerlink" title="Autovacuum Workers"></a>Autovacuum Workers</h2><p>尚未提及的一个配置选项是<code>autovacuum_max_workers</code>，那么它是关于什么的呢，好吧，清理不会在单个<code>autovacuum</code>进程中发生，但是数据库允许启动<code>autovacuum_max_workers</code>进程，这些进程实际上对不同的数据库/表进行清理。</p>
-<p>这是有用的，因为您不希望在清理单个大表之前停止清理小表(由于节流，这可能需要相当多的时间)。</p>
-<p>问题是用户认为工人的数量与可能发生的清理量成正比。如果你将自动清理的工人数量增加到6个，它肯定会比默认的3个工人多做两倍的工作，对吗?</p>
-<p>嗯，没有。前几段所述的成本限制是全局的，由所有自动清理工人共享。每个工作进程只能获得总成本限制的<code>1/autovacuum_max_workers</code>，因此增加工作进程的数量只会使它们运行得更慢。</p>
-<p>这有点像高速公路，将汽车数量增加一倍，但让它们以一半的速度行驶，每小时到达目的地的人数大约相同。</p>
-<p>因此，如果您的数据库清理跟不上用户活动，那么增加工作人员数量不是解决方案，除非您还调整其他参数。</p>
-<h2 id="每表节流"><a href="#每表节流" class="headerlink" title="每表节流"></a>每表节流</h2><p>事实上，当我说成本限制是全局的，并且是由所有自动清理工人共享的，我一直在说谎(有点)。类似于缩放因子和阈值，可以设置每个表的成本限制和延迟：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_cost_limit <span class="token operator">=</span> <span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> t <span class="token keyword">SET</span> <span class="token punctuation">(</span>autovacuum_vacuum_cost_delay <span class="token operator">=</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>然后，处理这些表的工人不包括在全局成本计算中，而会被独立控制。</p>
-<p>这给了你相当大的灵活性和权力，但别忘了，权力越大，责任越大!</p>
-<p>在实践中，我们几乎从不使用这个特性，有两个基本原因。首先，您通常希望在后台清理上使用一个全局限制。其次，多个工作人员有时被限制在一起，有时是独立的，这使得监视和分析系统的行为变得更加困难。</p>
-<h2 id="概括"><a href="#概括" class="headerlink" title="概括"></a>概括</h2><p>这就是调整<code>autovacuum</code>的方法。如果我必须把它总结成几条基本规则，那就是这五条:</p>
-<ul>
-<li>不要禁用<code>autovacuum</code>，除非你真的知道你在做什么，认真对待。</li>
-<li>对于繁忙的数据库(执行大量<code>UPDATE</code>s和<code>DELETE</code>)，尤其是大型数据库，您可能应该降低比例因子，以便更频繁地进行清理。</li>
-<li>在合理的硬件(良好的存储、多核)上，您可能应该增加节流参数，以便清理工作能够跟上。</li>
-<li>在大多数情况下，仅仅增加<code>autovacuum_max_workers</code>并不能真正起作用，你会得到更多缓慢的进程。</li>
-<li>可以使用<code>ALTER TABLE</code>设置每个表的参数，但如果确实需要这样做，请三思。它使系统更复杂，更难以检查。</li>
-</ul>
+<p>以上指令是通过eventlet模块运行Celery框架的，Celery框架还有很多种运行方式。当Celery框架成功启动后，它会自动加载testcelery定义的分布式任务updateData，并在终端中显示Redis数据库的连接信息，如图：</p>
+<p><img src="/medias/image/image-20230524231705469.png" alt="image-20230524231705469"></p>
+<p>7，在浏览器中输入127.0.0.1:8000，视图函数index将触发分布式任务updateData，执行id默认为1的修改，当执行成功后，执行结果会显示在终端界面，并且保存到数据表django_celery_results_taskresult中。</p>
+<p><img src="/medias/image/image-20230524232021675.png" alt="image-20230524232021675"></p>
+<h2 id="3-定时任务"><a href="#3-定时任务" class="headerlink" title="3 定时任务"></a>3 定时任务</h2><p>1，在index的tasks中定义分布式任务timing，代码如下：</p>
+<pre class="line-numbers language-python"><code class="language-python">@shared_task
+<span class="token keyword">def</span> <span class="token function">timing</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    now <span class="token operator">=</span> time<span class="token punctuation">.</span>strftime<span class="token punctuation">(</span><span class="token string">'%H:%M:%S'</span><span class="token punctuation">)</span>
+    <span class="token keyword">with</span> open<span class="token punctuation">(</span><span class="token string">'d:\\output.txt'</span><span class="token punctuation">,</span> <span class="token string">'a'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> f<span class="token punctuation">:</span>
+        f<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token string">'The time is '</span><span class="token operator">+</span> now<span class="token punctuation">)</span>
+        f<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+        f<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>接着将分布式任务timing设为定时任务</p>
+<p>2，登录Admin管理系统主页面，单击Periodic Tasks链接进入该页面，点击Add Periodic Tasks链接，如图：</p>
+<p><img src="/medias/image/image-20230524235020486.png" alt="image-20230524235020486"></p>
+<p>3，将Name设为Mytiming，Task设为分布式任务timing，Interval设置为5秒。即创建了定时任务Mytiming，每间隔5秒就会执行分布式任务timing。定时任务创建后，可以在表django_celery_beat_periodictask中查看任务信息，如图：</p>
+<p> <img src="/medias/image/image-20230524235133183.png" alt="image-20230524235133183"></p>
+<p>如果分布式任务设有参数，那么可以在Add Periodic Tasks页面设置Arguments或Keyword argument，参数以JSON格式表示，它们分别对应数据表字段args和kwargs。</p>
+<p>4，定时任务设置后，通过输入指令来启动定时任务。在输入指令前，必须保证testcelery和Celery处于运行状态。在终端中分别执行</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 指令中的testcelery是项目名称</span>
+<span class="token comment" spellcheck="true"># 启动Celery</span>
+celery -A testcelery worker -l info -P eventlet
+<span class="token comment" spellcheck="true"># 启动定时任务</span>
+celery -A testcelery beat -l info -S django
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>定时任务启动后，django_celery_beat_periodictask表中所有的定时任务都会进入等待状态，只有Django的系统时间到达定时任务的触发时间，Celery才会运行符合触发条件的定时任务。比如定时任务Mytiming，它是每隔5秒会执行分布式任务timing，我们在终端或者表django_celery_results_taskresult中都可以查看定时任务的执行情况，如图：</p>
+<p><img src="/medias/image/image-20230524235734298-16849440896692.png" alt="image-20230524235734298"></p>
 
                 
             </div>
@@ -547,7 +599,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/autovacuum-diao-you/">https://jinlid.github.io/2023/autovacuum-diao-you/</a>
+                    <a href="https://jinlid.github.io/2023/django-fen-bu-shi-ren-wu-he-ding-shi-ren-wu/">https://jinlid.github.io/2023/django-fen-bu-shi-ren-wu-he-ding-shi-ren-wu/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -585,8 +637,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/postgresql/">
-                                    <span class="chip bg-color">postgresql</span>
+                                <a href="/tags/flask/">
+                                    <span class="chip bg-color">flask</span>
                                 </a>
                             
                         </div>
@@ -669,24 +721,24 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/pi-liang-shu-ju-jia-zai-de-zui-jia-shi-jian-ji-qiao/">
+                <a href="/2023/3.cha-xun-chu-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="批量数据加载的最佳实践技巧">
+                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="第3章 查询处理">
                         
-                        <span class="card-title">批量数据加载的最佳实践技巧</span>
+                        <span class="card-title">第3章 查询处理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            有时，PostgreSQL 数据库需要在单个或最少的步骤中导入大量数据。这通常称为批量数据导入，其中数据源通常是一个或多个大文件。这个过程有时会慢得令人无法接受。
+                            如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-19
                         </span>
                         <span class="publish-author">
                             
@@ -718,31 +770,31 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/checkpoint-jin-cheng/">
+                <a href="/2023/flask-postgresql-bootstrap-shi-xian-jian-suo-xi-tong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="checkpoint进程">
+                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="flask+postgresql+bootstrap实现检索系统">
                         
-                        <span class="card-title">checkpoint进程</span>
+                        <span class="card-title">flask+postgresql+bootstrap实现检索系统</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            一个检索系统
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-20
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-16
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                    数据库
+                            <a href="/categories/python/" class="post-category">
+                                    python
                                 </a>
                             
                             
@@ -752,8 +804,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/flask/">
+                        <span class="chip bg-color">flask</span>
                     </a>
                     
                 </div>

@@ -413,11 +413,11 @@
                 </a>
                 
                 
-                <a href="/categories/python/" title="python: 1">
+                <a href="/categories/python/" title="python: 2">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
                             style="background-color: #D5F5E3;">python
-                        <span class="tag-length">1</span>
+                        <span class="tag-length">2</span>
                     </span>
                 </a>
                 
@@ -560,7 +560,10 @@ SQL语句执行;
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，无论是在社区邮件列表中还是在为客户进行性能调优审查期间。(另一个是“autovacuum”，几天前由Joe Nelson从C
+                                在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，那么让我带你了解一下检查点，它们做什么以及如何在PostgreSQL中调优它们。
+
+
+检查点的意义是什么?PostgreSQ
                             
                         </div>
                         <div class="publish-info">
@@ -606,10 +609,9 @@ SQL语句执行;
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                检查点是一个强制进程。
+                                
 
-
-为了理解这一点，让我们讨论块，PostgreSQL 总是以块的形式读写数据。考虑emp表，它只有一个记录，这条记录中的数据加起来应该是几个字节；我们在列id中有值1 ，在列first_name中有值Newname
+为了理解这一点，让我们讨论块，PostgreSQL 总是以块的形式读写数据。考虑emp表，它只有一个记录，这条记录中的数据加起来应该是几个字节；我们在列id中有值1 ，在列first_name中有值Newname。但是，此表将占用 8K
                             
                         </div>
                         <div class="publish-info">

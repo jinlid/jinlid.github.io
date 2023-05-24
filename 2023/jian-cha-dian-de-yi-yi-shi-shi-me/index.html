@@ -5,7 +5,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="checkpoint进程, jinlid&#39;s blog">
-    <meta name="description" content="在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，无论是在社区邮件列表中还是在为客户进行性能调优审查期间。(另一个是“autovacuum”，几天前由Joe Nelson从C">
+    <meta name="description" content="在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，那么让我带你了解一下检查点，它们做什么以及如何在PostgreSQL中调优它们。
+
+
+检查点的意义是什么?PostgreSQ">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -412,18 +415,20 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，无论是在社区邮件列表中还是在为客户进行<a target="_blank" rel="noopener" href="https://www.2ndquadrant.com/services/postgresql-performance-tuning/">性能调优审查</a>期间。(另一个是“autovacuum”，几天前由<a target="_blank" rel="noopener" href="http://www.citusdata.com/blog/2016/11/04/autovacuum-not-the-enemy/">Joe Nelson</a>从Citus讨论过。)那么让我带你了解一下检查点，它们做什么以及如何在PostgreSQL中调优它们。</p>
+                <p>在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，那么让我带你了解一下检查点，它们做什么以及如何在PostgreSQL中调优它们。</p>
 <span id="more"></span>
 
 <h2 id="检查点的意义是什么"><a href="#检查点的意义是什么" class="headerlink" title="检查点的意义是什么?"></a>检查点的意义是什么?</h2><p>PostgreSQL是一个依赖于预写日志(WAL)的数据库，所有的更改都先写入日志(更改流)，然后才写入数据文件。这提供了持久性，因为在崩溃的情况下，数据库可以使用WAL来执行恢复，从WAL读取更改并重新应用到数据文件上。</p>
 <p>虽然这可能会使写入量翻倍，但实际上可能会提高性能。用户只需要等待WAL(被刷新到磁盘)，而数据文件只在内存中修改，然后在后台刷新。这很好，因为WAL的写在本质上是顺序的，而对数据文件的写通常是随机的。</p>
-<p>假设系统崩溃，数据库需要执行恢复。最简单的方法是从头开始，从头重放整个WAL。最后我们应该得到一个完整的(正确的)数据库。明显的缺点当然是需要保持和重放整个WAL。我们经常处理的数据库不是特别大(比如几百GB)，但每天产生几TB的WAL。因此，想象一下，在运行数据库一年时，您需要多少磁盘空间来保持所有WAL，以及在恢复期间重放需要多少时间。</p>
-<p>但是，如果数据库能够保证对给定WAL位置(日志中的偏移量)的所有更改，以及到该位置的所有数据文件更改都被刷新到磁盘中呢？然后，它可以在恢复过程中确定这个位置，并只重放WAL的剩余部分，极大地缩短了恢复时间。它还可以在“已知的好”位置之前移除WAL。</p>
+<p>假设系统崩溃，数据库需要执行恢复。最简单的方法是从头开始，从头重放整个WAL。最后我们应该得到一个完整的(正确的)数据库。当然，明显的缺点是需要保留和重放整个WAL。我们经常处理的数据库不是特别大(比如几百GB)，但每天产生几TB的WAL。因此，想象一下，在运行数据库一年时，您需要多少磁盘空间来保持所有WAL，以及在恢复期间重放需要多少时间。</p>
+<p>但是，如果数据库能够保证对给定WAL位置(日志中的偏移量)的所有更改，以及到该位置的所有数据文件更改都被刷新到磁盘中呢？然后，它可以在恢复过程中确定这个位置，并只重放WAL的剩余部分，极大地缩短了恢复时间。它还可以在“已经回放”位置之前移除WAL。</p>
 <p>这正是检查点的作用，确保在某个时间点之前不再需要WAL进行恢复，从而减少磁盘空间需求和恢复时间。</p>
-<p><strong>注:</strong> 如果你碰巧是游戏玩家，你可能熟悉检查点的概念——你的角色在游戏中通过了某个点，如果你没能击败下一个boss或掉进了炽热的熔岩湖，你就从最后一个点开始，而不是从头开始。😉</p>
+<blockquote>
+<p>如果你碰巧是游戏玩家，你可能熟悉检查点的概念——你的角色在游戏中通过了某个点，如果你没能击败下一个boss或掉进了炽热的熔岩湖，你就从最后一个点开始，而不是从头开始。</p>
+</blockquote>
 <p>让我们再讨论一下另一种极端情况，执行非常频繁的检查点(比如，每秒钟左右一次)。这将允许只保留少量的WAL，并且恢复将非常快(只需要重放少量WAL)。但它也会将对数据文件的异步写入转换为同步写入，严重影响用户(例如增加“COMMIT”延迟，降低吞吐量)。</p>
-<p>因此，在实践中，您希望检查点不频繁地发生，以免影响用户，但要足够频繁，以合理地限制恢复时间和磁盘空间需求。</p>
-<h2 id="触发检查点"><a href="#触发检查点" class="headerlink" title="触发检查点"></a>触发检查点</h2><p>可以触发检查点的原因有三到四个:</p>
+<p>因此在实践中，您希望检查点不频繁地发生，以免影响用户，但也要足够频繁，以合理地限制恢复时间和磁盘空间需求。</p>
+<h2 id="触发检查点"><a href="#触发检查点" class="headerlink" title="触发检查点"></a>触发检查点</h2><p>可以触发检查点的原因如下:</p>
 <ul>
 <li><p>直接执行<code>CHECKPOINT</code>命令</p>
 </li>
@@ -449,7 +454,7 @@
 </ol>
 <p>很难说<code>checkpoint_timeout</code>的“合理”值是多少，因为它取决于恢复时间目标(RTO)，即可接受的最大恢复持续时间是多少。</p>
 <p>不过，这有点棘手，因为<code>checkpoint_timeout</code>是对生成WAL所需时间的限制，而不是直接对恢复时间的限制。不幸的是，由于种种原因，我们无法确切地说出复苏需要多长时间。WAL通常由多个进程(运行DML)生成，而恢复由单个进程执行(这种限制主要是固有的，不太可能很快消失)。这不仅会影响本地恢复，还会影响使用流复制将故障转移到备用服务器。当然，本地恢复通常发生在重新启动后，此时文件系统缓存是冷的。</p>
-<p>但通常，默认值(5分钟)相当低，30分钟到1小时之间的值相当常见。PostgreSQL 9.6甚至将最长时间增加到1天(因此有些黑客认为这对于某些用例来说是个好主意)。较低的值还可能导致整页写入(我不打算在这里讨论)而导致写入放大。</p>
+<p>但通常，默认值(5分钟)相当低，30分钟到1小时之间的值相当常见。PostgreSQL 9.6甚至将最长时间增加到1天(因此有些黑客认为这对于某些用例来说是个好主意)。较低的值还可能导致整页写入而导致写入放大。</p>
 <p>假设我们决定用30分钟。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">checkpoint_timeout</span> <span class="token punctuation">=</span> <span class="token attr-value">30min</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
@@ -495,7 +500,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <p>只有当所有这些步骤都完成时，检查点才算完成。你可以“尽可能快地”完成这些步骤，即一次性写入所有脏缓冲区，然后在文件上调用<code>fsync</code>，事实上这就是PostgreSQL直到8.2所做的。但是这会导致I/O由于填充文件系统缓存和设备饱和而停滞，并影响用户会话。</p>
 <p>为了解决这个问题，PostgreSQL 8.3引入了“扩展检查点”的概念，不是一次写入所有数据，而是在很长一段时间内进行写操作。这使得操作系统有时间在后台清除脏数据，使得最终的<code>fsync</code>更廉价。</p>
 <p>写是基于到下一个检查点的进度来限制的，数据库知道在需要另一个“检查点”之前我们还剩下多少时间/ WAL，并且它可以计算出应该已经写出多少缓冲区。然而，数据库必须在最后才发出写操作，这意味着最后一批写操作仍然在文件系统缓存中，使得最后的<code>fsync</code>调用(在启动下一个检查点之前发出)再次变得昂贵。</p>
-<p>因此，数据库需要给内核留出足够的时间，以便脏数据在后台被刷新到磁盘——而页面缓存(Linux文件系统缓存)的过期通常是由时间驱动的，特别是由内核参数:</p>
+<p>因此，数据库需要给内核留出足够的时间，以便脏数据在后台被刷新到磁盘——而页面缓存(Linux文件系统缓存)的过期通常是由时间驱动的，特别是由内核参数：</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">vm.dirty_expire_centisecs</span> <span class="token punctuation">=</span> <span class="token attr-value">3000</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>它表示数据在30秒后过期(默认情况下)。</p>
@@ -506,14 +511,14 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <p>相反，您可以尝试大致使用这个公式设置<code>checkpoint_completion_target</code></p>
 <pre class="line-numbers language-c"><code class="language-c"><span class="token punctuation">(</span>checkpoint_timeout <span class="token operator">-</span> 2min<span class="token punctuation">)</span> <span class="token operator">/</span> checkpoint_timeout
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>30分钟大约是0.93。有时它建议不要超过0.9 -这可能是可以的，并且您不太可能观察到这两个值之间的任何显著差异。(当使用非常高的<code>checkpoint_timeout</code>值时，这可能会改变，现在在PostgreSQL 9.6上可以达到1天)。</p>
+<p>30分钟大约是0.93。有时它建议不要超过0.9，这可能是可以的，并且您不太可能观察到这两个值之间的任何显著差异。(当使用非常高的<code>checkpoint_timeout</code>值时，这可能会改变，现在在PostgreSQL 9.6上可以达到1天)。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>现在您应该知道检查点的目的是什么，以及调优它们的基础知识。总结一下:</p>
 <ul>
 <li><p>大多数检查点应该是基于时间的，即由checkpoint_timeout</p>
 <ul>
 <li><p>性能(不频繁的检查点)和恢复所需时间(频繁的检查点)之间的妥协</p>
 </li>
-<li><p>15-30分钟之间的值是最常见的，但上升到1h也不是坏事</p>
+<li><p>15-30分钟之间的值是最常见的，但上升到1小时也不是坏事</p>
 </li>
 </ul>
 </li>
@@ -685,7 +690,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            检查点是一个强制进程。
+                            
                         
                     </div>
                     <div class="publish-info">
