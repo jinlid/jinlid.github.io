@@ -4,10 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="checkpoint进程, jinlid&#39;s blog">
-    <meta name="description" content="
-
-为了理解这一点，让我们讨论块，PostgreSQL 总是以块的形式读写数据。考虑emp表，它只有一个记录，这条记录中的数据加起来应该是几个字节；我们在列id中有值1 ，在列first_name中有值Newname。但是，此表将占用 8K">
+    <meta name="keywords" content="VACUUM调优和自定义预定vacuum作业, jinlid&#39;s blog">
+    <meta name="description" content="PostgreSQL 的内置 autovacuum 功能正在不断改进，一个又一个版本。它变得越来越强大，同时减少了开销并解决了边缘情况。我认为没有任何 PostgreSQL 版本是在没有任何 autovacuum 改进的情况下推出的，毫无疑">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -19,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>checkpoint进程 | jinlid&#39;s blog</title>
+    <title>VACUUM调优和自定义预定vacuum作业 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -344,7 +342,7 @@
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">checkpoint进程</h1>
+                    <h1 class="description center-align post-title">VACUUM调优和自定义预定vacuum作业</h1>
                 </div>
             </div>
         </div>
@@ -380,8 +378,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                数据库
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
                             </a>
                         
                     </div>
@@ -393,7 +391,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-02-20
+                    2023-06-19
                 </div>
                 
 
@@ -414,62 +412,68 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <span id="more"></span>
-
-<p>为了理解这一点，让我们讨论块，PostgreSQL 总是以块的形式读写数据。考虑emp表，它只有一个记录，这条记录中的数据加起来应该是几个字节；我们在列id中有值1 ，在列first_name中有值Newname。但是，此表将占用 8K 磁盘空间，因为 PostgreSQL 使用 8K 块（块也称为页面），很容易验证 PostgreSQL 使用块。确保我们的表只有一条记录如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM emp;</span>
- <span class="token function">id</span> <span class="token operator">|</span> first_name
-----+------------
-  1 <span class="token operator">|</span> Newname
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>然后，我们找到文件名：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_relation_filepath('emp');</span>
- pg_relation_filepath
-----------------------
- base/16420/16436
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>现在，我们检查文件的大小：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \! ls -l /home/pg10/postgresql10.23/data/base/16420/16436</span>
--rw-------. 1 pg10 postgres 8192 Feb 11 22:15 /home/pg10/postgresql10.23/data/base/16420/16436
+                <p>PostgreSQL 的内置 autovacuum 功能正在不断改进，一个又一个版本。它变得越来越强大，同时减少了开销并解决了边缘情况。我认为没有任何 PostgreSQL 版本是在没有任何 autovacuum 改进的情况下推出的，毫无疑问，它对于大多数用例来说已经足够好了。</p>
+<p>但是，这仍然远非适合任何特定环境的完美选择。在处理许多客户环境时，我们不断看到内置逻辑不够用的情况。</p>
+<h3 id="常见问题-x2F-限制"><a href="#常见问题-x2F-限制" class="headerlink" title="常见问题/限制"></a>常见问题/限制</h3><ol>
+<li><p><strong>在高峰时段，表成为 autovacuum 的候选对象</strong><br>autovacuum 设置基于scale factors/thresholds。当表上有大量事务时，超过表这些限制的可能性很高——这是高峰时段。实际上，它在非常错误的时间启动的。</p>
+</li>
+<li><p><strong>急需vacuum的表</strong><br>经常看到一些表成为 vacuuming 的候选对象并反复占用所有 worker 的情况是很常见的。而候选名单中的其他表很长一段时间都没有被vacuum。当前的 autovacuum 情报不足以了解谁更需要清理并给予更好的优先级。</p>
+</li>
+<li><p><strong>无法动态控制 autovacuum workers 的油门</strong><br>这可能是最糟糕的。即使有一个知情的 DBA，他想要<code>autovacuum_vacuum_cost_limit</code>根据需要或时间窗口调整并向 PostgreSQL 发出信号。<br>例如： </p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> SYSTEM <span class="token keyword">set</span> autovacuum_vacuum_cost_limit <span class="token operator">=</span> <span class="token number">2000</span><span class="token punctuation">;</span>
+<span class="token keyword">select</span> pg_reload_conf<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>8192 字节 = 8K，所以，一张只有一条记录的表就占用了8K。让我们尝试插入一些数据，看看会发生什么：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> emp<span class="token punctuation">(</span>id <span class="token punctuation">,</span> first_name<span class="token punctuation">)</span> <span class="token keyword">SELECT</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">5000000</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'A longer name '</span><span class="token punctuation">;</span>
-<span class="token keyword">INSERT</span> <span class="token number">0</span> <span class="token number">5000000</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>执行几次前面的查询后，让我们从 shell 提示符下检查文件的大小：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \! ls -lh base/16420/16436*</span>
--rw-------. 1 pg10 postgres 249M Feb 11 22:18 base/16420/16436
--rw-------. 1 pg10 postgres  80K Feb 11 22:17 base/16420/16436_fsm
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>因此，我们有数据库目录和表文件。在文件中，数据以块为单位进行管理。简而言之，PostgreSQL 集群的物理布局如下所示：</p>
-<p><img src="/medias/image/image-20230211210706429.png" alt="image-20230211210706429"></p>
-<p>一旦用户更改了数据（已在缓冲区中可用），该缓冲区就变脏了。如前所述，用户提交了更改并不意味着更改已写入数据文件。而将更改写入数据文件是检查点进程的工作。当检查点发生时，所有脏（修改）页面都被写入表和索引文件，该过程还将页面标记为干净。它还将预写日志标记为应用到此时。</p>
-<p>检查点是事务序列中的点，在这些点上可以保证堆和索引数据文件已使用在此检查点之前写入的所有信息进行了更新。在检查点时间，所有脏数据页都被刷新到磁盘，并将特殊的检查点记录写入日志文件。到目前为止，更改记录只写入了预写日志文件，在发生崩溃时，崩溃恢复过程会查看最新的检查点记录，以确定日志中的点（称为重做记录），它应该从该点开始重做操作。</p>
-<p>检查点信息记录在xlog中，检查点信息工作流程如下图：</p>
-<p><img src="/medias/image/image-20230220210338147.png" alt="检查点信息工作流程"></p>
-<p>在此之前对数据文件所做的任何更改都保证已经在磁盘上。因此，在检查点之后，不再需要包含重做记录的日志段之前的日志段，并且可以回收来自<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/wal-configuration.html">http://www.postgresql.org/docs/current/static/wal-configuration.html</a>.</p>
-<p>现在的问题是：检查点何时发生？有几个参数决定检查点应该何时发生：</p>
-<ol>
-<li>checkpoint_segments。默认值为3。一旦3 个WAL 段被填充，就会出现检查点。每个 WAL 段为 16 MB。一旦完成了3个 16 MB 的 WAL 段的更改，就应该出现一个检查点。</li>
-<li>checkpoint_timeout，检查点间隔时间是一个超时值，可以设置为秒（默认）、分钟或小时。</li>
-<li>PostgreSQL在smart或fast模式下关闭。</li>
-<li>在pg9.5或更高版本中，pg_xlog（pg10及以上为pg_wal）中WAL段文件的总大小已超过max_wal_size的值（默认1GB，即64个16MB文件）也会触发检查点。</li>
-<li>手动执行checkpoint。</li>
+<p>这对当前运行的autovacuum worker没有影响。只有下一个worker启动时才会考虑这个设置。所以这不能用来解决问题。</p>
+</li>
+<li><p><strong>DBA 调整参数的尝试常常适得其反</strong><br>在看到陈旧的表和饥饿的表后，绝望的 DBA 保持积极的设置和更多的worker。很多时候，这会使系统超出其极限，因为当系统已经有大量活动会话时，一切都会在错误的时间发生。乘以<code>maintenance_work_mem</code>工人的分配。系统性能受到很大程度的影响。我见过的最糟糕的情况是 autovacuum workers 占用了高达 50% 的服务器资源。</p>
+</li>
+<li><p><strong>活动时间窗口期间的 autovacuum 违背了它自己的目的</strong><br>如果在高活动窗口期间需要时间才能完成，autovacuum worker 将引用旧的 xid/快照。因此，它不会清除在同一持续时间内生成的死元组，这与 autovacuum 的目的背道而驰。</p>
+</li>
+<li><p><strong>饥饿的表会触发环绕式预防 autovacuum</strong><br>很常见的是，需要较长时间自动清理范围<code>autovacuum_freeze_max_age</code>和 预防回卷主动清理的表会被触发。</p>
+</li>
 </ol>
-<p>让我们考虑一个具有大约 16 GB 共享缓冲区的服务器，这是一台可承受大量负载的服务器。如果此负载的很大一部分由写入组成，那么这个 16 GB 缓冲区的大部分可能会在几分钟内变脏。检查点段的低设置将导致可用段快速填充并频繁检查点。同样，将checkpoint_timeout设置得较低也会导致频繁检查点。这会导致磁盘吞吐量过大。另一方面，如果我们将这些值保持得非常高，这将导致不频繁的检查点。在写入密集型系统中，这会导致检查点期间出现显着的 I/O 峰值，从而影响其他查询的性能。</p>
-<p>可以调整另一个参数： checkpoint_completion_target以在一定程度上缓解这种情况。</p>
-<p>这个参数告诉 PostgreSQL 在每次迭代中它必须多快尝试完成检查点过程。使用默认值0.5， PostgreSQL 可以预期在下一个检查点开始之前的大约一半时间内完成每个检查点。当我们将此值增加到0.9 时，检查点产生的写入会分散到更长的时间段内。因此，I/O 尖峰变得平坦。</p>
-<p><img src="/medias/image/image-20230220212227270.png" alt="检查点调整"></p>
-<p>非常不频繁的检查点和大量脏缓冲区的一个问题是恢复时间可能会增加。在数据库重启的情况下，比如崩溃，它会找出最后的检查点信息。然后它将重播在最后一个检查点之后发生的所有事务，直到最后一次提交。事务/更改是从 WAL 中读取的。如果系统宕机时脏数据量很大，这意味着在数据库开放业务之前需要重放大量事务。这意味着更长的停机时间。同样从这个角度来看，拥有更频繁的检查点比不频繁的检查点更好。恢复时间可能与checkpoint_timeout值一样长。有关此参数的精彩帖子可在</p>
-<p><a target="_blank" rel="noopener" href="https://www.depesz.com/2010/11/03/checkpoint_completion_target/">https://www.depesz.com/2010/11/03/checkpoint_completion_target/</a> 找到。</p>
-<p>在控制文件中，记录了检查点位置：</p>
-<p><img src="/medias/image/image-20230220210811402.png" alt="检查点记录位置在控制文件"></p>
-<p><img src="/medias/image/image-20230220210927532.png" alt="image-20230220210927532"></p>
-<p>通过控制文件可以从xlog文件中找到上次检查点，再找到上次REDO点，然后开始恢复。</p>
-<p><img src="/medias/image/image-20230220211251618.png" alt="利用检查点做为实例recovery的起始位置"></p>
-<p>一旦启动子进程完成，或者如果我们正在执行数据库恢复，一旦恢复开始，检查点是一个由 postmaster 启动的进程。它一直保持活动状态，直到postmaster令它终止。</p>
+<p>由于这种低效性，我们不断看到 DBA 倾向于完全禁用 autovacuum，并引发更多问题甚至中断。至少，我对 PostgreSQL 新手的请求是，请永远不要尝试关闭 autovacuum。这不是解决与 autovacuum 相关的问题的方法。</p>
+<h3 id="调整-autovacuum"><a href="#调整-autovacuum" class="headerlink" title="调整 autovacuum"></a>调整 autovacuum</h3><p>调整 autovacuum 显然是第一步。</p>
+<h4 id="全局级别设置"><a href="#全局级别设置" class="headerlink" title="全局级别设置"></a>全局级别设置</h4><p>参数<code>autovacuum_vacuum_cost_limit</code>和<code>autovacuum_vacuum_cost_delay</code>是控制 autovacuum worker 油门的主要两个参数。<code>autovacuum_max_workers</code>控制有多少worker将同时在不同的表上工作。默认情况下，<code>autovacuum_vacuum_cost_limit</code>将被禁用 (-1)，这意味着其他参数的值<code>vacuum_cost_limit</code>将生效。因此，建议的第一件事是设置一个值，<code>autovacuum_vacuum_cost_limit</code>该值将帮助我们单独控制 autovacuum workers。</p>
+<p>我在许多安装中看到的一个常见错误是将其<code>autovacuum_max_workers</code>设置为非常高的值，如 15!。假设这会使 autovacuum 运行得更快。请记住，这<code>autovacuum_vacuum_cost_limit</code>是在所有worker之间分配的。因此，worker数量越多，每个worker的运行速度就越慢。如上所述，较慢的worker意味着无效的清理。而且，它们每一个最多可以占用<code>maintenance_work_mem</code>。一般情况下，默认值<code>autovacuum_max_workers</code>3个就足够了。请考虑仅在绝对必要时才增加它。</p>
+<h4 id="表级分析设置"><a href="#表级分析设置" class="headerlink" title="表级分析设置"></a>表级分析设置</h4><p>实例级别的全面调优设置可能对一些表不起作用。这些异常值需要特殊处理，并且在表级别调整设置可能变得不可避免。我将从那些经常成为 autovacuum 候选者的表开始。</p>
+<p>PostgreSQL 日志参数<code>log_autovacuum_min_duration</code>提供了那些经常成为候选者的表以及那些花费大量时间和精力的 autovacuum 运行的详细信息。就个人而言，我更喜欢以此为起点。通过比较 <code>pg_stat_all_tables</code> 在两个不同时间戳下的 <code>autovacuum_count</code>，可以获得 atuovacuum 运行的摘要。我们需要考虑的是 HOT (Heap Only Tuple)  UPDATE和<code>fillfactor</code>. 可以使用同一个视图(pg_stat_all_tables)的n_tup_hot_upd来分析 HOT UPDATE信息。，调整它可以大大降低 vacuum 需求。</p>
+<p>配备所有这些信息分析，可以调整特定的表级设置。例如：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">alter</span> <span class="token keyword">table</span> t1 <span class="token keyword">set</span> <span class="token punctuation">(</span>autovacuum_vacuum_scale_factor<span class="token operator">=</span><span class="token number">0.0</span><span class="token punctuation">,</span> autovacuum_vacuum_threshold<span class="token operator">=</span><span class="token number">130000</span><span class="token punctuation">,</span> autovacuum_analyze_scale_factor<span class="token operator">=</span><span class="token number">0.0</span><span class="token punctuation">,</span> autovacuum_analyze_threshold<span class="token operator">=</span><span class="token number">630000</span><span class="token punctuation">,</span> autovacuum_enabled<span class="token operator">=</span><span class="token boolean">true</span><span class="token punctuation">,</span> <span class="token keyword">fillfactor</span><span class="token operator">=</span><span class="token number">82</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="补充计划vacuum作业"><a href="#补充计划vacuum作业" class="headerlink" title="补充计划vacuum作业"></a>补充计划vacuum作业</h2><p>我们的目标不是禁用 autovacuum，而是用我们对系统的了解来补充 autovacuum。它根本不复杂。我们能做的最简单的方法是在表或其 TOAST 具有最大年龄的表上运行“VACUUM FREEZE”。</p>
+<p>例如，我们可以有<code>vaccumjob.sql</code>以下内容的文件</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">WITH</span> cur_vaccs <span class="token keyword">AS</span> <span class="token punctuation">(</span><span class="token keyword">SELECT</span> split_part<span class="token punctuation">(</span>split_part<span class="token punctuation">(</span>substring<span class="token punctuation">(</span>query <span class="token keyword">from</span> <span class="token string">'.*\..*'</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">'.'</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">' '</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">as</span> tab <span class="token keyword">FROM</span> pg_stat_activity <span class="token keyword">WHERE</span> query <span class="token operator">like</span> <span class="token string">'autovacuum%'</span><span class="token punctuation">)</span>
+<span class="token keyword">select</span> <span class="token string">'VACUUM FREEZE "'</span><span class="token operator">||</span> n<span class="token punctuation">.</span>nspname <span class="token operator">||</span><span class="token string">'"."'</span><span class="token operator">||</span> <span class="token number">c</span><span class="token punctuation">.</span>relname <span class="token operator">||</span><span class="token string">'";'</span>
+  <span class="token keyword">from</span> pg_class <span class="token number">c</span> 
+  <span class="token keyword">inner</span> <span class="token keyword">join</span> pg_namespace n <span class="token keyword">on</span> <span class="token number">c</span><span class="token punctuation">.</span>relnamespace <span class="token operator">=</span> n<span class="token punctuation">.</span>oid
+  <span class="token keyword">left</span> <span class="token keyword">join</span> pg_class t <span class="token keyword">on</span> <span class="token number">c</span><span class="token punctuation">.</span>reltoastrelid <span class="token operator">=</span> t<span class="token punctuation">.</span>oid <span class="token operator">and</span> t<span class="token punctuation">.</span>relkind <span class="token operator">=</span> <span class="token string">'t'</span>
+<span class="token keyword">where</span> <span class="token number">c</span><span class="token punctuation">.</span>relkind <span class="token operator">in</span> <span class="token punctuation">(</span><span class="token string">'r'</span><span class="token punctuation">,</span><span class="token string">'m'</span><span class="token punctuation">)</span> 
+<span class="token operator">AND</span> <span class="token operator">NOT</span> <span class="token keyword">EXISTS</span> <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> cur_vaccs <span class="token keyword">WHERE</span> tab <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>relname<span class="token punctuation">)</span>
+<span class="token keyword">order</span> <span class="token keyword">by</span> GREATEST<span class="token punctuation">(</span>age<span class="token punctuation">(</span><span class="token number">c</span><span class="token punctuation">.</span>relfrozenxid<span class="token punctuation">)</span><span class="token punctuation">,</span>age<span class="token punctuation">(</span>t<span class="token punctuation">.</span>relfrozenxid<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">DESC</span>
+<span class="token keyword">limit</span> <span class="token number">100</span><span class="token punctuation">;</span>
+\gexec
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>该查询获取 100 个当前未进行 autovacuum 的旧表，并对它们运行“VACUUM FREEZE”。（末尾的 \gexec 执行查询输出）</p>
+<p>这可以使用corn来调度低活动窗口，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">20 11 * * * /full/path/to/psql -X -f /path/to/vacuumjob.sql <span class="token operator">></span> /tmp/vacuumjob.out 2<span class="token operator">></span><span class="token operator">&amp;</span>1
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果有多个低影响的窗口，那么可以使用多个时间表来利用它们。</p>
+<p>实际上，我们已经看到，基于 table age 方法的补充的、预定的 vacuum 作业具有以下积极作用</p>
+<ol>
+<li>这些表在高峰时段再次成为候选者的机会大大降低。</li>
+<li>能够在 vacuum 和 freeze 操作的非高峰时段非常有效地利用服务器资源。</li>
+<li>由于候选者是根据与默认标准（scale factor和threshold）完全不同的标准（表年龄）选择的，因此消除了一些表永远挨饿的可能性。此外，这消除了同一张表一次又一次成为 vacuum 候选者的可能性。</li>
+<li>在客户/用户环境中，预防 autovacuum 回卷几乎再也不会被报告。</li>
+</ol>
+<h2 id="概括"><a href="#概括" class="headerlink" title="概括"></a>概括</h2><p>autovacuum没有调优，或者设置很差，从实例级一直用到表级，这种情况并不少见。总结一下：</p>
+<ol>
+<li>默认设置在大多数系统中可能效果不佳。 在几个表上重复运行 autovacuum 而其他表缺乏 autovacuum 是很常见的。</li>
+<li>糟糕的设置可能会导致 autovacuum worker 占用相当一部分服务器资源而收效甚微。</li>
+<li>当系统进行大量事务时，autovacuum 自然会在错误的时间启动。</li>
+<li>实际上，对于那些处理繁重事务和具有大量事务的表，并且预计会有峰值和负载高峰时间段的系统来说，计划的 vacuum 作业变得很有必要。</li>
+</ol>
+<p>清晰的分析和调整是很重要的。我们总是强烈建议你做一个自定义的 vacuum 工作，它占用你的知识对系统和时间窗口的影响最小。</p>
 
                 
             </div>
@@ -496,7 +500,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/checkpoint-jin-cheng/">https://jinlid.github.io/2023/checkpoint-jin-cheng/</a>
+                    <a href="https://jinlid.github.io/2023/vacuum-diao-you-he-zi-ding-yi-yu-ding-vacuum-zuo-ye/">https://jinlid.github.io/2023/vacuum-diao-you-he-zi-ding-yi-yu-ding-vacuum-zuo-ye/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -614,29 +618,30 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2023/autovacuum-diao-you/">
+                <a href="/2023/vacuum-diao-you-he-zi-ding-yi-yu-ding-vacuum-zuo-ye/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="autovacuum调优">
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="VACUUM调优和自定义预定vacuum作业">
                         
-                        <span class="card-title">autovacuum调优</span>
+                        <span class="card-title">VACUUM调优和自定义预定vacuum作业</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            这篇博问介绍关于autovacuum调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。
+                            
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-22
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-06-19
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -649,6 +654,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -667,44 +673,32 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/jian-cha-dian-de-yi-yi-shi-shi-me/">
+                <a href="/2023/tcp-lian-jie-guan-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="checkpoint进程">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">checkpoint进程</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            在执行大量写操作的系统上，调优检查点对于获得良好的性能至关重要。然而，检查点是我们经常发现混淆和配置问题的地方之一，那么让我带你了解一下检查点，它们做什么以及如何在PostgreSQL中调优它们。
+                            
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-20
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-04-18
                             </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                    数据库
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
                             
                         </span>
                     </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
                 </div>
                 
             </div>

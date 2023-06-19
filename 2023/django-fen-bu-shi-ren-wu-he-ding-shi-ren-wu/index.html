@@ -512,7 +512,7 @@ __all__ <span class="token operator">=</span> <span class="token punctuation">[<
 <p>函数updateData由装饰器shared_task转化成分布式任务updateData，它设有参数id和info，分别代表模型Personinfo的主键id和模型字段的修改内容。分布式任务没有要求函数设置返回值，如果函数设有返回值，它就作为分布式任务的执行结果，否则将执行结果设为None，所有的执行结果都会记录在数据表django_celery_results_taskresult的result字段中。</p>
 <p>最后在testcelery中编写分布式任务updateData的触发条件，换句话说，当用户访问特定的网址时，视图函数或视图类将调用分布式任务updateData，由Celery框架执行分布式任务，视图函数或视图类只需返回响应内容即可，无需等待分布式任务的执行过程。</p>
 <p>4，在testcelery的urls.py和index的urls.py中定义路由</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># estcelery的urls.py</span>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># testcelery的urls.py</span>
 <span class="token keyword">from</span> django<span class="token punctuation">.</span>contrib <span class="token keyword">import</span> admin
 <span class="token keyword">from</span> django<span class="token punctuation">.</span>urls <span class="token keyword">import</span> path<span class="token punctuation">,</span>include
 
@@ -721,55 +721,6 @@ celery -A testcelery beat -l info -S django
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/3.cha-xun-chu-li/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="第3章 查询处理">
-                        
-                        <span class="card-title">第3章 查询处理</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-19
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
                 <a href="/2023/flask-postgresql-bootstrap-shi-xian-jian-suo-xi-tong/">
                     <div class="card-image">
                         
@@ -786,9 +737,9 @@ celery -A testcelery beat -l info -S django
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-16
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-02-16
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -806,6 +757,55 @@ celery -A testcelery beat -l info -S django
                     
                     <a href="/tags/flask/">
                         <span class="chip bg-color">flask</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2023/postgresql-fu-wu-qi-jia-gou/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="PostgreSQL服务器架构">
+                        
+                        <span class="card-title">PostgreSQL服务器架构</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            PostgreSQL 集群启动时会启动几个进程。这些进程管理相当多的文件 I/O，管理其他进程，并处理内存分配和许多其他工作。在本文中，我们将重点关注进程及其角色、内存管理以及它们如何协同工作。我们将从再次列出流程开始。
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-11
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>

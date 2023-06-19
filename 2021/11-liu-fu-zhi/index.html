@@ -4,8 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="第10章 基础备份和时间点恢复, jinlid&#39;s blog">
-    <meta name="description" content="在线数据库备份大致可以分为两类:逻辑备份和物理备份。虽然这两种方法各有优缺点，但逻辑备份有一个缺点;花太多时间在它的表现上。特别是，对大型数据库进行备份需要很长时间，从备份数据恢复这样的数据库需要更多的时间。相反，物理备份使得在相对较短的时">
+    <meta name="keywords" content="11 流复制, jinlid&#39;s blog">
+    <meta name="description" content="同步流复制是在9.1版本中实现的。这是一个所谓的单主-多从类型的复制，主和从这两个术语在PostgreSQL中通常分别被称为主和备。
+
+
+[TOC]
+这种本地复制特性基于日志传送(一种通用的复制技术)，其中主服务器继续发送WAL数据，然后每">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -17,7 +21,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>第10章 基础备份和时间点恢复 | jinlid&#39;s blog</title>
+    <title>11 流复制 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -337,12 +341,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">第10章 基础备份和时间点恢复</h1>
+                    <h1 class="description center-align post-title">11 流复制</h1>
                 </div>
             </div>
         </div>
@@ -391,7 +395,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-11-20
+                    2021-08-13
                 </div>
                 
 
@@ -412,179 +416,147 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>在线数据库备份大致可以分为两类:逻辑备份和物理备份。虽然这两种方法各有优缺点，但逻辑备份有一个缺点;花太多时间在它的表现上。特别是，对大型数据库进行备份需要很长时间，从备份数据恢复这样的数据库需要更多的时间。相反，物理备份使得在相对较短的时间内备份和恢复大型数据库成为可能，因此在实际系统中是一个非常重要和有用的特性。</p>
+                <p>同步流复制是在9.1版本中实现的。这是一个所谓的单主-多从类型的复制，主和从这两个术语在PostgreSQL中通常分别被称为主和备。</p>
 <span id="more"></span>
 
 <p>[TOC]</p>
-<p>在PostgreSQL中，从8.0版本开始就有了在线物理完全备份，一个运行的整个数据库集群的快照(即物理备份数据)被称为基本备份。在7.4或更早的版本中，PostgreSQL只支持逻辑备份(逻辑完全备份和部分备份，以及数据导出)。</p>
-<p>时间点恢复（point -in- time Recovery, PITR）也从8.0版本开始提供，该特性使用持续归档特性创建的基本备份和归档日志将数据库集群恢复到任何时间点。例如，即使您犯了一个严重的错误（例如截断所有表），该特性也使您能够恢复在您犯错误之前的点的数据库。</p>
-<p>本章将介绍以下主题:</p>
+<p>这种本地复制特性基于日志传送(一种通用的复制技术)，其中主服务器继续发送WAL数据，然后每个备用服务器立即重播接收到的数据。</p>
+<p>本章主要介绍流复制的工作原理：</p>
 <ul>
-<li><p>什么是基本备份</p>
+<li><p>流复制如何启动</p>
 </li>
-<li><p>PITR如何工作</p>
+<li><p>如何在主服务器和备用服务器之间传输数据</p>
 </li>
-<li><p>什么是时间线</p>
+<li><p>主服务器如何管理多个备用服务器</p>
 </li>
-<li><p>什么是时间轴历史文件</p>
+<li><p>主服务器如何检测备用服务器的故障</p>
 </li>
 </ul>
-<h3 id="10-1-基础备份"><a href="#10-1-基础备份" class="headerlink" title="10.1 基础备份"></a>10.1 基础备份</h3><p>首先，使用底层命令创建基本备份的标准过程如下所示:</p>
-<p>（1）发出pg_backup_start命令(版本14或更早的版本，pg_start_backup；</p>
-<p>（2）使用归档命令对数据库集群进行快照；</p>
-<p>（3）发出pg_backup_stop命令(版本14或更早的版本，pg_stop_backup</p>
-<p>对于数据库系统管理员来说，这个简单的过程很容易使用，因为它不需要特殊的工具，只需要常用的工具（如复制命令或类似的归档工具）就可以创建基础备份。此外，在这个过程中，不需要表锁，所有用户都可以发出查询而不受备份操作的影响。这些都是相对于其他主要开源RDBMS的巨大优势。</p>
-<p>进行基本备份的更简单方法是使用pg_basebackup实用程序，它在内部发出那些底层命令。</p>
-<p><img src="/medias/image/fig-10-01.png" alt="图10.1 进行基础备份"></p>
-<p>这两个命令显然是理解PITR的关键点之一，我们将在以下几节中探讨它们。</p>
-<p>这里定义了pg_backup_start和pg_backup_stop命令：src/backend/access/transam/xlogfuncs.c。</p>
-<h4 id="10-1-1-pg-backup-start-Ver-14或更早版本，pg-start-backup"><a href="#10-1-1-pg-backup-start-Ver-14或更早版本，pg-start-backup" class="headerlink" title="10.1.1 pg_backup_start (Ver.14或更早版本，pg_start_backup)"></a>10.1.1 pg_backup_start (Ver.14或更早版本，pg_start_backup)</h4><p>pg_backup_start为基本备份做准备。正如第9.8节所讨论的，恢复过程从REDO点开始，因此pg_backup_start必须做检查点来显式地在基本备份开始时创建REDO点。此外，检查点的检查点位置必须保存在pg_control之外的文件中，因为常规检查点可能在备份期间执行多次。pg_backup_start执行以下4个操作:</p>
-<p>（1）强制进入整页写模式。</p>
-<p>（2）切换到当前的WAL段文件(版本8.4或更高版本)。</p>
-<p>（3）做检查点。</p>
-<p>（4）创建一个backup_label文件——该文件创建在基本目录的顶层，包含关于基础备份本身的基本信息，例如该检查点的检查点位置。</p>
-<p>第三和第四项行动是该命令的核心；执行第一个和第二个操作是为了更可靠地恢复数据库集群。</p>
-<p>backup_label文件包含以下6项(版本11或更高版本为7项：</p>
+<p>尽管第一个复制特性(仅用于异步复制)是在9.0版本中实现的，但在9.1版本中已经被用于同步复制的新实现(目前正在使用)所取代。</p>
+<h3 id="11-1-启动流复制"><a href="#11-1-启动流复制" class="headerlink" title="11.1 启动流复制"></a>11.1 启动流复制</h3><p>在流复制中，三种进程协同工作。主服务器上的walsender进程将WAL数据发送到备用服务器，然后，备用服务器上启动walreceiver进程接收和startup回放这些数据。walsender和walreceiver使用单一TCP连接进行通信。</p>
+<p>在本节中，我们将探索流复制的启动顺序，以了解这些进程是如何启动的，以及它们之间的连接是如何建立的。图11.1显示了流复制的启动顺序图:</p>
+<p> <img src="/medias/image/fig-11-01.png" alt="图11.1 复制启动顺序"></p>
+<p>(1) 启动主备服务器。</p>
+<p>(2) 备服务器启动启动进程。</p>
+<p>(3) 备服务器启动walreceiver进程。</p>
+<p>(4) walreceiver向主服务器发送连接请求。如果主服务器没有运行，walreceiver会定期发送这些请求。</p>
+<p>(5) 当主服务器收到连接请求时，启动walsender进程，walsender和walreceiver之间建立TCP连接。</p>
+<p>(6) walreceiver发送备端数据库集群最新的LSN。一般来说，这个阶段在信息技术领域被称为握手。</p>
+<p>(7) 如果备端LSN的最新LSN小于主端LSN(备端LSN &lt;主端LSN)， walsender将前一个LSN的WAL数据发送给后一个LSN。这样的WAL数据是由存储在主服务器的pg_xlog子目录(在版本10或更高版本中为pg_wal子目录)中的WAL段提供的。备用服务器重新回放收到的WAL数据。在这个阶段中，备用服务器赶上了主服务器，因此称为追赶。</p>
+<p>(8) 流复制开始工作。</p>
+<p>每个walsender进程保持一个适合于连接walreceiver或任何应用程序的工作阶段的状态(注意，它不是walreceiver或连接walsender的应用程序的状态)。以下是它可能的状态:</p>
 <ul>
-<li><p>CHECKPOINT LOCATION——这是LSN的位置，该命令创建的检查点被记录在这里。</p>
+<li><p>startup——从开始walsender到握手结束。见图11.1(5)-(6)。</p>
 </li>
-<li><p>START WAL LOCATION——这不是用在PITR上，而是用在第11章描述的流复制上。它被命名为“START WAL LOCATION”，因为在复制模式下的备用服务器在初始启动时只读取该值一次。</p>
+<li><p>catch-up——在追赶阶段。见图11.1(7)。</p>
 </li>
-<li><p>BACKUP METHOD——这是用于进行基本备份的方法。(‘pg_backup_start’或’pg_basebackup’)</p>
+<li><p>streaming——当流复制正在工作时。见图11.1(8)。</p>
 </li>
-<li><p>BACKUP FROM——显示该备份是从主服务器还是从备用服务器获取的。</p>
-</li>
-<li><p>START TIME——这是pg_backup_start执行时的时间戳。</p>
-</li>
-<li><p>LABEL——这是在pg_backup_start中指定的标签。</p>
-</li>
-<li><p>START TIMELINE——这是备份启动的时间轴。这是用于完整性检查的，已在版本11中引入。</p>
+<li><p>backup—为备份工具(如pg_basebackup实用程序)发送整个数据库集群的文件。</p>
 </li>
 </ul>
-<p>backup_label</p>
-<p>在9.6版本中backup_label文件的实际示例如下所示:</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> <span class="token function">cat</span> /usr/local/pgsql/data/backup_label
-START WAL LOCATION: 0/9000028 <span class="token punctuation">(</span>file 000000010000000000000009<span class="token punctuation">)</span>
-CHECKPOINT LOCATION: 0/9000060
-BACKUP METHOD: pg_start_backup
-BACKUP FROM: master
-START TIME: 2022-11-18 11:45:19 GMT
-LABEL: Weekly Backup
+<p>pg_stat_replication视图显示所有正在运行的walsender的状态。一个例子如下:</p>
+<pre class="line-numbers language-sql-monosp"><code class="language-sql-monosp">testdb=# SELECT application_name,state FROM pg_stat_replication;
+ application_name |   state
+------------------+-----------
+ standby1         | streaming
+ standby2         | streaming
+ pg_basebackup    | backup
+(3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>正如你可以想象的那样，当你使用这个基础备份恢复一个数据库时，PostgreSQL从backup_label文件中取出’ CHECKPOINT LOCATION ‘从适当的归档日志中读取检查点记录，然后，从它的记录中获取REDO点并开始恢复过程。(细节将在下一节中描述)。</p>
-<h4 id="10-1-2-pg-backup-stop-Ver-14或更早版本，pg-stop-backup"><a href="#10-1-2-pg-backup-stop-Ver-14或更早版本，pg-stop-backup" class="headerlink" title="10.1.2 pg_backup_stop (Ver.14或更早版本，pg_stop_backup)"></a>10.1.2 pg_backup_stop (Ver.14或更早版本，pg_stop_backup)</h4><p>pg_backup_stop执行以下5个操作来完成备份。</p>
-<ol>
-<li><p>如果pg_backup_start强制更改了非全页写模式，则重置为非全页写模式。</p>
-</li>
-<li><p>写入备份端XLOG记录。</p>
-</li>
-<li><p>切换WAL段文件。</p>
-</li>
-<li><p>创建备份历史文件——该文件包含backup_label文件的内容和执行pg_backup_stop时的时间戳。</p>
-</li>
-<li><p>删除backup_label文件——从基础备份恢复时需要备份backup_label文件，复制完成后，在原数据库集群中就不需要备份了。</p>
-</li>
-</ol>
-<p>备份历史文件的命名方法如下所示。</p>
-<p>{WAL段}.{启动基本备份时的偏移值}.backup</p>
-<h3 id="10-2-时间点恢复如何工作"><a href="#10-2-时间点恢复如何工作" class="headerlink" title="10.2 时间点恢复如何工作"></a>10.2 时间点恢复如何工作</h3><p>图10.2显示了PITR的基本概念。在PITR模式下的PostgreSQL在基本备份上重放归档日志的WAL数据，从pg_backup_start创建的REDO点到您想要恢复的点。在PostgreSQL中，要恢复的点被称为恢复目标。</p>
-<p><img src="/medias/image/fig-10-02.png" alt="图10.2 PITR的基本概念"></p>
-<p>下面是对PITR如何工作的描述。假设你在2022年11月18日格林尼治时间12:05犯了一个错误。您应该删除数据库集群并使用之前所做的基础备份恢复新的数据库集群。然后，设置参数restore_command的命令，并在recovery.conf（版本11或更早）或postgresql.conf（版本12或更高）中设置参数recovery_target_time在出错点的时间(在本例中为12:05 GMT)。</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># Place archive logs under /mnt/server/archivedir directory.</span>
-<span class="token attr-name">restore_command</span> <span class="token punctuation">=</span> <span class="token attr-value">'cp /mnt/server/archivedir/%f %p'</span>
-<span class="token attr-name">recovery_target_time</span> <span class="token punctuation">=</span> <span class="token attr-value">"2022-11-18 12:05 GMT"</span>
+<p>如上所示，两个walsender正在运行，为连接的备用服务器发送WAL数据，另一个walsender正在运行，为pg_basebackup实用程序发送数据库集群的所有文件。</p>
+<p><strong>如果备用服务器长时间处于停止状态后重新启动，会发生什么情况?</strong></p>
+<p>在版本9.3或更早的版本中，如果备用服务器所需的主服务器的WAL段已经被回收，备用服务器就不能赶上主服务器。对于这个问题没有可靠的解决方案，只能为配置参数wal_keep_segments设置一个较大的值，以减少发生这种情况的可能性。这是一个权宜之计。</p>
+<p>在9.4或更高版本中，可以通过使用复制槽来防止这个问题。复制槽是一个扩展了WAL数据发送灵活性的特性，主要用于逻辑复制，这也为这个问题提供了解决方案——通过暂停回收过程，可以将包含pg_xlog(或pg_wal，如果版本10或更高)下未发送数据的WAL段文件保留在复制槽中。详细信息请参考官方文件。</p>
+<h3 id="11-2-如何进行流复制"><a href="#11-2-如何进行流复制" class="headerlink" title="11.2 如何进行流复制"></a>11.2 如何进行流复制</h3><p>流复制有两个方面:日志传送和数据库同步。日志传送显然是其中的一个方面，因为流复制基于它——每当发生写入时，主服务器将WAL数据发送到连接的备用服务器。同步复制需要数据库同步—主服务器与每个多备用服务器通信以同步其数据库集群。</p>
+<p>为了准确地理解流复制是如何工作的，我们应该研究一个主服务器如何管理多个备用服务器。为了简单起见，本节将描述特殊情况(即单主单备系统)，而一般情况(单主多备系统)将在下一节中描述。</p>
+<h4 id="11-2-1-主备机与同步备机之间的通信"><a href="#11-2-1-主备机与同步备机之间的通信" class="headerlink" title="11.2.1 主备机与同步备机之间的通信"></a>11.2.1 主备机与同步备机之间的通信</h4><p>假设备用服务器处于同步复制模式，但配置参数hot-standby被禁用，wal_level为’archive’。主服务器的主要参数如下所示:</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">'standby1'</span>
+<span class="token attr-name">hot_standby</span> <span class="token punctuation">=</span> <span class="token attr-value">off</span>
+<span class="token attr-name">wal_level</span> <span class="token punctuation">=</span> <span class="token attr-value">archive</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>当PostgreSQL启动时，如果存在recovery.conf（版本11或更早）或recovery，它将进入PITR模式。Signal(版本12或更高)，以及数据库集群中的backup_label。</p>
-<p> <strong>recovery.conf</strong></p>
-<p>recovery.conf在版本12中已经被废除，所有与恢复相关的参数都应该写入postgresql.conf中。详见官方文档。</p>
-<p>在版本12或更高版本中，当您从basebackup恢复服务器时，需要创建一个名为recovery的空文件。数据库集群目录中的信号文件。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">touch</span> /usr/local/pgsql/data/recovery.signal
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>PITR过程与第9章描述的正常恢复过程几乎相同；它们之间唯一的区别是以下两点:</p>
-<p>1 从哪里读取WAL段/Archive日志?</p>
+<p>此外，在第9.5节提到的三个写入WAL数据的触发器中，我们主要关注这里提交的事务。</p>
+<p>假设主服务器上的一个后端进程以自动提交模式发出一条简单的INSERT语句。后端启动事务，发出INSERT语句，然后立即提交事务。让我们进一步探讨如何完成这个提交操作。如图11.2中顺序图所示:</p>
+<p><img src="/medias/image/fig-11-02.png" alt="图11.2 流复制的通信顺序图"></p>
+<p>(1) 后端进程通过执行XLogInsert()和XLogFlush()函数将WAL数据写入和刷新到WAL段文件中。</p>
+<p>(2) walsender进程将写入WAL段的WAL数据发送给walreceiver进程。</p>
+<p>(3) 后端进程发送WAL数据后，继续等待备用服务器的ACK响应。更准确地说，后端进程通过执行内部函数SyncRepWaitForLSN()获得一个闩锁，并等待它被释放。</p>
+<p>(4) 备用服务器上的walreceiver通过write()系统调用将收到的WAL数据写入备用服务器的WAL段，并返回一个ACK响应给walsender。</p>
+<p>(5) walreceiver使用系统调用(如fsync())将WAL数据刷新到WAL段，并向walsender返回另一个ACK响应，并通知启动进程WAL数据更新。</p>
+<p>(6) 启动过程回放已经写入WAL段的WAL数据。</p>
+<p>(7) walsender在收到walreceiver的ACK响应后，释放后端进程的闩锁，然后，后端进程的提交或中止操作将完成。锁存释放的时间取决于参数synchronous_commit。它是’on’(默认)，当接收到步骤(5)的ACK时，闩锁被释放，而当接收到步骤(4)的ACK时，闩锁是’remote_write’。</p>
+<p>如果配置参数wal_level为’hot_standby’或’logical’， PostgreSQL将在提交或中止操作记录之后写入一条关于热备特性的WAL记录。(在这个例子中，PostgreSQL不写那个记录，因为它是“存档”。)</p>
+<p>每个ACK响应将备用服务器的内部信息通知给主服务器。它包括以下四个项目:</p>
 <ul>
-<li><p>正常恢复模式——从基目录下的pg_xlog子目录(在版本10或更高版本中是pg_wal子目录)。</p>
+<li><p>写入最新WAL数据的LSN位置。</p>
 </li>
-<li><p>PITR模式——从配置参数archive_command中设置的归档目录。</p>
+<li><p>刷新最新WAL数据的LSN位置。</p>
+</li>
+<li><p>LSN的位置，在启动过程中，最新的WAL数据已经被重放。</p>
+</li>
+<li><p>发送此响应时的时间戳。</p>
 </li>
 </ul>
-<p>2 检查点位置从哪里读取?</p>
-<ul>
-<li><p>正常恢复模式-从pg_control文件。</p>
-</li>
-<li><p>PITR模式-从backup_label文件。</p>
-</li>
-</ul>
-<p>PITR流程概述如下：</p>
-<p>（1）为了找到REDO点，PostgreSQL使用内部函数read_backup_label从backup_label文件中读取’CHECKPOINT LOCATION’的值。</p>
-<p>（2）PostgreSQL从recovery.conf（版本11或更早）或PostgreSQL .conf（版本12或更高）中读取一些参数值；在本例中，使用restore_command和recovery_target_time。</p>
-<p>（3）PostgreSQL从REDO点开始重放WAL数据，这可以很容易地从’CHECKPOINT LOCATION’的值中获得。通过执行参数resotere_command中写入的命令，从归档日志中读取WAL数据，并将归档日志从归档区域复制到临时区域。(临时区域内复制的日志文件在使用后会被删除)</p>
-<p>在这个例子中，PostgreSQL从REDO点读取并重放WAL数据到时间戳’20022-11-18 12:05:00’之前的那个点，因为参数recovery_target_time被设置为这个时间戳。如果恢复目标没有设置为recovery.conf（版本11或更早）或PostgreSQL.conf（版本12或更高），PostgreSQL将会重放直到归档日志结束。</p>
-<p>（4）当恢复过程完成时，一个时间轴历史文件，例如’00000002.History’，在pg_xlog子目录中创建（在版本10或更高版本中是pg_wal子目录）；如果启用了归档日志功能，则在归档目录下也会创建同名文件。该文件的内容和作用将在以下部分中进行描述。</p>
-<p>提交和中止操作的记录包含每个操作完成的时间戳（两个操作的XLOG数据部分分别在xl_xact_commit和xl_xact_abort中定义）。因此，如果将目标时间设置为参数recovery_target_time，那么当PostgreSQL回放提交或中止操作的XLOG记录时，它可以选择是否继续恢复。当每个动作的XLOG记录被重放时，PostgreSQL比较目标时间和记录中写入的每个时间戳；如果时间戳超过目标时间，则PITR进程将结束。</p>
-<p>函数read_backup_label在src/backend/access/transam/xlog.c中定义。</p>
-<p>结构xl_xact_commit和xl_xact_abort在src/include/access/xact.h中定义。</p>
-<p>为什么我们可以使用常见的归档工具来进行基本备份?</p>
-<p>恢复过程是使数据库集群处于一致状态的过程，尽管集群是不一致的。由于PITR基于恢复过程，所以即使基本备份是一堆不一致的文件，它也可以恢复数据库集群。这就是为什么我们可以使用普通归档工具而不需要文件系统快照功能或特殊工具的原因。</p>
-<h3 id="10-3-时间线和时间轴历史文件"><a href="#10-3-时间线和时间轴历史文件" class="headerlink" title="10.3 时间线和时间轴历史文件"></a>10.3 时间线和时间轴历史文件</h3><p>PostgreSQL中的时间轴用于区分原始数据库集群和恢复后的数据库集群，是PITR的核心概念。在本节中，将描述与时间轴相关的两个内容：timelineId和时间轴历史文件。</p>
-<h4 id="10-3-1-时间线"><a href="#10-3-1-时间线" class="headerlink" title="10.3.1 时间线"></a>10.3.1 时间线</h4><p>每个时间轴都有一个对应的timelineId，这是一个从1开始的4字节无符号整数。</p>
-<p>为每个数据库集群分配一个单独的timelineId。使用initdb工具创建的原始数据库集群的timelineId为1。每当数据库集群恢复时，timelineId将增加1。例如，在上一节的示例中，从原集群中恢复的集群的timelineId为2。</p>
-<p>图10.3从timelineId的角度说明了PITR过程。首先，我们移除当前的数据库集群，恢复过去所做的基础备份，以便回到恢复的起点，这种情况如图中红色箭头曲线所示。接下来，我们启动PostgreSQL服务器，该服务器通过沿着初始时间轴(timelineId 1)跟踪，从pg_backup_start创建的REDO点直到恢复目标重放归档日志中的WAL数据，这种情况如图中蓝色箭头线所示。然后，一个新的时间轴id 2被分配给恢复的数据库集群，PostgreSQL在新的时间轴上运行。</p>
-<p><img src="/medias/image/fig-10-03.png" alt="图10.3 原数据库集群与恢复后的数据库集群之间的timelineId关系"></p>
-<p>如第9章所述，WAL段文件名的前8位等于为每个段创建的数据库集群的timelineId。当timelineId被改变时，WAL段文件名也会被改变。</p>
-<p>重点介绍WAL段文件的恢复过程。假设我们使用两个归档日志’000000010000000000000009’和’00000001000000000000000A’恢复数据库集群。新恢复的数据库集群被分配为timelineId 2，PostgreSQL从’00000002000000000000000A’创建WAL段。图10.4显示了这种情况。</p>
-<p><img src="/medias/image/fig-10-04.png" alt="图10.3 原数据库集群与恢复后的数据库集群之间的timelineId关系"></p>
-<h4 id="10-3-2-时间轴历史文件"><a href="#10-3-2-时间轴历史文件" class="headerlink" title="10.3.2 时间轴历史文件"></a>10.3.2 时间轴历史文件</h4><p>当PITR进程完成时，一个名为’00000002’的时间轴历史文件。History ‘是在归档目录和pg_xlog子目录（在版本10或更高版本中是pg_wal子目录）下创建的。这个文件记录了它从哪个时间轴分叉，以及什么时候分叉。</p>
-<p>该文件的命名规则如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token string">"8-digit new timelineId"</span>.history
+<p>Walreceiver不仅在写入和刷新WAL数据时返回ACK响应，而且还定期作为备用服务器的心跳返回ACK响应。因此，主服务器总是掌握所有连接的备用服务器的状态。</p>
+<p>通过发出如下所示的查询，可以显示连接的备用服务器的LSN相关信息。</p>
+<pre class="line-numbers language-sql-monosp"><code class="language-sql-monosp">testdb=# SELECT application_name AS host,
+        write_location AS write_LSN, flush_location AS flush_LSN, 
+        replay_location AS replay_LSN FROM pg_stat_replication;
+
+   host   | write_lsn | flush_lsn | replay_lsn 
+----------+-----------+-----------+------------
+ standby1 | 0/5000280 | 0/5000280 | 0/5000280
+ standby2 | 0/5000280 | 0/5000280 | 0/5000280
+(2 rows)
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>心跳的间隔设置为参数wal_receiver_status_interval，默认为10秒。</p>
+<h4 id="11-2-2-发生故障时的行为"><a href="#11-2-2-发生故障时的行为" class="headerlink" title="11.2.2 发生故障时的行为"></a>11.2.2 发生故障时的行为</h4><p>在本小节中，描述了当同步备用服务器发生故障时主服务器的行为，以及如何处理这种情况。</p>
+<p>即使同步备用服务器发生故障，不再能够返回ACK响应，主服务器也会一直等待响应。因此，正在运行的事务无法提交，后续的查询处理也无法启动。换句话说，所有主要的服务器操作实际上都停止了。(流复制不支持通过超时自动恢复到异步模式的功能)</p>
+<p>有两种方法可以避免这种情况。其中一种方法是使用多个备用服务器来提高系统可用性，另一种方法是通过手动执行以下步骤从同步模式切换到异步模式。</p>
+<p>(1) 将参数“synchronous_standby_names”设置为“empty string”。</p>
+<p>Synchronous_standby_names = “</p>
+<p>(2) 执行带reload选项的pg_ctl命令。</p>
+<p>pg_ctl -D $PGDATA reload</p>
+<p>上述过程不会影响连接的客户端。主服务器继续进行事务处理，同时保留客户端和各自后端进程之间的所有会话。</p>
+<h3 id="11-3-管理多个备用服务器"><a href="#11-3-管理多个备用服务器" class="headerlink" title="11.3 管理多个备用服务器"></a>11.3 管理多个备用服务器</h3><p>在本节中，将描述流复制与多个备用服务器的工作方式。</p>
+<h4 id="11-3-1-Sync-priority和sync-state"><a href="#11-3-1-Sync-priority和sync-state" class="headerlink" title="11.3.1 Sync_priority和sync_state"></a>11.3.1 Sync_priority和sync_state</h4><p>主服务器将sync_priority和sync_state提供给所有受管理的备用服务器，并根据其各自的值处理每个备用服务器。(主服务器给出这些值，即使它只管理一个备用服务器;在前面的章节中没有提到这一点。)</p>
+<p>Sync_priority同步模式下备用服务器的优先级，为固定值。越小的值表示优先级越高，而0是表示“处于异步模式”的特殊值。备用服务器的优先级按照主服务器的配置参数synchronous_standby_names中列出的顺序给出。例如，以下配置中，“standby1”和“standby2”的优先级分别为1和2。</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">'standby1, standby2'</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>时间轴历史文件至少包含一行，每行由以下三部分组成:</p>
+<p>(此参数中未列出的备用服务器为异步模式，其优先级为0)</p>
+<p>Sync_state是备用服务器的状态。根据所有备用服务器的运行状态和各个优先级的不同，它是可变的。以下是可能的状态:</p>
 <ul>
-<li><p>timelineId——用于恢复的归档日志的timelineId。</p>
-</li>
-<li><p>LSN——发生WAL段切换的LSN位置。</p>
-</li>
-<li><p>reason——人类可读的解释为什么时间轴被改变。</p>
-</li>
+<li><strong>Sync</strong> 是所有工作备用服务器(异步服务器除外)中优先级最高的同步备用服务器的状态。</li>
+<li>**Potential **是所有工作备用服务器(异步服务器除外)中优先级第二或更低的备用同步备用服务器的状态。如果同步备用失败，它将被替换为潜在备用中优先级最高的备用。</li>
+<li>**Async **是异步-备用服务器的状态，这个状态是固定的。主服务器以与潜在备用相同的方式处理异步备用，只是它们的sync_state永远不会是’sync’或’potential’。</li>
 </ul>
-<p>具体例子如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> <span class="token function">cat</span> /home/postgres/archivelogs/00000002.history
-1	  0/A000198	before 2022-11-20 12:05:00.861324+00
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>含义如下：</p>
-<p>数据库集群（timelineId=2）基于timelineId为1的基本备份，通过重放归档日志直到0/A000198，在’2022-11-20 12:05:00.861324+00’之前的时间进行恢复。</p>
-<p>通过这种方式，每个时间轴历史文件告诉我们单个恢复的数据库集群的完整历史。此外，它也用于PITR过程本身。细节将在下一节中解释。</p>
-<p>时间轴历史文件格式在9.3版更改。版本9.3或更高版本和更早版本的格式如下所示，但不详细说明。</p>
-<p>9.3以后版本：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">timelineId	LSN	<span class="token string">"reason"</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>9.2之前版本：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">timelineId	WAL_segment	<span class="token string">"reason"</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h3 id="10-4-使用时间轴历史文件的时间点恢复"><a href="#10-4-使用时间轴历史文件的时间点恢复" class="headerlink" title="10.4 使用时间轴历史文件的时间点恢复"></a>10.4 使用时间轴历史文件的时间点恢复</h3><p>时间轴历史文件在第二个和后续的PITR流程中起着重要作用。通过尝试第二次恢复，我们将探索如何使用它。</p>
-<p>再一次，假设您在timelineId为2的恢复数据库集群中在12:15:00发生了错误。在这种情况下，要恢复数据库集群，你应该创建一个新的recovery.conf，如下所示：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">restore_command <span class="token operator">=</span> <span class="token string">'cp /mnt/server/archivedir/%f %p'</span>
-recovery_target_time <span class="token operator">=</span> <span class="token string">"2022-11-20 12:15:00 GMT"</span>
-recovery_target_timeline <span class="token operator">=</span> 2
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>参数recovery_target_time设置您犯新错误的时间，并将recovery_target_timeline设置为’2’，以便按照其时间轴进行恢复。</p>
-<p>重新启动PostgreSQL服务器并进入PITR模式，在目标时间沿timelineId 2恢复数据库，见图10.5。</p>
-<p><img src="/medias/image/fig-10-05.png" alt="图10.5 按照时间线id 2在12:15:00恢复数据库"></p>
-<p>（1）PostgreSQL从backup_label文件中读取’CHECKPOINT LOCATION’的值。</p>
-<p>（2）从recovery.conf中读取一些参数的值；本例中为restore_command、recovery_target_time和recovery_target_timeline。</p>
-<p>（3）PostgreSQL读取时间轴历史文件’00000002.History’，它对应于参数recovery_target_timeline的值。</p>
-<p>（4）PostgreSQL通过以下步骤重放WAL数据：</p>
-<ul>
-<li>从REDO点到LSN ‘0/A000198 ‘，它写在00000002。历史文件，对timelineId为1的相应归档日志的WAL数据进行读取和回放。</li>
-<li>从LSN ‘0/A000198’之后到时间戳’2022-11-20 12:15:00 之前，PostgreSQL读取和重放timelineId为2的WAL数据(适当的归档日志)。</li>
-</ul>
-<p>（5）当恢复过程完成时，当前的时间轴id将前进到3，新的时间轴历史文件名为00000003。在pg_xlog子目录（如果版本10或更高版本则是pg_wal子目录）和归档目录中创建历史记录。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> <span class="token function">cat</span> /home/postgres/archivelogs/00000003.history
-1         0/A000198     before 2022-11-20 12:05:00.861324+00
-2         0/B000078     before 2022-11-20 12:15:00.927133+00
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>当您多次执行PITR时，您应该显式地设置一个timelineId来使用适当的时间轴历史文件。</p>
-<p>这样，时间轴历史文件既是数据库集群的历史日志，也是PITR进程的恢复指令文档。</p>
+<p>备用服务器的优先级和状态可以通过发出以下查询来显示:</p>
+<pre class="line-numbers language-sql-monosp"><code class="language-sql-monosp">testdb=# SELECT application_name AS host, 
+         sync_priority, sync_state FROM pg_stat_replication;
+   host   | sync_priority | sync_state
+----------+---------------+------------
+ standby1 |             1 | sync
+ standby2 |             2 | potential
+(2 rows)
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>一些开发人员最近正在尝试实现“多同步-备用”。 详情请看<a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/6/293/">这里</a> 。</p>
+<h4 id="11-3-2-主服务器如何管理多个备用服务器"><a href="#11-3-2-主服务器如何管理多个备用服务器" class="headerlink" title="11.3.2 主服务器如何管理多个备用服务器"></a>11.3.2 主服务器如何管理多个备用服务器</h4><p>主服务器只等待来自同步备用服务器的ACK响应。换句话说，主服务器只确认同步备用服务器对WAL数据的写入和刷新。因此，流复制确保只有同步备用设备与主设备处于一致和同步的状态。</p>
+<p>图11.3显示了潜在备用设备的ACK响应早于主备用设备的ACK响应返回的情况。在那里，主服务器不完成当前事务的提交操作，而是继续等待主服务器的ACK响应。然后，当接收到主进程的响应时，后端进程释放锁存器并完成当前事务处理。</p>
+<p> <img src="/medias/image/fig-11-03.png" alt="图11.3 管理多个备用服务器"></p>
+<p>standby1和standby2的sync_state分别为’sync’和’potential’。(1)尽管收到了潜在备用服务器的ACK响应，主进程的后端进程仍然继续等待同步备用服务器的ACK响应。(2)主进程的后端进程释放锁存器，完成当前事务处理。</p>
+<p>在相反的情况下(即主服务器的ACK响应比潜在服务器的响应早返回)，主服务器立即完成当前事务的提交操作，而不确保潜在的备用服务器是否写入和刷新WAL数据。</p>
+<h4 id="11-3-3-发生故障时的行为"><a href="#11-3-3-发生故障时的行为" class="headerlink" title="11.3.3 发生故障时的行为"></a>11.3.3 发生故障时的行为</h4><p>再次查看当备用服务器发生故障时主服务器的行为。</p>
+<p>当潜在备用服务器或异步备用服务器发生故障时，主服务器将终止连接到故障备用服务器的walsender进程，并继续所有处理。换句话说，主服务器的事务处理不会受到任何一种备用服务器故障的影响。</p>
+<p>当同步备用服务器失败时，主服务器终止连接到失败备用服务器的walsender进程，并用优先级最高的潜在备用服务器替换同步备用服务器。见图11.4。与上面描述的故障相反，主服务器上的查询处理将从故障点暂停到同步备用服务器被替换。因此，备用服务器的故障检测是提高复制系统可用性的一个非常重要的功能。故障检测将在下一节中描述。)</p>
+<p> <img src="/medias/image/fig-11-04.png" alt="图11.4 更换同步备用服务器"></p>
+<p>在任何情况下，如果一个或多个备用服务器以同步模式运行，则主服务器始终只保持一个同步备用服务器，并且该同步备用服务器始终与主服务器保持一致和同步状态。</p>
+<h3 id="11-4-检测备用服务器故障"><a href="#11-4-检测备用服务器故障" class="headerlink" title="11.4 检测备用服务器故障"></a>11.4 检测备用服务器故障</h3><p>流复制使用两个常见的故障检测过程，完全不需要任何特殊的硬件。</p>
+<p><strong>1 备用服务器进程失败检测</strong></p>
+<p>当检测到walsender和walreceiver之间的连接中断时，主服务器立即判断备用服务器或walreceiver进程故障。当底层网络函数因写入或读取walreceiver的套接字接口失败而返回错误时，主服务器也立即确定其失败。</p>
+<p><strong>2 硬件和网络故障检测</strong></p>
+<p>如果walreceiver在wal_sender_timeout参数设置的时间内(默认为60秒)没有返回任何内容，则主服务器将确定备用服务器故障。与上面描述的故障不同，即使备用服务器由于某些故障(例如备用服务器的硬件故障、网络故障等)不再能够发送任何响应，也需要一定的时间(最长为wal_sender_timeout秒)来确认主服务器上备用服务器的死亡。</p>
+<p>根据故障的类型，通常可以在故障发生后立即检测到故障，而有时在故障发生和检测到故障之间可能有一段时间延迟。特别是，如果在同步备用服务器中发生后一种类型的故障，则主服务器上的所有事务处理都将停止，直到检测到备用服务器的故障，即使多个潜在的备用服务器可能一直在工作。</p>
+<p>在9.2或更早的版本中，参数wal_sender_timeout被称为replication_timeout。</p>
 
                 
             </div>
@@ -611,7 +583,7 @@ recovery_target_timeline <span class="token operator">=</span> 2
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2022/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">https://jinlid.github.io/2022/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/</a>
+                    <a href="https://jinlid.github.io/2021/11-liu-fu-zhi/">https://jinlid.github.io/2021/11-liu-fu-zhi/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -733,31 +705,31 @@ recovery_target_timeline <span class="token operator">=</span> 2
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/jian-kong-fu-wu-qi-xing-neng/">
+                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="监控服务器性能">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
                         
-                        <span class="card-title">监控服务器性能</span>
+                        <span class="card-title">10 基础备份和时间点恢复</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            为了能够解决性能问题，我们应该能够有效地使用操作系统实用程序。我们应该能够使用正确的操作系统工具和命令来识别可能由 CPU、内存或磁盘 I/O 问题引起的性能问题。很多时候，DBA 的职责经常与某些系统管理相关的职能重叠，对于 DBA 来说
+                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，逻辑备份在它的表现上花太多时间。特别是对大型数据库进行备份需要很长时间，从备份到恢复数据需要更多的时间。相反，物理备份使得在相对较短的时间内备份和恢复大型数据库成为可
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-01-12
+                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="post-category">
-                                    操作系统
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
                                 </a>
                             
                             
@@ -767,8 +739,8 @@ recovery_target_timeline <span class="token operator">=</span> 2
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/linux/">
-                        <span class="chip bg-color">linux</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
@@ -782,24 +754,24 @@ recovery_target_timeline <span class="token operator">=</span> 2
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/11-liu-fu-zhi/">
+                <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="第11章 流复制">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
                         
-                        <span class="card-title">第11章 流复制</span>
+                        <span class="card-title">2 进程和内存架构</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            同步流复制是在9.1版本中实现的。这是一个所谓的单主-多从类型的复制，这两个术语——主和从——在PostgreSQL中通常分别被称为主和备。
+                            本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-11-10
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
                             </span>
                         <span class="publish-author">
                             

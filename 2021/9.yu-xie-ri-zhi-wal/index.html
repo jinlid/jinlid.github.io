@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="第9章 预写日志—WAL, jinlid&#39;s blog">
+    <meta name="keywords" content="9 预写日志—WAL, jinlid&#39;s blog">
     <meta name="description" content="事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改和操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -17,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>第9章 预写日志—WAL | jinlid&#39;s blog</title>
+    <title>9 预写日志—WAL | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -337,12 +337,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/10.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/12.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">第9章 预写日志—WAL</h1>
+                    <h1 class="description center-align post-title">9 预写日志—WAL</h1>
                 </div>
             </div>
         </div>
@@ -458,8 +458,7 @@
 <p>由于主要关键字和概念的介绍刚刚结束，下面就是用WAL插入元组的说明。参见图9.2和以下说明。（另请参阅<a target="_blank" rel="noopener" href="http://www.slideshare.net/suzuki_hironobu/fig-902">此幻灯片</a>。）</p>
 <p><img src="/medias/image/fig-9-02.png" alt="图 9.2 使用 WAL 进行插入操作"></p>
 <p>符号’<em>TABLE_A’s LSN</em>‘显示了TABLE_A的页头中pd_lsn的值。’<em>page’s LSN</em>‘是同样的方式。</p>
-<p>(1) checkpointer，一个后台进程，周期性地执行checkpoint。每当检查点启动时，它都会将一个名为</p>
-<p>检查点记录的XLOG记录写入当前WAL段。该记录包含最新REDO点的位置。</p>
+<p>(1) checkpointer，一个后台进程，周期性地执行checkpoint。每当检查点启动时，它都会将一个名为检查点记录的XLOG记录写入当前WAL段。该记录包含最新REDO点的位置。</p>
 <p>(2) 发出第一条INSERT语句，PostgreSQL将TABLE_A的页面加载到共享缓冲池中，在页面中插入一个元组，在位置<em>LSN_1</em>处创建并写入这条语句的XLOG记录到WAL缓冲区中，并更新TABLE_A的LSN从<em>LSN_0</em>到<em>LSN_1</em>。</p>
 <p>在这个例子中，这个XLOG记录是一对header-data和完整元组。</p>
 <p>(3) 当这个事务提交时，PostgreSQL会创建这个提交操作的XLOG记录并将其写入WAL缓冲区，然后，将WAL缓冲区上的所有XLOG记录写入<em>LSN_1</em>并刷新到WAL段文件。</p>
@@ -494,7 +493,7 @@
 <p>(2) 当一个XLOG记录是它的备份块时，应用另一个重放规则：不管两个LSN的值如何，记录的数据部分（即页面本身）都将被覆盖到页面上，并且页面的LSN更新到XLOG记录的LSN。</p>
 <p>在此示例中，PostgreSQL将记录的数据部分覆盖到损坏的页面，并将TABLE_A的LSN更新为<em>LSN_1</em>。通过这种方式，损坏的页面由其备份块恢复。</p>
 <p>(3) 由于第二条XLOG记录是一个非备份块，PostgreSQL的操作方式与上一小节中的指令相同。</p>
-<p>即使发生了一些数据写入失败，PostgreSQL也可以恢复。（当然，如果发生文件系统或媒体故障，则这不适用。）</p>
+<p>即使发生了一些数据写入失败，PostgreSQL也可以恢复。（当然，如果发生文件系统或媒体故障，则这不适用）</p>
 <h2 id="9-2-事务日志和WAL段文件"><a href="#9-2-事务日志和WAL段文件" class="headerlink" title="9.2 事务日志和WAL段文件"></a>9.2 事务日志和WAL段文件</h2><p>从逻辑上讲，PostgreSQL将XLOG记录写入事务日志中，事务日志是一个8字节长（16 ExaByte）的虚拟文件。</p>
 <p>由于事务日志的容量实际上是无限的，因此可以说8字节的地址空间足够大，我们不可能处理8字节长度的容量的文件。因此，PostgreSQL中的事务日志默认分为16 MB的文件，每个文件称为<em>WAL段</em>，参见图 9.6。</p>
 <p><strong>WAL段文件大小</strong></p>
@@ -534,7 +533,7 @@
 <span class="token punctuation">}</span> XLogRecord<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>除了两个变量，大部分变量都是显而易见的，不需要描述。</p>
-<p><strong>xl_rmid</strong>和<strong>xl_info</strong>是相关变量<strong>的资源管理器</strong>，这是与WAL相关的操作的集合的写入及XLOG记录重放功能等。资源管理器的数量随着每个PostgreSQL版本的增加而增加，版本10包含以下内容：</p>
+<p><strong>xl_rmid</strong>和<strong>xl_info</strong>是相关变量的资源管理器，这是与WAL相关的操作的集合的写入及XLOG记录重放功能等。资源管理器的数量随着每个PostgreSQL版本的增加而增加，版本10包含以下内容：</p>
 <table>
 <thead>
 <tr>
@@ -705,7 +704,7 @@
 <p>这些 XLOG记录的格式为9.4版。</p>
 <p>(5) 函数*XLogWrite()*将WAL缓冲区上的所有XLOG记录写入并刷新到WAL段文件中。</p>
 <p>如果参数<em>wal_sync_method</em>设置为*’open_sync’<em>或</em>‘open_datasync’<em>，则记录被同步写入，因为该函数使用</em>open()<em>系统调用指定标志</em>O_SYNC<em>或</em>O_DSYNC<em>写入所有记录。如果参数设置为</em>‘fsync’<em>、</em>‘fsync_writethrough’<em>或</em>‘fdatasync’<em>，则相应的系统调用 – <em>fsync()<em>、</em>fcntl() 和 F_FULLFSYNC选项</em>或</em>fdatasync()*——将被处决。在任何情况下，都确保所有XLOG记录都写入存储。</p>
-<p>​	(6) 函数<em>TransactionIdCommitTree()<em>将</em>CLOG上</em>的此事务的状态从<em>“IN_PROGRESS”</em>更改为<em>“COMMITTED”</em>。</p>
+<p>(6) 函数<em>TransactionIdCommitTree()<em>将</em>CLOG上</em>的此事务的状态从<em>“IN_PROGRESS”</em>更改为<em>“COMMITTED”</em>。</p>
 <p><img src="/medias/image/fig-9-12.png" alt="图 9.12 XLOG 记录的写入顺序（接图 9.11）"></p>
 <p>在上面的例子中，commit action导致了XLOG记录写入WAL段，但是当发生以下任何一种情况时，可能会导致这种写入：</p>
 <ol>
@@ -975,19 +974,19 @@ Prior checkpoint location:            0/C000E70
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/8.huan-chong-qu-guan-li-qi/">
+                <a href="/2021/5.bing-fa-kong-zhi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="第8章 缓冲区管理器">
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
                         
-                        <span class="card-title">第8章 缓冲区管理器</span>
+                        <span class="card-title">5 并发控制</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
+                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
                         
                     </div>
                     <div class="publish-info">
@@ -1028,9 +1027,9 @@ Prior checkpoint location:            0/C000E70
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="第9章 预写日志—WAL">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
                         
-                        <span class="card-title">第9章 预写日志—WAL</span>
+                        <span class="card-title">9 预写日志—WAL</span>
                     </div>
                 </a>
                 <div class="card-content article-content">

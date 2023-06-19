@@ -637,7 +637,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 </ul>
 <p>让我们来看看 WAL 的几个用途。</p>
 <p><strong>恢复</strong></p>
-<p>这是 WAL 概念的主要目的。在这里，我们指的是恢复已提交但尚未找到数据文件路径的事务。对数据库所做的所有更改都将进入 WAL 段，而不管这些更改是否已反映到数据文件中。事实上，在将更改写入数据文件之前，必须先将更改写入 WAL 文件。 WAL 文件的丢失几乎肯定意味着交易丢失。</p>
+<p>这是 WAL 概念的主要目的。在这里，我们指的是恢复已提交但尚未找到数据文件路径的事务。对数据库所做的所有更改都将进入 WAL 段，而不管这些更改是否已反映到数据文件中。事实上，在将更改写入数据文件之前，必须先将更改写入 WAL 文件。 WAL 文件的丢失几乎肯定意味着事务丢失。</p>
 <p><strong>增量备份和时间点恢复</strong></p>
 <p>我们可以拍摄 PostgreSQL 文件系统的快照，然后设置 WAL 归档进程。拍摄的快照不需要是一致的。生成的 WAL 段将继续归档，我们可以使用快照和归档的 WAL 段来执行时间点恢复。在这个过程中，我们恢复文件快照，然后重放 WAL 段直到特定时间点或直到一个事务。</p>
 <p><strong>复制</strong></p>
@@ -683,12 +683,12 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 </blockquote>
 <p><code>vacuum</code> 进程将之前删除（或更新）的记录使用的空间标记为可在表中重复使用。有一个 <code>vacuum</code> 命令可以手动执行此操作， <code>vacuum</code> 不会锁定表。</p>
 <p><code>VACUUM FULL</code> 除了将空间标记为可重用外，还会移除已删除或更新的记录并对表数据重新排序，这需要对表进行独占锁定。</p>
-<p>使用带“analyze”的 <code>vacuum</code> 选项执行会读取表中的记录并生成查询计划器使用的统计信息。</p>
+<p>使用带<code>analyze</code> 的 <code>vacuum</code> 选项执行会读取表中的记录并生成查询计划器使用的统计信息。</p>
 <p><code>autovacuum</code> 使 <code>vacuum</code> 进程自动化。建议让 <code>autovacuum</code> 进程清理数据文件，除非有特定原因不这样做。如果一天中的大部分时间数据库负载很重，可以在非高峰时段安排 <code>vacuum</code>。尽管集群中很少或没有删除/更新，但进行例行清理很有用，因为清理会更新规划器使用的数据统计信息。</p>
 <p>更多细节参考：<a href="https://jinlid.github.io/2022/autovacuum-jin-cheng/">https://jinlid.github.io/2022/autovacuum-jin-cheng/</a></p>
 <h2 id="logging进程"><a href="#logging进程" class="headerlink" title="logging进程"></a><strong>logging</strong>进程</h2><p>这是一个可选过程，默认设置为关闭。我们必须将 <code>logging_collector</code> 参数设置为 on 才能启动此过程：</p>
-<pre><code>cd $PGDATA
-</code></pre>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cd</span> <span class="token variable">$PGDATA</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>编辑postgresql.conf文件并进行一些更改：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">log_destination <span class="token operator">=</span> <span class="token string">'stderr'</span>
 logging_collector <span class="token operator">=</span> on
@@ -724,8 +724,7 @@ server starting
 </blockquote>
 <p>应用程序中的错误：</p>
 <blockquote>
-<p><strong>ERROR: function non_existing_function() does not exist at character</strong> </p>
-<p><strong>8</strong></p>
+<p><strong>ERROR: function non_existing_function() does not exist at character</strong> <strong>8</strong></p>
 <p><strong>HINT: No function matches the given name and argument types. You</strong> </p>
 <p><strong>might need to add explicit type casts.</strong></p>
 <p><strong>STATEMENT: select non_existing_function();</strong></p>
@@ -768,7 +767,7 @@ server starting
 <td>这会报告导致所有数据库会话中止的错误。</td>
 </tr>
 </tbody></table>
-<p>可以在位于<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/runtime-config-logging.html">http://www.postgresql.org/docs/current/static/runtime-config-logging.html</a> 的 PostgreSQL 文档中找到对参数的出色描述。</p>
+<p>可以在位于<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/runtime-config-logging.html">http://www.postgresql.org/docs/current/static/runtime-config-logging.html</a> 的 PostgreSQL 文档中找到对参数的描述。</p>
 <p>我们将看到一些有用的选项并继续：</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">log_min_duration_statement&amp;nbsp;</span><span class="token punctuation">=</span><span class="token attr-value">&amp;nbsp;0</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
@@ -850,9 +849,6 @@ server starting
 </tr>
 </tbody></table>
 <p>请注意， <code>log_line_prefix</code> 参数不适用于csvlog选项。</p>
-<blockquote>
-<p>xxxxxxxxxx&nbsp;iptables -A INPUT -i eth0 -s 10.68.24.0/24 -p tcp –dport 22 -j ACCEPTbash</p>
-</blockquote>
 <h2 id="stats-collector进程"><a href="#stats-collector进程" class="headerlink" title="stats collector进程"></a><strong>stats collector进程</strong></h2><p>顾名思义，此过程收集有关数据库的统计信息。这是一个可选过程，默认值为 on。该过程跟踪对磁盘块和单个行项中的表和索引的访问。它还会跟踪表的记录计数，并跟踪 <code>vacuum</code> 和 <code>analyze</code> 操作。重要的是要注意，各个进程在进入空闲状态之前将新的统计计数传输到收集器。因此，许多柜台不会反映飞行中的交易活动。</p>
 <p>数据被记录在一组表中，我们可以通过提供的多个视图访问它。视图以 pg_stat 开头。键入以下命令：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">\d<span class="token operator">&amp;</span>nbsp<span class="token punctuation">;</span><span class="token operator">&amp;</span>nbsp<span class="token punctuation">;</span>pg_stat
@@ -1269,19 +1265,19 @@ Time: 0.413 ms
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/flask-postgresql-bootstrap-shi-xian-jian-suo-xi-tong/">
+                <a href="/2023/django-fen-bu-shi-ren-wu-he-ding-shi-ren-wu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="flask+postgresql+bootstrap实现检索系统">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Django的分布式任务和定时任务">
                         
-                        <span class="card-title">flask+postgresql+bootstrap实现检索系统</span>
+                        <span class="card-title">Django的分布式任务和定时任务</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            一个检索系统
+                            Django 的分布式任务主要由 Celery 框架实现，这是 Python 开发的分布式任务队列。它支持使用任务队列的方式在分布的机器、进程和线程上执行任务调度。Celery 本身不提供信息存储服务。它使用第三方数据库来传递任务，目前第三
                         
                     </div>
                     <div class="publish-info">

@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="第5章 并发控制, jinlid&#39;s blog">
+    <meta name="keywords" content="5 并发控制, jinlid&#39;s blog">
     <meta name="description" content="并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
 
 
@@ -22,7 +22,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>第5章 并发控制 | jinlid&#39;s blog</title>
+    <title>5 并发控制 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -342,12 +342,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/3.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">第5章 并发控制</h1>
+                    <h1 class="description center-align post-title">5 并发控制</h1>
                 </div>
             </div>
         </div>
@@ -423,7 +423,7 @@
 <p>[TOC]</p>
 <blockquote>
 <p>共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都有许多变体。在 MVCC 中，每个写操作都会创建一个新版本的数据项，同时保留旧版本。当一个事务读取一个数据项时，系统会选择其中一个版本来确保单个事务的隔离。MVCC的主要优点是 ‘<em>读不阻塞写，写不阻塞读</em>‘，相比之下，例如，基于S2PL的系统必须在写入器写入项目时阻止读取器，因为写入器获得了该项目的排它锁。PostgreSQL和一些RDBMS使用称为快照隔离(SI)的MVCC变体。</p>
-<p>为了实现 SI，一些 RDBMS，例如 Oracle，使用回滚段。写入新数据项时，将旧版本项写入回滚段，随后将新项覆盖到数据区。PostgreSQL 使用一种更简单的方法。一个新的数据项被直接插入到相关的表格页面中，在读取项目时，PostgreSQL通过应用可见性检查规则来选择项目的适当版本以响应单个事务。</p>
+<p>为了实现 SI，一些 RDBMS，例如 Oracle，使用回滚段。写入新数据项时，将旧版本项写入回滚段，随后将新项覆盖到数据区。PostgreSQL 使用一种更简单的方法。一个新的数据项被直接插入到相关的表格页面中，在读取项目时，PostgreSQL通过应用可见性检查规则来选择适当版本的项目以响应单个事务。</p>
 <p>SI不允许ANSI SQL-92标准中定义的三种异常，即<em>脏读</em>、<em>不可重复读</em>和<em>幻读</em>。但是，SI 无法实现真正的可序列化，因为它允许序列化异常，例如<em>Write Skew</em>和<em>Read-only Transaction Skew</em>。请注意，基于经典可串行化定义的 ANSI SQL-92 标准并不等同于现代理论中的定义。为了解决这个问题，Serializable Snapshot Isolation(SSI)从9.1版开始添加。SSI可以检测序列化异常并解决此类异常引起的冲突。因此，PostgreSQL9.1及更高版本提供了真正的 SERIALIZABLE隔离级别。（另外，SQL Server也使用SSI，Oracle仍然只使用SI）</p>
 </blockquote>
 <p>本章包括以下四个部分：</p>
@@ -491,14 +491,14 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><p><strong>2</strong>表示Frozen txid，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1">第 5.10.1 节</a>中描述。</p>
 </li>
 </ul>
-<p>Txid可以相互比较。例如，在txid 100的观点下，大于100的txids是’未来的’，在txid 100中是<em>不可见</em>的；小于100的txid 是’’过去的’，并且是<em>可见的</em>（图 5.1 a）。</p>
+<p>txid可以相互比较。例如，在txid 100的观察下，大于100的txids是’未来的’，在txid 100中是’不可见’的；小于100的txid 是’’过去的’，并且是’可见的’（图 5.1 a）。</p>
 <p><img src="/medias/image/fig-5-01.png" alt="图 5.1 PostgreSQL中的事务ID"></p>
-<p>由于实际系统中txid空间不足，PostgreSQL将txid空间视为一个圆圈。之前的21亿事务是’过去的’，接下来的21亿交易是’’未来的’（图 5.1 b）。在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1 节</a>中描述了所谓的<em>txid</em>环绕问题。</p>
+<p>由于实际系统中txid空间不足，PostgreSQL将txid空间视为一个圆圈。之前的21亿事务是’过去的’，接下来的21亿交易是’’未来的’（图 5.1 b）。在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1 节</a>中描述了所谓的txid环绕问题。</p>
 <p>注意，没有为BEGIN命令分配txid。在PostgreSQL中，当执行完BEGIN命令后执行第一个命令时，事务管理器会分配一个tixd，然后它的事务就开始了。</p>
 <h2 id="5-2-元组结构"><a href="#5-2-元组结构" class="headerlink" title="5.2 元组结构"></a>5.2 元组结构</h2><p>表页中的堆元组分为普通数据元组和TOAST元组，本节仅描述普通的元组。</p>
 <p>一个堆元组由三部分组成，即 HeapTupleHeaderData结构、NULL位图和用户数据（图 5.2）。</p>
 <p><img src="/medias/image/fig-5-02.png" alt="图 5.2 元组结构"></p>
-<p>HeapTupleHeaderData 结构在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/ee943004466418595363d567f18c053bae407792/src/include/access/htup_details.h">src/include/access/htup_details.h</a>中定义。<a href="void(0)">HeapTupleHeaderData</a>结构包含七个字段，但后续部分只需要四个字段。</p>
+<p>HeapTupleHeaderData 结构在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/ee943004466418595363d567f18c053bae407792/src/include/access/htup_details.h">src/include/access/htup_details.h</a>中定义。<a href="void(0)">HeapTupleHeaderData</a>结构包含七个字段，后续部分只说四个字段。</p>
 <ul>
 <li><p><strong>t_xmin</strong>保存插入此元组的事务的txid。</p>
 </li>
@@ -511,9 +511,9 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 </ul>
 <h2 id="5-3-插入、删除和更新元组"><a href="#5-3-插入、删除和更新元组" class="headerlink" title="5.3 插入、删除和更新元组"></a>5.3 插入、删除和更新元组</h2><p>本节介绍如何插入、删除和更新元组。然后简要的描述了用于插入和更新元组的<em>自由空间映射（FSM）</em>。</p>
 <p>为了关注元组，下面没有表示页眉和行指针。图 5.3 显示了如何表示元组的示例。</p>
-<p><img src="/medias/image/fig-5-03.png" alt="图 5.2 元组的表示"></p>
+<p><img src="/medias/image/fig-5-03.png" alt="图 5.3 元组的表示"></p>
 <h3 id="5-3-1-插入"><a href="#5-3-1-插入" class="headerlink" title="5.3.1 插入"></a>5.3.1 插入</h3><p>通过插入操作，一个新的元组被直接插入到目标表的一页中（图 5.4）。</p>
-<p><img src="/medias/image/fig-5-04.png" alt="图 5.2 插入元组"></p>
+<p><img src="/medias/image/fig-5-04.png" alt="图 5.4 插入元组"></p>
 <p>假设一个tuple被一个 txid 为 99 的事务插入到一个页面中。在这种情况下，插入的tuple的header字段设置如下。</p>
 <p>Tuple_1：</p>
 <ul>
@@ -527,7 +527,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 </li>
 </ul>
 <p><strong>页面检查</strong></p>
-<p>PostgreSQL 提供了一个扩展<em>pageinspect</em>，它是一个贡献模块，用于显示数据库页面的内容。</p>
+<p>PostgreSQL 提供了一个扩展 <em>pageinspect</em>，它是一个贡献模块，用于显示数据库页面的内容。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE EXTENSION pageinspect;</span>
 CREATE EXTENSION
 testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE tbl (data text);</span>
@@ -550,7 +550,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 </ul>
 <p>如果提交了 txid 111，则不再需要 Tuple_1。通常，不需要的元组在 PostgreSQL中被称为<strong>死亡元组</strong>，死亡元组最终应该从页面中删除。清理死元组称为<strong>VACUUM</strong>处理，在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中介绍。</p>
 <h3 id="5-3-3-更新"><a href="#5-3-3-更新" class="headerlink" title="5.3.3 更新"></a>5.3.3 更新</h3><p>在更新操作中，PostgreSQL在逻辑上删除最新的元组并插入一个新元组（图 5.6）。</p>
-<p><img src="/medias/image/fig-5-06.png" alt="图 5.5 元组删除"></p>
+<p><img src="/medias/image/fig-5-06.png" alt="图 5.6 元组删除"></p>
 <p>假设由 txid 99插入的行被 txid 100更新了两次。</p>
 <p>当执行第一个UPDATE 命令时，通过将 txid 100 设置为 t_xmax 逻辑删除Tuple_1，然后插入Tuple_2。然后，将Tuple_1的 t_ctid 重写为指向 Tuple_2。Tuple_1 和 Tuple_2 的头域如下。</p>
 <p>Tuple_1：</p>
@@ -579,10 +579,9 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><strong>t_ctid</strong>设置为 (0,3)。</li>
 </ul>
 <p>与删除操作一样，如果 txid 100被提交，Tuple_1和 Tuple_2将是死元组，如果 txid 100被中止，Tuple_2 和 Tuple_3 将是死元组。</p>
-<h3 id="5-3-4-Free-Space-Map"><a href="#5-3-4-Free-Space-Map" class="headerlink" title="5.3.4 Free Space Map"></a>5.3.4 Free Space Map</h3><p>在插入堆表或索引元组时，PostgreSQL使用对应表或索引的<strong>FSM</strong>来选择可以插入它的页面。</p>
+<h3 id="5-3-4-Free-Space-Map"><a href="#5-3-4-Free-Space-Map" class="headerlink" title="5.3.4 Free Space Map"></a>5.3.4 Free Space Map</h3><p>在插入堆表或索引元组时，PostgreSQL使用对应表或索引的 <strong>FSM</strong> 来选择可以插入它的页面。</p>
 <p>如<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql01.html#_1.2.3.">第 1.2.3 节</a>所述，所有表和索引都有各自的FSM，每个FSM将有关每个页面的<strong>可用空间容量的信息</strong>存储在相应的表或索引文件中。所有FSM都以后缀’fsm’存储，如有必要，它们会加载到共享内存中。</p>
-<p><em>pg_freespacemap</em></p>
-<p>扩展<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">pg_freespacemap</a>提供指定表或者索引的空闲空间。以下查询显示指定表中每个页面的可用空间比例。</p>
+<p><a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/pgfreespacemap.html">pg_freespacemap</a> 扩展提供指定表或者索引的空闲空间。以下查询显示指定表中每个页面的可用空间比例。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE EXTENSION pg_freespacemap;</span>
 CREATE EXTENSION
 
@@ -610,13 +609,13 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 </li>
 </ul>
 <p>当前txid前进并且clog无法再存储它时，会附加一个新页面。</p>
-<p>当需要事务的状态时，调用内部函数，这些函数读取阻塞并返回请求事务的状态。（也可以 在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.1">第 5.7.1 节</a>中看看 <em>Hint Bits</em>。）</p>
+<p>当需要事务的状态时，调用内部函数，这些函数读取CLOG并返回请求事务的状态。（也可以在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.7.1">第 5.7.1 节</a>中看看 <em>Hint Bits</em>）</p>
 <h3 id="5-4-3-clog的维护"><a href="#5-4-3-clog的维护" class="headerlink" title="5.4.3 clog的维护"></a>5.4.3 clog的维护</h3><p>当PostgreSQL关闭或checkpoint进程运行时，clog的数据被写入存储在<strong>pg_clog</strong>子目录下的文件中。</p>
 <blockquote>
-<p>pg_clog将在版本10中重命名为pg_xact。</p>
+<p>pg_clog将在版本10中重命名为pg_xact</p>
 </blockquote>
 <p>这些文件被命名为<em>0000</em>、<em>0001</em>等。最大文件大小为 256 KB，当clog使用8页（第一页到第八页，总大小为64 KB）时，将其数据写入0000（64 KB），以37页（296 KB）写入数据分为 0000 和 0001，其大小分别为 256 KB 和 40 KB。</p>
-<p>当PostgreSQL启动时，存储在pg_clog的文件中的数据被加载以初始化clog。clog的大小不断增加，因为每当堵塞物被填满时都会附加一个新页面。但是，并非clog中的所有数据都是必需的。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中描述的vacuum处理会定期删除此类旧数据（clog页面和文件），有关删除clog数据的详细信息在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.4">第 6.4 节</a>中描述。</p>
+<p>当PostgreSQL启动时，存储在pg_clog的文件中的数据被加载以初始化clog。clog的大小不断增加，因为每当CLOG被填满时都会附加一个新页面。但是，并非clog中的所有数据都是必需的。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>中描述的vacuum处理会定期删除此类旧数据（clog页面和文件），有关删除clog数据的详细信息在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.4">第 6.4 节</a>中描述。</p>
 <h2 id="5-5-事务快照"><a href="#5-5-事务快照" class="headerlink" title="5.5. 事务快照"></a>5.5. 事务快照</h2><p>事务快照是存储有关所有事务是否活跃的信息，在一定的时间点为单个事务的数据集。这里的活动事务意味着它正在进行中或尚未开始。</p>
 <p>PostgreSQL内部将事务快照的文本表示格式定义为’<strong>100:100</strong>‘。例如，’<strong>100:100</strong>‘表示小于99的txid不活跃，等于或大于100的txid是活跃的。在下面的描述中，使用了这种方便的表示形式。如果您不熟悉它，请参阅以下。</p>
 <blockquote>
@@ -1171,7 +1170,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <hr>
 <h2 id="5-10-所需的维护进程"><a href="#5-10-所需的维护进程" class="headerlink" title="5.10 所需的维护进程"></a>5.10 所需的维护进程</h2><p>PostgreSQL的并发控制机制需要以下维护流程：</p>
 <ol>
-<li><p>删除指向相应死元组的死元组和索引元组</p>
+<li><p>删除指向相应死元组的索引元组以及死元组</p>
 </li>
 <li><p>去除clog的不必要部分</p>
 </li>
@@ -1180,14 +1179,14 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
 <li><p>更新FSM、VM和统计信息</p>
 </li>
 </ol>
-<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.2.">第5.3.2 节</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.3.">第5.4.3节</a>分别解释了对第一个和第二个过程的需求。第三个过程与事务id回绕问题有关，在下面的小节中简要描述。</p>
+<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.2.">第5.3.2节</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.3.">第5.4.3节</a>分别解释了对第一个和第二个过程的需求。第三个过程与事务id回绕问题有关，在下面的小节中简要描述。</p>
 <p>在PostgreSQL中，<strong>VACUUM</strong>处理负责这些进程。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>描述了vacuum进程。</p>
 <h3 id="5-10-1-冻结处理"><a href="#5-10-1-冻结处理" class="headerlink" title="5.10.1 冻结处理"></a>5.10.1 冻结处理</h3><p>在这里，我们描述txid环绕问题。</p>
 <p>假设插入tuple Tuple_1，txid为100，即Tuple_1的t_xmin为100，服务器已经运行了很长时间，Tuple_1没有被修改。当前的txid为21亿+100，并且执行了SELECT 命令。这时候Tuple_1是<em>可见的，</em>因为txid 100是<em>过去的</em>。然后，执行相同的 SELECT 命令；因此，当前的txid是21亿+101。但是，由于txid 100<em>在未来</em>（图 5.20），因此 Tuple_1<em>不再可见</em>。这就是PostgreSQL 中所谓的<em>事务环绕问题</em>。</p>
 <p><img src="/medias/image/fig-5-20.png" alt="图 5.20 环绕问题"></p>
-<p>为了解决这个问题，PostgreSQL引入了一个叫做<em>freeze txid</em>的概念，并实现了一个叫做<em>FREEZE</em>的过程。</p>
+<p>为了解决这个问题，PostgreSQL引入了一个叫做 <em>freeze txid</em> 的概念，并实现了一个叫做<em>FREEZE</em>的过程。</p>
 <p>在PostgreSQL中，一个冻结的txid，它是一个特殊的保留txid 2，被定义为总是比所有其他txid旧。换句话说，冻结的txid始终处于非活动状态且可见。</p>
-<p>冻结过程由vacuum进程调用。如果t_xmin值早于当前txid减去<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-MIN-AGE">vacuum_freeze_min_age</a>（默认值为 5000 万），则冻结进程会扫描所有表文件并将元组的t_xmin重写为冻结的 txid 。这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>有更详细的解释。</p>
+<p>冻结过程由vacuum进程调用。如果t_xmin值早于当前txid减去 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-MIN-AGE">vacuum_freeze_min_age</a>（默认值为 5000 万），则冻结进程会扫描所有表文件并将元组的t_xmin重写为冻结的 txid 。这在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">第 6 章</a>有更详细的解释。</p>
 <p>例如，如图5.21a)所示，当前txid为5000万，冻结过程由VACUUM命令调用。在这种情况下，Tuple_1和Tuple_2 的t_xmin都被重写为 2。</p>
 <p>在版本9.4或更高版本中，将元组的t_infomask字段设置为XMIN_FROZEN，而不是将元组的t_xmin重写为冻结的 txid（图 5.21 b）。</p>
 <p><img src="/medias/image/fig-5-21.png" alt="图 5.21 冻结过程"></p>
@@ -1351,9 +1350,9 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="第7章 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                         
-                        <span class="card-title">第7章 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -1396,19 +1395,19 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/8.huan-chong-qu-guan-li-qi/">
+                <a href="/2021/9.yu-xie-ri-zhi-wal/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="第8章 缓冲区管理器">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
                         
-                        <span class="card-title">第8章 缓冲区管理器</span>
+                        <span class="card-title">9 预写日志—WAL</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
+                            事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改和操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的
                         
                     </div>
                     <div class="publish-info">

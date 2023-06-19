@@ -4,12 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="第6章 vacuum进程, jinlid&#39;s blog">
-    <meta name="description" content="vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 第 5.10 节中都
-有简要介绍。
+    <meta name="keywords" content="6 vacuum进程, jinlid&#39;s blog">
+    <meta name="description" content="vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
 
 
-为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vac">
+为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vacuum full。并行VACUUM（通常简称为V">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -21,7 +20,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>第6章 vacuum进程 | jinlid&#39;s blog</title>
+    <title>6 vacuum进程 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -346,7 +345,7 @@
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">第6章 vacuum进程</h1>
+                    <h1 class="description center-align post-title">6 vacuum进程</h1>
                 </div>
             </div>
         </div>
@@ -416,8 +415,7 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id，这两个任务在 <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.">第 5.10 节</a>中都</p>
-<p>有简要介绍。</p>
+                <p>vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。</p>
 <span id="more"></span>
 
 <p>为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vacuum full。并行VACUUM（通常简称为VACUUM）为表文件的每</p>
@@ -425,7 +423,7 @@
 <p>在vacuum full运行时，其他事务不能访问表。</p>
 <blockquote>
 <p>尽管vacuum进程对于PostgreSQL来说是必不可少的，但与其他功能相比，它的功能改进一直很缓慢。例如，在8.0版本之前，这个</p>
-<p>进程必须手动执行（使用psql实用程序或使用cron守护进程）。它是在2005年实现autovacuum守护进程时实现的。</p>
+<p>进程必须手动执行（使用psql实用程序或使用cron守护进程），它是在2005年实现autovacuum守护进程时实现的。</p>
 <p>由于vacuum工作涉及扫描整个表，这是一个昂贵的过程。在8.4(2009)版本中，引入了可见性地图(VM)来提高删除死元组的效率。在</p>
 <p>9.6(2016)版本中，通过增强VM改进了冻结过程。</p>
 </blockquote>
@@ -516,7 +514,7 @@
 <p>VM的基本概念很简单，每个表都有一个单独的可见性映射，用于保存表文件中每个页面的可见性。页面的可见性决定了每个页面是否有死元组，vacuum进程可以跳过没有死元组的页面。</p>
 <p>图 6.2 显示了VM的使用情况。假设表由三页组成，第0页和第2页包含死元组，而第1页不包含。该表的VM保存了关于哪些页面包含死元组的信息。在这种情况下，vacuum进程通过引用VM的信息跳过第一页。</p>
 <p><img src="/medias/image/fig-6-02.png" alt="图 6.2 VM的使用方式 "></p>
-<p>每个VM由一个或多个8kb的页面组成，该文件以’VM’后缀存储。以relfilenode为18751的表文件为例，其中FSM (18751_fsm)和VM (18751_vm)文件如下所示。</p>
+<p>每个VM由一个或多个8KB的页面组成，该文件以’VM’后缀存储。以relfilenode为18751的表文件为例，其中FSM (18751_fsm)和VM (18751_vm)文件如下所示。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>
 $ <span class="token function">ls</span> -la base/16384/18751*
 -rw------- 1 postgres postgres  8192 Apr 21 10:21 base/16384/18751
@@ -528,7 +526,7 @@ $ <span class="token function">ls</span> -la base/16384/18751*
 <p>冻结处理通常以惰性模式运行，但是，当满足特定条件时，就会运行急切模式。在惰性模式下，冻结处理仅使用目标表的相应 VM 扫描包含死元组的页面。相比之下，急切模式会扫描所有页面，无论每个页面是否包含死元组，它还会更新与冻结处理相关的系统目录，并尽可能删除不必要的clog页面和文件。</p>
 <h3 id="6-3-1-惰性模式"><a href="#6-3-1-惰性模式" class="headerlink" title="6.3.1 惰性模式"></a>6.3.1 惰性模式</h3><p>当开始冻结处理时，PostgreSQL 计算 freezeLimit_txid 并冻结 t_xmin 小于 freezeLimit txid 的元组。</p>
 <p>freezeLimit_txid 定义如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">freezeLimit_txid<span class="token operator">=</span><span class="token punctuation">(</span>最旧的Xmin-Vacuum_freeze_min_age<span class="token punctuation">)</span>freezeLimit_txid<span class="token operator">=</span><span class="token punctuation">(</span>OldestXmin−vacuum_freeze_min_age<span class="token punctuation">)</span>
+<pre class="line-numbers language-bash"><code class="language-bash">freezeLimit_txid<span class="token operator">=</span><span class="token punctuation">(</span>OldestXmin−vacuum_freeze_min_age<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>在那里最旧的XminOldestXmin是当前正在运行的事务中最旧的 txid。例如，如果在执行 VACUUM 命令时三个事务（txids 100、101 和 102）正在运行， 最旧的XminOldestXmin 是 100。如果不存在其他事务， 最旧的XminOldestXmin是执行这个 VACUUM 命令的 txid。在这里，<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-MIN-AGE">vacuum_freeze_min_age</a>是一个配置参数（默认为 50,000,000）。</p>
 <p>一个具体示例。在这里，Table_1 由三个页面组成，每个页面有三个元组。执行 VACUUM 命令时，当前 txid 为 50,002,500，没有其他事物。在这种情况下，最旧的XminOldestXmin是 50,002,500；因此，freezeLimit_txid 为 2500。冻结处理如下执行。</p>
@@ -551,7 +549,7 @@ $ <span class="token function">ls</span> -la base/16384/18751*
 <p>当满足以下条件时执行急切模式。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">pg_database.datfrozenxid<span class="token operator">&lt;</span><span class="token punctuation">(</span>OldestXmin−vacuum_freeze_table_age<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在上述条件中， <em>pg_database.datfrozenxid</em>代表<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/catalog-pg-database.html">pg_database</a>系统目录的列，并保存每个数据库最旧的冻结 txid，细节在后面描述。因此，我们假设所有 pg_database.datfrozenxid 的值为 1821（这是 9.5 版新数据库集群安装后的初始值）。 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-TABLE-AGE">vacuum_freeze_table_age</a>是一个配置参数（默认为 150,000,000）。</p>
+<p>在上述条件中， pg_database.datfrozenxid代表<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/catalog-pg-database.html">pg_database</a>系统目录的列，并保存每个数据库最旧的冻结 txid，细节在后面描述。因此，我们假设所有 pg_database.datfrozenxid 的值为 1821（这是 9.5 版新数据库集群安装后的初始值）。 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-VACUUM-FREEZE-TABLE-AGE">vacuum_freeze_table_age</a>是一个配置参数（默认为 150,000,000）。</p>
 <p>下图显示了一个具体示例。在 Table_1 中，Tuple_1 和 Tuple_7 都被删除了。Tuple_10 和 Tuple_11 已插入到第二页。执行 VACUUM 命令时，当前 txid 为 150,002,000，没有其他事物。因此，OldestXmin 为 150,002,000，freezeLimit txid 为 100,002,000。在这种情况下，满足上述条件，因为1821&lt;(150002000−150000000)，因此，冻结处理在急切模式下执行如下。</p>
 <p>（注意这是 9.5 或更早版本的行为）</p>
 <p><strong>急切模式下冻结旧的元组（9.5 或更早版本）</strong></p>
@@ -596,10 +594,12 @@ testdb=# SELECT n.nspname as "Schema", c.relname as "Name", c.relfrozenxid
  pg_catalog | pg_transform            |         1821
 (57 rows)
 
-testdb=# SELECT datname, datfrozenxid FROM pg_database WHERE datname = 'testdb'; datname | datfrozenxid 
----------+-------------- testdb  |         1821
+testdb=# SELECT datname, datfrozenxid FROM pg_database WHERE datname = 'testdb'; 
+datname 				| datfrozenxid 
+------------------------+-------------- 
+testdb                  |         1821
 (1 row)
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><em>冻结选项</em></p>
 <p>带有 FREEZE 选项的 VACUUM 命令强制冻结指定表中的所有 txid，这是在急切模式下执行的。但是，freezeLimit 设置为 OldestXmin（不是“OldestXmin - Vacuum_freeze_min_age”）。例如，当 txid 5000 执行 VACUUM FULL 命令且没有其他正在运行的事务时，OldesXmin 设置为 5000，小于 5000 的 txid 将被冻结。</p>
 <h3 id="6-3-3-在急切模式下改进冻结处理"><a href="#6-3-3-在急切模式下改进冻结处理" class="headerlink" title="6.3.3 在急切模式下改进冻结处理"></a><strong>6.3.3 在急切模式下改进冻结处理</strong></h3><p>9.5 或更早版本中的急切模式效率不高，因为总是扫描所有页面。例如，在上节示例中，即使第 0 页中的所有元组都被冻结，也会扫描第 0 页。</p>
@@ -881,19 +881,19 @@ testdb=# SELECT count(*) as "number of blocks",
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                <a href="/2021/3.cha-xun-chu-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="第2章 进程和内存架构">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
                         
-                        <span class="card-title">第2章 进程和内存架构</span>
+                        <span class="card-title">3 查询处理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                            如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
                         
                     </div>
                     <div class="publish-info">
@@ -930,19 +930,19 @@ testdb=# SELECT count(*) as "number of blocks",
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2021/8.huan-chong-qu-guan-li-qi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="第7章 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="8 缓冲区管理器">
                         
-                        <span class="card-title">第7章 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">8 缓冲区管理器</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
                         
                     </div>
                     <div class="publish-info">
