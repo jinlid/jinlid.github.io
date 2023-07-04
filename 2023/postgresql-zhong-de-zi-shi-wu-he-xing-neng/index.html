@@ -1,0 +1,1265 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="POSTGRESQL中的子事务和性能, jinlid&#39;s blog">
+    <meta name="description" content="最近在排查PostgreSQL性能问题时，两次遇到了子事务的问题。所以我认为这是另一篇博客文章的好主题。
+什么是子事务？每个人都知道数据库事务。在以自动提交模式运行的 PostgreSQL 中，您必须使用BEGIN或者 START TRAN">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>POSTGRESQL中的子事务和性能 | jinlid&#39;s blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">jinlid&#39;s blog</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">jinlid&#39;s blog</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">POSTGRESQL中的子事务和性能</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2023-07-04
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>最近在排查PostgreSQL性能问题时，两次遇到了子事务的问题。所以我认为这是另一篇博客文章的好主题。</p>
+<h2 id="什么是子事务？"><a href="#什么是子事务？" class="headerlink" title="什么是子事务？"></a>什么是子事务？</h2><p>每个人都知道数据库事务。在以<code>自动提交模式</code>运行的 PostgreSQL 中，您必须使用<code>BEGIN</code>或者 <code>START TRANSACTION</code>跨多个语句的事务，并使用 <code>END</code> 或 <code>COMMIT</code>关闭它。如果您中止事务（或结束数据库会话而不提交），则事务内完成的所有工作都将被撤消<code>ROLLBACK</code>。</p>
+<p>现在，子事务允许您回滚事务中完成的部分工作。您可以使用标准 SQL 语句在事务内启动子事务：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SAVEPOINT</span> name<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>“ <code>name</code>” 是子事务的标识符（没有单引号！）。您无法在 SQL 中提交子事务（它会与包含它的事务一起自动提交），但您可以使用以下命令将其回滚：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ROLLBACK</span> <span class="token keyword">TO</span> <span class="token keyword">SAVEPOINT</span> name<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="子事务的使用"><a href="#子事务的使用" class="headerlink" title="子事务的使用"></a>子事务的使用</h2><p>子事务在较长的事务中很有用。在 PostgreSQL 中，事务内的任何错误都会中止事务：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
+BEGIN
+test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
+     ?column?      
+-------------------
+ Some work is <span class="token keyword">done</span>
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+ 
+test<span class="token operator">=</span><span class="token operator">></span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR:  division by zero
+test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">></span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
+ERROR:  current transaction is aborted, commands ignored <span class="token keyword">until</span> end of transaction block
+test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">></span> COMMIT<span class="token punctuation">;</span>
+ROLLBACK
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>对于执行大量工作的事务，这是非常烦人的，因为这意味着迄今为止完成的所有工作都会丢失。子事务可以帮助您从这种情况中恢复：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
+BEGIN
+test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
+     ?column?      
+-------------------
+ Some work is <span class="token keyword">done</span>
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+ 
+test<span class="token operator">=</span><span class="token operator">></span> SAVEPOINT a<span class="token punctuation">;</span>
+SAVEPOINT
+test<span class="token operator">=</span><span class="token operator">></span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR:  division by zero
+test<span class="token operator">=</span><span class="token operator">></span> ROLLBACK TO SAVEPOINT a<span class="token punctuation">;</span>
+ROLLBACK
+test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
+      ?column?       
+---------------------
+ try to <span class="token keyword">do</span> <span class="token function">more</span> work
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+ 
+test<span class="token operator">=</span><span class="token operator">></span> COMMIT<span class="token punctuation">;</span>
+COMMIT
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>请注意，当回滚旧事务时，<code>ROLLBACK TO SAVEPOINT</code>会启动另一个子事务<code>a</code>。</p>
+<h2 id="PL-x2F-pgSQL-中的子事务"><a href="#PL-x2F-pgSQL-中的子事务" class="headerlink" title="PL/pgSQL 中的子事务"></a>PL/pgSQL 中的子事务</h2><p>即使您从未使用过该<code>SAVEPOINT</code>语句，您也可能已经遇到过子事务。上一节中的代码是用 PL/pgSQL 编写的，如下所示：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">BEGIN
+   PERFORM <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
+ 
+   BEGIN  -- a block inside a block
+      PERFORM 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+   EXCEPTION
+      WHEN division_by_zero THEN
+         NULL<span class="token punctuation">;</span>  -- ignore the error
+   END<span class="token punctuation">;</span>
+ 
+   PERFORM <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
+END<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>每次您输入带有<code>EXCEPTION</code>子句的块时，都会启动一个新的子事务。子事务在您离开块时提交，并在您进入异常处理程序时回滚。</p>
+<h2 id="与其他数据库的兼容性"><a href="#与其他数据库的兼容性" class="headerlink" title="与其他数据库的兼容性"></a>与其他数据库的兼容性</h2><p>许多其他数据库以不同的方式处理事务内的错误。它们不会中止整个事务，而是仅回滚导致错误的语句，使事务本身保持活动状态。</p>
+<p>当从这样的数据库迁移或移植到 PostgreSQL 时，您可能会想将<em>每个语句</em>包装在子事务中以模拟上述行为。</p>
+<p>PostgreSQL JDBC 驱动程序甚至有一个<a target="_blank" rel="noopener" href="https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters">连接参数</a>“ <code>autosave</code>”，您可以将其设置为“ <code>always</code>”，以在每个语句之前自动设置一个保存点，并在失败时回滚。</p>
+<p>如下所示，这种诱人的技术将导致严重的性能问题。</p>
+<h2 id="性能测试用例"><a href="#性能测试用例" class="headerlink" title="性能测试用例"></a>性能测试用例</h2><p>为了演示过度使用子事务引起的问题，我创建了一个测试表：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">CREATE UNLOGGED TABLE contend <span class="token punctuation">(</span>
+    <span class="token function">id</span> integer PRIMARY KEY,
+    val integer NOT NULL
+<span class="token punctuation">)</span>
+WITH <span class="token punctuation">(</span>fillfactor<span class="token operator">=</span><span class="token string">'50'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+INSERT INTO contend <span class="token punctuation">(</span>id, val<span class="token punctuation">)</span>
+SELECT i, 0
+FROM generate_series<span class="token punctuation">(</span>1, 10000<span class="token punctuation">)</span> AS i<span class="token punctuation">;</span>
+ 
+VACUUM <span class="token punctuation">(</span>ANALYZE<span class="token punctuation">)</span> contend<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>该表很小，没有日志记录，并且具有较低的填充因子，以尽可能减少所需的 I/O。这样，我可以更好地观察子事务的效果。</p>
+<p>我将使用PostgreSQL 附带的基准测试工具<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/pgbench.html"><code>pgbench</code></a>来运行以下自定义 SQL 脚本：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">BEGIN<span class="token punctuation">;</span>
+PREPARE sel<span class="token punctuation">(</span>integer<span class="token punctuation">)</span> AS
+   SELECT count<span class="token punctuation">(</span>*<span class="token punctuation">)</span>
+   FROM contend
+   WHERE <span class="token function">id</span> BETWEEN <span class="token variable">$1</span> AND <span class="token variable">$1</span> + 100<span class="token punctuation">;</span>
+PREPARE upd<span class="token punctuation">(</span>integer<span class="token punctuation">)</span> AS
+   UPDATE contend SET val <span class="token operator">=</span> val + 1
+   WHERE <span class="token function">id</span> IN <span class="token punctuation">(</span><span class="token variable">$1</span>, <span class="token variable">$1</span> + 10, <span class="token variable">$1</span> + 20, <span class="token variable">$1</span> + 30<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+SAVEPOINT a<span class="token punctuation">;</span>
+\set rnd random<span class="token punctuation">(</span>1,990<span class="token punctuation">)</span>
+EXECUTE sel<span class="token punctuation">(</span>10 * :rnd + :client_id + 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+EXECUTE upd<span class="token punctuation">(</span>10 * :rnd + :client_id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+SAVEPOINT a<span class="token punctuation">;</span>
+\set rnd random<span class="token punctuation">(</span>1,990<span class="token punctuation">)</span>
+EXECUTE sel<span class="token punctuation">(</span>10 * :rnd + :client_id + 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+EXECUTE upd<span class="token punctuation">(</span>10 * :rnd + :client_id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+<span class="token punctuation">..</span>.
+ 
+SAVEPOINT a<span class="token punctuation">;</span>
+\set rnd random<span class="token punctuation">(</span>1,990<span class="token punctuation">)</span>
+EXECUTE sel<span class="token punctuation">(</span>10 * :rnd + :client_id + 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+EXECUTE upd<span class="token punctuation">(</span>10 * :rnd + :client_id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ 
+DEALLOCATE ALL<span class="token punctuation">;</span>
+COMMIT<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>该脚本将为测试号 1 设置 60 个保存点，为测试号 2 设置 90 个保存点。它使用准备好的语句来最大限度地减少查询解析的开销。</p>
+<p><code>pgbench</code>将替换<code>:client_id</code>为数据库会话唯一的数字。因此，只要客户端不超过 10 个，每个客户端的<code>UPDATE</code>s 都不会与其他客户端的冲突，但它们会<code>SELECT</code>互相冲突。</p>
+<h2 id="运行性能测试"><a href="#运行性能测试" class="headerlink" title="运行性能测试"></a>运行性能测试</h2><p>由于我的机器有 8 个核心，因此我将使用 6 个并发客户端运行测试 10 分钟。</p>
+<p>要查看带有“ <code>perf top</code>”的有意义的信息，您需要安装 PostgreSQL 调试符号。特别建议在生产系统上这样做。</p>
+<h3 id="测试-1（60-个子事务）"><a href="#测试-1（60-个子事务）" class="headerlink" title="测试 1（60 个子事务）"></a>测试 1（60 个子事务）</h3><pre class="line-numbers language-bash"><code class="language-bash">pgbench -f subtrans.sql -n -c 6 -T 600
+ 
+transaction type: subtrans.sql
+scaling factor: 1
+query mode: simple
+number of clients: 6
+number of threads: 1
+duration: 600 s
+number of transactions actually processed: 100434
+latency average <span class="token operator">=</span> 35.846 ms
+tps <span class="token operator">=</span> 167.382164 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 167.383187 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这是<code>perf top --no-children --call-graph=fp --dsos=/usr/pgsql-12/bin/postgres</code>测试运行时“ ”显示的内容：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">+    1.86%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> tbm_iterate
++    1.77%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> hash_search_with_hash_value
+     1.75%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> AllocSetAlloc
++    1.36%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> pg_qsort
++    1.12%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> base_yyparse
++    1.10%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> TransactionIdIsCurrentTransactionId
++    0.96%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> heap_hot_search_buffer
++    0.96%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> LWLockAttemptLock
++    0.85%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> HeapTupleSatisfiesVisibility
++    0.82%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> heap_page_prune
++    0.81%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> ExecInterpExpr
++    0.80%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> SearchCatCache1
++    0.79%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> BitmapHeapNext
++    0.64%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> LWLockRelease
++    0.62%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> MemoryContextAllocZeroAligned
++    0.55%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> _bt_checkkeys                                 
+     0.54%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> hash_any
++    0.52%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> _bt_compare
+     0.51%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> ExecScan
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="测试-2（90-个子事务）"><a href="#测试-2（90-个子事务）" class="headerlink" title="测试 2（90 个子事务）"></a>测试 2（90 个子事务）</h3><pre class="line-numbers language-bash"><code class="language-bash">pgbench -f subtrans.sql -n -c 6 -T 600
+ 
+transaction type: subtrans.sql
+scaling factor: 1
+query mode: simple
+number of clients: 6
+number of threads: 1
+duration: 600 s
+number of transactions actually processed: 41400
+latency average <span class="token operator">=</span> 86.965 ms
+tps <span class="token operator">=</span> 68.993634 <span class="token punctuation">(</span>including connections establishing<span class="token punctuation">)</span>
+tps <span class="token operator">=</span> 68.993993 <span class="token punctuation">(</span>excluding connections establishing<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这就是“ <code>perf top --no-children --call-graph=fp --dsos=/usr/pgsql-12/bin/postgres</code>”所要说的：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">+   10.59%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> LWLockAttemptLock
++    7.12%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> LWLockRelease
++    2.70%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> LWLockAcquire
++    2.40%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> SimpleLruReadPage_ReadOnly
++    1.30%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> TransactionIdIsCurrentTransactionId
++    1.26%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> tbm_iterate
++    1.22%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> hash_search_with_hash_value
++    1.08%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> AllocSetAlloc
++    0.77%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> heap_hot_search_buffer
++    0.72%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> pg_qsort
++    0.72%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> base_yyparse
++    0.66%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> SubTransGetParent
++    0.62%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> HeapTupleSatisfiesVisibility
++    0.54%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> ExecInterpExpr
++    0.51%  <span class="token punctuation">[</span>.<span class="token punctuation">]</span> SearchCatCache1
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>即使我们考虑到测试 2 中的事务更长，与测试 1 相比，这仍然是<strong>60% 的性能下降。</strong></p>
+<h2 id="子交易的实施"><a href="#子交易的实施" class="headerlink" title="子交易的实施"></a>子交易的实施</h2><p>要了解发生了什么，我们必须了解事务和子事务是如何实现的。</p>
+<p>每当事务或子事务修改数据时，都会为其分配一个<em>事务 ID</em>。PostgreSQL 在提交日志中跟踪这些事务 ID ，该日志保存在<code>pg_xact</code>数据目录的子目录中。</p>
+<p>但是，事务和子事务之间存在一些差异：</p>
+<ul>
+<li>每个子事务都有一个包含事务或子事务（“父事务”）</li>
+<li>提交子事务不需要 WAL 刷新</li>
+<li>每个数据库会话只能有一个事务，但有很多子事务</li>
+</ul>
+<p>(子)事务是给定子事务的父事务的信息持久化到数据目录的pg_subtrans子目录中。由于包含该信息的事务一旦结束就会过时，因此在关闭或崩溃期间不必保存该数据。</p>
+<h2 id="子交易和可见性"><a href="#子交易和可见性" class="headerlink" title="子交易和可见性"></a>子交易和可见性</h2><p>PostgreSQL 中行版本（“元组”）的可见性由<code>xmin</code>和<a target="_blank" rel="noopener" href="https://www.cybertec-postgresql.com/en/whats-in-an-xmax/"><code>xmax</code></a>系统列决定，其中包含创建和销毁事务的事务 ID。如果存储的事务 ID 是子事务的 ID，则 PostgreSQL 还必须查阅包含（子）事务的状态来确定事务 ID 是否有效。</p>
+<p>为了确定语句可以看到哪些元组，PostgreSQL在语句（或事务）开始时拍摄数据库<em>快照。</em>这样的快照包括：</p>
+<ul>
+<li>最大事务 ID：从该事务开始的所有内容都是不可见的</li>
+<li>拍摄快照时处于活动状态的事务和子事务的列表</li>
+<li>当前（子）事务中最早可见命令的<em>命令</em>号</li>
+</ul>
+<p>快照是通过查看<em>进程数组</em>来初始化的，该数组存储在共享内存中，包含有关所有当前正在运行的后端的信息。当然，它包含后端的当前事务 ID **，并且每个会话最多可容纳 64 个非中止子事务。如果此类子事务超过 64 个，则快照将被标记为*suboverflowed***。</p>
+<h2 id="解释测试结果"><a href="#解释测试结果" class="headerlink" title="解释测试结果"></a>解释测试结果</h2><p>subooverflow快照不包含确定可见性所需的所有数据，因此PostgreSQL有时不得不求助于pg_subtrans。这些页缓存在共享缓冲区中，</p>
+<p>但是您可以看到在perf输出的SimpleLruReadPage_ReadOnly中查找它们的开销。其他事务必须更新pg_subtrans以注册子事务，您可以</p>
+<p>在perf输出中看到它们如何与读取器竞争轻量级锁。</p>
+<h2 id="诊断子事务过多的问题"><a href="#诊断子事务过多的问题" class="headerlink" title="诊断子事务过多的问题"></a>诊断子事务过多的问题</h2><p>除了看“ <code>perf top</code>”之外，还有其他症状可以指出这个问题的方向：</p>
+<ul>
+<li>您的工作负载在单线程运行时性能良好，但在多个并发数据库会话中运行时性能很差</li>
+<li>你经常会在pg_stat_activity中看到等待事件“SubtransSLRU”(旧版本中的“SubtransControlLock”)</li>
+<li>从PostgreSQL v13开始，您可以查看监控视图 <code>pg_stat_slru</code> 并检查name = ‘Subtrans’行中的 <code>blks_read</code> 是否持续增长。这表明PostgreSQL必须读取磁盘页，因为它需要访问不再缓存的子事务。</li>
+<li>如果使用 <code>pg_export_snapshot()</code> 函数导出快照，则data目录的pg_snapshots子目录中的结果文件将包含“sof:1”行，表示子事务数组溢出</li>
+<li>从PostgreSQL v16开始，您可以调用函数 <code>pg_stat_get_backend_subxact(integer)</code> 来返回后端进程的子事务数量以及子事务缓存是否溢出</li>
+</ul>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>子事务是一个很棒的工具，但您应该明智地使用它们。如果需要并发性，每个事务启动的子事务不要超过 64 个。</p>
+<p>本文中显示的诊断应该可以帮助您确定您是否遇到了该问题。</p>
+<p>找出该问题的原因可能很棘手。例如，您为 SQL 语句（可能在触发器中）的每个结果行调用的带有异常处理程序的函数启动一个新的子事务可能并不明显。</p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://jinlid.github.io/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/">https://jinlid.github.io/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">JINLID</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="PostgreSQL服务器架构">
+                        
+                        <span class="card-title">PostgreSQL服务器架构</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2023/postgresql-zhong-cong-md5-dao-scram-sha-256/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="POSTGRESQL中从MD5到SCRAM-SHA-256">
+                        
+                        <span class="card-title">POSTGRESQL中从MD5到SCRAM-SHA-256</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2023</span>
+            
+            <a href="/about" target="_blank">JINLID</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/jinlid" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:845401160@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=845401160" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 845401160" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
