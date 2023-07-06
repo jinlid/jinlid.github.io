@@ -395,11 +395,11 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 41">
+                <a href="/categories/postgresql/" title="postgresql: 43">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">41</span>
+                        <span class="tag-length">43</span>
                     </span>
                 </a>
                 
@@ -444,27 +444,27 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/pi-liang-shu-ju-jia-zai-de-zui-jia-shi-jian-ji-qiao/">
+                    <a href="/2023/li-jie-postgresql-zhong-de-bloat-he-vacuum/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="批量数据加载的最佳实践技巧">
+                            <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="理解PostgreSQL中的Bloat和VACUUM">
                             
-                            <span class="card-title">批量数据加载的最佳实践技巧</span>
+                            <span class="card-title">理解PostgreSQL中的Bloat和VACUUM</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                有时，PostgreSQL 数据库需要在单个或最少的步骤中导入大量数据。这通常称为批量数据导入，其中数据源通常是一个或多个大文件。这个过程有时会慢得令人无法接受。
+                                与其他RDBMS相比，PostgreSQL中MVCC(多版本并发控制)的实现是不同的和特殊的。PostgreSQL中的MVCC控制哪些元组可以通过版本控制对事务可见。
 
 
-造成这种低性能的原因有很多：索引、触发器、外键、GUID 主键，甚至预写
+PostgreSQL中的版本控制是什么?让我们考虑Oracle或My
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-25
                             </span>
                             <span class="publish-author">
                                 
@@ -542,6 +542,55 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
+                    <a href="/2023/pi-liang-shu-ju-jia-zai-de-zui-jia-shi-jian-ji-qiao/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="批量数据加载的最佳实践技巧">
+                            
+                            <span class="card-title">批量数据加载的最佳实践技巧</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                有时，PostgreSQL 数据库需要在单个或最少的步骤中导入大量数据。这通常称为批量数据导入，其中数据源通常是一个或多个大文件。这个过程有时会慢得令人无法接受。
+
+
+造成这种低性能的原因有很多：索引、触发器、外键、GUID 主键，甚至预写
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
                     <a href="/2023/autovacuum-bu-shi-di-ren/">
                         <div class="card-image tag-image">
                             
@@ -558,6 +607,55 @@
 
 
 这些问题源于所谓的“膨胀”，这是PostgreSQL和其他MVCC数据
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2023/vacuum-he-analyze-zui-jia-shi-jian-ji-qiao/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="VACUUM和ANALYZE最佳实践技巧">
+                            
+                            <span class="card-title">VACUUM和ANALYZE最佳实践技巧</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                VACUUM 和 ANALYZE 是PostgreSQL 数据库两个最重要的维护操作。 
+
+
+VACUUM 用于回收表中“死元组”占用的空间。当删除或更新记录（先删除后插入）时，会生成死元组。PostgreSQL 不会从表中物理删除旧行，而
                             
                         </div>
                         <div class="publish-info">
@@ -691,56 +789,6 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
-                            
-                            <span class="card-title">流复制三（延迟备库）</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
-
-
-[TOC]
-延迟备库1 延迟备库的意义PostgreSQL 流复制
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-09
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
                     <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
                         <div class="card-image tag-image">
                             
@@ -814,52 +862,6 @@ FATAL:  terminating connect
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2023-02-09
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/postgresql-liu-fu-zhi-yi-huan-jing-da-jian/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="流复制一（环境搭建）">
-                            
-                            <span class="card-title">流复制一（环境搭建）</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                PostgreSQL 早在9.0版本开始支持物理复制，也可称为流复制（ Streaming Replication )，通过流复制技术，可以从实例级复制出一个与主库一模一样的从库（也称之为备库） 举个简单的例子，在主机 host1 上创建了
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-08
                             </span>
                             <span class="publish-author">
                                 
