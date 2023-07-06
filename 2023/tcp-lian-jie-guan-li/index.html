@@ -402,7 +402,7 @@ TCP连接的建立和终止一个TCP连接由">
             <div id="articleContent">
                 <p>TCP是一种面向连接的的单播协议。在发送数据之前，通信双方必须在彼此之间建立一条连接。TCP服务模型是一个字节流。TCP必须检测并修补所有在IP层（或下面的层）产生的丢包、重复以及错误等数据传输问题。</p>
 <h4 id="TCP连接的建立和终止"><a href="#TCP连接的建立和终止" class="headerlink" title="TCP连接的建立和终止"></a>TCP连接的建立和终止</h4><p>一个TCP连接由一对端点或套接字构成，其中通信的每一端都由一对唯一的IP地址和端口号所标识。一个TCP连接通常分为3个阶段：启动、数据传输和退出。下图显示了一个典型的TCP连接的建立和关闭过程（不包含数据传输）。</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/image-20230418212623713.png" alt="image-20230418212623713"></p>
+<p><img src="/medias/image/image-20230418212623713.png" alt="image-20230418212623713"></p>
 <p>为了建立一个TCP连接，需要完成以下步骤：</p>
 <ol>
 <li>客户端发送一个 <code>SYN</code> 报文段，并指明自己想要连接的端口号和它的客户端初始序列号 <code>K</code>。客户端发送的这个 <code>SYN</code> 报文段称作段1。</li>

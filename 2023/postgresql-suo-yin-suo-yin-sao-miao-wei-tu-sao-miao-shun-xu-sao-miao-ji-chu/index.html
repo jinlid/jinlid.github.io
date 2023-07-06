@@ -435,8 +435,8 @@ CREATE INDEX
 ANALYZE
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>在 PostgreSQL 中，btree 使用 Lehman-Yao 高并发 btree（将在后面的博客中更详细地介绍）。</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/02_PostgreSQL-Complete-B-tree.jpg" alt="postgresql 索引 B 树"></p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/01_PostgreSQL-B-tree.jpg" alt="postgresql 索引 B 树"></p>
+<p><img src="/medias/image/02_PostgreSQL-Complete-B-tree-168865667503438.jpg" alt="postgresql 索引 B 树"></p>
+<p><img src="/medias/image/01_PostgreSQL-B-tree-168865667653040.jpg" alt="postgresql 索引 B 树"></p>
 <h2 id="在-PostgreSQL-中选择一小部分数据"><a href="#在-PostgreSQL-中选择一小部分数据" class="headerlink" title="在 PostgreSQL 中选择一小部分数据"></a><strong>在 PostgreSQL 中选择一小部分数据</strong></h2><p>当只选择一小部分行时，PostgreSQL 可以直接询问索引。在这种情况下，它甚至可以使用“仅索引扫描”，因为所需的所有列实际上已经在索引中：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM sampletable WHERE x = 42353;</span>
                                QUERY PLAN
@@ -472,7 +472,7 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
 <blockquote>
 <p>因此，位图扫描对性能有很大贡献。</p>
 </blockquote>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/03_PostgreSQL-Bitmap-scan.jpg" alt="postgresql 位图扫描"></p>
+<p><img src="/medias/image/03_PostgreSQL-Bitmap-scan-168865667947542.jpg" alt="postgresql 位图扫描"></p>
 
                 
             </div>
@@ -621,13 +621,13 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                <a href="/2023/postgresql-fen-xi-he-you-hua-qi-tong-ji-xin-xi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="POSTGRESQL分析和优化器统计信息">
                         
-                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
+                        <span class="card-title">POSTGRESQL分析和优化器统计信息</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -670,13 +670,13 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-fen-xi-he-you-hua-qi-tong-ji-xin-xi/">
+                <a href="/2023/postgresql-you-hua-shu-ju-ku-can-shu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="POSTGRESQL分析和优化器统计信息">
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="PostgreSQL优化数据库参数">
                         
-                        <span class="card-title">POSTGRESQL分析和优化器统计信息</span>
+                        <span class="card-title">PostgreSQL优化数据库参数</span>
                     </div>
                 </a>
                 <div class="card-content article-content">

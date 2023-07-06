@@ -655,8 +655,8 @@ Options:
 <p>实例如下：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">pg_resetwal -c 0x00000,0x00000 -D /opt/pg12/pgdata -l 000000030000000A000000CA -m 0x10000,0x00001 -O 0xCC80 --wal-segsize<span class="token operator">=</span>16 -x 0x100000
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/640.png" alt="图片"></p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/640-16801052406188.png" alt="图片"></p>
+<p><img src="/medias/image/640.png" alt="图片"></p>
+<p><img src="/medias/image/640-16801052406188.png" alt="图片"></p>
 <h2 id="恢复实例"><a href="#恢复实例" class="headerlink" title="恢复实例"></a>恢复实例</h2><p>按照上边的方法，我们来实做一个恢复：</p>
 <p>我们先把旧的 <code>pg_control</code> 文件重命名一下：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>pg10@localhost ~<span class="token punctuation">]</span>$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>/global
@@ -1043,19 +1043,19 @@ drwx------. 2 pg10 postgres  59 Mar 30 00:06 archive_status
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
+                <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
+                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="流复制四（查询冲突）">
                         
-                        <span class="card-title">流复制三（延迟备库）</span>
+                        <span class="card-title">流复制四（查询冲突）</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
+                            
                         
                     </div>
                     <div class="publish-info">

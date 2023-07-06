@@ -418,7 +418,7 @@
 <h2 id="什么是HOT？"><a href="#什么是HOT？" class="headerlink" title="什么是HOT？"></a>什么是HOT？</h2><p>HOT 是<code>Heap Only Tuple</code>的缩写（这是一个比<a target="_blank" rel="noopener" href="https://www.postgresql.org/message-id/1163112297.3634.570.camel%40silverbirch.site">Overflow Update CHaining</a>更好的缩写）。该功能克服了 PostgreSQL 处理<code>UPDATE</code>的一些低效率问题。</p>
 <h2 id="PostgreSQL-UPDATE实现的问题"><a href="#PostgreSQL-UPDATE实现的问题" class="headerlink" title="PostgreSQL UPDATE实现的问题"></a>PostgreSQL <code>UPDATE</code>实现的问题</h2><p>PostgreSQL 通过在表中保留旧版本的表行来实现多版本化 - 添加<code>UPDATE</code>该行的新行版本（“tuple”）并将旧版本标记为无效。</p>
 <p>在很多方面，PostgreSQL中的更新与删除后跟插入没有太大区别。</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/update_not_HOT_Zeichenfl%C3%A4che-1.png" alt="正常更新"></p>
+<p><img src="/medias/image/update_not_HOT_Zeichenfl%C3%A4che-1-168865670440244.png" alt="正常更新"></p>
 <p>这有很多优点：</p>
 <ul>
 <li>无需额外的存储区域保留旧行版本</li>
@@ -487,7 +487,7 @@
 <h2 id="HOT更新的工作原理"><a href="#HOT更新的工作原理" class="headerlink" title="HOT更新的工作原理"></a>HOT更新的工作原理</h2><p>为了理解 HOT，让我们回顾一下<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/storage-page-layout.html">PostgreSQL 中表页的布局</a>：</p>
 <p>“行指针”数组存储在页面的开头，每个指针都指向一个实际的元组。这种间接引用允许PostgreSQL在不改变外部外观的情况下在内部重新组织页面。</p>
 <p><strong>仅堆元组是一种不从表块外部引用的元组</strong>。相反，“转发地址”(其行指针号)存储在旧的行版本中:</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/update_HOT_Zeichenfl%C3%A4che-1.png" alt="热门更新"></p>
+<p><img src="/medias/image/update_HOT_Zeichenfl%C3%A4che-1-168865670723446.png" alt="热门更新"></p>
 <p>仅当该行的新版本和旧版本位于同一块中时才有效。该行的外部地址（原始行指针）保持不变。要访问仅限堆的元组，PostgreSQL 必须遵循块内的“HOT链”。</p>
 <h2 id="HOT更新的优点"><a href="#HOT更新的优点" class="headerlink" title="HOT更新的优点"></a>HOT更新的优点</h2><p>HOT更新有两个主要优点：</p>
 <ul>

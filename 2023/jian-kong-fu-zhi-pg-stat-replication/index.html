@@ -446,7 +446,7 @@ reply_time       <span class="token operator">|</span> <span class="token keywor
 <p>多年来，此视图中的列数大幅增加。不过，我们首先讨论一些基本原理。</p>
 <h2 id="pg-stat-replication：WAL-sender信息"><a href="#pg-stat-replication：WAL-sender信息" class="headerlink" title="pg_stat_replication：WAL sender信息"></a>pg_stat_replication：WAL sender信息</h2><p>人们常说 <code>pg_stat_replication</code> 位于“primary”上。这不完全正确。该视图的作用是公开有关 wal_sender 进程的信息。换句话说:如</p>
 <p>果你正在运行级联复制，这意味着当一个从服务器复制到其他从服务器时，它可能也会显示条目。这是一张说明情况的图片：</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/pg_stat_replication_Zeichenfl%C3%A4che-1.png" alt="复制日志"></p>
+<p><img src="/medias/image/pg_stat_replication_Zeichenfl%C3%A4che-1.png" alt="复制日志"></p>
 <p>对于每个 WAL sender进程，您将得到一个条目。重要的是，每个服务器只能看到链中的下一个服务器——发送服务器永远不会“看穿”从服务器。换句话说：在级联复制的情况下，您必须要求每个发送服务器获取概览。</p>
 <p>还有更多：人们通常必须确定备库是否是最新的。这里有很多相关的事情：</p>
 <ul>
@@ -456,7 +456,7 @@ reply_time       <span class="token operator">|</span> <span class="token keywor
 <li>replay_lsn：已经重播了多少 WAL，因此对查询可见？</li>
 </ul>
 <p>下图说明了这些字段：</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/Replication-log_Zeichenfl%C3%A4che-1.png" alt="pg_stat_replication"></p>
+<p><img src="/medias/image/Replication-log_Zeichenfl%C3%A4che-1.png" alt="pg_stat_replication"></p>
 <p>这里需要注意的是，PostgreSQL 提供了一种特殊的数据类型来表示这些数据：<strong>pg_lsn</strong></p>
 <p>可以轻松地找出当前的 WAL 位置。下面是它的工作原理：</p>
 <pre class="line-numbers language-sql"><code class="language-sql">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_current_wal_lsn();</span>

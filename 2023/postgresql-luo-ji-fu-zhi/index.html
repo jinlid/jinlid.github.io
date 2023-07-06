@@ -522,7 +522,7 @@ COMMIT 747
 
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="2-逻辑复制架构"><a href="#2-逻辑复制架构" class="headerlink" title="2 逻辑复制架构"></a>2 逻辑复制架构</h2><p> <img src="/../../../source/themes/hexo-theme-matery/source/medias/image/image-20230322210722306.png" alt="逻辑复制架构图"></p>
+<h2 id="2-逻辑复制架构"><a href="#2-逻辑复制架构" class="headerlink" title="2 逻辑复制架构"></a>2 逻辑复制架构</h2><p> <img src="/medias/image/image-20230322210722306.png" alt="逻辑复制架构图"></p>
 <p>图中的逻辑主库和逻辑备库为不同的 PostgreSQL 实例，可以在同一主机上，也可以在不同主机上，并且逻辑主库的表 table1 和 table2 加入了 Publication ，备库上的 Subscription 能够实时同步逻辑主库上的 table1 和 table2;</p>
 <p>逻辑复制是基于逻辑解析，其核心原理是逻辑主库将 Publication 中表的 WAL 日志解析成一定格式并发送给逻辑备库，逻辑备库Subscription 接收到解析后的 WAL 日志后进行重做，从而实现表数据同步。</p>
 <p>逻辑复制架构图中最重要的两个角色为 Publication 和 Subscription。</p>

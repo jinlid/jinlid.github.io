@@ -560,28 +560,19 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2023/flask-postgresql-bootstrap-shi-xian-jian-suo-xi-tong/">
+                        <a href="/2023/django-fen-bu-shi-ren-wu-he-ding-shi-ren-wu/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="flask+postgresql+bootstrap实现检索系统">
+                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Django的分布式任务和定时任务">
                                 
-                                <span class="card-title">flask+postgresql+bootstrap实现检索系统</span>
+                                <span class="card-title">Django的分布式任务和定时任务</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    一个检索系统
-
-
-直接上代码：
-index.html
-&lt;!DOCTYPE html>
-&lt;html lang="en">
-&lt;head>
-    &lt;meta charset="UTF-8">
-    &lt;title>
+                                    Django 的分布式任务主要由 Celery 框架实现，这是 Python 开发的分布式任务队列。它支持使用任务队列的方式在分布的机器、进程和线程上执行任务调度。Celery 本身不提供信息存储服务。它使用第三方数据库来传递任务，目前第三
                                 
                             </div>
                             <div class="publish-info">
@@ -628,19 +619,28 @@ index.html
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2023/django-fen-bu-shi-ren-wu-he-ding-shi-ren-wu/">
+                        <a href="/2023/flask-postgresql-bootstrap-shi-xian-jian-suo-xi-tong/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Django的分布式任务和定时任务">
+                                <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="flask+postgresql+bootstrap实现检索系统">
                                 
-                                <span class="card-title">Django的分布式任务和定时任务</span>
+                                <span class="card-title">flask+postgresql+bootstrap实现检索系统</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    Django 的分布式任务主要由 Celery 框架实现，这是 Python 开发的分布式任务队列。它支持使用任务队列的方式在分布的机器、进程和线程上执行任务调度。Celery 本身不提供信息存储服务。它使用第三方数据库来传递任务，目前第三
+                                    一个检索系统
+
+
+直接上代码：
+index.html
+&lt;!DOCTYPE html>
+&lt;html lang="en">
+&lt;head>
+    &lt;meta charset="UTF-8">
+    &lt;title>
                                 
                             </div>
                             <div class="publish-info">
@@ -816,23 +816,21 @@ index.html
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
+                        <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
+                                <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="流复制四（查询冲突）">
                                 
-                                <span class="card-title">流复制三（延迟备库）</span>
+                                <span class="card-title">流复制四（查询冲突）</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
+                                    部署流复制环境后，备库可提供只读操作，通常会将一些执行时间较长的分析任务、统计 SQL 跑在备库上，从而减轻主库压力，在备库上执行一些长时间 SQL 时，可能会出现以下错误并被中止：
 
-
-[TOC]
-延迟备库1 延迟备库的意义PostgreSQL 流复制
+FATAL:  terminating connect
                                 
                             </div>
                             <div class="publish-info">
@@ -879,21 +877,23 @@ index.html
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2023/postgresql-liu-fu-zhi-si-cha-xun-chong-tu/">
+                        <a href="/2023/postgresql-liu-fu-zhi-san-yan-chi-bei-ku/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="流复制四（查询冲突）">
+                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="流复制三（延迟备库）">
                                 
-                                <span class="card-title">流复制四（查询冲突）</span>
+                                <span class="card-title">流复制三（延迟备库）</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    部署流复制环境后，备库可提供只读操作，通常会将一些执行时间较长的分析任务、统计 SQL 跑在备库上，从而减轻主库压力，在备库上执行一些长时间 SQL 时，可能会出现以下错误并被中止：
+                                    延迟备库是指可以配置备库和主库的延迟时间，这样备库始终和主库保持指定时间的延迟，例如设置备库和主库之间的延迟时间为1小时 ，理论上备库和主库的延时始终保持在一小时左右。
 
-FATAL:  terminating connect
+
+[TOC]
+延迟备库1 延迟备库的意义PostgreSQL 流复制
                                 
                             </div>
                             <div class="publish-info">

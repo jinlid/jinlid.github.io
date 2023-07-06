@@ -417,7 +417,7 @@ PostgreSQL如何写入数据在我们更详细地">
                 <p>检查点是PostgreSQL的核心概念。然而，许多人并不知道它们到底是什么，也不知道如何调整检查点以达到最高效率。这篇文章将解释</p>
 <p>检查点和检查点调优，并希望对这些重要的数据库内部机制有所启发。</p>
 <h2 id="PostgreSQL如何写入数据"><a href="#PostgreSQL如何写入数据" class="headerlink" title="PostgreSQL如何写入数据"></a>PostgreSQL如何写入数据</h2><p>在我们更详细地讨论检查点之前，了解 PostgreSQL 如何写入数据非常重要。我们看一下下面的图片：</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/checkpoint_Zeichenfl%C3%A4che-1.png" alt="img"></p>
+<p><img src="/medias/image/checkpoint_Zeichenfl%C3%A4che-1-168865652657132.png" alt="img"></p>
 <p>最重要的是，我们必须假设崩溃随时可能发生。为什么这是相关的？好吧，我们想确保你的数据库永远不会被损坏。结果是我们无法直接</p>
 <p>向数据文件写入数据。为什么呢？假设我们要向数据文件写入“1234”。如果我们在“12”之后崩溃了呢？结果将是表中的某一行出错。也许</p>
 <p>索引项会丢失，等等——我们必须不惜一切代价防止这种情况发生。</p>
@@ -430,7 +430,7 @@ PostgreSQL如何写入数据在我们更详细地">
 <p>要读取数据，PostgreSQL会在向操作系统请求数据块之前检查共享缓冲区。因此，脏块的写入顺序并不重要。甚至可以稍晚一点写入数</p>
 <p>据，以增加在一次I/O请求中向磁盘发送多个更改的几率。</p>
 <h2 id="摆脱-WAL"><a href="#摆脱-WAL" class="headerlink" title="摆脱 WAL"></a>摆脱 WAL</h2><p>但是，我们不能无限期地将数据写入 WAL。在某些时候，空间必须被回收。这正是检查点的好处。</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/checkpoint2_Zeichenfl%C3%A4che-1.png" alt="PostgreSQL 检查点"></p>
+<p><img src="/medias/image/checkpoint2_Zeichenfl%C3%A4che-1-168865653150034.png" alt="PostgreSQL 检查点"></p>
 <p>检查点的目的是确保在某个点之前创建的所有脏缓冲区都发送到磁盘，以便可以回收到该点的 WAL。PostgreSQL 的方法是启动一个检查</p>
 <p>点进程，将那些丢失的更改写入磁盘。但是，此过程不会尽快将数据发送到磁盘。原因是我们希望使 I/O 曲线变平以保证稳定的响应时</p>
 <p>间。</p>

@@ -415,7 +415,7 @@
                 <p>许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 <code>hot_standby_feedback</code> 参数的真正作用是什么。支持客户不断问这个问题，因此与更广泛的 PostgreSQL 用户分享这些知识可能会很有用。</p>
 <h2 id="VACUUM-在-PostgreSQL-中做什么"><a href="#VACUUM-在-PostgreSQL-中做什么" class="headerlink" title="VACUUM 在 PostgreSQL 中做什么"></a>VACUUM 在 PostgreSQL 中做什么</h2><p>VACUUM 是 PostgreSQL 中的一个重要命令，它的目标是清除任何人不再需要的死行。这个想法是当新数据进入时重用表内的空间。重要的是：<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/sql-vacuum.html">VACUUM</a>的目的是重用表内的空间 - 这并不一定意味着关系会收缩。另外：请记住，VACUUM 只能清除死行，如果 PostgreSQL 服务器上运行的其他事务不再需要它们。</p>
 <p>考虑下图：</p>
-<p><a target="_blank" rel="noopener" href="https://www.cybertec-postgresql.com/wp-content/uploads/2018/08/hot_standby_feedback-01-VACUUM-NEU.jpg"><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/hot_standby_feedback-01-VACUUM-NEU.jpg" alt="热备反馈真空"></a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cybertec-postgresql.com/wp-content/uploads/2018/08/hot_standby_feedback-01-VACUUM-NEU.jpg"><img src="/medias/image/hot_standby_feedback-01-VACUUM-NEU-168865651247428.jpg" alt="热备反馈真空"></a></p>
 <p>正如您所看到的，我们这里有两个连接。左侧的第一个连接正在运行一个冗长的 SELECT 语句。现在请记住：SQL 语句基本上会“冻结”其</p>
 <p>数据视图。在 SQL 语句中，世界不会“改变”——查询将始终看到相同的数据集，而不管同时进行的更改如何。理解这一点非常重要。</p>
 <p>我们来看看第二个事务。它将删除一些数据并提交。自然出现的问题是：PostgreSQL什么时候才能真正从磁盘中删除这一行？DELETE 本</p>
@@ -429,7 +429,7 @@
 <p>因此，在单个服务器上，情况非常清楚。VACUUM 可以清除不再出现的行。</p>
 <h2 id="PostgreSQL-中的复制冲突"><a href="#PostgreSQL-中的复制冲突" class="headerlink" title="PostgreSQL 中的复制冲突"></a>PostgreSQL 中的复制冲突</h2><p>主备场景下会发生什么？情况稍微复杂一些，因为主数据库如何知道备用数据库之一正在发生某些奇怪的事务？</p>
 <p>这是显示典型场景的图像：</p>
-<p><img src="/../../../source/themes/hexo-theme-matery/source/medias/image/vacuum_cleanup-01-939x1024.jpg" alt="PostgreSQL VACUUM 和表膨胀">在 PostgreSQL 中使用 VACUUM 防止表膨胀</p>
+<p><img src="/medias/image/vacuum_cleanup-01-939x1024-168865651589130.jpg" alt="PostgreSQL VACUUM 和表膨胀">在 PostgreSQL 中使用 VACUUM 防止表膨胀</p>
 <p>在这种情况下，副本上的 SELECT 语句将运行几分钟。同时，对主数据库进行更改（更新、删除等）。这还是没问题的。请记住：</p>
 <p>DELETE 并没有真正删除该行 - 它只是将其标记为死行，但它仍然对其他事务可见，这些事务允许看到死行。如果允许主服务器上的</p>
 <p><a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/sql-vacuum.html">VACUUM</a>真正从磁盘中删除行，情况就会变得很严重。VACUUM </p>
@@ -641,13 +641,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/">
+                <a href="/2023/postgresql-zhong-cong-md5-dao-scram-sha-256/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的子事务和性能">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="POSTGRESQL中从MD5到SCRAM-SHA-256">
                         
-                        <span class="card-title">POSTGRESQL中的子事务和性能</span>
+                        <span class="card-title">POSTGRESQL中从MD5到SCRAM-SHA-256</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
