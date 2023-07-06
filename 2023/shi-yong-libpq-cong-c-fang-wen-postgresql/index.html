@@ -959,38 +959,38 @@ value <span class="token operator">=</span> 29<span class="token punctuation">(<
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>如果输出很长，可以将 <code>pager</code> 设置为非零值，要求对输出进行分页;也就是说，通过一个过滤器，在每一页左右暂停输出。如果<code>expanded</code> 设置为非零值，则输出格式更改为在一行中单独列出每行中的每个字段。</p>
 <p>我们可以通过设置html3为非零值来生成适合网页包含的HTML输出。我们可以通过设置 <code>tableOpt</code> 和 <code>caption</code> 字符串来指定表选项和标题。下面是一个程序示例(<code>print.c</code>)，使用 <code>PQprint</code> 生成HTML输出:</p>
-<pre><code>#include &lt;stdlib.h&gt;
-#include &lt;libpq-fe.h&gt;
-int main()
-{
-    PGresult *result;
-    PGconn *conn;
-    conn = PQconnectdb("");
-    if(PQstatus(conn) == CONNECTION_OK) {
-        printf("connection made\n");
-         result = PQexec(conn, "SELECT \* FROM customer WHERE town = 'Bingham'");
-         { 
-             PQprintOpt pqp;
-             pqp.header = 1;
-            pqp.align = 1;
-            pqp.html3 = 1;
-            pqp.expanded = 0;
-            pqp.pager = 0;
-            pqp.fieldSep = "";
-            pqp.tableOpt = "align=center";
-            pqp.caption = "Bingham Customer List";
-            pqp.fieldName = NULL;
-            printf("&lt;html&gt;&lt;head&gt;&lt;title&gt;Customers&lt;/title&gt;&lt;/head&gt;&lt;body&gt;\n");
-            PQprint(stdout, result, &amp;pqp);
-            printf("&lt;/body&gt;&lt;/html&gt;\n");
-         }
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;libpq-fe.h></span></span>
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    PGresult <span class="token operator">*</span>result<span class="token punctuation">;</span>
+    PGconn <span class="token operator">*</span>conn<span class="token punctuation">;</span>
+    conn <span class="token operator">=</span> <span class="token function">PQconnectdb</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">PQstatus</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span> <span class="token operator">==</span> CONNECTION_OK<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"connection made\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         result <span class="token operator">=</span> <span class="token function">PQexec</span><span class="token punctuation">(</span>conn<span class="token punctuation">,</span> <span class="token string">"SELECT \* FROM customer WHERE town = 'Bingham'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token punctuation">{</span> 
+             PQprintOpt pqp<span class="token punctuation">;</span>
+             pqp<span class="token punctuation">.</span>header <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>align <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>html3 <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>expanded <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>pager <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>fieldSep <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>tableOpt <span class="token operator">=</span> <span class="token string">"align=center"</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>caption <span class="token operator">=</span> <span class="token string">"Bingham Customer List"</span><span class="token punctuation">;</span>
+            pqp<span class="token punctuation">.</span>fieldName <span class="token operator">=</span> <span class="token constant">NULL</span><span class="token punctuation">;</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"&lt;html>&lt;head>&lt;title>Customers&lt;/title>&lt;/head>&lt;body>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">PQprint</span><span class="token punctuation">(</span><span class="token constant">stdout</span><span class="token punctuation">,</span> result<span class="token punctuation">,</span> <span class="token operator">&amp;</span>pqp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"&lt;/body>&lt;/html>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token punctuation">}</span>
 
-    }
-    PQfinish(conn);
-    return EXIT_SUCCESS;
+    <span class="token punctuation">}</span>
+    <span class="token function">PQfinish</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> EXIT_SUCCESS<span class="token punctuation">;</span>
 
-}
-</code></pre>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>这个程序的输出是HTML代码，显示在屏幕上(stdout)。输出如下:</p>
 <p>$ <strong>PGDATABASE=bpfinal ./print</strong></p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>title</span><span class="token punctuation">></span></span>Customers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>title</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
