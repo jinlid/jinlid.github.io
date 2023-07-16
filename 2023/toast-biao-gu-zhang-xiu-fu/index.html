@@ -518,6 +518,36 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>因toast表坏块问题，将导致源表不可访问，如果有有效的备份，可以通过备份来进行故障的恢复；如果没有有效的备份，可以通过对源</p>
 <p>表错误记录进行清理。</p>
+<p>本次函数用到的RAISE语法</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 可以在客户端或者服务端设置日志级别</span>
+client_min_messages/log_min_messages
+
+RAISE level <span class="token function">format</span><span class="token punctuation">;</span>
+• DEBUG
+• LOG
+• NOTICE
+• INFO
+• WARNING
+• EXCEPTION
+<span class="token comment" spellcheck="true"># 以下是不同client_min_messages参数值对应RAISE的日志范围</span>
+error			INFO
+warning 		INFO WARNING
+notice（默认）    INFO WARNING NOTICE
+log     		INFO WARNING NOTICE 
+debug1  		INFO WARNING NOTICE LOG DEBUG 
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>调试模块</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">DO</span> $$ 
+<span class="token keyword">BEGIN</span> 
+ RAISE DEBUG <span class="token string">'This is a debug text.'</span><span class="token punctuation">;</span>
+ RAISE INFO <span class="token string">'This is an information.'</span><span class="token punctuation">;</span>
+ RAISE LOG <span class="token string">'This is a log.'</span><span class="token punctuation">;</span>
+ RAISE WARNING <span class="token string">'This is a warning at %'</span><span class="token punctuation">,</span> <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ RAISE NOTICE <span class="token string">'This is a notice %%'</span><span class="token punctuation">;</span>
+<span class="token keyword">END</span> $$<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>数据库错误码</p>
+<p><a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/">https://www.postgresql.org/docs/</a></p>
 
                 
             </div>
