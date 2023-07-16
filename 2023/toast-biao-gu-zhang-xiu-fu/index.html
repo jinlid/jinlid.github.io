@@ -451,8 +451,9 @@ server stopped
 server starting
 server started
 <span class="token comment" spellcheck="true"># 查询源表数据出现块故障</span>
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \set VERBOSITY verbose</span>
 postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select * from pg_statistic;</span>
-ERROR:  could not <span class="token function">read</span> block 0 <span class="token keyword">in</span> <span class="token function">file</span> <span class="token string">"base/13325/2840"</span><span class="token keyword">:</span> <span class="token function">read</span> only 1024 of 8192 bytes
+ERROR:  XX001: could not <span class="token function">read</span> block 0 <span class="token keyword">in</span> <span class="token function">file</span> <span class="token string">"base/13325/2840"</span><span class="token keyword">:</span> <span class="token function">read</span> only 1024 of 8192 bytes
 
 <span class="token comment" spellcheck="true"># toast表数据为空</span>
 postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select * from pg_toast.pg_toast_2619 limit 1;</span>
@@ -466,7 +467,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 -------
    470
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h3 id="解决toast表故障步骤"><a href="#解决toast表故障步骤" class="headerlink" title="解决toast表故障步骤"></a><strong>解决toast表故障步骤</strong></h3><p><strong>1、尝试重建索引并对表分析</strong></p>
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true"># 尝试重建索引</span>
 postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># reindex table pg_toast.pg_toast_2619;</span>
