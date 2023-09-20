@@ -463,29 +463,29 @@ min seg size <span class="token punctuation">(</span>bytes<span class="token pun
 <h4 id="Huge-Pages"><a href="#Huge-Pages" class="headerlink" title="Huge Pages"></a><strong>Huge Pages</strong></h4><p>默认情况下，Linux使用4K内存页，BSD有超级页，而Windows有大页。页是分配给进程的一块物理内存。根据进程的内存需求，进程可以拥有多个页。进程需要的内存越多，分配给它的页就越多。操作系统维护了一个进程页分配表。页面越小，表越大，在页表中查找一页所需的时间就越多。因此，大页使得使用大量内存的同时减少开销成为可能。更少的页查找，更少的页错误，通过更大的缓冲区进行更快的读/写操作。这提高了性能。</p>
 <p>PostgreSQL仅在Linux上支持更大的页面。默认情况下，Linux使用4K的内存页，因此在内存操作太多的情况下，需要设置更大的页。通过使用大小为2 MB到1 GB的大页，可以观察到性能的提升。超大页的大小可以设置启动时间。您可以使用 <code>cat /proc/meminfo | grep -i huge</code> 命令在您的Linux机器上轻松检查大页的设置和利用率。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">Note</span><span class="token punctuation">:</span> <span class="token attr-value">This is only for Linux, for other OS this operation is ignored$ cat /proc/meminfo | grep -i huge</span>
-<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
-<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
-<span class="token attr-name">HugePages_Total</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">HugePages_Free</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 2048 kB</span>
+<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;  0 kB</span>
+<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span>  <span class="token attr-value">0 kB</span>
+<span class="token attr-name">HugePages_Total</span><span class="token punctuation">:</span> <span class="token attr-value">0</span>
+<span class="token attr-name">HugePages_Free</span><span class="token punctuation">:</span>  <span class="token attr-value">0</span>
+<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span>  <span class="token attr-value">0</span>
+<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span>  <span class="token attr-value">0</span>
+<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp; 2048 kB</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>在本例中，尽管大页大小设置为2048 (2 MB)，但巨型页的总数为0。这表示禁用巨大的页面。</p>
 <p>用于量化大页的脚本</p>
 <p>这是一个简单的脚本，返回所需的巨大页面的数量。当PostgreSQL运行时，在Linux系统上执行这个脚本。确保 <code>$PGDATA</code>环境变量设置为PostgreSQL的数据目录。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true">#!/bin/bash</span>
 <span class="token attr-name">pid</span><span class="token punctuation">=</span><span class="token attr-value">`head -1 $PGDATA/postmaster.pid`</span>
-<span class="token attr-name">echo</span> <span class="token attr-value">"Pid:&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; $pid"</span>
+<span class="token attr-name">echo</span> <span class="token attr-value">"Pid:&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; $pid"</span>
 <span class="token attr-name">peak</span><span class="token punctuation">=</span><span class="token attr-value">`grep ^VmPeak /proc/$pid/status | awk '{ print $2 }'`</span>
-<span class="token attr-name">echo</span> <span class="token attr-value">"VmPeak:&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; $peak kB"</span>
+<span class="token attr-name">echo</span> <span class="token attr-value">"VmPeak:&amp;nbsp;&amp;nbsp;&amp;nbsp;  $peak kB"</span>
 <span class="token attr-name">hps</span><span class="token punctuation">=</span><span class="token attr-value">`grep ^Hugepagesize /proc/meminfo | awk '{ print $2 }'`</span>
 <span class="token attr-name">echo</span> <span class="token attr-value">"Hugepagesize:&amp;nbsp;&amp;nbsp; $hps kB"</span>
 <span class="token attr-name">hp</span><span class="token punctuation">=</span><span class="token attr-value">$((peak/hps))</span>
 <span class="token attr-name">echo</span> <span class="token attr-value">Set Huge Pages:&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; $hp</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>脚本的输出如下所示：</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">Pid</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 12737</span>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">Pid</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;        12737</span>
 <span class="token attr-name">VmPeak</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;180932 kB</span>
 <span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp; 2048 kB</span>
 <span class="token attr-name">Set</span> <span class="token attr-value">Huge Pages: 88</span>
@@ -495,23 +495,23 @@ min seg size <span class="token punctuation">(</span>bytes<span class="token pun
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>现在检查大页，您将看到没有大页正在使用(HugePages_Free = HugePages_Total)。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">$</span> <span class="token attr-value">cat /proc/meminfo | grep -i huge</span>
-<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
-<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
+<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;       0 kB</span>
+<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span>       <span class="token attr-value">0 kB</span>
 <span class="token attr-name">HugePages_Total</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 88</span>
 <span class="token attr-name">HugePages_Free</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 88</span>
-<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 2048 kB</span>
+<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span>       <span class="token attr-value">0</span>
+<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span>       <span class="token attr-value">0</span>
+<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;   2048 kB</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在在 <code>$PGDATA/postgresql.conf</code> 中设置参数<code>huge_pages</code>为”on”并重启服务器。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">$</span> <span class="token attr-value">cat /proc/meminfo | grep -i huge</span>
-<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
-<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
+<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;       0 kB</span>
+<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span>       <span class="token attr-value">0 kB</span>
 <span class="token attr-name">HugePages_Total</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 88</span>
 <span class="token attr-name">HugePages_Free</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 81</span>
 <span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;64</span>
-<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 2048 kB</span>
+<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span>       <span class="token attr-value">0</span>
+<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;   2048 kB</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在你可以看到只有很少一部分大页面被使用。现在让我们尝试向数据库中添加一些数据。</p>
 <pre class="line-numbers language-sql"><code class="language-sql">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE foo(a INTEGER);</span>
@@ -521,13 +521,13 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 <p>让我们看看现在是否比以前使用了更多的大页面。</p>
 <pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">$</span> <span class="token attr-value">cat /proc/meminfo | grep -i huge</span>
-<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
-<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0 kB</span>
+<span class="token attr-name">AnonHugePages</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;       0 kB</span>
+<span class="token attr-name">ShmemHugePages</span><span class="token punctuation">:</span>       <span class="token attr-value">0 kB</span>
 <span class="token attr-name">HugePages_Total</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 88</span>
 <span class="token attr-name">HugePages_Free</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 18</span>
-<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 1</span>
-<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 0</span>
-<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 2048 kB</span>
+<span class="token attr-name">HugePages_Rsvd</span><span class="token punctuation">:</span>       <span class="token attr-value">1</span>
+<span class="token attr-name">HugePages_Surp</span><span class="token punctuation">:</span>       <span class="token attr-value">0</span>
+<span class="token attr-name">Hugepagesize</span><span class="token punctuation">:</span><span class="token attr-value">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;   2048 kB</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在可以看到，大多数大页面都在使用中。</p>
 <blockquote>
