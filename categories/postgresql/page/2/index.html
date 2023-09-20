@@ -395,38 +395,11 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 40">
+                <a href="/categories/postgresql/" title="postgresql: 39">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">40</span>
-                    </span>
-                </a>
-                
-                
-                <a href="/categories/python/" title="python: 2">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            style="background-color: #F5EEF8;">python
-                        <span class="tag-length">2</span>
-                    </span>
-                </a>
-                
-                
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 4">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            style="background-color: #D5F5E3;">数据库
-                        <span class="tag-length">4</span>
-                    </span>
-                </a>
-                
-                
-                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统: 1">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            style="background-color: #E8F8F5;">操作系统
-                        <span class="tag-length">1</span>
+                        <span class="tag-length">39</span>
                     </span>
                 </a>
                 
@@ -434,7 +407,34 @@
                 <a href="/categories/Linux/" title="Linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #FEF9E7;">Linux
+                            style="background-color: #F5EEF8;">Linux
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/python/" title="python: 2">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #D5F5E3;">python
+                        <span class="tag-length">2</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 5">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #E8F8F5;">数据库
+                        <span class="tag-length">5</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #FEF9E7;">操作系统
                         <span class="tag-length">1</span>
                     </span>
                 </a>
@@ -639,19 +639,20 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
+                    <a href="/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的子事务和性能">
                             
-                            <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
+                            <span class="card-title">POSTGRESQL中的子事务和性能</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 hot_standby_feedback 参数的真正作用是什么。支持客户不断问这个问题，因此与更广泛的 PostgreSQL 用户分享这些知识可能会
+                                最近在排查PostgreSQL性能问题时，两次遇到了子事务的问题。所以我认为这是另一篇博客文章的好主题。
+什么是子事务？每个人都知道数据库事务。在以自动提交模式运行的 PostgreSQL 中，您必须使用BEGIN或者 START TRAN
                             
                         </div>
                         <div class="publish-info">
@@ -685,20 +686,19 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/">
+                    <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的子事务和性能">
+                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
                             
-                            <span class="card-title">POSTGRESQL中的子事务和性能</span>
+                            <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                最近在排查PostgreSQL性能问题时，两次遇到了子事务的问题。所以我认为这是另一篇博客文章的好主题。
-什么是子事务？每个人都知道数据库事务。在以自动提交模式运行的 PostgreSQL 中，您必须使用BEGIN或者 START TRAN
+                                许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 hot_standby_feedback 参数的真正作用是什么。支持客户不断问这个问题，因此与更广泛的 PostgreSQL 用户分享这些知识可能会
                             
                         </div>
                         <div class="publish-info">
@@ -828,19 +828,19 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-suo-1-xing-suo/">
+                    <a href="/2023/postgresql-suo-2-chong-liang-ji-suo/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="PostgreSQL锁，第1部分:行锁">
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="PostgreSQL锁，第2部分:重量级锁">
                             
-                            <span class="card-title">PostgreSQL锁，第1部分:行锁</span>
+                            <span class="card-title">PostgreSQL锁，第2部分:重量级锁</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                理解PostgreSQL锁对于构建可伸缩的应用程序和避免停机是很重要的。现代计算机和服务器有许多CPU核心，可以并行执行多个查询。数据库包含许多一致的结构，这些结构由并行运行的查询或后台进程所做的更改可能导致数据库崩溃，甚至损坏数据。因此，
+                                应用程序开发人员和dba的PostgreSQL锁可见性在大多数情况下与重量级锁相关。复杂的数据库锁定操作需要使用来自系统目录的视图进行完整的检测。应该清楚哪个对象被特定的数据库“后端”进程锁定。任何锁的另一个名称是“瓶颈”。为了使数据库操作
                             
                         </div>
                         <div class="publish-info">
