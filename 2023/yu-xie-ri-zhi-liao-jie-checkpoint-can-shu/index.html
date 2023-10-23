@@ -496,7 +496,7 @@ pgdba     7374  0.0  0.0  27816  1340 ?        Ss   Jul13   0:01  \_ postgres: s
 <p>到目前为止，我希望情况已经很清楚了。</p>
 <p>现在，拼图的下一部分—— wal segments.</p>
 <p>这些文件（wal 段）驻留在 PostgreSQL PGDATA 的 pg_xlog/ 目录中：</p>
-<pre><code>=$ ls -l data/pg_xlog/
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token operator">=</span>$ <span class="token function">ls</span> -l data/pg_xlog/
 total 131076
 -rw------- 1 pgdba pgdba 16777216 2011-07-14 01:39 000000010000000800000058
 -rw------- 1 pgdba pgdba 16777216 2011-07-14 01:03 000000010000000800000059
@@ -507,7 +507,7 @@ total 131076
 -rw------- 1 pgdba pgdba 16777216 2011-07-14 01:06 00000001000000080000005E
 -rw------- 1 pgdba pgdba 16777216 2011-07-14 01:06 00000001000000080000005F
 drwx------ 2 pgdba pgdba     4096 2011-07-14 01:14 archive_status/
-</code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>每个段名称包含 3 个 8 个十六进制数字块。例如：<strong>00000001000000080000005C</strong>表示：</p>
 <ul>
 <li>00000001 – 时间线 1</li>
@@ -878,13 +878,13 @@ drwx------ 2 postgres postgres       96 Jun  4 23:28 archive_status
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/wei-postgresql-you-hua-diao-zheng-linux-nei-he-can-shu/">
+                <a href="/2023/tcp-lian-jie-guan-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="为PostgreSQL优化调整Linux内核参数">
+                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="TLS：TCP连接管理">
                         
-                        <span class="card-title">为PostgreSQL优化调整Linux内核参数</span>
+                        <span class="card-title">TLS：TCP连接管理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -895,14 +895,14 @@ drwx------ 2 postgres postgres       96 Jun  4 23:28 archive_status
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-18
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-17
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Linux/" class="post-category">
+                                    Linux
                                 </a>
                             
                             
@@ -912,8 +912,8 @@ drwx------ 2 postgres postgres       96 Jun  4 23:28 archive_status
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/Linux/">
+                        <span class="chip bg-color">Linux</span>
                     </a>
                     
                 </div>
