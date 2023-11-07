@@ -395,11 +395,20 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 31">
+                <a href="/categories/postgresql/" title="postgresql: 32">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">31</span>
+                        <span class="tag-length">32</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 8">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #F5EEF8;">数据库
+                        <span class="tag-length">8</span>
                     </span>
                 </a>
                 
@@ -407,7 +416,7 @@
                 <a href="/categories/Linux/" title="Linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #F5EEF8;">Linux
+                            style="background-color: #D5F5E3;">Linux
                         <span class="tag-length">1</span>
                     </span>
                 </a>
@@ -416,17 +425,8 @@
                 <a href="/categories/python/" title="python: 2">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #D5F5E3;">python
+                            style="background-color: #E8F8F5;">python
                         <span class="tag-length">2</span>
-                    </span>
-                </a>
-                
-                
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 6">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            style="background-color: #E8F8F5;">数据库
-                        <span class="tag-length">6</span>
                     </span>
                 </a>
                 
@@ -583,6 +583,53 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
+                    <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                            
+                            <span class="card-title">POSTGRESQL中的连接策略和性能</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                PostgreSQL 中存在三种工作方式完全不同的连接策略。如果 PostgreSQL 选择了错误的策略，查询性能可能会受到很大影响。本文介绍了连接策略、如何使用索引支持它们、它们可能会出现什么问题以及如何调整连接以获得更好的性能。
+连接策
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
                     <a href="/2023/postgresql-luo-ji-fu-zhi/">
                         <div class="card-image tag-image">
                             
@@ -682,22 +729,22 @@ PostgreSQL中的版本控制是什么?让我们考虑Oracle或My
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/pi-liang-shu-ju-jia-zai-de-zui-jia-shi-jian-ji-qiao/">
+                    <a href="/2023/dang-autovacuum-bu-gong-zuo-shi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="批量数据加载的最佳实践技巧">
+                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="当 autovacuum 不工作时">
                             
-                            <span class="card-title">批量数据加载的最佳实践技巧</span>
+                            <span class="card-title">当 autovacuum 不工作时</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                有时，PostgreSQL 数据库需要在单个或最少的步骤中导入大量数据。这通常称为批量数据导入，其中数据源通常是一个或多个大文件。这个过程有时会慢得令人无法接受。
+                                快速回顾一下，autovacuum后台进程清理死行，例如旧的已删除行版本。您也可以通过运行手动执行清理VACUUM，但autovacuum会根据表中死行的数量在适当的时候自动执行清理，不要太频繁但足够频繁以控制“垃圾”的数量。
 
 
-造成这种低性能的原因有很多：索引、触发器、外键、GUID 主键，甚至预写
+一般来说
                             
                         </div>
                         <div class="publish-info">
@@ -731,22 +778,22 @@ PostgreSQL中的版本控制是什么?让我们考虑Oracle或My
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/dang-autovacuum-bu-gong-zuo-shi/">
+                    <a href="/2023/pi-liang-shu-ju-jia-zai-de-zui-jia-shi-jian-ji-qiao/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="当 autovacuum 不工作时">
+                            <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="批量数据加载的最佳实践技巧">
                             
-                            <span class="card-title">当 autovacuum 不工作时</span>
+                            <span class="card-title">批量数据加载的最佳实践技巧</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                快速回顾一下，autovacuum后台进程清理死行，例如旧的已删除行版本。您也可以通过运行手动执行清理VACUUM，但autovacuum会根据表中死行的数量在适当的时候自动执行清理，不要太频繁但足够频繁以控制“垃圾”的数量。
+                                有时，PostgreSQL 数据库需要在单个或最少的步骤中导入大量数据。这通常称为批量数据导入，其中数据源通常是一个或多个大文件。这个过程有时会慢得令人无法接受。
 
 
-一般来说
+造成这种低性能的原因有很多：索引、触发器、外键、GUID 主键，甚至预写
                             
                         </div>
                         <div class="publish-info">
@@ -801,56 +848,6 @@ VACUUM 用于回收表中“死元组”占用的空间。当删除或更新记�
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/autovacuum-diao-you/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="autovacuum调优">
-                            
-                            <span class="card-title">autovacuum调优</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                这篇博问介绍关于autovacuum调优的基础知识，将非常简要地解释必要的理论(死元组、膨胀以及autovacuum如何处理它)，主要焦点是调优——有哪些配置选项、经验法则等等。
-
-
-[TOC]
-死元组首先，让我们简要地解释什么是“死元组”
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-22
                             </span>
                             <span class="publish-author">
                                 

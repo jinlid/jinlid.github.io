@@ -4,13 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="2 进程和内存架构, jinlid&#39;s blog">
-    <meta name="description" content="本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+    <meta name="keywords" content="EXPLAIN – 第1部分, jinlid&#39;s blog">
+    <meta name="description" content="在本博客中，我们将更深入地研究EXPLAIN命令，了解有关成本的更多信息，EXPLAIN ANALYZE并比较计划，以便更好地了解优化查询的潜在领域。 
 
 
-[TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
-">
+Set Up（设置）我们将创建 2 个表来进一步探索和理解“EXPLAIN”命令。">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -22,7 +20,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>2 进程和内存架构 | jinlid&#39;s blog</title>
+    <title>EXPLAIN – 第1部分 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -342,12 +340,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/17.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">2 进程和内存架构</h1>
+                    <h1 class="description center-align post-title">EXPLAIN – 第1部分</h1>
                 </div>
             </div>
         </div>
@@ -383,8 +381,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/postgresql/" class="post-category">
-                                postgresql
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                数据库
                             </a>
                         
                     </div>
@@ -396,7 +394,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-08-13
+                    2023-11-05
                 </div>
                 
 
@@ -417,152 +415,117 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。</p>
+                <p>在本博客中，我们将更深入地研究<code>EXPLAIN</code>命令，了解有关成本的更多信息，<code>EXPLAIN ANALYZE</code>并比较计划，以便更好地了解优化查询的潜在领域。 </p>
 <span id="more"></span>
 
-<p>[TOC]</p>
-<h2 id="2-1-流程架构"><a href="#2-1-流程架构" class="headerlink" title="2.1 流程架构"></a>2.1 流程架构</h2><p>PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。</p>
-<p>多个进程协同管理一个数据库集群的集合通常被称为<em>“PostgreSQL 服务器”</em>，它包含以下类型的进程：</p>
+<h3 id="Set-Up（设置）"><a href="#Set-Up（设置）" class="headerlink" title="Set Up（设置）"></a>Set Up（设置）</h3><p>我们将创建 2 个表来进一步探索和理解“EXPLAIN”命令。 </p>
+<pre class="line-numbers language-bash"><code class="language-bash">-- big_table has 100 unique rows
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE big_table AS (SELECT GENERATE_SERIES(1,100) id, 'hello ' || GENERATE_SERIES(1,100) AS name);</span>
+SELECT 100
+ 
+-- small_table has 3 sets of 10 rows with the same data.
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE small_table AS (SELECT (GENERATE_SERIES(0,29) % 10) + 1 id, 'hello ' || ((GENERATE_SERIES(0,29) % 10) + 1) AS name);</span>
+SELECT 30
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>当我们稍后在 select 语句中使用聚合函数时，重复的元组将为我们提供帮助。</p>
+<h3 id="Costs（成本）"><a href="#Costs（成本）" class="headerlink" title="Costs（成本）"></a>Costs（成本）</h3><p>PostgreSQL 使用基于成本的优化器。它真正的意思是查询可以有多种执行方式。服务器需要一种方法来选择一个好的选项（如果不是许多可用选项中最好的）。这就需要比较不同的执行策略。因此 PostgreSQL 将成本分配给多个竞争策略并选择成本较低的策略。 </p>
+<p>成本估计是根据查询执行中可能创建的预期资源负载分配给查询执行中每个步骤的任意值。根据 PostgreSQL 文档，它是规划者估计成本的任意值。<code>seq_page_cost</code>GUC 用作基准成本值。它是对作为一系列顺序读取的一部分的磁盘页面读取的任意工作量估计。其他操作的成本是通过与此成本进行比较来定义的。<code>postgresql.conf</code>有关其他成本参数， 请参阅一节中的“规划器成本常量”部分。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN SELECT COUNT(*), bt.id, bt.name, st.id </span>
+FROM big_table bt INNER JOIN small_table st
+ON bt.id <span class="token operator">=</span> st.id
+WHERE bt.id <span class="token operator">&lt;</span> 8 AND st.id <span class="token operator">&lt;</span> 5
+GROUP BY bt.id, bt.name, st.id
+HAVING COUNT<span class="token punctuation">(</span>*<span class="token punctuation">)</span> <span class="token operator">></span> 1
+ORDER BY bt.id DESC, bt.name<span class="token punctuation">;</span>
+                                      QUERY PLAN                                       
+---------------------------------------------------------------------------------------
+ GroupAggregate  <span class="token punctuation">(</span>cost<span class="token operator">=</span>3.79<span class="token punctuation">..</span>3.82 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>24<span class="token punctuation">)</span>
+   Group Key: bt.id, bt.name, st.id
+   Filter: <span class="token punctuation">(</span>count<span class="token punctuation">(</span>*<span class="token punctuation">)</span> <span class="token operator">></span> 1<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Sort  <span class="token punctuation">(</span>cost<span class="token operator">=</span>3.79<span class="token punctuation">..</span>3.80 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>16<span class="token punctuation">)</span>
+         Sort Key: bt.id DESC, bt.name
+         -<span class="token operator">></span>  Hash Join  <span class="token punctuation">(</span>cost<span class="token operator">=</span>1.50<span class="token punctuation">..</span>3.78 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>16<span class="token punctuation">)</span>
+               Hash Cond: <span class="token punctuation">(</span>bt.id <span class="token operator">=</span> st.id<span class="token punctuation">)</span>
+               -<span class="token operator">></span>  Seq Scan on big_table bt  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>2.25 rows<span class="token operator">=</span>6 width<span class="token operator">=</span>12<span class="token punctuation">)</span>
+                     Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 8<span class="token punctuation">)</span>
+               -<span class="token operator">></span>  Hash  <span class="token punctuation">(</span>cost<span class="token operator">=</span>1.38<span class="token punctuation">..</span>1.38 rows<span class="token operator">=</span>10 width<span class="token operator">=</span>4<span class="token punctuation">)</span>
+                     -<span class="token operator">></span>  Seq Scan on small_table st  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.38 rows<span class="token operator">=</span>10 width<span class="token operator">=</span>4<span class="token punctuation">)</span>
+                           Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 5<span class="token punctuation">)</span>
+<span class="token punctuation">(</span>12 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>关于成本，这里有一些关键点需要注意：</p>
 <ul>
-<li>一个<strong>Postgres的服务器进程</strong>是与数据库集群管理的所有进程的父进程。</li>
-<li>每个<strong>后端进程</strong>处理由连接的客户端发出的所有查询和语句。</li>
-<li>各种<strong>后台进程</strong>为数据库管理执行每个特性的进程（例如，VACUUM 和CHECKPOINT 进程）。</li>
-<li>在<strong>复制相关进程中</strong>，它们执行流式复制。详细信息在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql11.html">第 11 章</a>中描述。</li>
-<li>在9.3 版本支持的<strong>后台工作进程中</strong>，它可以执行用户实现的任何处理。此处不详述，请参考<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/bgworker.html">官方文档</a>。</li>
+<li>首先也是最重要的，成本是双精度数据类型，它在设置非常小或很大的任意值方面提供了更大的灵活性。 </li>
+<li>成本是一个范围。</li>
 </ul>
-<p>在以下小节中，将描述前三种类型的过程的详细信息。</p>
-<p><img src="/medias/image/fig-2-01.png" alt="图 2.1 PostgreSQL 进程架构的一个例子"></p>
-<hr>
-<p>该图展示了一个 PostgreSQL 服务器的进程：一个 postgres 服务器进程、两个后端进程、七个后台进程和两个客户端进程。还说明了数据库集群、共享内存和两个客户端进程。</p>
-<h3 id="2-1-1-Postgres-服务器进程"><a href="#2-1-1-Postgres-服务器进程" class="headerlink" title="2.1.1 Postgres 服务器进程"></a>2.1.1 Postgres 服务器进程</h3><p>如上所述，postgres 服务器进程是 PostgreSQL 服务器中所有进程的父进程。在早期版本中，它被称为“postmaster”。</p>
-<p>通过使用<em>start</em>选项执行<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/app-pg-ctl.html">pg_ctl</a>实用程序，postgres 服务器进程将启动。然后，它在内存中分配一个共享内存区域，启动各种后台进程，必要时启动复制关联进程和后台工作进程，并等待来自客户端的连接请求。每当收到来自客户端的连接请求时，它就会启动一个后端进程。（然后，启动的后端进程处理连接的客户端发出的所有查询）</p>
-<p>一个postgres服务器进程监听一个网络端口，默认端口是5432。虽然同一台主机上可以运行多个PostgreSQL服务器，但是每个服务器之间应该设置监听不同的端口号，例如5432、5433 ， 等等。</p>
-<h3 id="2-1-2-后端流程"><a href="#2-1-2-后端流程" class="headerlink" title="2.1.2 后端流程"></a>2.1.2 后端流程</h3><p>后端进程，也称为<em>postgres</em>，由 postgres 服务器进程启动并处理由一个连接的客户端发出的所有查询。它通过单个 TCP 连接与客户端通信，并在客户端断开连接时终止。</p>
-<p>由于只允许操作一个数据库，因此在连接到 PostgreSQL 服务器时必须明确指定要使用的数据库。</p>
-<p>PostgreSQL 允许多个客户端同时连接；配置参数<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/runtime-config-connection.html#GUC-MAX-CONNECTIONS">max_connections</a>控制客户端的最大数量（默认为 100）。</p>
-<p>如果WEB应用等很多客户端频繁重复与PostgreSQL服务器的连接和断开连接，会增加建立连接和创建后端进程的成本，因为PostgreSQL没有实现本地连接池功能，这种情况对数据库服务器的性能有负面影响。为了处理这种情况，通常使用池中间件（<a target="_blank" rel="noopener" href="https://pgbouncer.github.io/">pgbouncer</a> 或<a target="_blank" rel="noopener" href="http://www.pgpool.net/mediawiki/index.php/Main_Page">pgpool-II</a>）。</p>
-<h3 id="2-1-3-后台进程"><a href="#2-1-3-后台进程" class="headerlink" title="2.1.3 后台进程"></a>2.1.3 后台进程</h3><p>表 2.1 显示了后台进程列表。与 postgres 服务器和后端进程相比，无法简单地解释每个功能，因为这些功能取决于各个特定的功能和 PostgreSQL 内部结构。因此，本章仅作介绍，详细信息将在后面的章节中描述。</p>
-<table>
-<thead>
-<tr>
-<th align="left">过程</th>
-<th align="left">描述</th>
-<th align="left">参考</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">background writer</td>
-<td align="left">在这个过程中，共享缓冲池上的脏页被逐渐定期写入持久性存储（例如，HDD、SSD）（在 9.1 或更早版本中，它还负责检查点过程）</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.6.">第 8.6 节</a></td>
-</tr>
-<tr>
-<td align="left">checkpointer</td>
-<td align="left">在 9.2 或更高版本的此过程中，执行检查点过程</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.6.">第 8.6</a><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html#_9.7.">节</a>、<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html#_9.7.">第 9.7 节</a></td>
-</tr>
-<tr>
-<td align="left">autovacuum launcher</td>
-<td align="left">定期调用 autovacuum-worker 进程进行清理（更准确地说，它请求为 postgres 服务器创建 autovacuum 工作器）</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.5.">第 6.5 节</a></td>
-</tr>
-<tr>
-<td align="left">WAL writer</td>
-<td align="left">此过程会定期将 WAL 缓冲区上的 WAL 数据写入并刷新到持久存储</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html#_9.9.">第 9.9 节</a></td>
-</tr>
-<tr>
-<td align="left">statistics collector</td>
-<td align="left">在这个过程中，会收集pg_stat_activity、pg_stat_database等统计信息</td>
-<td align="left"><a href="/2022/stats-collector-jin-cheng/">stats collector进程</a></td>
-</tr>
-<tr>
-<td align="left">logging collector (logger)</td>
-<td align="left">此进程将服务器消息写入日志文件</td>
-<td align="left"></td>
-</tr>
-<tr>
-<td align="left">archiver</td>
-<td align="left">此过程执行归档日志记录</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html#_9.10.">第 9.10 节</a></td>
-</tr>
-</tbody></table>
-<p>在以下示例中，一个 postgres 服务器进程（pid 为 9687）、两个后端进程（pid 为 9697 和 9717）以及表 2.1 中列出的几个后台进程正在运行，另请参见图 2.1。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> pstree -p 9687
--+<span class="token operator">=</span> 00001 root /sbin/launchd
- \-+- 09687 postgres /usr/local/pgsql/bin/postgres -D /usr/local/pgsql/data
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09688 postgres postgres: logger process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09690 postgres postgres: checkpointer process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09691 postgres postgres: writer process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09692 postgres postgres: wal writer process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09693 postgres postgres: autovacuum launcher process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09694 postgres postgres: archiver process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09695 postgres postgres: stats collector process     
-   <span class="token operator">|</span>--<span class="token operator">=</span> 09697 postgres postgres: postgres sampledb 192.168.1.100<span class="token punctuation">(</span>54924<span class="token punctuation">)</span> idle  
-   \--<span class="token operator">=</span> 09717 postgres postgres: postgres sampledb 192.168.1.100<span class="token punctuation">(</span>54964<span class="token punctuation">)</span> idle <span class="token keyword">in</span> transaction  
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="2-2-内存架构"><a href="#2-2-内存架构" class="headerlink" title="2.2 内存架构"></a>2.2 内存架构</h2><p>PostgreSQL 中的内存架构可以分为两大类：</p>
-<ul>
-<li>本地内存区域 - 由每个后端进程分配供自己使用。</li>
-<li>共享内存区域 - 由 PostgreSQL 服务器的所有进程使用。</li>
-</ul>
-<p>在以下小节中，将简要介绍这些内容。</p>
-<p><img src="/medias/image/fig-2-02.png" alt="图 2.2 PostgreSQL 中的内存架构 "></p>
-<h3 id="2-2-1-本地存储区"><a href="#2-2-1-本地存储区" class="headerlink" title="2.2.1 本地存储区"></a>2.2.1 本地存储区</h3><p>每个后端进程分配一个本地内存区域用于查询处理；每个区域被分成几个子区域——它们的大小是固定的或可变的。表 2.2 列出了主要的子领域。详细信息将在以下章节中描述。</p>
-<table>
-<thead>
-<tr>
-<th align="left">分区</th>
-<th align="left">描述</th>
-<th align="left">参考</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">work_mem</td>
-<td align="left">Executor 使用此区域通过 ORDER BY 和 DISTINCT 操作对元组进行排序，并通过合并连接和哈希连接操作连接表。</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql03.html">第3章</a></td>
-</tr>
-<tr>
-<td align="left">maintenance_work_mem</td>
-<td align="left">某些类型的维护操作（例如，VACUUM、REINDEX）使用此区域。</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.1.">第 6.1 节</a></td>
-</tr>
-<tr>
-<td align="left">temp_buffers</td>
-<td align="left">Executor 使用这个区域来存储临时表。</td>
-<td align="left"></td>
-</tr>
-</tbody></table>
-<h3 id="2-2-2-共享内存区"><a href="#2-2-2-共享内存区" class="headerlink" title="2.2.2 共享内存区"></a>2.2.2 共享内存区</h3><p>共享内存区域由 PostgreSQL 服务器在启动时分配。该区域也分为几个固定大小的子区域。表 2.3 列出了主要的子领域。详细信息将在以下章节中描述。</p>
-<table>
-<thead>
-<tr>
-<th align="left">分区</th>
-<th align="left">描述</th>
-<th align="left">参考</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">shared buffer</td>
-<td align="left">PostgreSQL 将表和索引中的页面从持久存储加载到这里，并直接对其进行操作。</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html">第8章</a></td>
-</tr>
-<tr>
-<td align="left">WAL buffer</td>
-<td align="left">为确保服务器故障不会丢失数据，PostgreSQL 支持 WAL 机制。WAL 数据（也称为 XLOG 记录）是 PostgreSQL 中的事务日志；WAL缓冲区是WAL数据写入持久化存储之前的缓冲区。</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html">第9章</a></td>
-</tr>
-<tr>
-<td align="left">commit log</td>
-<td align="left">提交日志（CLOG）为并发控制（CC）机制保存所有事务的状态（例如，in_progress、committed、aborted）。</td>
-<td align="left"><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.">第 5.4 节</a></td>
-</tr>
-</tbody></table>
-<p>除了它们之外，PostgreSQL 还分配了几个区域，如下所示：</p>
-<ul>
-<li>用于各种访问控制机制的子区域。（例如，信号量、轻量级锁、共享和排他锁等）</li>
-<li>各种后台进程的子区域，例如 checkpointer 和 autovacuum。</li>
-<li>事务处理的子区域，例如保存点和两阶段提交。</li>
-</ul>
+<p>这些值中的第一个是<code>estimated startup cost</code>. 这是输出阶段开始之前所花费的时间。它包括子节点花费的任何时间。查看第 20 行节点的启动成本，然后查看第 19 行父节点的启动成本。父节点在子节点完成后启动。它表示数据的整合；即父节点在开始工作之前正在等待收集所有行。任何启动成本为 0.00 的节点都表明这些节点几乎可以立即启动。 </p>
+<p>第二个值是<code>estimated total cost</code>输出阶段可以开始向父节点发送行之前的值。因此第 19 行的父节点接收到所有符合条件的行，之后会产生 0.30 的额外成本。</p>
+<p>在某些情况下，父节点可以立即开始从子节点接收数据。看看下面的输出。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN SELECT * FROM big_table, small_table;</span>
+                               QUERY PLAN                                
+-------------------------------------------------------------------------
+ Nested Loop  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>40.88 rows<span class="token operator">=</span>3000 width<span class="token operator">=</span>48<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Seq Scan on big_table  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>2.00 rows<span class="token operator">=</span>100 width<span class="token operator">=</span>12<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Materialize  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.45 rows<span class="token operator">=</span>30 width<span class="token operator">=</span>36<span class="token punctuation">)</span>
+         -<span class="token operator">></span>  Seq Scan on small_table  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.30 rows<span class="token operator">=</span>30 width<span class="token operator">=</span>36<span class="token punctuation">)</span>
+<span class="token punctuation">(</span>4 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>它是big_table 和small_table 之间的交叉连接。您可以清楚地看到，<code>Materialize</code>随着顺序扫描在small_table 上开始，节点开始接收数据。<code>Nested Loop</code>同时开始。</p>
+<p>成本实际上是对资源“潜在”花费的相对衡量标准。它为我们提供了需要改进的领域的良好指示。</p>
+<h3 id="Optimizing-Costs（优化成本）"><a href="#Optimizing-Costs（优化成本）" class="headerlink" title="Optimizing Costs（优化成本）"></a>Optimizing Costs（优化成本）</h3><p>为了获得最佳性能，您可能需要<code>postgresql.conf</code>根据您的硬件校准文件中设置的成本。例如，<code>random_page_cost</code> 估计比顺序访问页面贵 4 倍。这是因为期望内核将进行预读优化，从而降低顺序读取成本。与 HDD 相比，SSD 的随机页面成本更低。您还可以为可能位于不同存储设备上的表空间设置自定义成本。有关更多详细信息，请参阅 PostgreSQL 的<code>CREATE TABLESPACE</code>文档。让我们仔细看看下面给出的 <code>EXPLAIN</code> 计划中的成本。</p>
+<h3 id="Explain-Analyze解释分析"><a href="#Explain-Analyze解释分析" class="headerlink" title="Explain Analyze解释分析"></a>Explain Analyze解释分析</h3><p>在我们讨论 <code>EXPLAIN ANALYZE</code> 之前，您必须记住它运行实际的查询；没有 <code>ANALYZE</code> 的 <code>EXPLAIN</code> 不行！因此，在运行 <code>EXPLAIN ANALYZE</code> 查询时要特别小心，尤其是在运行 DML 查询时。如果您希望对查询运行<code>EXPLAIN ANALYZE</code> <code>INSERT/UPDATE/DELETE or CREATE TABLE AS</code>，请将语句包装在事务块中。</p>
+<p>使用 <code>ANALYZE</code> 重新运行上述查询，我们得到：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN ANALYZE SELECT COUNT(*), bt.id, bt.name, st.id </span>
+FROM big_table bt INNER JOIN small_table st
+ON bt.id <span class="token operator">=</span> st.id
+WHERE bt.id <span class="token operator">&lt;</span> 8 AND st.id <span class="token operator">&lt;</span> 5
+GROUP BY bt.id, bt.name, st.id
+HAVING COUNT<span class="token punctuation">(</span>*<span class="token punctuation">)</span> <span class="token operator">></span> 1
+ORDER BY bt.id DESC, bt.name<span class="token punctuation">;</span>
+                                                            QUERY PLAN                                                            
+----------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  <span class="token punctuation">(</span>cost<span class="token operator">=</span>3.79<span class="token punctuation">..</span>3.82 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>24<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>2.499<span class="token punctuation">..</span>2.829 rows<span class="token operator">=</span>4 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+   Group Key: bt.id, bt.name, st.id
+   Filter: <span class="token punctuation">(</span>count<span class="token punctuation">(</span>*<span class="token punctuation">)</span> <span class="token operator">></span> 1<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Sort  <span class="token punctuation">(</span>cost<span class="token operator">=</span>3.79<span class="token punctuation">..</span>3.80 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>16<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>2.412<span class="token punctuation">..</span>2.550 rows<span class="token operator">=</span>12 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+         Sort Key: bt.id DESC, bt.name
+         Sort Method: quicksort  Memory: 25kB
+         -<span class="token operator">></span>  Hash Join  <span class="token punctuation">(</span>cost<span class="token operator">=</span>1.50<span class="token punctuation">..</span>3.78 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>16<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>1.683<span class="token punctuation">..</span>1.990 rows<span class="token operator">=</span>12 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+               Hash Cond: <span class="token punctuation">(</span>bt.id <span class="token operator">=</span> st.id<span class="token punctuation">)</span>
+               -<span class="token operator">></span>  Seq Scan on big_table bt  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>2.25 rows<span class="token operator">=</span>6 width<span class="token operator">=</span>12<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>0.646<span class="token punctuation">..</span>0.742 rows<span class="token operator">=</span>7 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+                     Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 8<span class="token punctuation">)</span>
+                     Rows Removed by Filter: 93
+               -<span class="token operator">></span>  Hash  <span class="token punctuation">(</span>cost<span class="token operator">=</span>1.38<span class="token punctuation">..</span>1.38 rows<span class="token operator">=</span>10 width<span class="token operator">=</span>4<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>0.958<span class="token punctuation">..</span>0.969 rows<span class="token operator">=</span>12 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     -<span class="token operator">></span>  Seq Scan on small_table st  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.38 rows<span class="token operator">=</span>10 width<span class="token operator">=</span>4<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>0.599<span class="token punctuation">..</span>0.749 rows<span class="token operator">=</span>12 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+                           Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 5<span class="token punctuation">)</span>
+                           Rows Removed by Filter: 18
+ Planning Time: 2.358 ms
+ Execution Time: 3.093 ms
+<span class="token punctuation">(</span>18 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>除了成本之外，<code>EXPLAIN ANALYZE</code> 还为我们提供了执行查询以来的实际时间、行数和循环信息。比较第 18 行和第 23 行节点的成本和时间，我们可以看到 2.25 的成本最多需要 0.742 毫秒，而 1.38 则需要 0.749 毫秒。</p>
+<p>虽然“行”的值是不言自明的，但循环可能不是。不，我们这里不是在谈论游标。在某些情况下，查询可能需要多次执行节点。让我们使用 <code>ANALYZE</code> 重新运行交叉连接语句，因为我们需要一次又一次地获取两个表之一。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN ANALYZE SELECT * FROM big_table, small_table;</span>
+                                                     QUERY PLAN                                                     
+--------------------------------------------------------------------------------------------------------------------
+ Nested Loop  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>40.88 rows<span class="token operator">=</span>3000 width<span class="token operator">=</span>48<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>12.700<span class="token punctuation">..</span>121.419 rows<span class="token operator">=</span>3000 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Seq Scan on big_table  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>2.00 rows<span class="token operator">=</span>100 width<span class="token operator">=</span>12<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>10.894<span class="token punctuation">..</span>12.014 rows<span class="token operator">=</span>100 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+   -<span class="token operator">></span>  Materialize  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.45 rows<span class="token operator">=</span>30 width<span class="token operator">=</span>36<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>0.017<span class="token punctuation">..</span>0.376 rows<span class="token operator">=</span>30 loops<span class="token operator">=</span>100<span class="token punctuation">)</span>
+         -<span class="token operator">></span>  Seq Scan on small_table  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>1.30 rows<span class="token operator">=</span>30 width<span class="token operator">=</span>36<span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span>0.582<span class="token punctuation">..</span>0.976 rows<span class="token operator">=</span>30 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+ Planning Time: 2.109 ms
+ Execution Time: 156.926 ms
+<span class="token punctuation">(</span>6 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>第 6 行的节点运行了 100 次，这正是 big_table 中的行数。</p>
+<h3 id="Comparing-Plans（比较计划）"><a href="#Comparing-Plans（比较计划）" class="headerlink" title="Comparing Plans（比较计划）"></a>Comparing Plans（比较计划）</h3><p>这些成本可以帮助我们更好地了解编写 SQL 查询时可用的不同选择。让我们举一个在子查询和联接之间进行选择的简单示例。在我们的具体情况下哪一个更好。以下查询返回完全相同的数据。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM big_table WHERE id IN (SELECT DISTINCT(id) FROM small_table) ORDER BY id, name;</span>
+ 
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT DISTINCT(big_table.*) FROM big_table INNER JOIN small_table ON big_table.id = small_table.id ORDER BY id, name;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>第一个查询需要“4.537 ms”，第二个查询需要“3.636 ms”。查看这两个计划，第二个查询中的“散列连接”节点需要更长的时间并导致查询速度变慢。</p>
+<h3 id="Conclusion（结论）"><a href="#Conclusion（结论）" class="headerlink" title="Conclusion（结论）"></a>Conclusion（结论）</h3><p>了解查询大部分时间都花在哪里对于优化它至关重要。该成本可能会转化为实际的成本。因此，保持较低的查询成本和运行时间可以降低对硬件和银行帐户影响的总体成本。</p>
+<p>至此我的 SQL 优化系列博客中的 EXPLAIN 部分就完成了。在接下来的步骤中，我们将了解影响查询规划、优化和执行的其他因素。敬请关注。</p>
 
                 
             </div>
@@ -589,7 +552,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2021/2.jin-cheng-he-nei-cun-jia-gou/">https://jinlid.github.io/2021/2.jin-cheng-he-nei-cun-jia-gou/</a>
+                    <a href="https://jinlid.github.io/2023/explain-di-2-bu-fen/">https://jinlid.github.io/2023/explain-di-2-bu-fen/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -707,41 +670,43 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2023/explain-di-2-bu-fen/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="EXPLAIN – 第1部分">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">EXPLAIN – 第1部分</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            在本博客中，我们将更深入地研究EXPLAIN命令，了解有关成本的更多信息，EXPLAIN ANALYZE并比较计划，以便更好地了解优化查询的潜在领域。 
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-11-05
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
+                                    数据库
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -760,24 +725,24 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/5.bing-fa-kong-zhi/">
+                <a href="/2023/postgresql-hou-duan-jia-gou-gai-shu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="POSTGRESQL：PostgreSQL 后端架构概述？">
                         
-                        <span class="card-title">5 并发控制</span>
+                        <span class="card-title">POSTGRESQL：PostgreSQL 后端架构概述？</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                            
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-11-05
                             </span>
                         <span class="publish-author">
                             
