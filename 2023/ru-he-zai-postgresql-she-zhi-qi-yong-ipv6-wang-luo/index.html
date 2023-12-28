@@ -4,9 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="POSTGRESQL中的连接策略和性能, jinlid&#39;s blog">
-    <meta name="description" content="PostgreSQL 中存在三种工作方式完全不同的连接策略。如果 PostgreSQL 选择了错误的策略，查询性能可能会受到很大影响。本文介绍了连接策略、如何使用索引支持它们、它们可能会出现什么问题以及如何调整连接以获得更好的性能。
-连接策">
+    <meta name="keywords" content="如何在PostgreSQL设置启用IPv6网络, jinlid&#39;s blog">
+    <meta name="description" content="1. 概述PostgreSQL 是一个很棒的开源数据库，不仅因为它支持很多数据库功能，还因为它支持不同的网络设置。例如，您只需几个步骤即可在支持 IPv6 的网络上进行设置。本博客将演示如何在 Linux 中的 IPv6 网络上设置 Pos">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>POSTGRESQL中的连接策略和性能 | jinlid&#39;s blog</title>
+    <title>如何在PostgreSQL设置启用IPv6网络 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +337,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/4.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">POSTGRESQL中的连接策略和性能</h1>
+                    <h1 class="description center-align post-title">如何在PostgreSQL设置启用IPv6网络</h1>
                 </div>
             </div>
         </div>
@@ -392,7 +391,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-07-04
+                    2023-12-28
                 </div>
                 
 
@@ -413,99 +412,183 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>PostgreSQL 中存在三种工作方式完全不同的连接策略。如果 PostgreSQL 选择了错误的策略，查询性能可能会受到很大影响。本文介绍了连接策略、如何使用索引支持它们、它们可能会出现什么问题以及如何调整连接以获得更好的性能。</p>
-<h2 id="连接策略的术语"><a href="#连接策略的术语" class="headerlink" title="连接策略的术语"></a>连接策略的术语</h2><h3 id="表"><a href="#表" class="headerlink" title="表"></a>表</h3><p>连接组合了两个表的数据。这样的表可以是一个表（也称为基表）或任何计划节点的结果。例如，像这样的连接中</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
-<span class="token keyword">FROM</span> <span class="token number">a</span>
-   <span class="token keyword">JOIN</span> <span class="token punctuation">(</span><span class="token number">b</span> <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token number">c</span> <span class="token keyword">ON</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span>
-      <span class="token keyword">ON</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+                <h4 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h4><p>PostgreSQL 是一个很棒的开源数据库，不仅因为它支持很多数据库功能，还因为它支持不同的网络设置。例如，您只需几个步骤即可在支持 IPv6 的网络上进行设置。本博客将演示如何在 Linux 中的 IPv6 网络上设置 PostgreSQL。</p>
+<p>如果您检查家庭互联网调制解调器/路由器，您很可能会发现 IPv6 已启用。有许多文档和 RFC 更详细地解释了 IPv6。例如，在<a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/rfc4291/">RFC 4291</a><code>IP Version 6 Addressing Architecture</code>中定义。在这篇博客中，我将仅解释此演示中所需的一些简单概念。</p>
+<h4 id="2-设置IPv6网络"><a href="#2-设置IPv6网络" class="headerlink" title="2. 设置IPv6网络"></a>2. 设置IPv6网络</h4><h5 id="链路本地地址（Link-local-address）"><a href="#链路本地地址（Link-local-address）" class="headerlink" title="链路本地地址（Link-local address）"></a>链路本地地址（Link-local address）</h5><p>与 IPv4 不同，启用 IPv6 的主机的所有接口都需要链路本地地址。链路本地地址始终以前缀 fe80:: 开头，并且是在该接口上的 TCP/IP 堆栈启动期间生成的。有趣的是，链路本地地址不需要 DHCP 服务器或任何手动配置。链路本地可以设置为从接口的 MAC 地址派生，在这种情况下，如果您知道接口的 MAC，则只需将 MAC 复制并粘贴到链路本地即可创建链路本地<a target="_blank" rel="noopener" href="https://ben.akrin.com/?p=1347">地址计算器</a>。</p>
+<h5 id="全球地址（Global-address）"><a href="#全球地址（Global-address）" class="headerlink" title="全球地址（Global address）"></a>全球地址（Global address）</h5><p>然而，正如名称所示，它有一个限制，它只能在直接连接的主机之间起作用。为了允许跨互联网或多个路由器进行通信，主机需要有一个全局地址。设置全局 IPv6 地址有多种不同的方法。这里，我们介绍三种典型的方式：手动、DHCPv6和SLAAC。</p>
+<ul>
+<li>要手动设置 IPv6 全局地址，您可以使用<code>ip</code>或<code>ifconfig</code>。例如：</li>
+</ul>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> ip -6 addr add 2020:1:0:0::db1/64 dev eth0 
+<span class="token function">sudo</span> <span class="token function">ifconfig</span> eth0 inet6 add 2020:1:0:0::db1/64 
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>由于IPv6允许十六进制字符，因此您可以创建自己的自定义IPv6地址。例如，使用 IPv6 地址配置 PostgreSQL 服务器，如 <code>:db:feed</code>, <code>:da7a:ba5e</code>, <code>:db1</code>, <code>:db2</code> 等.</p>
+<ul>
+<li>无状态地址自动配置（SLAAC）需要有一个<code>router advertisement</code>定期广播地址的路由器。路由器还应该响应<code>router solicitation</code>来自任何主机的请求。一旦主机收到<code>router advertisement</code>，它将使用 来<code>prefix</code>自动生成全局 IPv6 地址。下面是一个示例，在 PostgreSQL 服务器端安装<code>Router Advertisement Daemon (radvd)</code>：</li>
+</ul>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> radvd
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后配置radvd conf文件，例如，</p>
+<pre class="line-numbers language-bash"><code class="language-bash">interface eno1
+<span class="token punctuation">{</span>
+   AdvSendAdvert on<span class="token punctuation">;</span>
+   AdvManagedFlag off<span class="token punctuation">;</span>
+   AdvOtherConfigFlag on<span class="token punctuation">;</span>
+   prefix 2020:1:0:0::/64
+   <span class="token punctuation">{</span>
+        AdvAutonomous on<span class="token punctuation">;</span>
+   <span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在 Postgres 服务器上配置新的 IPv6 地址以供 radvd 守护进程使用</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> ip -6 addr add 2020:1:0:0::db1/64 dev eno1
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后启动<code>radvd</code>守护进程，<code>sudo radvd -l /etc/radvd.conf</code><br>现在，如果您检查客户端计算机端的 IP 地址，您应该看到如下所示的内容：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">></span>  mtu 1500
+        inet 172.20.14.27  netmask 255.255.255.0  broadcast 172.20.14.255
+        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
+        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">></span>
+        ether 08:00:27:29:ab:c9  txqueuelen 1000  <span class="token punctuation">(</span>Ethernet<span class="token punctuation">)</span>
+        RX packets 118  bytes 38615 <span class="token punctuation">(</span>38.6 KB<span class="token punctuation">)</span>
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 181  bytes 26919 <span class="token punctuation">(</span>26.9 KB<span class="token punctuation">)</span>
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>其中，<code>2020:1::8dcf:b8be:dbcc:26c6</code> 是收到路由器发布后生成的全局地址。</p>
+<ul>
+<li>有状态 IPv6 地址通过 DHCPv6 服务器完成。该设置与 IPv4 DHCP 服务器设置类似。下面是 Ubuntu 机器上的示例：</li>
+</ul>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> isc-dhcp-server
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>安装 DHCP 服务器后，编辑 IPv6 地址分配的配置文件。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> vim /etc/dhcp/dhcpd6.conf
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>并添加以下信息：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">ddns-update-style none<span class="token punctuation">;</span>
+default-lease-time 7200<span class="token punctuation">;</span> <span class="token comment" spellcheck="true"># 12 hours</span>
+max-lease-time 86400<span class="token punctuation">;</span> <span class="token comment" spellcheck="true"># 12 hours</span>
+authoritative<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">### Subnet</span>
+subnet6 2020:2:0:0::/64 <span class="token punctuation">{</span>
+    range6
+        2020:2:0:0::1001  2020:2:0:0::1005<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在 Postgres 服务器上配置新的 IPv6 地址以供 DHCPv6 服务器使用</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> ip -6 addr add 2020:2:0:0::db1/64 dev eno1
+<span class="token function">sudo</span> dhcpd -6 -d -cf /etc/dhcp/dhcpd6.conf eno1
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>在客户端计算机端，手动运行 IPv6 的 dhcp 请求。<code>dhclient -6 enp0s3</code>，然后执行 IP 地址检查。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">></span>  mtu 1500
+        inet 172.20.14.27  netmask 255.255.255.0  broadcast 172.20.14.255
+        inet6 2020:2::1004  prefixlen 128  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
+        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
+        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">></span>
+        ether 08:00:27:29:ab:c9  txqueuelen 1000  <span class="token punctuation">(</span>Ethernet<span class="token punctuation">)</span>
+        RX packets 1118  bytes 253355 <span class="token punctuation">(</span>253.3 KB<span class="token punctuation">)</span>
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 495  bytes 76673 <span class="token punctuation">(</span>76.6 KB<span class="token punctuation">)</span>
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>其中，<code>2020:2::1004</code>是 DHCPv6 服务器分配的全局 IPv6 地址。</p>
+<h4 id="3-使用-ping6-测试连通性"><a href="#3-使用-ping6-测试连通性" class="headerlink" title="3. 使用 ping6 测试连通性"></a>3. 使用 ping6 测试连通性</h4><ul>
+<li>PostgreSQL server<ul>
+<li>网络接口：eno1</li>
+<li>链接本地： <code>fe80::1c79:293f:1b6e:c826</code></li>
+<li>IPv6 全局地址(SLAAC)：<code>2020:1::db1</code></li>
+<li>IPv6 全局地址(DHCPv6)：<code>2020:2::db1</code></li>
+</ul>
+</li>
+<li>psql 客户端 IP<ul>
+<li>网络接口：enp0s3</li>
+<li>链接本地： <code>fe80::8005:8b22:cd7d:ee39</code></li>
+<li>生成的 IPv6 全局地址 (SLAAC)：<code>2020:1::8dcf:b8be:dbcc:26c6</code></li>
+<li>分配的 IPv6 全局地址 (DHCPv6)：<code>2020:2::1004</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="从服务器到客户端的-ping6-测试"><a href="#从服务器到客户端的-ping6-测试" class="headerlink" title="从服务器到客户端的 ping6 测试"></a>从服务器到客户端的 ping6 测试</h5><pre class="line-numbers language-bash"><code class="language-bash">$ ping6 fe80::8005:8b22:cd7d:ee39%eno1
+PING fe80::8005:8b22:cd7d:ee39%eno1<span class="token punctuation">(</span>fe80::8005:8b22:cd7d:ee39%eno1<span class="token punctuation">)</span> 56 data bytes
+64 bytes from fe80::8005:8b22:cd7d:ee39%eno1: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.582 ms
+64 bytes from fe80::8005:8b22:cd7d:ee39%eno1: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.572 ms
+
+$ ping6 2020:1::8dcf:b8be:dbcc:26c6
+PING 2020:1::8dcf:b8be:dbcc:26c6<span class="token punctuation">(</span>2020:1::8dcf:b8be:dbcc:26c6<span class="token punctuation">)</span> 56 data bytes
+64 bytes from 2020:1::8dcf:b8be:dbcc:26c6: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.576 ms
+64 bytes from 2020:1::8dcf:b8be:dbcc:26c6: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.601 ms
+
+$ ping6 2020:2::1004
+PING 2020:2::1004<span class="token punctuation">(</span>2020:2::1004<span class="token punctuation">)</span> 56 data bytes
+64 bytes from 2020:2::1004: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.896 ms
+64 bytes from 2020:2::1004: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.631 ms
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="从客户端到服务器的-ping6-测试"><a href="#从客户端到服务器的-ping6-测试" class="headerlink" title="从客户端到服务器的 ping6 测试"></a>从客户端到服务器的 ping6 测试</h5><pre class="line-numbers language-bash"><code class="language-bash">$ ping6 fe80::1c79:293f:1b6e:c826%enp0s3
+PING fe80::1c79:293f:1b6e:c826%enp0s3<span class="token punctuation">(</span>fe80::1c79:293f:1b6e:c826%enp0s3<span class="token punctuation">)</span> 56 data bytes
+64 bytes from fe80::1c79:293f:1b6e:c826%enp0s3: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.144 ms
+64 bytes from fe80::1c79:293f:1b6e:c826%enp0s3: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.220 ms
+
+$ ping6 2020:1::db1
+PING 2020:1::db1<span class="token punctuation">(</span>2020:1::db1<span class="token punctuation">)</span> 56 data bytes
+64 bytes from 2020:1::db1: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.825 ms
+64 bytes from 2020:1::db1: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.520 ms
+
+$ ping6 2020:2::db1
+PING 2020:2::db1<span class="token punctuation">(</span>2020:2::db1<span class="token punctuation">)</span> 56 data bytes
+64 bytes from 2020:2::db1: icmp_seq<span class="token operator">=</span>1 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.508 ms
+64 bytes from 2020:2::db1: icmp_seq<span class="token operator">=</span>2 ttl<span class="token operator">=</span>64 time<span class="token operator">=</span>0.486 ms
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="4-为PostgreSQL配置-IPv6"><a href="#4-为PostgreSQL配置-IPv6" class="headerlink" title="4. 为PostgreSQL配置 IPv6"></a>4. 为PostgreSQL配置 IPv6</h4><p>编辑 postgresql.conf 文件以允许 Postgres 监听不同的接口</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">listen_addresses</span> <span class="token punctuation">=</span> <span class="token attr-value">'*'   </span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>编辑基于主机的身份验证文件以允许客户端计算机连接不同的源 IP。</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># IPv6 local connections:</span>
+<span class="token attr-name">host</span> <span class="token attr-value">   all             all             fe80::8005:8b22:cd7d:ee39/128           trust</span>
+<span class="token attr-name">host</span> <span class="token attr-value">   all             all             2020:1::8dcf:b8be:dbcc:26c6/128         trust</span>
+<span class="token attr-name">host</span> <span class="token attr-value">   all             all             2020:2::1004/128                        trust</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p>基表a将连接到b和c的连接结果。</p>
-<p>表也可以是索引扫描的结果。因此，当我在下面说“PostgreSQL 按顺序扫描表”时，我并不是说必须对表进行顺序扫描。只是 PostgreSQL 完整地读取了“被连接的东西”。</p>
-<h3 id="内表与外表的关系"><a href="#内表与外表的关系" class="headerlink" title="内表与外表的关系"></a>内表与外表的关系</h3><p>任何连接的执行计划如下所示：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token punctuation">(</span>COSTS <span class="token keyword">OFF</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> <span class="token number">a</span> <span class="token keyword">JOIN</span> <span class="token number">b</span> <span class="token keyword">USING</span> <span class="token punctuation">(</span>id<span class="token punctuation">)</span><span class="token punctuation">;</span>
- 
-         QUERY <span class="token keyword">PLAN</span>         
-<span class="token comment" spellcheck="true">----------------------------</span>
- <span class="token keyword">Hash</span> <span class="token keyword">Join</span>
-   <span class="token keyword">Hash</span> Cond: <span class="token punctuation">(</span><span class="token number">a</span><span class="token punctuation">.</span>id <span class="token operator">=</span> <span class="token number">b</span><span class="token punctuation">.</span>id<span class="token punctuation">)</span>
-   <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> <span class="token number">a</span>
-   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span>
-         <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> <span class="token number">b</span>
-<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>我们将连接关系的上层关系（在本例中为上面的顺序扫描<code>a</code>），将下层关系（从计算出的哈希值）称为连接的外表<code>b</code>，称为内表。</p>
-<h3 id="连接条件和连接键"><a href="#连接条件和连接键" class="headerlink" title="连接条件和连接键"></a>连接条件和连接键</h3><p>如果将一个表的每一行与另一个表的每一行组合起来，就会得到笛卡尔积或两个关系的交叉连接。连接条件是排除其中一些组合的过滤器。编写连接条件的方法有多种，但都可以转换为</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token number">a</span> <span class="token operator">&lt;</span><span class="token keyword">join</span> <span class="token keyword">type</span><span class="token operator">></span> <span class="token keyword">JOIN</span> <span class="token number">b</span> <span class="token keyword">ON</span> <span class="token operator">&lt;</span><span class="token keyword">join</span> condition<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>如果连接条件的形式为</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token number">a</span><span class="token punctuation">.</span>col1 <span class="token operator">&lt;</span>operator<span class="token operator">></span> <span class="token number">b</span><span class="token punctuation">.</span>col2 <span class="token punctuation">[</span><span class="token operator">AND</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">]</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>我们称 <code>a.col1</code>和 <code>b.col2</code>为连接键。</p>
-<p>请注意，对于内部连接，连接条件和<code>WHERE</code>条件之间没有区别，但这不适用于外部连接。</p>
-<h2 id="Nested-loop连接策略"><a href="#Nested-loop连接策略" class="headerlink" title="Nested loop连接策略"></a>Nested loop连接策略</h2><p>这是所有连接策略中最简单、最通用的连接策略。</p>
-<p>PostgreSQL 按顺序扫描外部表，对于每个结果行，它扫描内部表以查找匹配的行。</p>
-<h3 id="有助于nested-loop连接索引"><a href="#有助于nested-loop连接索引" class="headerlink" title="有助于nested loop连接索引"></a>有助于nested loop连接索引</h3><p>由于我们按顺序扫描外表，因此外部表上的任何索引都没有帮助。但是内部表的连接键上的索引可以大大加快嵌套循环连接的速度。</p>
-<h3 id="nested-loop连接策略的用例"><a href="#nested-loop连接策略的用例" class="headerlink" title="nested loop连接策略的用例"></a>nested loop连接策略的用例</h3><p>如果外部表很小，则嵌套循环连接特别有效，因为这样内部循环就不会执行得太频繁。它是具有规范化数据模型的 OLTP 工作负载中使用的典型连接策略，效率很高。如果外部表很大，则嵌套循环连接通常效率非常低，即使它们受到内部表索引的支持。</p>
-<p>除此之外，如果没有连接条件使用<code>=</code>运算符，它是唯一可以使用的连接策略。因此，如果没有其他策略可以使用，它也可以作为后备策略。</p>
-<h2 id="Hash-join策略"><a href="#Hash-join策略" class="headerlink" title="Hash join策略"></a>Hash join策略</h2><p>首先，PostgreSQL 顺序扫描内部表并构建一个哈希表，其中哈希键由所有使用<code>=</code>运算符的连接键组成。然后它按顺序扫描外部表并探测找到的每一行的哈希值以查找匹配的连接键。</p>
-<p>这有点类似于嵌套循环连接。构建哈希表是一项额外的启动工作，但探测哈希比扫描内部表要快得多。</p>
-<h3 id="有助于hash-join的索引"><a href="#有助于hash-join的索引" class="headerlink" title="有助于hash join的索引"></a>有助于hash join的索引</h3><p>由于我们按顺序扫描这两个关系，因此连接条件上的索引对哈希连接没有帮助。</p>
-<h2 id="hash-join策略的用例"><a href="#hash-join策略的用例" class="headerlink" title="hash join策略的用例"></a>hash join策略的用例</h2><p>如果涉及的表都不是小的，而小表对应的散列表可以放入<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-WORK-MEM"><code>work_mem</code></a>中，那么散列关联是最好的选择。这是因为PostgreSQL会分批构建散列并将其存储在临时磁盘文件中，这会影响性能。在这种情况下，优化器通常选择不同的连接策略，如<code>merge join</code>。</p>
-<p>只有当连接条件中的运算符是<code>=</code>时，才能在散列表中查找值，因此你至少需要一个与该运算符关联的条件。</p>
-<h2 id="Merge-join策略"><a href="#Merge-join策略" class="headerlink" title="Merge join策略"></a>Merge join策略</h2><p>在<code>merge join</code>中，PostgreSQL 使用<code>=</code>运算符选择所有连接条件。然后，它通过连接键对两个表进行排序（这意味着数据类型必须是可排序的）。然后它迭代两个排序列表并找到匹配的条目。</p>
-<h3 id="有助于merge-join的索引"><a href="#有助于merge-join的索引" class="headerlink" title="有助于merge join的索引"></a>有助于merge join的索引</h3><p>排序键上的索引可以加速排序，因此两个表上的连接键上的索引可以加速合并连接。然而，除非可以使用仅索引扫描，否则显式排序通常更廉价。</p>
-<h3 id="merge-join策略的用例"><a href="#merge-join策略的用例" class="headerlink" title="merge join策略的用例"></a>merge join策略的用例</h3><p>如果涉及的表都太大，散列无法放入<code>work_mem</code>，优化器通常选择merge join。因此，这是连接非常大的表的最佳策略。</p>
-<p>与<code>hash join</code>一样，<code>merge join</code>仅在至少有一个使用<code>=</code>操作符的连接条件时才可行。</p>
-<h2 id="PostgreSQL-连接策略汇总表"><a href="#PostgreSQL-连接策略汇总表" class="headerlink" title="PostgreSQL 连接策略汇总表"></a>PostgreSQL 连接策略汇总表</h2><table>
-<thead>
-<tr>
-<th></th>
-<th>nested loop</th>
-<th><strong>hash join</strong></th>
-<th><strong>merge join</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>算法</strong></td>
-<td>对于每个外表行，扫描内表</td>
-<td>从内部表构建哈希，扫描外部表，探测哈希</td>
-<td>对表合并进行排序</td>
-</tr>
-<tr>
-<td><strong>有帮助的索引</strong></td>
-<td>内部关系的连接键上的索引</td>
-<td>无</td>
-<td>两个表的连接键上的索引</td>
-</tr>
-<tr>
-<td><strong>好的策略</strong></td>
-<td>外表很小</td>
-<td>该散列表放入work_mem</td>
-<td>两张表都很大</td>
-</tr>
-</tbody></table>
-<h2 id="对查询性能的影响"><a href="#对查询性能的影响" class="headerlink" title="对查询性能的影响"></a>对查询性能的影响</h2><p>选择错误的连接策略会导致性能不佳：</p>
-<ul>
-<li>如果优化器低估了行数，它可能会错误地选择<code>nested loop</code>连接。然后，它扫描内部表的次数比预期的要多，这会导致性能不佳。</li>
-<li>如果优化器高估了行数，它可能会错误地选择<code>hash join</code>或<code>merge join</code>。然后它必须完全扫描这两个表，这比在内部表上有索引的<code>nested loop</code>连接的性能要差得多。</li>
-</ul>
-<p>在这两种情况下，错误的行计数估计都是问题的原因。因此，虽然连接可能是我们花费大部分执行时间的地方，但原因是之前发生的错误估计。</p>
-<h2 id="如何让PostgreSQL选择正确的连接策略"><a href="#如何让PostgreSQL选择正确的连接策略" class="headerlink" title="如何让PostgreSQL选择正确的连接策略"></a>如何让PostgreSQL选择正确的连接策略</h2><p>找出最好的连接策略是什么（也许 PostgreSQL 正在做正确的事情）。您可以使用以下命令暂时禁用不同的连接策略<code>SET</code>，该命令会更改当前数据库会话中的参数：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SET</span> enable_hashjoin <span class="token operator">=</span> <span class="token keyword">off</span><span class="token punctuation">;</span>
-<span class="token keyword">SET</span> enable_mergejoin <span class="token operator">=</span> <span class="token keyword">off</span><span class="token punctuation">;</span>
-<span class="token keyword">SET</span> enable_nestloop <span class="token operator">=</span> <span class="token keyword">off</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>请注意，您不能真正禁用嵌套循环连接，只能阻止 PostgreSQL 使用它们。如果没有<code>=</code>运算符的连接条件，则嵌套循环连接是唯一的方法。</p>
-<p>调整查询通常不是一个简单直接的任务。但是，这里有一些指导方针和想法：</p>
-<ul>
-<li>如果由于错误估计而选择了错误的连接策略，尝试改进该估计。analyze表，或许增加<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-DEFAULT-STATISTICS-TARGET"><code>default_statistics_target</code></a>，看看是否有不同。尝试用更简单的 <code>WHERE</code> 条件重写查询，使优化器的任务更容易。</li>
-<li>尝试增加<code>work_mem</code>并看看是否可以获得更廉价的哈希连接。</li>
-<li>配置告诉 PostgreSQL 有关您的硬件和资源的参数：<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-RANDOM-PAGE-COST"><code>random_page_cost</code></a>、<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-EFFECTIVE-CACHE-SIZE"><code>effective_cache_size</code></a>和<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-EFFECTIVE-IO-CONCURRENCY"><code>effective_io_concurrency</code></a>，这将使它能够正确地为索引扫描定价。</li>
-<li>您可以通过仅索引扫描来加速嵌套循环和合并联接。为此，您必须将所有必需的列添加到索引（最好使用<code>INCLUDE</code>子句），并确保表被足够频繁地清理。</li>
-</ul>
-<h2 id="结论——连接策略和查询调优"><a href="#结论——连接策略和查询调优" class="headerlink" title="结论——连接策略和查询调优"></a>结论——连接策略和查询调优</h2><p>了解 3 种连接策略（嵌套循环连接、哈希连接和合并连接）对于任何想要了解执行计划和调整查询的人来说都是至关重要的。查询调优的艺术无法通过一篇文章来表达，但我希望我能在这里收集一些相关信息。</p>
+<h5 id="psql-客户端使用带有接口名称的链接本地地址连接到-Postgres-服务器"><a href="#psql-客户端使用带有接口名称的链接本地地址连接到-Postgres-服务器" class="headerlink" title="psql 客户端使用带有接口名称的链接本地地址连接到 Postgres 服务器"></a>psql 客户端使用带有接口名称的链接本地地址连接到 Postgres 服务器</h5><pre class="line-numbers language-bash"><code class="language-bash">$ psql -d postgres -U david -h fe80::1c79:293f:1b6e:c826%enp0s3
+psql <span class="token punctuation">(</span>14devel<span class="token punctuation">)</span>
+Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT datname,pid, usename, client_addr FROM pg_stat_activity where usename='david';</span>
+ datname  <span class="token operator">|</span>  pid  <span class="token operator">|</span> usename <span class="token operator">|</span>        client_addr        
+----------+-------+---------+---------------------------
+          <span class="token operator">|</span> 24170 <span class="token operator">|</span> david   <span class="token operator">|</span> 
+ postgres <span class="token operator">|</span> 24244 <span class="token operator">|</span> david   <span class="token operator">|</span> fe80::8005:8b22:cd7d:ee39
+<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="psql客户端使用全局地址（无状态地址）连接到Postgres服务器"><a href="#psql客户端使用全局地址（无状态地址）连接到Postgres服务器" class="headerlink" title="psql客户端使用全局地址（无状态地址）连接到Postgres服务器"></a>psql客户端使用全局地址（无状态地址）连接到Postgres服务器</h5><pre class="line-numbers language-bash"><code class="language-bash">$ psql -d postgres -U david -h 2020:1::db1
+psql <span class="token punctuation">(</span>14devel<span class="token punctuation">)</span>
+Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT datname,pid, usename, client_addr FROM pg_stat_activity where usename='david';</span>
+ datname  <span class="token operator">|</span>  pid  <span class="token operator">|</span> usename <span class="token operator">|</span>         client_addr         
+----------+-------+---------+-----------------------------
+          <span class="token operator">|</span> 24131 <span class="token operator">|</span> david   <span class="token operator">|</span> 
+ postgres <span class="token operator">|</span> 24149 <span class="token operator">|</span> david   <span class="token operator">|</span> 2020:1::8dcf:b8be:dbcc:26c6
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="psql客户端使用全局地址（有状态地址）连接到Postgres服务器"><a href="#psql客户端使用全局地址（有状态地址）连接到Postgres服务器" class="headerlink" title="psql客户端使用全局地址（有状态地址）连接到Postgres服务器"></a>psql客户端使用全局地址（有状态地址）连接到Postgres服务器</h5><pre class="line-numbers language-bash"><code class="language-bash">$ psql -d postgres -U david -h 2020:2::db1
+psql <span class="token punctuation">(</span>14devel<span class="token punctuation">)</span>
+Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT datname,pid, usename, client_addr FROM pg_stat_activity where usename='david';</span>
+ datname  <span class="token operator">|</span>  pid  <span class="token operator">|</span> usename <span class="token operator">|</span> client_addr  
+----------+-------+---------+--------------
+          <span class="token operator">|</span> 24170 <span class="token operator">|</span> david   <span class="token operator">|</span> 
+ postgres <span class="token operator">|</span> 24235 <span class="token operator">|</span> david   <span class="token operator">|</span> 2020:2::1004
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="5-典型错误"><a href="#5-典型错误" class="headerlink" title="5. 典型错误"></a>5. 典型错误</h4><h5 id="使用-link-local-连接-Postgres，无需接口名称"><a href="#使用-link-local-连接-Postgres，无需接口名称" class="headerlink" title="使用 link-local 连接 Postgres，无需接口名称"></a>使用 link-local 连接 Postgres，无需接口名称</h5><pre class="line-numbers language-bash"><code class="language-bash">$ psql -d postgres -U david -h fe80::1c79:293f:1b6e:c826
+psql: error: could not connect to server: could not connect to server: Invalid argument
+    Is the server running on host <span class="token string">"fe80::1c79:293f:1b6e:c826"</span> and accepting
+    TCP/IP connections on port 5432?
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="psql-客户端使用错误的全局地址作为源地址"><a href="#psql-客户端使用错误的全局地址作为源地址" class="headerlink" title="psql 客户端使用错误的全局地址作为源地址"></a>psql 客户端使用错误的全局地址作为源地址</h5><pre class="line-numbers language-bash"><code class="language-bash">$ psql -d postgres -h 2020:2::db1
+psql: error: could not connect to server: FATAL:  no pg_hba.conf entry <span class="token keyword">for</span> host <span class="token string">"2020:1::8dcf:b8be:dbcc:26c6"</span>, user <span class="token string">"dbtest"</span>, database <span class="token string">"postgres"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>这是由于同一接口上有多个可用的 IPv6 全局地址。在这种情况下，应用程序（即）<code>psql</code>应该有一个选项来选择首选 IPv6，否则，内核将根据预定义的策略和规则选择 IPv6 全局地址。详细信息请查看<a target="_blank" rel="noopener" href="http://linux-ip.net/html/routing-saddr-selection.html">源地址选择</a>。一个简单的解决方案是删除其他全局 IPv6 地址，并禁用相应的<code>service</code>ie<code>radvd</code>或<code>DHCPv6</code>服务器。</p>
+<h4 id="6-总结"><a href="#6-总结" class="headerlink" title="6. 总结"></a>6. 总结</h4><p>我们演示了如何使用一台 Postgres 服务器和一个 psql 客户端设置一个简单的 IPv6 网络。在 PostgreSQL 端启用 IPv6 配置非常简单，但需要一些基本的 IPv6 知识。</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://www.tldp.org/HOWTO/Linux+IPv6-HOWTO/ch06s02.html">配置 IPv6 地址</a></p>
 
                 
             </div>
@@ -532,7 +615,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">https://jinlid.github.io/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/</a>
+                    <a href="https://jinlid.github.io/2023/ru-he-zai-postgresql-she-zhi-qi-yong-ipv6-wang-luo/">https://jinlid.github.io/2023/ru-he-zai-postgresql-she-zhi-qi-yong-ipv6-wang-luo/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -650,17 +733,18 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
+                <a href="/2023/ru-he-zai-postgresql-she-zhi-qi-yong-ipv6-wang-luo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
+                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="如何在PostgreSQL设置启用IPv6网络">
                         
-                        <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
+                        <span class="card-title">如何在PostgreSQL设置启用IPv6网络</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -670,9 +754,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-12-28
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -685,6 +769,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -703,31 +788,32 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-fen-xi-he-you-hua-qi-tong-ji-xin-xi/">
+                <a href="/2023/strace-ming-ling-jie-shao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="POSTGRESQL分析和优化器统计信息">
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="strace命令介绍">
                         
-                        <span class="card-title">POSTGRESQL分析和优化器统计信息</span>
+                        <span class="card-title">strace命令介绍</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            [TOC]
+strace基本功能监控用户和内核进程的交互，追踪进程的调用、信号传递、进程状态变化等。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-12-07
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/linux/" class="post-category">
+                                    linux
                                 </a>
                             
                             
@@ -737,8 +823,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/linux/">
+                        <span class="chip bg-color">linux</span>
                     </a>
                     
                 </div>

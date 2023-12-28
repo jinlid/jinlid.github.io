@@ -576,7 +576,7 @@ WHERE c.relname not like <span class="token string">'pg%'</span><span class="tok
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>输出告诉我们缓冲区是脏的。让我们强制检查点：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">CHECKPOINT<span class="token punctuation">;</span>
-CHECKPOINT
+CHECKPOINT<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>我们将重复查询：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT</span>
@@ -644,7 +644,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <p>WAL 段已用于前面提到的两个目的。从 9.0 版本开始，WAL 段也被用于复制。道理很简单。无论如何，服务器中发生的所有更改都记录在 WAL 段中。为什么不使用这些并为故障转移准备好备用服务器呢？</p>
 <p>WAL 还减少了保证事务提交所需的磁盘写入次数，从而提高了性能。这是因为 WAL 写入是顺序的。如果提交了一些小事务，它们将按顺序出现在日志中。如果数据库在没有 WAL 的情况下工作，事务提交将立即导致将数据写出到所有受事务影响的数据文件。</p>
 <p>现在，我们也来看看与 WAL 相关的几个关键参数。将目录更改为$PGDATA并执行以下命令：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>postgres@host1 data<span class="token punctuation">]</span>$ <span class="token function">grep</span> wal postgresql.conf
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">[postgres@host1</span> <span class="token attr-value">data]$ grep wal postgresql.conf</span>
 <span class="token comment" spellcheck="true">#wal_level = minimal                    # minimal, replica, or logical</span>
 <span class="token comment" spellcheck="true">#wal_sync_method = fsync                # the default is the first option</span>
 <span class="token comment" spellcheck="true">#wal_compression = off                  # enable compression of full-page writes</span>
@@ -1030,9 +1030,9 @@ datname <span class="token operator">=</span> <span class="token string">'postgr
 <p>临时文件的数量没有增加。</p>
 <h3 id="使用-maintenance-work-mem-进行维护"><a href="#使用-maintenance-work-mem-进行维护" class="headerlink" title="使用 maintenance_work_mem 进行维护"></a>使用 maintenance_work_mem 进行维护</h3><p>此内存区域由 <code>vacuum</code> 等操作使用。与 <code>work_mem</code> 的情况一样，分配的空间将影响维护活动的完成速度。使用此区域的典型活动包括分析、清理、创建索引、重建索引等。</p>
 <p>显示此值的影响非常简单，如以下命令所示：</p>
-<pre><code>postgres=# \timing on
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \timing on</span>
 Timing is on.
-</code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>有一个包含几十万条记录的列表：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT pg_size_pretty(pg_table_size('myt'));</span>
  pg_size_pretty 
