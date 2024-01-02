@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="标签: postgresql, jinlid&#39;s blog">
+    <meta name="keywords" content="分类: go, jinlid&#39;s blog">
     <meta name="description" content="jinlid&#39;s blog">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -17,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>标签: postgresql | jinlid&#39;s blog</title>
+    <title>分类: go | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -385,62 +385,82 @@
 
     
 
-<div id="tags" class="container chip-container">
+<div id="category-cloud" class="container chip-container">
     <div class="card">
         <div class="card-content">
             <div class="tag-title center-align">
-                <i class="fas fa-tags"></i>&nbsp;&nbsp;文章标签
+                <i class="fas fa-bookmark"></i>&nbsp;&nbsp;文章分类
             </div>
             <div class="tag-chips">
                 
                 
-                <a href="/tags/postgresql/" title="postgresql: 36">
+                
+                <a href="/categories/postgresql/" title="postgresql: 30">
                     <span class="chip center-align waves-effect waves-light
-                             chip-active "
-                            data-tagname="postgresql" style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">36</span>
+                             chip-default "
+                            style="background-color: #F9EBEA;">postgresql
+                        <span class="tag-length">30</span>
                     </span>
                 </a>
                 
                 
-                <a href="/tags/Linux/" title="Linux: 1">
+                <a href="/categories/Linux/" title="Linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            data-tagname="Linux" style="background-color: #F5EEF8;">Linux
+                            style="background-color: #F5EEF8;">Linux
                         <span class="tag-length">1</span>
                     </span>
                 </a>
                 
                 
-                <a href="/tags/flask/" title="flask: 2">
+                <a href="/categories/python/" title="python: 2">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            data-tagname="flask" style="background-color: #D5F5E3;">flask
+                            style="background-color: #D5F5E3;">python
                         <span class="tag-length">2</span>
                     </span>
                 </a>
                 
                 
-                <a href="/tags/linux/" title="linux: 1">
+                <a href="/categories/go/" title="go: 1">
                     <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            data-tagname="linux" style="background-color: #E8F8F5;">linux
+                             chip-active "
+                            style="background-color: #E8F8F5;">go
                         <span class="tag-length">1</span>
                     </span>
                 </a>
+                
+                
+                <a href="/categories/linux/" title="linux: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #FEF9E7;">linux
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 5">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #F8F9F9;">数据库
+                        <span class="tag-length">5</span>
+                    </span>
+                </a>
+                
                 
             </div>
         </div>
     </div>
 </div>
 
+
     
 
     <article id="articles" class="container articles">
         <div class="row tags-posts">
             
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
                     <a href="/2024/golang-lian-jie-postgresql/">
                         <div class="card-image tag-image">
@@ -452,6 +472,20 @@
                         </div>
                     </a>
                     <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                一个demo
+package main
+ 
+import (
+    "database/sql"
+    "fmt"
+    "sync"
+    _ "github.com/lib/pq" // 导入驱动
+)
+var wg sync.W
+                            
+                        </div>
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2024-01-02
@@ -461,299 +495,29 @@
                                 <i class="fas fa-bookmark fa-fw icon-category"></i>
                                 
                                 <a href="/categories/go/" class="post-category">
-                                go
+                                    go
                                 </a>
                                 
                                 
                             </span>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/ru-he-zai-postgresql-she-zhi-qi-yong-ipv6-wang-luo/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="如何在PostgreSQL设置启用IPv6网络">
-                            
-                            <span class="card-title">如何在PostgreSQL设置启用IPv6网络</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-12-28
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
                     </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/postgresql-hou-duan-jia-gou-gai-shu/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="POSTGRESQL：PostgreSQL 后端架构概述">
-                            
-                            <span class="card-title">POSTGRESQL：PostgreSQL 后端架构概述</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-11-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/ru-he-fen-xi-postgresql-beng-kui-zhuan-chu-wen-jian/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="如何分析PostgreSQL崩溃转储文件">
-                            
-                            <span class="card-title">如何分析PostgreSQL崩溃转储文件</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-11-01
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="post-category">
-                                数据库
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/postgresql-zhong-de-sql-you-hua-in-exists-anyall-yu-join/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="PostgreSQL中的SQL优化：IN、EXISTS、ANYALL与JOIN">
-                            
-                            <span class="card-title">PostgreSQL中的SQL优化：IN、EXISTS、ANYALL与JOIN</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-06
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/jian-kong-fu-zhi-pg-stat-replication/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="监控复制：PG_STAT_REPLICATION">
-                            
-                            <span class="card-title">监控复制：PG_STAT_REPLICATION</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/postgresql-shi-me-shi-jian-cha-dian/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="POSTGRESQL：什么是检查点？">
-                            
-                            <span class="card-title">POSTGRESQL：什么是检查点？</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/postgresql-fu-za-de-lin-shi-biao/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="POSTGRESQL复杂的临时表">
-                            
-                            <span class="card-title">POSTGRESQL复杂的临时表</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div class="article tag-post col s12 m6 l4" data-tags="postgresql" data-aos="fade-up">
-                <div class="card">
-                    <a href="/2023/postgresql-zhong-de-re-geng-xin-yi-huo-de-geng-hao-de-xing-neng/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="POSTGRESQL中的热更新以获得更好的性能">
-                            
-                            <span class="card-title">POSTGRESQL中的热更新以获得更好的性能</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
             
         </div>
     </article>
 </main>
-
-
-<div class="container paging">
-    <div class="row">
-        <div class="col s6 m4 l4">
-            
-            <a class="left btn-floating btn-large disabled">
-                <i class="fas fa-angle-left"></i>
-            </a>
-            
-        </div>
-        <div class="page-info col m4 l4 hide-on-small-only">
-            <div class="center-align b-text-gray">1 / 4</div>
-        </div>
-        <div class="col s6 m4 l4">
-            
-            <a href="/tags/postgresql/page/2/"
-               class="right btn-floating btn-large waves-effect waves-light bg-color">
-                <i class="fas fa-angle-right"></i>
-            </a>
-            
-        </div>
-    </div>
-</div>
 
 
 
