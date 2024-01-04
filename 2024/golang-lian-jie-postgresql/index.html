@@ -4,17 +4,13 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="golang连接postgresql, jinlid&#39;s blog">
-    <meta name="description" content="一个demo
-package main
- 
-import (
-    &#34;database/sql&#34;
-    &#34;fmt&#34;
-    &#34;sync&#34;
-    _ &#34;github.com/lib/pq&#34; // 导入驱动
-)
-var wg sync.W">
+    <meta name="keywords" content="如何找到toast表损坏的所在ctid, jinlid&#39;s blog">
+    <meta name="description" content="假设test_toast表数据损坏了。
+使用python多线程方式查找
+import psycopg2
+from multiprocessing import Pool
+
+conn = psycopg2.connect(host=&#34;192.">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -26,7 +22,7 @@ var wg sync.W">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>golang连接postgresql | jinlid&#39;s blog</title>
+    <title>如何找到toast表损坏的所在ctid | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -346,12 +342,12 @@ var wg sync.W">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/14.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">golang连接postgresql</h1>
+                    <h1 class="description center-align post-title">如何找到toast表损坏的所在ctid</h1>
                 </div>
             </div>
         </div>
@@ -421,7 +417,41 @@ var wg sync.W">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>一个demo</p>
+                <p>假设test_toast表数据损坏了。</p>
+<p>使用python多线程方式查找</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> psycopg2
+<span class="token keyword">from</span> multiprocessing <span class="token keyword">import</span> Pool
+
+conn <span class="token operator">=</span> psycopg2<span class="token punctuation">.</span>connect<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">"192.168.137.129"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token string">"1921"</span><span class="token punctuation">,</span> database<span class="token operator">=</span><span class="token string">"postgres"</span><span class="token punctuation">,</span> user<span class="token operator">=</span><span class="token string">"pg10"</span><span class="token punctuation">,</span> password<span class="token operator">=</span><span class="token string">"postgresql@123"</span><span class="token punctuation">,</span> <span class="token punctuation">)</span>
+conn<span class="token punctuation">.</span>autocommit<span class="token operator">=</span><span class="token boolean">True</span>
+cur <span class="token operator">=</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">get_ctids</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span><span class="token string">"SELECT ctid FROM test_toast"</span><span class="token punctuation">)</span>
+    rows <span class="token operator">=</span> cur<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    ctid_list <span class="token operator">=</span> <span class="token punctuation">[</span>row<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token keyword">for</span> row <span class="token keyword">in</span> rows<span class="token punctuation">]</span>
+    cur<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> ctid_list
+
+<span class="token keyword">def</span> <span class="token function">check_error</span><span class="token punctuation">(</span>ctid<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span><span class="token string">"SELECT info FROM test_toast where ctid = '%s'::tid"</span><span class="token operator">%</span>ctid<span class="token punctuation">)</span>
+    <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"ERROR: "</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span>__str__<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">", The ctid of the damaged tuple is:"</span><span class="token operator">+</span> ctid<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">close_conn</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    conn<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    ctid_list <span class="token operator">=</span> get_ctids<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    p <span class="token operator">=</span> Pool<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span>
+    <span class="token keyword">for</span> ctid <span class="token keyword">in</span> ctid_list<span class="token punctuation">:</span>
+        p<span class="token punctuation">.</span>apply_async<span class="token punctuation">(</span>check_error<span class="token punctuation">,</span> args<span class="token operator">=</span><span class="token punctuation">(</span>ctid<span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    p<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    p<span class="token punctuation">.</span>join<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    close_conn<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>使用go协程方式查找</p>
 <pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package</span> main
  
 <span class="token keyword">import</span> <span class="token punctuation">(</span>
@@ -430,22 +460,21 @@ var wg sync.W">
     <span class="token string">"sync"</span>
     <span class="token boolean">_</span> <span class="token string">"github.com/lib/pq"</span> <span class="token comment" spellcheck="true">// 导入驱动</span>
 <span class="token punctuation">)</span>
-<span class="token keyword">var</span> wg sync<span class="token punctuation">.</span>WaitGroup <span class="token comment" spellcheck="true">//只定义无需赋值</span>
-<span class="token keyword">func</span> <span class="token function">f</span><span class="token punctuation">(</span>db <span class="token operator">*</span>sql<span class="token punctuation">.</span>DB<span class="token punctuation">,</span>v <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token keyword">var</span> wg sync<span class="token punctuation">.</span>WaitGroup
+
+<span class="token keyword">func</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db <span class="token operator">*</span>sql<span class="token punctuation">.</span>DB<span class="token punctuation">,</span>v <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">defer</span> wg<span class="token punctuation">.</span><span class="token function">Done</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token comment" spellcheck="true">// fmt.Printf("%v \n", v)</span>
-    rows<span class="token punctuation">,</span> err <span class="token operator">:=</span> db<span class="token punctuation">.</span><span class="token function">Query</span><span class="token punctuation">(</span><span class="token string">"SELECT starelid FROM pg_statistic where ctid = '"</span><span class="token operator">+</span> v <span class="token operator">+</span> <span class="token string">"'"</span><span class="token punctuation">)</span>
+    <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token comment" spellcheck="true">//调用recover内置函数，可以捕获错误，如果没有捕获错误，返回值为零值，nil</span>
+        <span class="token keyword">if</span> err <span class="token operator">:=</span> <span class="token function">recover</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>err <span class="token operator">!=</span> <span class="token boolean">nil</span><span class="token punctuation">{</span>
+            fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"ERROR"</span><span class="token punctuation">,</span> err<span class="token punctuation">,</span> <span class="token string">", The ctid of the damaged tuple is: "</span><span class="token punctuation">,</span> v<span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    rows<span class="token punctuation">,</span> err <span class="token operator">:=</span> db<span class="token punctuation">.</span><span class="token function">Query</span><span class="token punctuation">(</span><span class="token string">"SELECT info FROM test_toast where ctid = '"</span><span class="token operator">+</span> v <span class="token operator">+</span> <span class="token string">"'::tid"</span><span class="token punctuation">)</span>
     <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
-    <span class="token keyword">for</span> rows<span class="token punctuation">.</span><span class="token function">Next</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token keyword">var</span> starelid <span class="token builtin">string</span>
-        err2 <span class="token operator">:=</span> rows<span class="token punctuation">.</span><span class="token function">Scan</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>starelid<span class="token punctuation">)</span>
-        <span class="token keyword">if</span> err2 <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
-            <span class="token function">panic</span><span class="token punctuation">(</span>err2<span class="token punctuation">)</span>
-        <span class="token punctuation">}</span>
-        fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>starelid<span class="token punctuation">)</span>
-    <span class="token punctuation">}</span>
+    <span class="token keyword">defer</span> rows<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token punctuation">}</span>
 
 <span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -455,19 +484,14 @@ var wg sync.W">
  
     <span class="token comment" spellcheck="true">// 建立连接</span>
     db<span class="token punctuation">,</span> err <span class="token operator">:=</span> sql<span class="token punctuation">.</span><span class="token function">Open</span><span class="token punctuation">(</span><span class="token string">"postgres"</span><span class="token punctuation">,</span> dbInfo<span class="token punctuation">)</span>
+    db<span class="token punctuation">.</span><span class="token function">SetMaxOpenConns</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span>
     <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
     <span class="token keyword">defer</span> db<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
  
-    <span class="token comment" spellcheck="true">// 测试连接是否成功</span>
-    err <span class="token operator">=</span> db<span class="token punctuation">.</span><span class="token function">Ping</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
-        <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
-    <span class="token punctuation">}</span>
- 
     <span class="token comment" spellcheck="true">// 执行查询</span>
-    rows<span class="token punctuation">,</span> err <span class="token operator">:=</span> db<span class="token punctuation">.</span><span class="token function">Query</span><span class="token punctuation">(</span><span class="token string">"SELECT ctid FROM pg_statistic"</span><span class="token punctuation">)</span>
+    rows<span class="token punctuation">,</span> err <span class="token operator">:=</span> db<span class="token punctuation">.</span><span class="token function">Query</span><span class="token punctuation">(</span><span class="token string">"SELECT ctid FROM test_toast"</span><span class="token punctuation">)</span>
     <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
@@ -479,7 +503,6 @@ var wg sync.W">
         <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
             <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
         <span class="token punctuation">}</span>
-        <span class="token comment" spellcheck="true">// fmt.Println(ctid)</span>
         result <span class="token operator">=</span> <span class="token function">append</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> ctid<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
 
@@ -488,14 +511,13 @@ var wg sync.W">
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
     <span class="token keyword">for</span> <span class="token boolean">_</span><span class="token punctuation">,</span>v <span class="token operator">:=</span> <span class="token keyword">range</span> result<span class="token punctuation">{</span>
-        wg<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true">//携程开始的时候加1操作</span>
-        <span class="token keyword">go</span> <span class="token function">f</span><span class="token punctuation">(</span>db<span class="token punctuation">,</span> v<span class="token punctuation">)</span>
+        wg<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+        <span class="token keyword">go</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db<span class="token punctuation">,</span> v<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
-    <span class="token comment" spellcheck="true">//主线程一直阻塞，什么时候wg减为0了，就停止</span>
     wg<span class="token punctuation">.</span><span class="token function">Wait</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 
 <span class="token punctuation">}</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -640,18 +662,17 @@ var wg sync.W">
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/golang-lian-jie-postgresql/">
+                <a href="/2024/flask-lian-jie-postgresql/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="golang连接postgresql">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">golang连接postgresql</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -661,29 +682,16 @@ var wg sync.W">
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-02
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-03
+                        </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/go/" class="post-category">
-                                    go
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
                             
                         </span>
                     </div>
-                </div>
-
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
                 </div>
                 
             </div>
