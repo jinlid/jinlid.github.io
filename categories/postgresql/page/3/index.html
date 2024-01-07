@@ -422,19 +422,19 @@
                 </a>
                 
                 
-                <a href="/categories/go/" title="go: 1">
+                <a href="/categories/linux/" title="linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #E8F8F5;">go
+                            style="background-color: #E8F8F5;">linux
                         <span class="tag-length">1</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/linux/" title="linux: 1">
+                <a href="/categories/go/" title="go: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #FEF9E7;">linux
+                            style="background-color: #FEF9E7;">go
                         <span class="tag-length">1</span>
                     </span>
                 </a>
@@ -554,24 +554,23 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/5.bing-fa-kong-zhi/">
+                    <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                             
-                            <span class="card-title">5 并发控制</span>
+                            <span class="card-title">7 仅堆元组和仅索引扫描</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                                本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
 
 
 [TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
+7.1 仅堆元组（热）HOT 在 8.3 版中实现，当更新的行存储在与存储旧行的同一表页中时，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
                             
                         </div>
                         <div class="publish-info">
@@ -605,22 +604,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/6.vacuum-jin-cheng/">
+                    <a href="/2021/3.cha-xun-chu-li/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
                             
-                            <span class="card-title">6 vacuum进程</span>
+                            <span class="card-title">3 查询处理</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
+                                如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
 
 
-为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vacuum full。并行VACUUM（通常简称为V
+本章由以下三部分组成:
+
+第3.
                             
                         </div>
                         <div class="publish-info">
@@ -705,24 +706,24 @@
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/3.cha-xun-chu-li/">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
+                            <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
                             
-                            <span class="card-title">3 查询处理</span>
+                            <span class="card-title">5 并发控制</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
 
 
-本章由以下三部分组成:
+[TOC]
 
-第3.
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
