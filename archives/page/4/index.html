@@ -696,24 +696,23 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                        <a href="/2021/11-liu-fu-zhi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
+                                <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
                                 
-                                <span class="card-title">2 进程和内存架构</span>
+                                <span class="card-title">11 流复制</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                                    同步流复制是在9.1版本中实现的。这是一个所谓的单主-多从类型的复制，主和从这两个术语在PostgreSQL中通常分别被称为主和备。
 
 
 [TOC]
-2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
-
+这种本地复制特性基于日志传送(一种通用的复制技术)，其中主服务器继续发送WAL数据，然后每
                                 
                             </div>
                             <div class="publish-info">
@@ -760,23 +759,24 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/11-liu-fu-zhi/">
+                        <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
                                 
-                                <span class="card-title">11 流复制</span>
+                                <span class="card-title">2 进程和内存架构</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    同步流复制是在9.1版本中实现的。这是一个所谓的单主-多从类型的复制，主和从这两个术语在PostgreSQL中通常分别被称为主和备。
+                                    本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
 
 
 [TOC]
-这种本地复制特性基于日志传送(一种通用的复制技术)，其中主服务器继续发送WAL数据，然后每
+2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
+
                                 
                             </div>
                             <div class="publish-info">
