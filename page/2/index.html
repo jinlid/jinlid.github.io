@@ -392,71 +392,21 @@
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/jian-kong-fu-zhi-pg-stat-replication/">
+                    <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="监控复制：PG_STAT_REPLICATION">
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
                             
-                            <span class="card-title">监控复制：PG_STAT_REPLICATION</span>
+                            <span class="card-title">POSTGRESQL中的连接策略和性能</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL 复制（同步和异步复制）是数据库社区中最广泛使用的功能之一。如今，人们正在构建高可用性集群或使用复制来创建只读
-副本来分散工作负载。这里需要注意的是，如果您使用复制，则必须确保您的集群受到正确监控。
-这篇文章的目的是解释
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-              <!-- 隐藏某个文章 -->
-            
-             <!-- 隐藏某个文章 -->
-            <div class="article col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
-                        <div class="card-image">
-                            
-                            
-                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
-                            
-                            <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
-                        </div>
-                    </a>
-
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 hot_standby_feedback 参数的真正作用是什么。支持客户不断问这个问题，因此与更广泛的 PostgreSQL 用户分享这些知识可能会
+                                PostgreSQL 中存在三种工作方式完全不同的连接策略。如果 PostgreSQL 选择了错误的策略，查询性能可能会受到很大影响。本文介绍了连接策略、如何使用索引支持它们、它们可能会出现什么问题以及如何调整连接以获得更好的性能。
+连接策
                             
                         </div>
                         <div class="publish-info">
@@ -591,21 +541,21 @@
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                    <a href="/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                            <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）">
                             
-                            <span class="card-title">POSTGRESQL中的连接策略和性能</span>
+                            <span class="card-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL 中存在三种工作方式完全不同的连接策略。如果 PostgreSQL 选择了错误的策略，查询性能可能会受到很大影响。本文介绍了连接策略、如何使用索引支持它们、它们可能会出现什么问题以及如何调整连接以获得更好的性能。
-连接策
+                                很多人询问PostgreSQL 中的索引扫描。本博客旨在对该主题进行基本介绍。许多人不知道优化器在处理单个查询时会做什么。我决定展示如何访问表并给出示例。让我们开始使用 PostgreSQL 索引。
+索引是良好性能的支柱。如果没有正确的索引
                             
                         </div>
                         <div class="publish-info">
@@ -655,56 +605,6 @@
                         <div class="summary block-with-text">
                             
                                 开箱即用的默认 PostgreSQL 配置并未针对任何特定工作负载进行调整。设置默认值以确保 PostgreSQL 在任何地方运行，消耗最少的资源，并且不会导致任何漏洞。它具有所有数据库参数的默认设置。数据库管理员或开发人员主要负责根据系统
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-              <!-- 隐藏某个文章 -->
-            
-             <!-- 隐藏某个文章 -->
-            <div class="article col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">
-                        <div class="card-image">
-                            
-                            
-                            <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）">
-                            
-                            <span class="card-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</span>
-                        </div>
-                    </a>
-
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                很多人询问PostgreSQL 中的索引扫描。本博客旨在对该主题进行基本介绍。许多人不知道优化器在处理单个查询时会做什么。我决定展示如何访问表并给出示例。让我们开始使用 PostgreSQL 索引。
-索引是良好性能的支柱。如果没有正确的索引
                             
                         </div>
                         <div class="publish-info">
@@ -857,6 +757,104 @@
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2023-02-25
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+              <!-- 隐藏某个文章 -->
+            
+             <!-- 隐藏某个文章 -->
+            <div class="article col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2023/vacuum-he-analyze-zui-jia-shi-jian-ji-qiao/">
+                        <div class="card-image">
+                            
+                            
+                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="VACUUM和ANALYZE最佳实践技巧">
+                            
+                            <span class="card-title">VACUUM和ANALYZE最佳实践技巧</span>
+                        </div>
+                    </a>
+
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                VACUUM 和 ANALYZE 是PostgreSQL 数据库两个最重要的维护操作。 
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+              <!-- 隐藏某个文章 -->
+            
+             <!-- 隐藏某个文章 -->
+            <div class="article col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2023/dang-autovacuum-bu-gong-zuo-shi/">
+                        <div class="card-image">
+                            
+                            
+                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="当 autovacuum 不工作时">
+                            
+                            <span class="card-title">当 autovacuum 不工作时</span>
+                        </div>
+                    </a>
+
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                快速回顾一下，autovacuum后台进程清理死行，例如旧的已删除行版本。您也可以通过运行手动执行清理VACUUM，但autovacuum会根据表中死行的数量在适当的时候自动执行清理，不要太频繁但足够频繁以控制“垃圾”的数量。
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-23
                             </span>
                             <span class="publish-author">
                                 

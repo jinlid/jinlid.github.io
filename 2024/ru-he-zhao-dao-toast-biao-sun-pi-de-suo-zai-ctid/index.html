@@ -458,11 +458,12 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
     <span class="token string">"database/sql"</span>
     <span class="token string">"fmt"</span>
     <span class="token string">"sync"</span>
+    <span class="token string">"sync/atomic"</span>
     <span class="token boolean">_</span> <span class="token string">"github.com/lib/pq"</span> <span class="token comment" spellcheck="true">// 导入驱动</span>
 <span class="token punctuation">)</span>
 <span class="token keyword">var</span> wg sync<span class="token punctuation">.</span>WaitGroup
-
-<span class="token keyword">func</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db <span class="token operator">*</span>sql<span class="token punctuation">.</span>DB<span class="token punctuation">,</span>v <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token keyword">var</span> counter <span class="token builtin">int32</span>
+<span class="token keyword">func</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db <span class="token operator">*</span>sql<span class="token punctuation">.</span>DB<span class="token punctuation">,</span>total <span class="token builtin">float32</span><span class="token punctuation">,</span>v <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">defer</span> wg<span class="token punctuation">.</span><span class="token function">Done</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
     <span class="token keyword">defer</span> <span class="token keyword">func</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
         <span class="token comment" spellcheck="true">//调用recover内置函数，可以捕获错误，如果没有捕获错误，返回值为零值，nil</span>
@@ -474,9 +475,11 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
     <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
+    atomic<span class="token punctuation">.</span><span class="token function">AddInt32</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>counter<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+    fmt<span class="token punctuation">.</span><span class="token function">Printf</span><span class="token punctuation">(</span><span class="token string">"\rData scanning progress:%.2f%%, "</span><span class="token punctuation">,</span> <span class="token function">float32</span><span class="token punctuation">(</span>counter<span class="token operator">*</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token operator">/</span>total<span class="token punctuation">)</span>
     <span class="token keyword">defer</span> rows<span class="token punctuation">.</span><span class="token function">Close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token punctuation">}</span>
-
+    
 <span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token comment" spellcheck="true">// 设置连接信息</span>
     dbInfo <span class="token operator">:=</span> fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable"</span><span class="token punctuation">,</span>
@@ -505,19 +508,20 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
         <span class="token punctuation">}</span>
         result <span class="token operator">=</span> <span class="token function">append</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> ctid<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
-
+    total <span class="token operator">:=</span> <span class="token function">float32</span><span class="token punctuation">(</span><span class="token function">len</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span>
     err <span class="token operator">=</span> rows<span class="token punctuation">.</span><span class="token function">Err</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
     <span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
         <span class="token function">panic</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
     <span class="token punctuation">}</span>
-    <span class="token keyword">for</span> <span class="token boolean">_</span><span class="token punctuation">,</span>v <span class="token operator">:=</span> <span class="token keyword">range</span> result<span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token boolean">_</span><span class="token punctuation">,</span>v <span class="token operator">:=</span> <span class="token keyword">range</span> result <span class="token punctuation">{</span>
         wg<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
-        <span class="token keyword">go</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db<span class="token punctuation">,</span> v<span class="token punctuation">)</span>
+        <span class="token keyword">go</span> <span class="token function">check_error</span><span class="token punctuation">(</span>db<span class="token punctuation">,</span>total<span class="token punctuation">,</span> v<span class="token punctuation">)</span>
+        
     <span class="token punctuation">}</span>
     wg<span class="token punctuation">.</span><span class="token function">Wait</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-
+    fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token string">"\nData scan completed."</span><span class="token punctuation">)</span>
 <span class="token punctuation">}</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -544,7 +548,7 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/golang-lian-jie-postgresql/">https://jinlid.github.io/2024/golang-lian-jie-postgresql/</a>
+                    <a href="https://jinlid.github.io/2024/ru-he-zhao-dao-toast-biao-sun-pi-de-suo-zai-ctid/">https://jinlid.github.io/2024/ru-he-zhao-dao-toast-biao-sun-pi-de-suo-zai-ctid/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -662,18 +666,17 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/golang-lian-jie-postgresql/">
+                <a href="/2024/vacuum-zai-postgresql-zhong-ru-he-gong-zuo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="如何找到toast表损坏的所在ctid">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="VACUUM在PostgreSQL中如何工作">
                         
-                        <span class="card-title">如何找到toast表损坏的所在ctid</span>
+                        <span class="card-title">VACUUM在PostgreSQL中如何工作</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -683,27 +686,26 @@ cur <span class="token operator">=</span> conn<span class="token punctuation">.<
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-02
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-01-09
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/go/" class="post-category">
-                                    go
+                            <a href="/categories/postgres/" class="post-category">
+                                    postgres
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/postgres/">
+                        <span class="chip bg-color">postgres</span>
                     </a>
                     
                 </div>

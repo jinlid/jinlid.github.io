@@ -4,9 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="POSTGRESQL复杂的临时表, jinlid&#39;s blog">
-    <meta name="description" content="临时表一直存在，并被应用程序开发人员广泛使用。然而，临时表的功能远不止表面看上去的那么简单。PostgreSQL 允许您以一种很好的方式配置临时表的生命周期，并有助于避免一些常见的陷阱。
-创建临时表默认情况下，临时表的存在时间与数据库连接的">
+    <meta name="keywords" content="VACUUM在PostgreSQL中如何工作, jinlid&#39;s blog">
+    <meta name="description" content="介绍最近，我有一位客户试图弄清楚为什么他的 VACUUM -for-wraparound 花费了这么长时间 - 他有一个 6TB 的数据库，并且 VACUUM 已经运行了 4 天多。不幸的是，当VACUUM运行时（特别是当 autovacu">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>POSTGRESQL复杂的临时表 | jinlid&#39;s blog</title>
+    <title>VACUUM在PostgreSQL中如何工作 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +337,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">POSTGRESQL复杂的临时表</h1>
+                    <h1 class="description center-align post-title">VACUUM在PostgreSQL中如何工作</h1>
                 </div>
             </div>
         </div>
@@ -367,8 +366,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/postgresql/">
-                                <span class="chip bg-color">postgresql</span>
+                            <a href="/tags/postgres/">
+                                <span class="chip bg-color">postgres</span>
                             </a>
                         
                     </div>
@@ -379,8 +378,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/postgresql/" class="post-category">
-                                postgresql
+                            <a href="/categories/postgres/" class="post-category">
+                                postgres
                             </a>
                         
                     </div>
@@ -392,7 +391,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-07-05
+                    2024-01-09
                 </div>
                 
 
@@ -413,96 +412,42 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>临时表一直存在，并被应用程序开发人员广泛使用。然而，临时表的功能远不止表面看上去的那么简单。PostgreSQL 允许您以一种很好的方式配置临时表的生命周期，并有助于避免一些常见的陷阱。</p>
-<h2 id="创建临时表"><a href="#创建临时表" class="headerlink" title="创建临时表"></a><strong>创建临时表</strong></h2><p>默认情况下，临时表的存在时间与数据库连接的时间一样长。一旦断开连接，它就会被删除。在许多情况下，这是人们想要的行为：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TEMPORARY TABLE x (id int);</span>
-CREATE TABLE
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d</span>
-        List of relations
-  Schema   <span class="token operator">|</span> Name <span class="token operator">|</span> Type  <span class="token operator">|</span> Owner 
------------+------+-------+-------
- pg_temp_3 <span class="token operator">|</span> x    <span class="token operator">|</span> table <span class="token operator">|</span> hs
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
- 
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># \q</span>
-iMac:~ hs$ psql tmp
-psql <span class="token punctuation">(</span>12.3<span class="token punctuation">)</span>
-Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
- 
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d</span>
-Did not <span class="token function">find</span> any relations.
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>一旦我们重新连接，表就永远消失了。另外，请记住，临时表仅在您的会话中可见。其他连接不会看到该表（当然，这是期望的行为）。这也意味着许多会话可以创建具有相同名称的临时表。</p>
-<p>然而，临时表可以做更多的事情。最重要的是能够控制提交时发生的情况：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token punctuation">[</span> <span class="token keyword">ON</span> <span class="token keyword">COMMIT</span> { PRESERVE <span class="token keyword">ROWS</span> <span class="token operator">|</span> <span class="token keyword">DELETE</span> <span class="token keyword">ROWS</span> <span class="token operator">|</span> <span class="token keyword">DROP</span> } <span class="token punctuation">]</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h3 id="3-个可用选项"><a href="#3-个可用选项" class="headerlink" title="3 个可用选项"></a>3 个可用选项</h3><p>如您所见，有三个选项。<code>PRESERVE ROWS</code>是您刚刚目睹的行为。有时你不希望那样。因此，也可以在提交时清空临时表：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># BEGIN;</span>
-BEGIN
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TEMP TABLE x ON COMMIT DELETE ROWS AS</span>
-    SELECT * FROM generate_series<span class="token punctuation">(</span>1, 5<span class="token punctuation">)</span> AS y<span class="token punctuation">;</span>
-SELECT 5
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM x;</span>
- y 
----
- 1
- 2
- 3
- 4
- 5
-<span class="token punctuation">(</span>5 rows<span class="token punctuation">)</span>
- 
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
-COMMIT
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM x;</span>
- y 
----
-<span class="token punctuation">(</span>0 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>在这种情况下，一旦事务结束，PostgreSQL 就会给我们留下一个空表。表本身仍然存在并且可以使用。</p>
-<p>让我们暂时删除该表：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># DROP TABLE x;</span>
-DROP TABLE
+                <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>最近，我有一位客户试图弄清楚为什么他的 VACUUM<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"> -for-wraparound</a> 花费了这么长时间 - 他有一个 6TB 的数据库，并且 VACUUM 已经运行了 4 天多。不幸的是，当VACUUM运行时（特别是当 autovacuum 在后台启动 VACUUM 时） 没有进度表 ，但是通过vmstat 和 strace的一点帮助，以及一些简单的 Bash 命令（如ls 和 ps ）的争论 ，我们可以推断出VACUUM 运行时正在进行的进度和活动 。</p>
+<h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>无需太多细节，重要的是要知道 PostgreSQL 中的VACUUM 由 3 个阶段组成：</p>
+<ol>
+<li>摄取阶段——死元组被读入 <code>maintenance_work_mem</code>。如果 <code>maintenance_work_memis</code>耗尽， VACUUM 将继续接下来的两个阶段，然后返回到此阶段并从中断处继续。</li>
+<li>修剪阶段——删除指向死元组的索引条目。</li>
+<li>清理阶段——数据页中项目指针和元组之间的实际行指针被删除。<br>如果您用这些术语来考虑 VACUUM ，我们可以推断出每个阶段的一些行为模式。此外，根据 VACUUM 所处的阶段，不耐烦并按下 Ctrl-C 可能会适得其反，并且有些风险。</li>
+</ol>
+<h2 id="追踪VACUUM"><a href="#追踪VACUUM" class="headerlink" title="追踪VACUUM"></a>追踪VACUUM</h2><p>当试图弄清楚VACUUM目前正在做什么时，拥有 psql 会话或 vacuumdb 进程的进程 ID 非常重要。您可以通过以下方式轻松获得：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>root@server1 /<span class="token punctuation">]</span><span class="token comment" spellcheck="true"># ps aux | grep -v grep | grep -v "autovacuum launcher process" | grep -i vacuum</span>
+enterprisedb      14404  1.8 12.3 800152 253116 ?       Rs   00:20   0:01 postgres: enterprisedb edb <span class="token punctuation">[</span>local<span class="token punctuation">]</span> VACUUM        
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="有时您希望整个表在事务结束时消失：可以使用ON-COMMIT-DROP来实现这一点："><a href="#有时您希望整个表在事务结束时消失：可以使用ON-COMMIT-DROP来实现这一点：" class="headerlink" title="有时您希望整个表在事务结束时消失：可以使用ON COMMIT DROP来实现这一点："></a>有时您希望整个表在事务结束时消失：可以使用<code>ON COMMIT DROP</code>来实现这一点：</h3><pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># BEGIN;</span>
-BEGIN
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TEMP TABLE x ON COMMIT DROP AS</span>
-    SELECT * FROM generate_series<span class="token punctuation">(</span>1, 5<span class="token punctuation">)</span> AS y<span class="token punctuation">;</span>
-SELECT 5
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
-COMMIT
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM x;</span>
-ERROR:  relation <span class="token string">"x"</span> does not exist
-LINE 1: SELECT * FROM x<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>PostgreSQL 会抛出错误，因为表已经消失了。这里值得注意的是，您仍然可以使用<code>WITH HOLD</code>游标，如下一个示例所示：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># BEGIN;</span>
-BEGIN
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TEMP TABLE x ON COMMIT DROP AS SELECT * FROM generate_series(1, 5) AS y;</span>
-SELECT 5
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># DECLARE mycur CURSOR WITH HOLD FOR SELECT * FROM x;</span>
-DECLARE CURSOR
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># COMMIT;</span>
-COMMIT
-tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># FETCH ALL FROM mycur;</span>
- y 
----
- 1
- 2
- 3
- 4
- 5
-<span class="token punctuation">(</span>5 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>表本身仍然不存在，但是 <code>WITH HOLD</code> 游标将确保游标的“内容”在事务结束后仍然存在。许多人并没有预料到这种行为，但它是有道理的，并且可以派上用场。</p>
-<h2 id="控制内存使用"><a href="#控制内存使用" class="headerlink" title="控制内存使用"></a><strong>控制内存使用</strong></h2><p>如果您使用临时表，则将它们保持相对较小是有意义的。然而，在某些情况下，临时表可能由于某种原因而变得相当大。为了确保性能保持良好，您可以告诉 PostgreSQL 在 RAM 中保留更多临时表。<code>temp_buffers</code> 是 postgresql.conf 中的参数，在这种情况下您应该查看：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">tmp<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW temp_buffers;</span>
- temp_buffers 
---------------
- 8MB
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>默认值为 8 MB。如果您的临时表很大，那么增加这个值当然是有意义的。</p>
+<p>在此示例中，VACUUM命令由 PID 为 14404 的psql会话运行。请将此 PID 放在手边，以便您可以找出该进程正在接触哪些文件。</p>
+<h2 id="破译数据"><a href="#破译数据" class="headerlink" title="破译数据"></a>破译数据</h2><p>请注意，第 1 阶段（摄取阶段）主要是将数据读入内存。它是对与表相关的每个文件的扫描（如果磁盘占用空间大于 1GB，则文件将被分割成 1GB 的段）。因此，如果您正在观察 vmstat ，您可能会在 io部分 的 bo列中看到相当多的活动 - 您还可能会看到一些 iowait （  cpu 部分下的wa列）。内存部分的缓存列应稳定增加到 <code>maintenance_work_mem</code> 设置的点（加上启动 VACUUM 进程之前缓存中的内容）。内存部分的空闲列也应该稳步减少。</p>
+<p>一旦表的所有死元组被读入内存（或者当 <code>maintenance_work_mem</code> 耗尽时）， VACUUM 进程就会进入阶段2（修剪阶段）。在这里，您将看到针对索引文件的写入活动。 当这种情况发生时，您应该会在io列的 bi 中看到一些活动 。要确定索引上的磁盘活动，您需要对 VACUUM 会话的 进程 ID执行简短的跟踪。您还需要索引到表的映射，可以通过以下查询获得该映射：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token number">c</span><span class="token punctuation">.</span>relname table_name<span class="token punctuation">,</span> <span class="token number">c</span><span class="token punctuation">.</span>relfilenode table_file_basename<span class="token punctuation">,</span> i<span class="token punctuation">.</span>relname index_name<span class="token punctuation">,</span> i<span class="token punctuation">.</span>relfilenode index_file_basename
+<span class="token keyword">FROM</span> pg_stat_user_indexes m
+<span class="token keyword">JOIN</span> pg_class <span class="token number">c</span> <span class="token keyword">ON</span> m<span class="token punctuation">.</span>relid<span class="token operator">=</span><span class="token number">c</span><span class="token punctuation">.</span>oid
+<span class="token keyword">JOIN</span> pg_class i <span class="token keyword">ON</span> m<span class="token punctuation">.</span>indexrelid <span class="token operator">=</span> i<span class="token punctuation">.</span>oid<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>注意：这不会映射到 TOAST 表及其索引（这是留给读者的练习）。</p>
+<p>获得 strace 输出的样本后，您可以通过将 strace 中的文件描述符映射到 <code>/proc/&lt;vacuum_processID&gt;</code> 中链接的文件来继续找出哪个输出。它指向的文件——如果它是一个索引，那么您正处于第二阶段。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token punctuation">[</span>root@server /<span class="token punctuation">]</span><span class="token comment" spellcheck="true"># strace -p 14404</span>
+Process 14404 attached
+write<span class="token punctuation">(</span>515, <span class="token string">"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"</span><span class="token punctuation">..</span>., 8192<span class="token punctuation">)</span> <span class="token operator">=</span> 8192
+lseek<span class="token punctuation">(</span>515, 0, SEEK_END<span class="token punctuation">)</span>                 <span class="token operator">=</span> 1458176
+write<span class="token punctuation">(</span>515, <span class="token string">"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"</span><span class="token punctuation">..</span>., 8192<span class="token punctuation">)</span> <span class="token operator">=</span> 8192
+lseek<span class="token punctuation">(</span>515, 0, SEEK_END<span class="token punctuation">)</span>                 <span class="token operator">=</span> 1466368
+write<span class="token punctuation">(</span>515, <span class="token string">"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"</span><span class="token punctuation">..</span>., 8192<span class="token punctuation">)</span> <span class="token operator">=</span> 8192
+write<span class="token punctuation">(</span>508, <span class="token string">"\0\0\0\0x#T\34\0\0\0\0\220\0\300\0\0 \4 \0\0\0\0\340\2358\4`\235\376\0"</span><span class="token punctuation">..</span>., 8192<span class="token punctuation">)</span> <span class="token operator">=</span> 8192
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在上面的strace示例中，515 和 508 是文件描述符。执行 <code>ls -l /proc/14404/|grep 515</code> 和 <code>ls -l /proc/14404/|grep 508</code>查看实际正在访问哪些文件。</p>
+<p>当  <code>VACUUM</code> 完成第 2 阶段时，它会进入第 3 阶段（清理阶段），在此阶段它会切断磁盘页面上的项目和元组之间的链接。如果您不记得磁盘页面是什么样子，下面提供了一张图像。请注意红线 - 第 3 阶段删除了红线和粉色框（仅当它们被标记为死区时），并更新绿色框以指向可用的黄色框。</p>
+<p><img src="/medias/image/heap_file_page.png" alt="PostgreSQL 磁盘页面"></p>
+<p>第3阶段是VACUUM过程中最重要的部分 ，实际上完成了释放空间的工作。一定不要中止此阶段（中止第二阶段可能也不好），因为您必须重新做许多在早期阶段完成的跑腿工作。</p>
+<p>要查看是否处于第 3 阶段，您将在 vmstat 中看到大量写入活动。在除了 Postgres 之外没有运行其他任何东西的服务器上，您应该在 io部分的 bi 列中看到很高的数字，而在 bo 列中几乎为零 。一旦第 3 阶段完成， VACUUM 将继续到下一个表（或者如果第 1 阶段填满了 <code>maintenance_work_mem</code> 则继续当前表）。一旦所有表都被 VACUUM， VACUUM 过程就完成了。</p>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>简而言之，就是这样。请注意，这就是常规 VACUUM发生的所有情况。VACUUM ANALYZE 将 在每个表完成 VACUUM 后执行 ANALYZE。此外，对于 VACUUM FULL，行为略有不同，因为索引被丢弃，并且整个文件被重写到新位置。</p>
 
                 
             </div>
@@ -529,7 +474,7 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/postgresql-fu-za-de-lin-shi-biao/">https://jinlid.github.io/2023/postgresql-fu-za-de-lin-shi-biao/</a>
+                    <a href="https://jinlid.github.io/2024/vacuum-zai-postgresql-zhong-ru-he-gong-zuo/">https://jinlid.github.io/2024/vacuum-zai-postgresql-zhong-ru-he-gong-zuo/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -567,8 +512,8 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/postgresql/">
-                                    <span class="chip bg-color">postgresql</span>
+                                <a href="/tags/postgres/">
+                                    <span class="chip bg-color">postgres</span>
                                 </a>
                             
                         </div>
@@ -647,17 +592,18 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-re-geng-xin-yi-huo-de-geng-hao-de-xing-neng/">
+                <a href="/2024/vacuum-zai-postgresql-zhong-ru-he-gong-zuo/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="POSTGRESQL中的热更新以获得更好的性能">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="VACUUM在PostgreSQL中如何工作">
                         
-                        <span class="card-title">POSTGRESQL中的热更新以获得更好的性能</span>
+                        <span class="card-title">VACUUM在PostgreSQL中如何工作</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -667,26 +613,27 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-09
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/postgres/" class="post-category">
+                                    postgres
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/postgres/">
+                        <span class="chip bg-color">postgres</span>
                     </a>
                     
                 </div>
@@ -700,13 +647,13 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-shi-me-shi-jian-cha-dian/">
+                <a href="/2024/ru-he-zhao-dao-toast-biao-sun-pi-de-suo-zai-ctid/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="POSTGRESQL：什么是检查点？">
+                        <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="如何找到toast表损坏的所在ctid">
                         
-                        <span class="card-title">POSTGRESQL：什么是检查点？</span>
+                        <span class="card-title">如何找到toast表损坏的所在ctid</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -717,14 +664,14 @@ tmp<span class="token operator">=</span><span class="token comment" spellcheck="
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-02
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/go/" class="post-category">
+                                    go
                                 </a>
                             
                             
