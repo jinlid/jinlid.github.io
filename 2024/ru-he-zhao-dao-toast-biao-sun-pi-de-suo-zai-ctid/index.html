@@ -5,12 +5,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="如何找到toast表损坏的所在ctid, jinlid&#39;s blog">
-    <meta name="description" content="假设test_toast表数据损坏了。
-使用python多进程方式查找
+    <meta name="description" content="二分法查找
+# -*- coding: utf-8 -*-
 import psycopg2
-from multiprocessing import Pool
 
-conn = psycopg2.connect(host=&#34;192.">
+conn = psycopg2.connect(host=&#34;192.168.137.129&#34;, port=&#34;1921&#34;, database=&#34;po">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -417,7 +416,43 @@ conn = psycopg2.connect(host=&#34;192.">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>假设test_toast表数据损坏了。</p>
+                <p>二分法查找</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># -*- coding: utf-8 -*-</span>
+<span class="token keyword">import</span> psycopg2
+
+conn <span class="token operator">=</span> psycopg2<span class="token punctuation">.</span>connect<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">"192.168.137.129"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token string">"1921"</span><span class="token punctuation">,</span> database<span class="token operator">=</span><span class="token string">"postgres"</span><span class="token punctuation">,</span> user<span class="token operator">=</span><span class="token string">"pg10"</span><span class="token punctuation">,</span> password<span class="token operator">=</span><span class="token string">"postgresql@123"</span><span class="token punctuation">,</span> <span class="token punctuation">)</span>
+conn<span class="token punctuation">.</span>autocommit<span class="token operator">=</span><span class="token boolean">True</span>
+cur <span class="token operator">=</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">get_ctids</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span><span class="token string">"SELECT ctid FROM test_toast order by ctid"</span><span class="token punctuation">)</span>
+    rows <span class="token operator">=</span> cur<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    ctid_list <span class="token operator">=</span> <span class="token punctuation">[</span>eval<span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">for</span> row <span class="token keyword">in</span> rows<span class="token punctuation">]</span>
+    cur<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> ctid_list
+
+<span class="token keyword">def</span> <span class="token function">f</span><span class="token punctuation">(</span>arr<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    left <span class="token operator">=</span> <span class="token number">0</span>
+    right <span class="token operator">=</span> len<span class="token punctuation">(</span>arr<span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span>
+    <span class="token keyword">while</span> left <span class="token operator">&lt;</span> right<span class="token punctuation">:</span>
+        mid <span class="token operator">=</span> <span class="token punctuation">(</span>left <span class="token operator">+</span> right<span class="token punctuation">)</span> <span class="token operator">//</span> <span class="token number">2</span>
+        <span class="token keyword">if</span> arr<span class="token punctuation">[</span>mid<span class="token punctuation">]</span> <span class="token operator">&lt;</span> x<span class="token punctuation">:</span>
+            left <span class="token operator">=</span> mid
+        <span class="token keyword">elif</span> arr<span class="token punctuation">[</span>mid<span class="token punctuation">]</span> <span class="token operator">></span> x<span class="token punctuation">:</span>
+            right <span class="token operator">=</span> mid
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> mid
+
+<span class="token keyword">def</span> <span class="token function">close_conn</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    conn<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    ctid_list <span class="token operator">=</span> get_ctids<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    x <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1199</span><span class="token punctuation">,</span><span class="token number">140</span><span class="token punctuation">)</span>
+    y <span class="token operator">=</span> f<span class="token punctuation">(</span>ctid_list<span class="token punctuation">,</span> x<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>y<span class="token punctuation">,</span> ctid_list<span class="token punctuation">[</span>y<span class="token punctuation">]</span><span class="token punctuation">)</span>
+    close_conn<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>使用python多进程方式查找</p>
 <pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> psycopg2
 <span class="token keyword">from</span> multiprocessing <span class="token keyword">import</span> Pool
