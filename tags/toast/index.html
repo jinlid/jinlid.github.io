@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="分类: go, jinlid&#39;s blog">
+    <meta name="keywords" content="标签: toast, jinlid&#39;s blog">
     <meta name="description" content="jinlid&#39;s blog">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -17,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>分类: go | jinlid&#39;s blog</title>
+    <title>标签: toast | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -385,137 +385,116 @@
 
     
 
-<div id="category-cloud" class="container chip-container">
+<div id="tags" class="container chip-container">
     <div class="card">
         <div class="card-content">
             <div class="tag-title center-align">
-                <i class="fas fa-bookmark"></i>&nbsp;&nbsp;文章分类
+                <i class="fas fa-tags"></i>&nbsp;&nbsp;文章标签
             </div>
             <div class="tag-chips">
                 
                 
-                
-                <a href="/categories/postgresql/" title="postgresql: 28">
+                <a href="/tags/postgresql/" title="postgresql: 32">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">28</span>
+                            data-tagname="postgresql" style="background-color: #F9EBEA;">postgresql
+                        <span class="tag-length">32</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/Linux/" title="Linux: 1">
+                <a href="/tags/Linux/" title="Linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #F5EEF8;">Linux
+                            data-tagname="Linux" style="background-color: #F5EEF8;">Linux
                         <span class="tag-length">1</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/postgres/" title="postgres: 1">
+                <a href="/tags/python/" title="python: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #D5F5E3;">postgres
+                            data-tagname="python" style="background-color: #D5F5E3;">python
                         <span class="tag-length">1</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/python/" title="python: 2">
+                <a href="/tags/toast/" title="toast: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-active "
+                            data-tagname="toast" style="background-color: #E8F8F5;">toast
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/tags/postgres/" title="postgres: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #E8F8F5;">python
+                            data-tagname="postgres" style="background-color: #FEF9E7;">postgres
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/tags/flask/" title="flask: 2">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="flask" style="background-color: #F8F9F9;">flask
                         <span class="tag-length">2</span>
                     </span>
                 </a>
                 
                 
-                <a href="/categories/linux/" title="linux: 1">
+                <a href="/tags/linux/" title="linux: 1">
                     <span class="chip center-align waves-effect waves-light
                              chip-default "
-                            style="background-color: #FEF9E7;">linux
+                            data-tagname="linux" style="background-color: #82E0AA;">linux
                         <span class="tag-length">1</span>
                     </span>
                 </a>
-                
-                
-                <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 4">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-default "
-                            style="background-color: #F8F9F9;">数据库
-                        <span class="tag-length">4</span>
-                    </span>
-                </a>
-                
-                
-                <a href="/categories/go/" title="go: 1">
-                    <span class="chip center-align waves-effect waves-light
-                             chip-active "
-                            style="background-color: #82E0AA;">go
-                        <span class="tag-length">1</span>
-                    </span>
-                </a>
-                
                 
             </div>
         </div>
     </div>
 </div>
 
-
     
 
     <article id="articles" class="container articles">
         <div class="row tags-posts">
             
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+            
+            <div class="article tag-post col s12 m6 l4" data-tags="postgresql, python, toast" data-aos="fade-up">
                 <div class="card">
-                    <a href="/2024/ru-he-zhao-dao-toast-biao-sun-pi-de-suo-zai-ctid/">
+                    <a href="/2024/toast-biao-shu-ju-sun-pi-xing-ding-wei/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="如何找到toast表损坏的所在ctid">
+                            <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="Toast表数据损坏行定位">
                             
-                            <span class="card-title">如何找到toast表损坏的所在ctid</span>
+                            <span class="card-title">Toast表数据损坏行定位</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                二分法查找
-# -*- coding: utf-8 -*-
-import psycopg2
-
-conn = psycopg2.connect(host="192.168.137.129", port="1921", database="po
-                            
-                        </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-02
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-14
                             </span>
                             <span class="publish-author">
                                 
                                 <i class="fas fa-bookmark fa-fw icon-category"></i>
                                 
-                                <a href="/categories/go/" class="post-category">
-                                    go
+                                <a href="/categories/postgresql/" class="post-category">
+                                postgresql
                                 </a>
                                 
                                 
                             </span>
                         </div>
                     </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
                 </div>
             </div>
             

@@ -4,8 +4,13 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="POSTGRESQL分析和优化器统计信息, jinlid&#39;s blog">
-    <meta name="description" content="我们的 PostgreSQL 24×7 支持团队最近收到了一位面临性能问题的客户的请求。问题的解决方案可以从 PostgreSQL 处理查询优化（具体来说，统计）的方式中找到。因此，我认为与我亲爱的读者分享一些这些知识会很高兴。因此，这篇文">
+    <meta name="keywords" content="Toast表数据损坏行定位, jinlid&#39;s blog">
+    <meta name="description" content="使用python二分查找方式
+# -*- coding: utf-8 -*-
+import psycopg2
+from datetime import datetime
+
+conn = psycopg2.connect(host=&#34;127.">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -17,7 +22,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>POSTGRESQL分析和优化器统计信息 | jinlid&#39;s blog</title>
+    <title>Toast表数据损坏行定位 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -337,12 +342,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/12.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">POSTGRESQL分析和优化器统计信息</h1>
+                    <h1 class="description center-align post-title">Toast表数据损坏行定位</h1>
                 </div>
             </div>
         </div>
@@ -370,6 +375,14 @@
                                 <span class="chip bg-color">postgresql</span>
                             </a>
                         
+                            <a href="/tags/python/">
+                                <span class="chip bg-color">python</span>
+                            </a>
+                        
+                            <a href="/tags/toast/">
+                                <span class="chip bg-color">toast</span>
+                            </a>
+                        
                     </div>
                     
                 </div>
@@ -391,7 +404,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-07-04
+                    2024-01-14
                 </div>
                 
 
@@ -412,115 +425,71 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>我们的 PostgreSQL 24×7 支持团队最近收到了一位面临性能问题的客户的请求。问题的解决方案可以从 PostgreSQL 处理查询优化（具体来说，统计）的方式中找到。因此，我认为与我亲爱的读者分享一些这些知识会很高兴。因此，这篇文章的主题是：PostgreSQL 存储哪些<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/planner-stats.html">类型的统计信息</a>，以及在哪里可以找到它们？让我们深入了解一下。</p>
-<h2 id="优化器统计的目的"><a href="#优化器统计的目的" class="headerlink" title="优化器统计的目的"></a>优化器统计的目的</h2><p>在我们深入研究 PostgreSQL 优化和统计之前，有必要了解 PostgreSQL 如何运行查询。典型的流程如下：</p>
-<p><img src="/medias/image/postgresql-query-execution_Zeichenfl%C3%A4che-1-168865653883336.png" alt="PostgreSQL查询执行，运行查询"></p>
-<p>首先，PostgreSQL解析查询。然后，traffic cop将实用命令(ALTER、CREATE、DROP、GRANT等)从其他命令中分离出来。在这之后，整个事情都经过重写系统，它负责处理规则等。</p>
-<p>接下来是优化器——它应该产生尽可能最好的计划。然后该计划可以由执行者执行。现在的主要问题是：优化器如何找到最好的计划？除了许多数学转换之外，它还使用统计信息来估计查询中涉及的行数。我们来看看：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE t_test AS SELECT *, 'hans'::text AS name</span>
-        FROM generate_series<span class="token punctuation">(</span>1, 1000000<span class="token punctuation">)</span> AS <span class="token function">id</span><span class="token punctuation">;</span>
-SELECT 1000000
-test<span class="token operator">=</span><span class="token comment" spellcheck="true"># ALTER TABLE t_test ALTER COLUMN id SET STATISTICS 10;</span>
-ALTER TABLE
-test<span class="token operator">=</span><span class="token comment" spellcheck="true"># ANALYZE;</span>
-ANALYZE
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>我创建了 100 万行，并告诉系统计算这些数据的统计信息。为了使内容适合我的网站，我还告诉 PostgreSQL 降低统计的精度。默认情况下，统计目标是 100。但是，我决定在这里使用 10，以使内容更具可读性 - 稍后会详细介绍。</p>
-<p>现在让我们运行一个简单的查询：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM t_test WHERE id &lt; 150000; </span>
-                        QUERY PLAN                           
----------------------------------------------------------------
- Seq Scan on t_test  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>17906.00 rows<span class="token operator">=</span>145969 width<span class="token operator">=</span>9<span class="token punctuation">)</span>
-   Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 150000<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>我们在这里看到的是 PostgreSQL 期望顺序扫描返回 145.000 行。此信息非常重要，因为如果系统知道会发生什么，它可以相应地调整其策略（索引、无索引等）。就我而言，只有两个选择：</p>
-<ul>
-<li>顺序扫描</li>
-<li>并行顺序扫描。</li>
-</ul>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM t_test WHERE id &lt; 1; </span>
-                        QUERY PLAN 
---------------------------------------------------------------- 
-Gather <span class="token punctuation">(</span>cost<span class="token operator">=</span>1000.00<span class="token punctuation">..</span>11714.33 rows<span class="token operator">=</span>1000 width<span class="token operator">=</span>9<span class="token punctuation">)</span> 
-   Workers Planned: 2 -<span class="token operator">></span> Parallel Seq Scan on t_test <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>10614.33 rows<span class="token operator">=</span>417 width<span class="token operator">=</span>9<span class="token punctuation">)</span>
-   Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 1<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>4 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>我所做的就是更改 WHERE 子句中的数字，突然间，计划发生了变化。第一个查询需要一个相当大的结果集；因此，启动并行性没有什么用处，因为在收集节点中收集所有这些行的成本太高。在第二个示例中，seq 扫描很少产生行 - 因此并行查询是有意义的。</p>
-<p>为了找到最佳策略，PostgreSQL 依靠统计数据为优化器提供预期结果的指示。统计数据越好，PostgreSQL 就越能优化查询。</p>
-<h2 id="检查优化器统计信息"><a href="#检查优化器统计信息" class="headerlink" title="检查优化器统计信息"></a>检查优化器统计信息</h2><p>如果你想看看PostgreSQL使用了哪一种数据，你可以看一下<code>pg_stats</code>是哪个视图向用户显示统计信息。这是视图的内容：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d pg_stats</span>
-View <span class="token string">"pg_catalog.pg_stats"</span>
-Column                  <span class="token operator">|</span> Type     <span class="token operator">|</span> Collation <span class="token operator">|</span> Nullable <span class="token operator">|</span> Default
-------------------------+----------+-----------+----------+---------
-schemaname              <span class="token operator">|</span> name     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-tablename               <span class="token operator">|</span> name     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-attname                 <span class="token operator">|</span> name     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-inherited               <span class="token operator">|</span> boolean  <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-null_frac               <span class="token operator">|</span> real     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-avg_width               <span class="token operator">|</span> integer  <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-n_distinct              <span class="token operator">|</span> real     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-most_common_vals        <span class="token operator">|</span> anyarray <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-most_common_freqs       <span class="token operator">|</span> real<span class="token punctuation">[</span><span class="token punctuation">]</span>   <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-histogram_bounds        <span class="token operator">|</span> anyarray <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-correlation             <span class="token operator">|</span> real     <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-most_common_elems       <span class="token operator">|</span> anyarray <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-most_common_elem_freqs  <span class="token operator">|</span> real<span class="token punctuation">[</span><span class="token punctuation">]</span>   <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-elem_count_histogram    <span class="token operator">|</span> real<span class="token punctuation">[</span><span class="token punctuation">]</span>   <span class="token operator">|</span>           <span class="token operator">|</span>          <span class="token operator">|</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>让我们一步一步地分析一下规划器可以使用哪些类型的数据：</p>
-<ul>
-<li><strong>schemaname + tablename + attname：</strong>对于每个模式中每个表的每一列，PostgreSQL 将存储一行数据。</li>
-<li><strong>inherited</strong>：我们是否正在查看继承/分区表？</li>
-<li><strong>null_fraction：</strong>列中包含 NULL 值的百分比是多少？<code>WHERE col IS NULL</code>如果您有或 <code>WHERE col IS NOT NULL</code>”之类的内容，这一点很重要</li>
-<li><strong>avg_width</strong>：列的平均预期宽度是多少？</li>
-<li><strong>n_distinct</strong>：列中不同条目的预期数量</li>
-<li><strong>most_common_vals</strong>：我们拥有最常出现的值的更精确信息。如果表中的条目分布不均匀，这一点尤其重要。</li>
-<li><strong>most_common_freqs</strong>：这些最常见值的频率是多少？PostgreSQL 在此存储百分比值。例如：“男性”是一个频繁的条目，54.32% 的条目是男性。</li>
-<li><strong>histogram_bounds</strong>：PostgreSQL 使用直方图来存储数据的分布。如果统计目标为 100，数据库将存储 101 个条目以指示数据内的边界（1% 步长）。</li>
-<li><strong>correlation</strong>：优化器还想了解有关磁盘上数据的物理顺序的信息。如果数据按顺序（1、2、3、4、5、6、…）或随机（6、1、2、3、5、4、…）存储，则会有所不同。如果我们正在寻找范围，则需要更少的块来读取排序的数据。如果您想使用 BRIN 索引，这一点尤其重要。</li>
-</ul>
-<p>最后，还有一些与数组相关的条目——但我们暂时不用担心这些。相反，让我们看一些示例内容：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># \x</span>
-Expanded display is on.
-test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM pg_stats WHERE tablename = 't_test';</span>
--<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>----------+---------------------------------------------------------------------------
-schemaname             <span class="token operator">|</span> public
-tablename              <span class="token operator">|</span> t_test
-attname                <span class="token operator">|</span> <span class="token function">id</span>
-inherited              <span class="token operator">|</span> f
-null_frac              <span class="token operator">|</span> 0
-avg_width              <span class="token operator">|</span> 4
-n_distinct             <span class="token operator">|</span> -1
-most_common_vals       <span class="token operator">|</span>
-most_common_freqs      <span class="token operator">|</span>
-histogram_bounds       <span class="token operator">|</span> <span class="token punctuation">{</span>47,102906,205351,301006,402747,503156,603102,700866,802387,901069,999982<span class="token punctuation">}</span>
-correlation            <span class="token operator">|</span> 1
-most_common_elems      <span class="token operator">|</span>
-most_common_elem_freqs <span class="token operator">|</span>
-elem_count_histogram   <span class="token operator">|</span>
--<span class="token punctuation">[</span> RECORD 2 <span class="token punctuation">]</span>----------+---------------------------------------------------------------------------
-schemaname             <span class="token operator">|</span> public
-tablename              <span class="token operator">|</span> t_test
-attname                <span class="token operator">|</span> name
-inherited              <span class="token operator">|</span> f
-null_frac              <span class="token operator">|</span> 0
-avg_width              <span class="token operator">|</span> 5
-n_distinct             <span class="token operator">|</span> 1
-most_common_vals       <span class="token operator">|</span> <span class="token punctuation">{</span>hans<span class="token punctuation">}</span>
-most_common_freqs      <span class="token operator">|</span> <span class="token punctuation">{</span>1<span class="token punctuation">}</span>
-histogram_bounds       <span class="token operator">|</span>
-correlation            <span class="token operator">|</span> 1
-most_common_elems      <span class="token operator">|</span>
-most_common_elem_freqs <span class="token operator">|</span>
-elem_count_histogram   <span class="token operator">|</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>在此清单中，您可以看到 PostgreSQL 对我们的表了解多少。在“id”列中，直方图部分最重要：“{47,102906,205351,301006,402747,503156,603102,700866,802387,901069,999982}”。PostgreSQL认为最小值是47。10%小于102906，20%预计小于205351，依此类推。这里还有趣的是<code>n_distinct</code>：-1 基本上意味着所有值都不同。如果您正在使用，这一点很重要<code>GROUP BY</code>。在 GROUP BY 的情况下，优化器想要知道期望有多少个组。<code>n_distinct</code>在许多情况下用于为我们提供该估计。</p>
-<p>在“name”列中，我们可以看到“hans”是最常见的值（100%）。这就是为什么我们没有得到直方图。</p>
-<p>当然，关于 PostgreSQL 优化器的运行方式还有很多可说的。然而，首先，对 Postgres 使用统计数据的方式有一个基本的了解是非常有用的。</p>
-<h2 id="自动清理和统计"><a href="#自动清理和统计" class="headerlink" title="自动清理和统计"></a>自动清理和统计</h2><p>一般来说，PostgreSQL 几乎自动生成统计信息。autovacuum 守护进程负责定期更新统计数据。统计数据是正确优化查询所需的燃料。这就是为什么它们非常重要。</p>
-<p>如果您想手动创建统计信息，您可以随时运行<code>ANALYZE</code>. 然而，在大多数用例中，autovacuum 就可以了。</p>
+                <p>使用python二分查找方式</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># -*- coding: utf-8 -*-</span>
+<span class="token keyword">import</span> psycopg2
+<span class="token keyword">from</span> datetime <span class="token keyword">import</span> datetime
+
+conn <span class="token operator">=</span> psycopg2<span class="token punctuation">.</span>connect<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">"127.0.0.1"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token string">"1921"</span><span class="token punctuation">,</span> database<span class="token operator">=</span><span class="token string">"postgres"</span><span class="token punctuation">,</span> user<span class="token operator">=</span><span class="token string">"pg10"</span><span class="token punctuation">,</span> password<span class="token operator">=</span><span class="token string">"postgresql@123"</span><span class="token punctuation">,</span> <span class="token punctuation">)</span>
+conn<span class="token punctuation">.</span>autocommit<span class="token operator">=</span><span class="token boolean">True</span>
+cur <span class="token operator">=</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">get_ids</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span><span class="token string">"SELECT id FROM test_toast order by id"</span><span class="token punctuation">)</span>
+    rows <span class="token operator">=</span> cur<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    lsts <span class="token operator">=</span> <span class="token punctuation">[</span>row<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token keyword">for</span> row <span class="token keyword">in</span> rows<span class="token punctuation">]</span>
+    <span class="token keyword">return</span> lsts
+
+<span class="token keyword">def</span> <span class="token function">check_error</span><span class="token punctuation">(</span>arr<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        sql <span class="token operator">=</span> <span class="token string">"SELECT * FROM test_toast where id between %d and %d "</span><span class="token operator">%</span><span class="token punctuation">(</span>arr<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span> arr<span class="token punctuation">[</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+        cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>sql<span class="token punctuation">)</span>
+    <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">if</span> len<span class="token punctuation">(</span>arr<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"ERROR: "</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span>__str__<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">", The id of the damaged tuple is:"</span><span class="token operator">+</span> str<span class="token punctuation">(</span>arr<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span>
+        left <span class="token operator">=</span> <span class="token number">0</span>
+        right <span class="token operator">=</span> len<span class="token punctuation">(</span>arr<span class="token punctuation">)</span>
+        mid <span class="token operator">=</span> <span class="token punctuation">(</span>left <span class="token operator">+</span> right<span class="token punctuation">)</span> <span class="token operator">//</span> <span class="token number">2</span>
+        list<span class="token punctuation">(</span>map<span class="token punctuation">(</span><span class="token keyword">lambda</span> x<span class="token punctuation">:</span> check_error<span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>arr<span class="token punctuation">[</span>left<span class="token punctuation">:</span>mid<span class="token punctuation">]</span><span class="token punctuation">,</span> arr<span class="token punctuation">[</span>mid<span class="token punctuation">:</span>right<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">close_conn</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    conn<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    start <span class="token operator">=</span> datetime<span class="token punctuation">.</span>now<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    lsts <span class="token operator">=</span> get_ids<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    check_error<span class="token punctuation">(</span>lsts<span class="token punctuation">)</span>
+    close_conn<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    end <span class="token operator">=</span> datetime<span class="token punctuation">.</span>now<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>end <span class="token operator">-</span> start<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>使用存储过程游标方式：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">create</span> <span class="token operator">or</span> replace <span class="token keyword">function</span> check_err_tuple<span class="token punctuation">(</span>tablename <span class="token keyword">varchar</span><span class="token punctuation">)</span> <span class="token keyword">returns</span> void
+<span class="token keyword">as</span> $$
+<span class="token keyword">declare</span>
+cur refcursor<span class="token punctuation">;</span>
+rec record<span class="token punctuation">;</span>
+text_var1 <span class="token keyword">text</span><span class="token punctuation">;</span>
+text_var2 <span class="token keyword">text</span><span class="token punctuation">;</span>
+<span class="token keyword">begin</span>
+    <span class="token keyword">open</span> cur <span class="token keyword">for</span> <span class="token keyword">execute</span> <span class="token string">'select * from '</span><span class="token operator">||</span>tablename<span class="token punctuation">;</span>
+    loop
+    <span class="token keyword">begin</span>
+        <span class="token keyword">fetch</span> cur <span class="token keyword">into</span> rec<span class="token punctuation">;</span>
+        <span class="token keyword">exit</span> <span class="token keyword">when</span> <span class="token operator">not</span> found<span class="token punctuation">;</span>
+            raise log <span class="token string">'record is: %'</span><span class="token punctuation">,</span>rec<span class="token punctuation">;</span>
+        exception <span class="token keyword">when</span> internal_error <span class="token operator">or</span> data_corrupted <span class="token keyword">then</span>
+        get stacked diagnostics 
+            text_var1 <span class="token operator">=</span> returned_sqlstate<span class="token punctuation">,</span>
+            text_var2 <span class="token operator">=</span> message_text<span class="token punctuation">;</span>
+        raise notice <span class="token string">'%,%,The ctid of the damaged tuple is:%'</span><span class="token punctuation">,</span>text_var1<span class="token punctuation">,</span>text_var2<span class="token punctuation">,</span>rec<span class="token punctuation">.</span>ctid<span class="token punctuation">;</span>
+        <span class="token keyword">end</span><span class="token punctuation">;</span>
+    <span class="token keyword">end</span> loop<span class="token punctuation">;</span>
+    <span class="token keyword">close</span> cur<span class="token punctuation">;</span>
+<span class="token keyword">end</span>
+$$ language plpgsql<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -547,7 +516,7 @@ elem_count_histogram   <span class="token operator">|</span>
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/postgresql-fen-xi-he-you-hua-qi-tong-ji-xin-xi/">https://jinlid.github.io/2023/postgresql-fen-xi-he-you-hua-qi-tong-ji-xin-xi/</a>
+                    <a href="https://jinlid.github.io/2024/toast-biao-shu-ju-sun-pi-xing-ding-wei/">https://jinlid.github.io/2024/toast-biao-shu-ju-sun-pi-xing-ding-wei/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -587,6 +556,14 @@ elem_count_histogram   <span class="token operator">|</span>
                             
                                 <a href="/tags/postgresql/">
                                     <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
+                                <a href="/tags/python/">
+                                    <span class="chip bg-color">python</span>
+                                </a>
+                            
+                                <a href="/tags/toast/">
+                                    <span class="chip bg-color">toast</span>
                                 </a>
                             
                         </div>
@@ -665,66 +642,18 @@ elem_count_histogram   <span class="token operator">|</span>
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                <a href="/2024/toast-biao-shu-ju-sun-pi-xing-ding-wei/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="Toast表数据损坏行定位">
                         
-                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）">
-                        
-                        <span class="card-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</span>
+                        <span class="card-title">Toast表数据损坏行定位</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -735,7 +664,7 @@ elem_count_histogram   <span class="token operator">|</span>
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-14
                             </span>
                         <span class="publish-author">
                             
@@ -749,11 +678,69 @@ elem_count_histogram   <span class="token operator">|</span>
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
                     <a href="/tags/postgresql/">
                         <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                    <a href="/tags/python/">
+                        <span class="chip bg-color">python</span>
+                    </a>
+                    
+                    <a href="/tags/toast/">
+                        <span class="chip bg-color">toast</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2024/vacuum-zai-postgresql-zhong-ru-he-gong-zuo/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="VACUUM在PostgreSQL中如何工作">
+                        
+                        <span class="card-title">VACUUM在PostgreSQL中如何工作</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-01-09
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgres/" class="post-category">
+                                    postgres
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgres/">
+                        <span class="chip bg-color">postgres</span>
                     </a>
                     
                 </div>
