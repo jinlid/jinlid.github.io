@@ -5,11 +5,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="8 缓冲区管理器, jinlid&#39;s blog">
-    <meta name="description" content="缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
+    <meta name="description" content="缓冲区管理器管理着共享内存和持久存储之间的数据传输，它会对 DBMS 的性能有着重要的影响。PostgreSQL 的缓冲区管理器十分高效。
 
 
 [TOC]
-在本章中，描述了 PostgreSQL 缓冲区管理器。第一部分提供概述，随后的部">
+本章介绍了 PostgreSQL 的缓冲区管理器。图8.1展示了缓冲区管理器存储和后">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -416,323 +416,368 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。</p>
+                <p>缓冲区管理器管理着共享内存和持久存储之间的数据传输，它会对 DBMS 的性能有着重要的影响。PostgreSQL 的缓冲区管理器十分高效。</p>
 <span id="more"></span>
 
 <p>[TOC]</p>
-<p>在本章中，描述了 PostgreSQL 缓冲区管理器。第一部分提供概述，随后的部分描述以下主题：</p>
+<p>本章介绍了 PostgreSQL 的缓冲区管理器。图8.1展示了缓冲区管理器存储和后端进程之间的关系，后续部分描述以下内容：</p>
 <ul>
-<li>缓冲区管理器结构</li>
-<li>缓冲区管理器锁</li>
+<li>缓冲区管理器的结构</li>
+<li>缓冲区管理器的锁</li>
 <li>缓冲区管理器的工作原理</li>
 <li>环形缓冲区</li>
-<li>刷新脏页</li>
+<li>脏页刷盘</li>
 </ul>
-<p><img src="/medias/image/fig-8-01.png" alt="图 8.1 缓冲区管理器、存储和后端进程之间的关系"></p>
-<h2 id="8-1-概述"><a href="#8-1-概述" class="headerlink" title="8.1. 概述"></a>8.1. 概述</h2><p>本节介绍了为方便后续章节的描述所需的关键概念。</p>
-<h3 id="8-1-1-缓冲区管理器结构"><a href="#8-1-1-缓冲区管理器结构" class="headerlink" title="8.1.1 缓冲区管理器结构"></a>8.1.1 缓冲区管理器结构</h3><p>PostgreSQL 缓冲管理器包括缓冲表、缓冲描述符和缓冲池，它们将在下一节中描述。该<strong>缓冲池</strong>层存储数据文件页面，如表和索引，以及<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.4.">自由空间地图</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.2.">可见性地图</a>。缓冲池是一个数组，即每个槽存储一个数据文件的一页。缓冲池数组的索引称为<strong>buffer_id</strong>。</p>
-<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.2.">8.2</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.3.">8.3节</a>描述了缓冲区管理器内部的细节。</p>
-<h3 id="8-1-2-缓冲标签"><a href="#8-1-2-缓冲标签" class="headerlink" title="8.1.2 缓冲标签"></a>8.1.2 缓冲标签</h3><p>在 PostgreSQL 中，所有数据文件的每一页都可以分配一个唯一的标签，即<strong>缓冲区标签</strong>。当缓冲区管理器收到请求时，PostgreSQL 使用所需页面的 buffer_tag。</p>
-<p>所述<a href="javascript:void(0)">buffer_tag</a>包括三个值：<a href="javascript:void(0)">RelFileNode</a>和到它的页面所属的关系的叉号，和它的页的块号。表、自由空间映射和可见性映射的分叉数分别定义为 0、1 和 2。</p>
-<p>例如，buffer_tag ‘{(16821, 16384, 37721), 0, 7}’ 标识关系的 OID 和分叉号分别为 37721 和 0 的第七个块中的页面；该关系包含在 OID 为 16821 的表空间下的 OID 为 16384 的数据库中。 类似地，buffer_tag ‘{(16821, 16384, 37721), 1, 3}’ 标识位于空闲空间第三块中的页OID 和叉号分别为 37721 和 1 的地图。</p>
-<h3 id="8-1-3-后端进程如何读取页面"><a href="#8-1-3-后端进程如何读取页面" class="headerlink" title="8.1.3 后端进程如何读取页面"></a>8.1.3 后端进程如何读取页面</h3><p>本小节描述后端进程如何从缓冲区管理器读取页面（图 8.2）。</p>
-<p><img src="/medias/image/fig-8-02.png" alt="图 8.2 后端如何从缓冲区管理器读取页面"></p>
+<p><img src="/medias/image/fig-8-01.png" alt="图8.1 缓冲区管理器存储和后端进程之间的关系"></p>
+<h2 id="8-1-概览"><a href="#8-1-概览" class="headerlink" title="8.1 概览"></a>8.1 概览</h2><p>本节介绍了为理解后续章节所需的关键概念。</p>
+<h3 id="8-1-1-缓冲区管理器的结构"><a href="#8-1-1-缓冲区管理器的结构" class="headerlink" title="8.1.1 缓冲区管理器的结构"></a>8.1.1 缓冲区管理器的结构</h3><p>PostgreSQL缓冲区管理器由缓冲表、缓冲区描述符和缓冲池组成，这些将在下一节中介绍。缓冲池层存储数据着数据文件页面，如表</p>
+<p>页和索引页，以及相应的<a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#_5.3.4">自由空间映射</a>和<a href="https://jinlid.github.io/2021/6.vacuum-jin-cheng/#_6.2">可见性映射</a>的页面。缓冲池是一个数组，数据的每个槽中存储数据文件的一页。缓冲池数组的序</p>
+<p>号索引称为<strong>buffer_id</strong>。第<a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#8.2">8.2</a>、<a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#8.3">8.3节</a>描述了缓冲区管理器的内部细节。</p>
+<h3 id="8-1-2-缓冲区标签（Buffer-Tag）"><a href="#8-1-2-缓冲区标签（Buffer-Tag）" class="headerlink" title="8.1.2 缓冲区标签（Buffer Tag）"></a>8.1.2 缓冲区标签（Buffer Tag）</h3><p>PostgreSQL中的每个数据文件页面都可以分配唯一的标签，即<strong>缓冲区标签</strong>。当缓冲区管理器收到请求时，PostgreSQL会用到</p>
+<p>目标页面的缓冲区标签。</p>
+<p>缓冲区标签有五个值：</p>
 <ul>
-<li>(1) 读取表或索引页时，后端进程向缓冲区管理器发送包含该页的buffer_tag 的请求。</li>
-<li>(2) 缓冲区管理器返回存储请求页面的槽的buffer_ID。如果请求的页面未存储在缓冲池中，则缓冲管理器将页面从持久存储加载到缓冲池槽之一，然后返回 buffer_ID 的槽。</li>
-<li>(3) 后端进程访问buffer_ID的slot（读取需要的页面）。</li>
+<li>specOid：包含目标页的关系所属表空间的OID。</li>
+<li>dbOid：包含目标页面的关系所属数据库的OID。</li>
+<li>relNumber：包含目标页面的关系文件的编号。</li>
+<li>blockNum：关系中目标页的块号。</li>
+<li>forkNum：页面所属关系的分支。表、自由空间映射和可见性映射的分支分别定义为 0、1 和 2。</li>
 </ul>
-<p>当后端进程修改缓冲池中的页面（例如，通过插入元组）时，尚未刷新到存储的已修改页面被称为<strong>脏页面</strong>。</p>
-<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.">8.4 节</a>描述了缓冲区管理器的工作原理。</p>
-<h3 id="8-1-4-页替换算法"><a href="#8-1-4-页替换算法" class="headerlink" title="8.1.4 页替换算法"></a>8.1.4 页替换算法</h3><p>当所有缓冲池槽位都被占用但请求的页面没有被存储时，缓冲管理器必须在缓冲池中选择一个将被请求的页面替换的页面。通常，在计算机科学领域，页面选择算法被称为<em>页面替换算法</em> ，被选中的页面被称为<strong>受害者页面</strong>。</p>
-<p>自从计算机科学出现以来，页面替换算法的研究就一直在进行。因此，之前已经提出了许多替换算法。从 8.1 版本开始，PostgreSQL 开始使用<strong>时钟扫描，</strong>因为它比以前版本中使用的 LRU 算法更简单、更高效。</p>
-<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.4.">8.4.4 节</a>描述了时钟扫描的细节。</p>
-<h3 id="8-1-5-冲洗脏页面"><a href="#8-1-5-冲洗脏页面" class="headerlink" title="8.1.5 冲洗脏页面"></a>8.1.5 冲洗脏页面</h3><p>脏页最终应该被刷新到存储中；但是，缓冲区管理器需要帮助才能执行此任务。在 PostgreSQL 中，有两个后台进程<strong>checkpointer</strong>和<strong>background writer</strong>负责这个任务。</p>
-<p><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.6.">8.6 节</a>描述了检查指针和后台编写器。</p>
-<p> <em>直接输入/输出</em></p>
-<p>PostgreSQL里面<strong>不</strong>支持直接I / O，尽管有时它已被讨论。如果您想了解更多详细信息，请参阅有关 pgsql-ML 的<a target="_blank" rel="noopener" href="http://www.postgresql.org/message-id/529E267F.4050700@agliodbs.com">讨论</a>和<a target="_blank" rel="noopener" href="http://lwn.net/Articles/580542/">这篇文章</a>。</p>
-<h2 id="8-2-缓冲区管理器结构"><a href="#8-2-缓冲区管理器结构" class="headerlink" title="8.2 缓冲区管理器结构"></a>8.2 缓冲区管理器结构</h2><p>PostgreSQL 缓冲管理器包括三层，即<em>缓冲表</em>、<em>缓冲描述符</em>和<em>缓冲池</em>（图 8.3）：</p>
-<p><img src="/medias/image/fig-8-03.png" alt="图 8.3 缓冲区管理器的三层结构"></p>
+<p>例如，缓冲区标签 ‘{16821, 16384, 37721, 0, 7}’ 标识位于表的第7号页面，其中OID和分叉号分别为37721和0。该表包含在OID为 16384</p>
+<p>的数据库中，位于OID为16821的表空间下。</p>
+<p>类似地，缓冲区标签 ‘{16821, 16384, 37721, 1, 3}’ 标识位于自由空间映射的第3号页面，其OID和分支分别为37721和1。</p>
+<h3 id="8-1-3-后端进程如何读取数据页"><a href="#8-1-3-后端进程如何读取数据页" class="headerlink" title="8.1.3 后端进程如何读取数据页"></a>8.1.3 后端进程如何读取数据页</h3><p>本小节描述了后端进程如何从缓冲区管理器中读取数据页（图 8.2）。</p>
+<p><img src="/medias/image/fig-8-02.png" alt="图8.2 后端如何从缓冲区管理器读取页面"></p>
+<ol>
+<li>当读取表或索引页时，后端进程向缓冲区管理器发送请求，请求中带有目标页面的 <code>buffer_tag</code> 。</li>
+<li>缓冲区管理器会根据 <code>buffer_tag</code> 返回一个 <code>buffer_id</code>，即目标页面存储在数组中的槽位的序号。如果请求的页面没有存储在缓冲池中，那么缓冲管理器会将页面从持久存储位置加载到其中一个缓冲池槽位中，然后再返回该槽位的 <code>buffer_ID</code>。</li>
+<li>后端进程访问 <code>buffer_ID</code> 的槽位（以读取需要的页面）。</li>
+</ol>
+<p>当后端进程修改缓冲池中的页面时（例如向页面插入元组），这种尚未刷新到持久存储，但已被修改的页面被称为<strong>脏页</strong>。</p>
+<p>第<a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#_8.4.">8.4 节</a>描述了缓冲区管理器的工作原理。</p>
+<h3 id="8-1-4-页面置换算法"><a href="#8-1-4-页面置换算法" class="headerlink" title="8.1.4 页面置换算法"></a>8.1.4 页面置换算法</h3><p>当所有缓冲池槽位都被占用，并且未包含所请求的页面时，缓冲管理器必须在缓冲池中选择一个页面逐出，用于放置被请求的页面。在计</p>
+<p>算机科学领域，选择页面的算法被称为<strong>页面置换算法</strong>，并且所选择的页面被称为<strong>受害者页面</strong>。</p>
+<p>自计算机科学出现以来，针对页面置换算法的研究一直在进行。许多置换算法被提出，PostgreSQL从8.1版本开始使用<strong>时钟扫描</strong>算法。比</p>
+<p>起以前版本中使用的 LRU 算法更简单高效。</p>
+<p><a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#_8.4.4">8.4.4 节</a>将描述时钟扫描的细节。</p>
+<h3 id="8-1-5-脏页刷盘"><a href="#8-1-5-脏页刷盘" class="headerlink" title="8.1.5 脏页刷盘"></a>8.1.5 脏页刷盘</h3><p>脏页最终应该被刷新到存储中，然而缓冲区管理器需要额外帮助才能执行此任务。在PostgreSQL中，<strong>checkpointer</strong>和</p>
+<p><strong>background writer</strong>这两个后台进程负责此任务。</p>
+<p>第<a href="https://jinlid.github.io/2021/8.huan-chong-qu-guan-li-qi/#_8.6">8.6 节</a>描述了checkpointer和background writer。</p>
+<blockquote>
+<p>PostgreSQL版本15及更早版本不支持直接I/O，尽管已经对此进行了讨论。请参阅<a target="_blank" rel="noopener" href="http://www.postgresql.org/message-id/529E267F.4050700@agliodbs.com">这篇</a>关于pgsql-ML的文章和<a target="_blank" rel="noopener" href="http://lwn.net/Articles/580542/">这篇文章</a>。</p>
+<p>在版本 16 中，添加了<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/16/runtime-config-developer.html#GUC-DEBUG-IO-DIRECT">debug-io-direct选项</a>。该选项供开发人员改进PostgreSQL中直接I/O的使用。如果开发顺利的话，Direct I/O将在不久的将来正式支持。</p>
+</blockquote>
+<h2 id="8-2-缓冲区管理器的结构"><a href="#8-2-缓冲区管理器的结构" class="headerlink" title="8.2 缓冲区管理器的结构"></a>8.2 缓冲区管理器的结构</h2><p>PostgreSQL缓冲管理器由三层组成，即<strong>缓冲表层</strong>、<strong>缓冲区描述符层</strong>和<strong>缓冲池层</strong>（图 8.3）。</p>
 <ul>
-<li>所述<strong>缓冲器池</strong>是一个数组。每个插槽存储一个数据文件页。数组槽的索引被称为<em>buffer_id</em> s。</li>
-<li>该<strong>缓冲区描述符</strong>层是缓冲区描述符的数组。每个描述符与缓冲池槽一一对应，并在相应槽中保存存储页面的元数据。<br>请注意，为方便起见采用了术语“缓冲区描述符层”，它仅在本文档中使用。</li>
-<li>该<strong>缓存表</strong>是一个哈希表存储之间的关系<em>buffer_tag</em>存网页的S和<em>buffer_id</em>持有的存网页各自的元数据描述符秒。</li>
+<li><p><strong>缓冲表层</strong>：是一个散列表，它存储着页面的 <code>buffer_tags</code> 与描述符的 <code>buffer_id</code> 之间的映射关系。</p>
+</li>
+<li><p><strong>缓冲区描述符层</strong>：是一个由缓冲区描述符组成的数组。每个描述符与缓冲池槽一一对应，并保存着相应槽的元数据。请注意，为了方便起见，采用术语“缓冲区描述符层”，并且仅在本文档中使用。</p>
+</li>
+<li><p><strong>缓冲池层</strong>：是一个数组，每个槽都存储一个数据文件页。数组槽的索引称为<strong>buffer_id</strong>。</p>
+</li>
 </ul>
+<p><img src="/medias/image/fig-8-03.png" alt="图8.3 缓冲区管理器的三层结构"></p>
 <p>这些层将在以下小节中详细描述。</p>
-<h3 id="8-2-1-缓冲表"><a href="#8-2-1-缓冲表" class="headerlink" title="8.2.1 缓冲表"></a>8.2.1 缓冲表</h3><p>缓冲表在逻辑上可以分为三部分：散列函数、散列桶槽和数据条目（图 8.4）。</p>
-<p>内置的哈希函数将 buffer_tags 映射到哈希桶槽。即使哈希桶槽数大于缓冲池槽数，也可能发生冲突。因此，缓冲表使用<em>单独的链表链接</em>方法来解决冲突。当数据条目映射到同一个桶槽时，该方法将条目存储在同一个链表中，如图8.4所示。</p>
-<p><img src="/medias/image/fig-8-04.png" alt="图 8.4 缓冲表"></p>
-<p>数据条目包含两个值：页面的 buffer_tag 和保存页面元数据的描述符的 buffer_id。例如，数据条目“ <em>Tag_A, id=1</em> ”表示buffer_id 为<em>1</em>的缓冲区描述符存储用<em>Tag_A</em>标记的页面的元数据。</p>
-<p> <em>哈希函数</em></p>
-<p>哈希函数是<a target="_blank" rel="noopener" href="https://doxygen.postgresql.org/dynahash_8c.html#ae802f2654df749ae0e0aadf4b5c5bcbd">calc_bucket()</a>和 <a target="_blank" rel="noopener" href="https://doxygen.postgresql.org/rege__dfa_8c.html#a6aa3a27e7a0fc6793f3329670ac3b0cb">hash()</a>的复合函数。 以下是它作为伪函数的表示。</p>
+<h3 id="8-2-1-缓冲表"><a href="#8-2-1-缓冲表" class="headerlink" title="8.2.1 缓冲表"></a>8.2.1 缓冲表</h3><p>缓冲区表在逻辑上可以分为三个部分：散列函数、散列桶槽和数据项（图 8.4）。</p>
+<p>内置的散列函数将 <code>buffer_tag</code> 映射到散列桶槽。即使散列桶槽数大于缓冲池槽数，也可能发生冲突。因此，缓冲表使用<strong>链表的分离链</strong></p>
+<p><strong>接</strong>方法来解决冲突。当数据项映射到同一个桶槽时，该方法将这些数据项存储在同一个链表中，如图8.4所示。</p>
+<p><img src="/medias/image/fig-8-04.png" alt="图8.4 缓冲表"></p>
+<p>数据项包含两个值：页面的 <code>buffer_tag</code> 和包含页面元数据的描述符的 <code>buffer_id</code>。例如，数据项 Tag_A, id=1 表示 buffer_id=1对应的</p>
+<p>缓冲区描述符中，存储着页面 Tag_A 的元数据。</p>
+<blockquote>
+<p> 散列函数</p>
+<p>散列函数是由<a target="_blank" rel="noopener" href="https://doxygen.postgresql.org/dynahash_8c.html#ae802f2654df749ae0e0aadf4b5c5bcbd">calc_bucket()</a>和 <a target="_blank" rel="noopener" href="https://doxygen.postgresql.org/rege__dfa_8c.html#a6aa3a27e7a0fc6793f3329670ac3b0cb">hash()</a>组合而成。 以下是用伪函数的表示的形式。</p>
 <pre class="line-numbers language-c"><code class="language-c">uint32 bucket_slot <span class="token operator">=</span> <span class="token function">calc_bucket</span><span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token function">hash</span><span class="token punctuation">(</span>BufferTag buffer_tag<span class="token punctuation">)</span><span class="token punctuation">,</span> uint32 bucket_size<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>请注意，基本操作（数据条目的查找、插入和删除）在此不做说明。这些是非常常见的操作，将在以下部分进行说明。</p>
+</blockquote>
+<p>暂时还没有对数据项的查找、插入和删除进行解释。这些常见的操作将在以下部分进行详细说明。</p>
 <h3 id="8-2-2-缓冲区描述符"><a href="#8-2-2-缓冲区描述符" class="headerlink" title="8.2.2 缓冲区描述符"></a>8.2.2 缓冲区描述符</h3><p>本节介绍缓冲区描述符的结构，下一节介绍缓冲区描述符层。</p>
-<p>缓冲区描述符将存储页面的元数据保存在相应的缓冲池槽中。缓冲区描述符结构由结构<a href="javascript:void(0)">BufferDesc</a>定义。虽然这个结构体有很多字段，但主要如下所示：</p>
+<p>缓冲区描述符存储着页面的元数据，这些与缓冲区描述符相应的页面保存在缓冲池槽中。缓冲区描述符的结构由BufferDesc结构定义。主</p>
+<p>要字段如下所示：</p>
 <ul>
-<li><p><strong>tag</strong>在相应的缓冲池槽中保存存储页面的<em>buffer_tag</em>（缓冲区标签在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.1.2.">第 8.1.2 节中</a>定义 ）。</p>
+<li><p><strong>tag</strong> 保存着目标页面的buffer_tag，该页面存储在相应的缓冲池槽中，缓冲区标签在第 8.1节中给出 。</p>
 </li>
-<li><p><strong>buffer_id</strong>标识描述符（相当于对应缓冲池槽的<em>buffer_id</em>）。</p>
+<li><p><strong>buffer_id</strong> 标识了缓冲区描述符，相当于对应缓冲池槽的buffer_id。</p>
 </li>
-<li><p><strong>refcount</strong>保存当前访问相关存储页面的 PostgreSQL 进程数。它也称为<strong>引脚数</strong>。当 PostgreSQL 进程访问存储的页面时，它的 refcount 必须加 1（refcount++）。访问页面后，它的refcount必须减1（refcount–）。<br>当引用计数为零时，即当前没有访问关联的存储页，则该页被<strong>取消固定</strong>；否则它被<strong>固定</strong>。</p>
+<li><p>**refcount **保存当前访问相关页面的 PostgreSQL 进程数。它也称为钉数。当 PostgreSQL 进程访问相应页面时，其引用计数必须加1（refcount++）。访问页面结束后，其引用计数必须减1（refcount–）。当引用计数为零时，即页面当前并未被访问时，则该页将取钉；否则它会被钉住。</p>
 </li>
-<li><p><strong>usage_count</strong>保存关联存储页面自加载到相应缓冲池槽以来被访问的次数。请注意，usage_count 用于页面替换算法（<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.4.">第 8.4.4 节</a>）。</p>
+<li><p>**usage_count **保存着相应页面加载至相应缓冲池槽后的访问次数。usage_count 会在页面置换算法中被用到，见第8.4.4节。</p>
 </li>
-<li><p><strong>context_lock</strong>和<strong>io_in_progress_lock</strong>是轻量级锁，用于控制对相关存储页面的访问。这些字段在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.3.2.">第 8.3.2 节</a>中描述。</p>
+<li><p><strong>context_lock</strong>和<strong>io_in_progress_lock</strong> 是轻量级锁，用于控制对相关页面的访问。这些字段将在第 8.3.2 节中描述。</p>
 </li>
-<li><p>flags</p>
-<p>可以保存相关存储页面的多个状态。主要状态如下：</p>
+<li><p>flags 用于保存相关页面的状态，主要状态如下：</p>
 <ul>
-<li><strong>脏位</strong>指示存储的页面是否脏。</li>
-<li><strong>有效位</strong>指示存储的页面是否可以读取或写入（有效）。例如，如果这个位<em>有效</em>，那么对应的缓冲池槽存储一个页面，这个描述符（有效位）保存页面元数据；因此，可以读取或写入存储的页面。如果此位<em>无效</em>，则此描述符不包含任何元数据；这意味着无法读取或写入存储的页面，或者缓冲区管理器正在替换存储的页面。</li>
-<li><strong>io_in_progress 位</strong>指示缓冲区管理器是否正在从/向存储读取/写入关联的页面。换句话说，该位指示是否有单个进程持有该描述符的 io_in_progress_lock。</li>
+<li><strong>脏位</strong> 指明相应页面是否为脏页。</li>
+<li><strong>有效位</strong> 指明相应页面是否可以被读写（有效）。例如，如果该位被设置为 <code>valid</code>， 那就意味着对应的缓冲池槽中存储着一个页面，而该描述符中保存着该页面的元数据，因而可以对该页面进行读写。反之如果有效位被设置为 <code>invalid</code>，那就意味着该描述符中并没有保存任何元数据，即对应的页面无法读写，缓冲区管理器可能正在将该页面换出。</li>
+<li>**io进行标记位 **指明缓冲区管理器是否正在从存储读/写相应页面。换句话说，该位指示是否有一个进程持有该描述符上的 io_in_progress_lock。</li>
 </ul>
 </li>
-<li><p><strong>freeNext</strong>是指向下一个描述符以生成<em>freelist</em>的指针，这将在下一小节中描述。</p>
+<li><p><strong>freeNext</strong> 是一个指针，指向下一个描述符，并以此构成一个空闲列表（freelist），这将在下一小节中描述。</p>
 </li>
 </ul>
-<p>结构<em>BufferDesc</em>在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/include/storage/buf_internals.h">src/include/storage/buf_internals.h 中定义</a>。</p>
-<p>为了简化以下描述，定义了三个描述符状态：</p>
+<p>结构<code>BufferDesc</code>在<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/include/storage/buf_internals.h">src/include/storage/buf_internals.h </a>中定义。</p>
+<p>为了简化后续章节的描述，这里定义了三个描述符状态：</p>
 <ul>
-<li><strong>空</strong>：当相应的缓冲池槽不存储页面（即<em>引用计数</em>和<em>usage_count</em>是0），该描述符的状态是<em>空的</em>。</li>
-<li><strong>钉扎</strong>：当相应的缓冲池时隙存储页面和任何的PostgreSQL进程正在访问的页面（即，<em>引用计数</em>和<em>usage_count</em>是大于或等于1），该缓冲区描述符的状态被<em>固定</em>。</li>
-<li><strong>Unpinned</strong>：当对应的缓冲池槽存储了一个页面，但没有PostgreSQL进程访问该页面时（即<em>usage_count</em>大于等于1，但<em>refcount</em>为0），这个缓冲区描述符的状态为<em>unpinned</em>。</li>
+<li><strong>空</strong>：当相应的缓冲池槽不存储页面，即 <code>refcount</code>和 <code>usage_count</code>都是0，该描述符的状态为空。</li>
+<li><strong>钉住</strong>：当相应的缓冲池槽中存储着页面，且有PostgreSQL进程正在访问的相应页面（即 <code>refcount</code>和 <code>usage_count</code>都大于或等于1），该缓冲区描述符的钉住。</li>
+<li><strong>未钉住</strong>：当对应的缓冲池槽存储页面，但没有PostgreSQL进程访问相应页面时（即 <code>usage_count</code>大于等于1，但 <code>refcount</code>为0），这个缓冲区描述符的状态为未钉住。</li>
 </ul>
-<p>每个描述符将具有上述状态之一。描述符状态相对于特定条件而变化，这将在下一小节中描述。</p>
-<p>在下图中，缓冲区描述符的状态由彩色框表示。</p>
+<p>每个描述符都处于上述状态之一。描述符的状态会根据特定条件而变化，这将在下一小节中描述。</p>
+<p>缓冲区描述符的状态由彩色框表示。</p>
 <ul>
-<li>(白色)<em>空</em></li>
-<li>(蓝色)<em>固定</em></li>
-<li>（水蓝色）未<em>固定</em></li>
+<li>（白色）<em>空</em></li>
+<li>（蓝色）<em>钉住</em></li>
+<li>（水蓝色）未钉住</li>
 </ul>
-<p>此外，脏页用“X”表示。例如，未固定的脏描述符由 X 表示。</p>
-<h3 id="8-2-3-缓冲区描述符层"><a href="#8-2-3-缓冲区描述符层" class="headerlink" title="8.2.3 缓冲区描述符层"></a>8.2.3 缓冲区描述符层</h3><p>缓冲区描述符的集合形成一个数组。在本文档中，该数组被称为<em>缓冲区描述符层</em>。</p>
-<p>当 PostgreSQL 服务器启动时，所有缓冲区描述符的状态都是<em>empty</em>。在 PostgreSQL 中，这些描述符包含一个名为<strong>freelist</strong>的链表（图 8.5）。</p>
-<p>请注意，<strong>空闲列表</strong>在PostgreSQL是从完全不同的概念<em>空闲列表</em>中的Oracle。PostgreSQL 的 freelist 只是空缓冲区描述符的链表。在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.4.">5.3.4 节</a>中描述的PostgreSQL<em>自由空间映射</em>中，充当与 Oracle 中的空闲列表相同的角色。</p>
-<p><img src="/medias/image/fig-8-05.png" alt="图 8.4 缓冲表"></p>
-<p>图 8.6 显示了如何加载第一页。</p>
-<ul>
-<li>(1) 从freelist的顶部取回一个空的descriptor，并将其固定（即把它的refcount和usage_count加1）。</li>
-<li>(2) 在缓冲区表中插入新条目，该条目保存第一页的标签和检索到的描述符的buffer_id 之间的关系。</li>
-<li>(3) 将新页面从存储加载到相应的缓冲池槽中。</li>
-<li>(4) 将新页面的元数据保存到检索到的描述符中。</li>
-</ul>
-<p>第二页和后续页的加载方式类似。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.2.">第 8.4.2 节</a>提供了其他详细信息。</p>
-<p><img src="/medias/image/fig-8-06.png" alt="图 8.6 加载第一页"></p>
-<p>从空闲列表中检索到的描述符始终保存页面的元数据。换句话说，非空描述符继续使用不会返回到freelist。但是，当发生以下任一情况时，相关描述符会再次添加到空闲列表中，并且描述符状态变为“空”：</p>
+<p>此外，脏页用 <strong>X</strong>表示。例如，未钉住的脏描述符由 X 表示。</p>
+<h3 id="8-2-3-缓冲区描述符层"><a href="#8-2-3-缓冲区描述符层" class="headerlink" title="8.2.3 缓冲区描述符层"></a>8.2.3 缓冲区描述符层</h3><p>缓冲区描述符的集合构成一个数组。在本文档中，该数组被称为<strong>缓冲区描述符层</strong>。</p>
+<p>当 PostgreSQL 服务器启动时，所有缓冲区描述符的状态都为空。在 PostgreSQL 中，这些描述符构成了一个名为<strong>freelist</strong>的链表，缓冲</p>
+<p>区管理器的初始化状态如图 8.5所示。</p>
+<p><img src="/medias/image/fig-8-05.png" alt="图8.5 缓冲区管理器初始化状态"></p>
+<blockquote>
+<p>注意，在PostgreSQL中的 freelist 是从完全不同于Oracle中的 freelist 的概念。PostgreSQL 的 freelist 只是空缓冲区描述符的链</p>
+<p>表。在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.4.">5.3.4 节</a>中已描述，PostgreSQL中与Oracle中的freelist相对应的对象是空闲空间映射（FSM）。</p>
+</blockquote>
+<p>图 8.6 展示了第一个页面是如何加载的。</p>
 <ol>
-<li>表或索引已被删除。</li>
-<li>数据库已被删除。</li>
-<li>已使用 VACUUM FULL 命令清理表或索引。</li>
+<li>从 <code>freelist</code> 的头部取一个空描述符，并将其钉住，即将refcount和usage_count增加1。</li>
+<li>在缓冲表中插入新项，该缓冲表项保存了页面 buffer_tag 与所获描述符 buffer_id 之间的关系。</li>
+<li>将新页面从存储器加载至相应的缓冲池槽中。</li>
+<li>将新页面的元数据保存至所获取的描述符中。</li>
 </ol>
-<p> <em>为什么空描述符包含空闲列表？</em></p>
-<p>做freelist的原因是为了立即获取第一个描述符。这是动态内存资源分配的常见做法。请参阅<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Free_list">此说明</a>。</p>
-<p>缓冲区描述符层包含一个无符号的 32 位整数变量，即<strong>nextVictimBuffer</strong>。该变量用于<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.4.">第 8.4.4 节中</a>描述的页面替换算法。</p>
-<h3 id="8-2-4-缓冲池"><a href="#8-2-4-缓冲池" class="headerlink" title="8.2.4 缓冲池"></a>8.2.4 缓冲池</h3><p>缓冲池是一个简单的数组，用于存储数据文件页，例如表和索引。缓冲池数组的索引被称为<em>buffer_id</em> s。</p>
-<p>缓冲池槽大小为 8 KB，等于一个页面的大小。因此，每个槽可以存储一整页。</p>
-<h2 id="8-3-缓冲区管理器锁"><a href="#8-3-缓冲区管理器锁" class="headerlink" title="8.3 缓冲区管理器锁"></a>8.3 缓冲区管理器锁</h2><p>缓冲区管理器将许多锁用于许多不同的目的。本节描述了后续章节中解释所需的锁。</p>
-<p>请注意，本节中描述的锁是缓冲区管理器同步机制的一部分；他们根本<strong>不</strong>涉及到任何SQL语句和SQL选项。</p>
-<h3 id="8-3-1-缓冲表锁"><a href="#8-3-1-缓冲表锁" class="headerlink" title="8.3.1 缓冲表锁"></a>8.3.1 缓冲表锁</h3><p><strong>BufMappingLock</strong>保护整个缓冲表的数据完整性。它是一种轻量级锁，可用于共享和独占模式。在缓冲区表中搜索条目时，后端进程持有共享的 BufMappingLock。插入或删除条目时，后端进程持有排他锁。</p>
-<p>BufMappingLock 被拆分成多个分区以减少缓冲表中的争用（默认为 128 个分区）。每个 BufMappingLock 分区保护相应哈希桶槽的部分。</p>
-<p>图 8.7 是一个典型的 BufMappingLock 拆分效果示例。两个后端进程可以同时以独占模式持有各自的 BufMappingLock 分区，以便插入新的数据条目。如果 BufMappingLock 是单个系统范围的锁，则两个进程都应等待另一个进程的处理，具体取决于哪个进程开始处理。</p>
-<p><img src="/medias/image/fig-8-07.png" alt="图 8.7 两个进程同时以独占方式获取BufMappingLock各自的分区，插入新的数据项"></p>
-<p>缓冲表需要许多其他锁。例如，缓冲表内部使用自旋锁来删除条目。然而，这些其他锁的描述被省略，因为它们在本文档中不是必需的。</p>
-<p>在 9.4 版本之前，BufMappingLock 默认被拆分为 16 个单独的锁。</p>
-<h3 id="8-3-2-每个缓冲区描述符的锁"><a href="#8-3-2-每个缓冲区描述符的锁" class="headerlink" title="8.3.2 每个缓冲区描述符的锁"></a>8.3.2 每个缓冲区描述符的锁</h3><p>每个缓冲区描述符使用两个轻量级锁<strong>content_lock</strong>和<strong>io_in_progress_lock</strong>来控制对相应缓冲池槽中存储页面的访问。当检查或更改自己字段的值时，将使用自旋锁。</p>
-<h4 id="8-3-2-1-内容锁"><a href="#8-3-2-1-内容锁" class="headerlink" title="8.3.2.1 内容锁"></a>8.3.2.1 内容锁</h4><p>content_lock 是强制访问限制的典型锁。它可以在<em>共享</em>和<em>独占</em>模式下使用。</p>
-<p>在读取页面时，后端进程会获取存储该页面的缓冲区描述符的共享 content_lock。</p>
+<p>第二页和后续页面的加载方式类似。第 8.4.2 节提供了其他详细信息。</p>
+<p><img src="/medias/image/fig-8-06.png" alt="图8.6 加载第一页"></p>
+<p>从 freelist 中摘出的描述符始终保存着页面的元数据。换句话说，仍然在使用的非空描述符不会返还到 freelist 中。但当发生以下任一情</p>
+<p>况时，描述符状态变为“空”，并被重新添加至 freelist  中：</p>
+<ol>
+<li>相关表或索引已被删除。</li>
+<li>相关数据库已被删除。</li>
+<li>相关表或索引已经被 VACUUM FULL 命令清理。</li>
+</ol>
+<blockquote>
+<p> 为什么使用 freelist 来维护空描述符？</p>
+<p>保留 freelist 的原因是为了立即获取第一个描述符。这是内存动态分配的常见做法。请参阅<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Free_list">此说明</a>。</p>
+</blockquote>
+<p>缓冲区描述符层包含一个32 位无符号的整数变量，即<strong>nextVictimBuffer</strong>。该变量用于第 8.4.4 节中描述的页面置换算法。</p>
+<h3 id="8-2-4-缓冲池"><a href="#8-2-4-缓冲池" class="headerlink" title="8.2.4 缓冲池"></a>8.2.4 缓冲池</h3><p>缓冲池只是一个用于存储关系数据文件（例如表和索引）页面的简单数组。缓冲池数组的序号索引也就是 <code>buffer_id</code>。</p>
+<p>缓冲池槽的大小为8KB，等于一个页面的大小。因此，每个槽都能存储整个页面。</p>
+<h2 id="8-3-缓冲区管理器锁"><a href="#8-3-缓冲区管理器锁" class="headerlink" title="8.3 缓冲区管理器锁"></a>8.3 缓冲区管理器锁</h2><p>缓冲区管理器会出于不同的目的使用各式各样的锁，本节将介绍后续章节中所必备的一些锁。</p>
+<blockquote>
+<p>注意，本节中描述的锁是缓冲区管理器同步机制的一部分。它们与SQL语句和SQL操作中的锁没有任何关系。</p>
+</blockquote>
+<h3 id="8-3-1-缓冲表锁"><a href="#8-3-1-缓冲表锁" class="headerlink" title="8.3.1 缓冲表锁"></a>8.3.1 缓冲表锁</h3><p><strong>BufMappingLock</strong>保护整个缓冲表的数据完整性。它是一种轻量级的锁，有共享模式和独占模式。在缓冲区表中搜索条目时，后端进</p>
+<p>程会持有共享的 BufMappingLock。插入或删除条目时，后端进程持有独占的 BufMappingLock。</p>
+<p>BufMappingLock 会被分成多个分区，以减少缓冲表中的争用（默认为 128 个分区）。每个 BufMappingLock 分区都保护着一部分相应</p>
+<p>的散列桶槽。</p>
+<p>图 8.7 是一个典型的 BufMappingLock 分区示例。两个后端进程可以同时持有各自分区的 BufMappingLock 独占锁，以便插入新的数据</p>
+<p>项。如果 BufMappingLock 是系统级的锁，那么其中一个进程就需要等待另一个进程完成处理。</p>
+<p><img src="/medias/image/fig-8-07.png" alt="图8.7 两个进程同时获取相应分区的 BufMappingLock独占锁，以插入新数据项"></p>
+<p>缓冲表也需要许多其他锁。例如，在缓冲表内部使用自旋锁（spin lock）来删除数据项。然而，本章不需要这些锁的其他相关知识，因此</p>
+<p>这里省略了对其他锁的介绍。</p>
+<blockquote>
+<p>在 9.4 版本之前，BufMappingLock 默认被拆分为 16 个独立的锁。</p>
+</blockquote>
+<h3 id="8-3-2-缓冲区描述符相关的锁"><a href="#8-3-2-缓冲区描述符相关的锁" class="headerlink" title="8.3.2 缓冲区描述符相关的锁"></a>8.3.2 缓冲区描述符相关的锁</h3><p>每个缓冲区描述符都会用到内容锁（<strong>content_lock</strong>）与IO进行锁（<strong>io_in_progress_lock</strong>）这两个轻量级锁，以控制对相应缓冲池槽页</p>
+<p>面的访问。当检查或更改描述符本身字段的值时，就会用到自旋锁。</p>
+<h4 id="8-3-2-1-内容锁"><a href="#8-3-2-1-内容锁" class="headerlink" title="8.3.2.1 内容锁"></a>8.3.2.1 内容锁</h4><p>内容锁（content_lock）是一个典型的强制限制访问的锁。它有共享和独占两种模式。当读取页面时，后端进程以共享模式获取页面相应</p>
+<p>缓冲区描述符中的 content lock。执行下列操作之一时，则会获取独占模式的 content lock。</p>
 <p>但是，在执行以下操作之一时会获得一个独占的 content_lock：</p>
 <ul>
-<li>将行（即元组）插入存储页或更改存储页内元组的 t_xmin/t_xmax 字段（t_xmin 和 t_xmax 在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.2.">第 5.2 节</a>中描述；简单地说，当删除或更新行时，关联元组的这些字段被更改） .</li>
-<li>除去元组物理或所存储的页上的压实自由空间（通过真空处理和HOT，其中所述进行<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html">章节6</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql07.html">7</a>，分别地）。</li>
-<li>冻结存储页面中的元组（冻结在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">第 5.10.1</a><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.3.">节</a>和<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql06.html#_6.3.">第 6.3</a><a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">节中</a>描述）。</li>
-</ul>
-<p>官方<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/backend/storage/buffer/README">README</a> 文件显示了更多详细信息。</p>
-<h4 id="8-3-2-2-io-in-progress-lock"><a href="#8-3-2-2-io-in-progress-lock" class="headerlink" title="8.3.2.2 io_in_progress_lock"></a>8.3.2.2 io_in_progress_lock</h4><p>io_in_progress 锁用于等待缓冲区上的 I/O 完成。当 PostgreSQL 进程从/向存储加载/写入页面数据时，该进程在访问存储时持有相应描述符的独占 io_in_progress 锁。</p>
-<h4 id="8-3-2-3-自旋锁"><a href="#8-3-2-3-自旋锁" class="headerlink" title="8.3.2.3 自旋锁"></a>8.3.2.3 自旋锁</h4><p>当检查或更改标志或其他字段（例如 refcount 和 usage_count）时，将使用自旋锁。下面给出了两个自旋锁使用的具体例子：</p>
-<ul>
-<li><p>(1) 下面显示了如何<strong>固定</strong>缓冲区描述符：</p>
+<li><p>将行（即元组）插入页面，或更改页面中元组的  t_xmin/t_xmax 字段（t_xmin 和 t_xmax 在第 5.2 节中介绍，简单地说，这些字段</p>
+<p>会在相关元组被删除或更新行时发生更改） 。</p>
 </li>
-<li><ul>
-<li>\1. 获取缓冲区描述符的自旋锁。</li>
-<li>2.将其refcount和usage_count的值加1。</li>
-<li>\3. 释放自旋锁。</li>
-</ul>
+<li><p>物理移除元组，或压紧页面上的空闲空间（由清理过程和HOT执行，分别在第6章和第7章中有介绍过）。</p>
 </li>
-<li><pre class="line-numbers language-c-monosp"><code class="language-c-monosp">LockBufHdr(bufferdesc);    /* Acquire a spinlock */
+<li><p>冻结页面中的元组（冻结过程在第 5.10.1节和第 6.3节中有过介绍）。</p>
+</li>
+</ul>
+<p>官方<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/backend/storage/buffer/README">README</a> 文件包含了更多的细节。</p>
+<h4 id="8-3-2-2-IO进行锁"><a href="#8-3-2-2-IO进行锁" class="headerlink" title="8.3.2.2 IO进行锁"></a>8.3.2.2 IO进行锁</h4><p>IO进行锁（io_in_progress_lock） 用于等待缓冲区上的 I/O 完成。当 PostgreSQL 进程加载/写入页面数据时，该进程在访问页面期间持</p>
+<p>有相应描述符上独占的 io_in_progress_lock。</p>
+<h4 id="8-3-2-3-自旋锁"><a href="#8-3-2-3-自旋锁" class="headerlink" title="8.3.2.3 自旋锁"></a>8.3.2.3 自旋锁</h4><p>当检查或更改标记字段或其他字段时，例如 refcount 和 usage_count，会使用自旋锁。下面是两个使用自旋锁的具体例子：</p>
+<ol>
+<li><p>钉住缓冲区描述符.</p>
+<p>获取缓冲区描述符上的自旋锁。</p>
+<p>将其 refcount 和 usage_count 的值加1。</p>
+<p>释放自旋锁。</p>
+<pre class="line-numbers language-c-monosp"><code class="language-c-monosp">LockBufHdr(bufferdesc);    /* Acquire a spinlock */
 bufferdesc->refcont++;
 bufferdesc->usage_count++;
 UnlockBufHdr(bufferdesc); /* Release the spinlock */
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 </li>
-<li><p>(2) 下面显示了如何将脏位设置为“1”：</p>
-</li>
-<li><ul>
-<li>\1. 获取缓冲区描述符的自旋锁。</li>
-<li>\2. 使用按位运算将脏位设置为“1”。</li>
-<li>\3. 释放自旋锁。</li>
-</ul>
-</li>
-<li><pre class="line-numbers language-c-monosp"><code class="language-c-monosp">#define BM_DIRTY             (1 << 0)    /* data needs writing */
-#define BM_VALID             (1 << 1)    /* data is valid */
-#define BM_TAG_VALID         (1 << 2)    /* tag is assigned */
-#define BM_IO_IN_PROGRESS    (1 << 3)    /* read or write in progress */
-#define BM_JUST_DIRTIED      (1 << 5)    /* dirtied since write started */
+<li><p>将脏位设置为”1“。</p>
+<p>获取缓冲区描述符上的自旋锁。</p>
+<p>使用位操作将脏位置设置为“1”。</p>
+<p>释放自旋锁。</p>
+<pre class="line-numbers language-c"><code class="language-c"><span class="token macro property">#<span class="token directive keyword">define</span> BM_DIRTY             (1 &lt;&lt; 0)    </span><span class="token comment" spellcheck="true">/* 数据需要回写 */</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> BM_VALID             (1 &lt;&lt; 1)    </span><span class="token comment" spellcheck="true">/* 数据有效 */</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> BM_TAG_VALID         (1 &lt;&lt; 2)    </span><span class="token comment" spellcheck="true">/* 已经分配了TAG */</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> BM_IO_IN_PROGRESS    (1 &lt;&lt; 3)    </span><span class="token comment" spellcheck="true">/* 正在进行读写 */</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> BM_JUST_DIRTIED      (1 &lt;&lt; 5)    </span><span class="token comment" spellcheck="true">/* 开始写之后数据刚被修改 */</span>
 
-LockBufHdr(bufferdesc);
-bufferdesc->flags |= BM_DIRTY;
-UnlockBufHdr(bufferdesc);
+<span class="token function">LockBufHdr</span><span class="token punctuation">(</span>bufferdesc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+bufferdesc<span class="token operator">-></span>flags <span class="token operator">|</span><span class="token operator">=</span> BM_DIRTY<span class="token punctuation">;</span>
+<span class="token function">UnlockBufHdr</span><span class="token punctuation">(</span>bufferdesc<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-</li>
-<li><p>以相同的方式更改其他位。</p>
-</li>
-</ul>
-<p> <em>用原子操作替换缓冲区管理器自旋锁</em></p>
-<p>在 9.6 版本中，缓冲区管理器的自旋锁将被替换为原子操作。查看<a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/9/408/">commitfest 的</a>这个<a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/9/408/">结果</a>。如果您想了解详细信息，请参阅<a target="_blank" rel="noopener" href="http://www.postgresql.org/message-id/flat/2400449.GjM57CE0Yg@dinodell#2400449.GjM57CE0Yg@dinodell">此讨论</a>。</p>
-<h2 id="8-4-缓冲区管理器的工作原理"><a href="#8-4-缓冲区管理器的工作原理" class="headerlink" title="8.4 缓冲区管理器的工作原理"></a>8.4 缓冲区管理器的工作原理</h2><p>本节介绍缓冲区管理器的工作原理。当后端进程想要访问所需的页面时，它会调用<em>ReadBufferExtended</em>函数。</p>
-<p><em>ReadBufferExtended</em>函数 的行为取决于三种逻辑情况。以下小节对每种情况进行了描述。此外，PostgreSQL<em>时钟扫描</em>页面替换算法在最后一小节中描述。</p>
-<h3 id="8-4-1-访问存储在缓冲池中的页面"><a href="#8-4-1-访问存储在缓冲池中的页面" class="headerlink" title="8.4.1 访问存储在缓冲池中的页面"></a>8.4.1 访问存储在缓冲池中的页面</h3><p>首先，描述最简单的情况，即所需页面已经存储在缓冲池中。在这种情况下，缓冲区管理器执行以下步骤：</p>
-<ul>
-<li>(1) 创建所需页面的<em>buffer_tag</em>（在本例中，buffer_tag 为’Tag_C’）并使用哈希函数计算<em>哈希桶槽</em>，其中包含创建的<em>buffer_tag</em>的关联条目。</li>
-<li>(2) 在共享模式下获取覆盖获取的hash桶槽的BufMappingLock分区（这个锁会在步骤（5）中释放）。</li>
-<li>(3) 查找tag为’Tag_C’的表项，从表项中获取<em>buffer_id</em>。在此示例中，buffer_id 为 2。</li>
-<li>(4) pin the buffer descriptor for buffer_id 2，即描述符的refcount和usage_count加1（<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.3.2.">8.3.2节</a>描述pinning）。</li>
-<li>(5) 释放BufMappingLock。</li>
-<li>(6) 访问buffer_id为2的缓冲池槽。</li>
-</ul>
-<p><img src="/medias/image/fig-8-08.png" alt="图 8.8 访问存储在缓冲池中的页面"></p>
-<p>然后，当从缓冲池槽中的页面读取行时，PostgreSQL 进程获取相应缓冲描述符的<em>共享 content_lock</em>。因此，多个进程可以同时读取缓冲池槽。</p>
-<p>当向页面插入（和更新或删除）行时，Postgres 进程获取相应缓冲区描述符的<em>独占 content_lock</em>（注意页面的脏位必须设置为“1”）。</p>
-<p>访问页面后，相应缓冲区描述符的 refcount 值减 1。</p>
-<h3 id="8-4-2-将页面从存储加载到空槽"><a href="#8-4-2-将页面从存储加载到空槽" class="headerlink" title="8.4.2 将页面从存储加载到空槽"></a>8.4.2 将页面从存储加载到空槽</h3><p>在第二种情况下，假设所需的页面不在缓冲池中，并且空闲列表具有空闲元素（空描述符）。在这种情况下，缓冲区管理器执行以下步骤：</p>
-<ul>
-<li>(1) 查找缓冲表（我们假设没有找到）。<ul>
-<li>\1. 创建所需页面的buffer_tag（在本例中，buffer_tag 为’Tag_E’）并计算哈希桶槽。</li>
-<li>\2. 获取共享模式下的BufMappingLock分区。</li>
-<li>3.查找缓冲表（根据假设没有找到）。</li>
-<li>\4. 释放 BufMappingLock。</li>
-</ul>
-</li>
-<li>(2)从freelist中获取<em>空缓冲区描述符</em>，并固定。本例中，获取到的描述符的buffer_id为4。</li>
-<li>(3) 以<em>独占</em>方式获取BufMappingLock分区（该锁将在步骤（6）中释放）。</li>
-<li>(4) 创建一个包含buffer_tag ‘Tag_E’和buffer_id 4的新数据条目；将创建的条目插入缓冲表。</li>
-<li>(5) 将需要的页面数据从storage加载到buffer_id为4的缓冲池槽中，如下：<ul>
-<li>1、获取对应描述符的独占io_in_progress_lock。</li>
-<li>\2. 将相应描述符的<em>io_in_progress</em>位设置为’1，以防止其他进程访问。</li>
-<li>\3. 将所需的页面数据从存储加载到缓冲池槽。</li>
-<li>4、改变对应描述符的状态；所述<em>io_in_progress</em>位被设置为“0”，并且<em>有效</em>位被设置为“1”。</li>
-<li>\5. 释放io_in_progress_lock。</li>
-</ul>
-</li>
-<li>(6) 释放BufMappingLock。</li>
-<li>(7) 访问buffer_id为4的缓冲池槽。</li>
-</ul>
-<p><img src="/medias/image/fig-8-09.png" alt="图 8.9 将页面从存储加载到空插槽"></p>
-<h3 id="8-4-3-将页面从存储加载到受害者缓冲池槽"><a href="#8-4-3-将页面从存储加载到受害者缓冲池槽" class="headerlink" title="8.4.3 将页面从存储加载到受害者缓冲池槽"></a>8.4.3 将页面从存储加载到受害者缓冲池槽</h3><p>在这种情况下，假设所有缓冲池槽都被页面占用，但没有存储所需的页面。缓冲区管理器执行以下步骤：</p>
-<ul>
-<li><p>(1)创建所需页面的buffer_tag，查找缓冲表。在此示例中，我们假设 buffer_tag 是“Tag_M”（未找到所需页面）。</p>
-</li>
-<li><p>(2) 使用时钟扫描算法选择一个受害者缓冲池槽，从缓冲表中获取包含受害者池槽的buffer_id的旧条目，并将受害者池槽固定在缓冲区描述符层。在这个例子中，受害者槽的 buffer_id 是 5，旧条目是 ‘Tag_F, id=5’。时钟扫描将在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.4.4.">下一小节中</a>描述。</p>
-</li>
-<li><p>(3) 如果受害页面数据是脏的，则刷新（写入和 fsync）；否则继续步骤（4）。</p>
-<p>在用新数据覆盖之前，必须将脏页写入存储。刷新脏页执行如下：</p>
-<ul>
-<li>1、获取buffer_id为5的描述符的共享content_lock和独占io_in_progress锁（步骤6中释放）。</li>
-<li>2.改变对应描述符的状态；所述<em>io_in_progress</em>位被设置为“1”和<em>just_dirtied</em>位被设置为“0”。</li>
-<li>3、根据情况，调用<em>XLogFlush()<em>函数将WAL缓冲区上的WAL数据写入当前的WAL段文件中（细节省略；WAL和</em>XLogFlush</em>函数在<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html">第9章</a>描述）。</li>
-<li>\4. 将受害者页面数据刷新到存储中。</li>
-<li>5、改变对应描述符的状态；所述<em>io_in_progress</em>位被设置为“0”和<em>有效</em>位被设置为“1”。</li>
-<li>\6. 释放 io_in_progress 和 content_lock 锁。</li>
-</ul>
-</li>
-<li><p>(4) 以独占模式获取覆盖包含旧条目的槽的旧BufMappingLock分区。</p>
-</li>
-<li><p>(5) 获取新的BufMappingLock分区，将新条目插入缓冲表：</p>
-<ul>
-<li>\1. 创建由新的 buffer_tag ‘Tag_M’ 和受害者的 buffer_id 组成的新条目。</li>
-<li>\2. 以独占模式获取新的 BufMappingLock 分区，该分区覆盖包含新条目的槽。</li>
-<li>\3. 将新条目插入缓冲表。</li>
-</ul>
-</li>
-</ul>
-<p><img src="/medias/image/fig-8-10.png" alt="图 8.10 将页面从存储加载到受害者缓冲池槽"></p>
-<ul>
-<li>(6) 从缓冲表中删除旧条目，并释放旧的 BufMappingLock 分区。</li>
-<li>(7) 将所需的页面数据从存储加载到受害缓冲区插槽。然后，使用 buffer_id 5 更新描述符的标志；脏位设置为“0”并初始化其他位。</li>
-<li>(8) 释放新的BufMappingLock分区。</li>
-<li>(9) 访问buffer_id为5的缓冲池槽。</li>
-</ul>
-<p><img src="/medias/image/fig-8-11.png" alt="图 8.11 将页面从存储加载到受害者缓冲池槽（从图 8.10 继续 ）"></p>
-<h3 id="8-4-4-页替换算法：时钟扫描"><a href="#8-4-4-页替换算法：时钟扫描" class="headerlink" title="8.4.4 页替换算法：时钟扫描"></a>8.4.4 页替换算法：时钟扫描</h3><p>本节的其余部分描述<strong>时钟扫描</strong>算法。该算法是NFU（不常用）的一种变体，开销较低；它有效地选择不太常用的页面。</p>
-<p>将缓冲区描述符想象成一个循环列表（图 8.12）。nextVictimBuffer 是一个无符号的 32 位整数，始终指向缓冲区描述符之一并顺时针旋转。算法的伪代码和描述如下：</p>
-<p> <em>伪代码：时钟扫描</em></p>
-<pre class="line-numbers language-c"><code class="language-c">     WHILE <span class="token function">true</span>
-<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>     Obtain the candidate buffer descriptor pointed by the <span class="token function">nextVictimBuffer</span>
-<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>     IF the candidate descriptor is unpinned <span class="token function">THEN</span>
-<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span>	       IF the candidate descriptor's usage_count <span class="token operator">==</span> <span class="token number">0</span> THEN
-                BREAK WHILE LOOP  <span class="token comment" spellcheck="true">/* the corresponding slot of this descriptor is victim slot. */</span>
-           ELSE
-            Decrease the candidate descriptpor's usage_count by <span class="token number">1</span>
-               END IF
-         END <span class="token function">IF</span>
-<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>     Advance nextVictimBuffer to the next one
-      END <span class="token function">WHILE</span> 
-<span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span> RETURN buffer_id of the victim
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<ul>
-<li>(1) 获取<em>nextVictimBuffer</em>指向的候选缓冲区描述符。</li>
-<li>(2) 如果候选缓冲区描述符是<em>unpinned</em>，则进行步骤(3)；否则，继续执行步骤（4）。</li>
-<li>(3)如果候选描述符的<em>usage_count</em>为<em>0</em>，则选择该描述符对应的slot作为牺牲品，进入步骤(5)；否则，将此描述符的<em>usage_count</em>减少 1 并继续执行步骤 (4)。</li>
-<li>(4) 将 nextVictimBuffer 推进到下一个描述符（如果在最后，则回绕）并返回到步骤（1）。重复直到找到受害者。</li>
-<li>(5) 返回受害者的buffer_id。</li>
-</ul>
-<p>具体示例如图 8.12 所示。缓冲区描述符显示为蓝色或青色框，框中的数字表示每个描述符的使用次数。</p>
-<p><img src="/medias/image/fig-8-12.png" alt="图 8.12 时钟扫描 "></p>
-<ul>
-<li>1）nextVictimBuffer指向第一个描述符（buffer_id 1）；然而，这个描述符被跳过，因为它是固定的。</li>
-<li>\2) nextVictimBuffer 指向第二个描述符（buffer_id 2）。这个描述符是 unpinned 但它的 usage_count 是 2；因此，usage_count 减 1，nextVictimBuffer 前进到第三个候选者。</li>
-<li>3）nextVictimBuffer指向第三个描述符（buffer_id 3）。这个描述符是 unpinned，它的 usage_count 是 0；因此，这是本轮的受害者。</li>
-</ul>
-<p>每当<em>nextVictimBuffer</em>扫描一个<em>unpinned</em>描述符时，它的<em>usage_count</em>就会减 1。因此，如果缓冲池中存在<em>unpinned</em>描述符，这个算法总是可以通过旋转 nextVictimBuffer 来找到一个 usage_count 为 0 的<em>受害者</em>。</p>
-<h2 id="8-5-环形缓冲器"><a href="#8-5-环形缓冲器" class="headerlink" title="8.5 环形缓冲器"></a>8.5 环形缓冲器</h2><p>在读取或写入大表时，PostgreSQL 使用<strong>环形缓冲区</strong>而不是缓冲池。该<em>环形缓冲器</em>是一个小而临时缓冲区域。当满足下面列出的任何条件时，都会为共享内存分配一个环形缓冲区：</p>
-<ol>
-<li><p>批量阅读</p>
-</li>
-<li><p>扫描大小超过缓冲池大小 (shared_buffers/4) 四分之一的关系时。在这种情况下，环形缓冲区大小为<em>256 KB</em>。</p>
-</li>
-<li><p>批量写入</p>
-</li>
-<li><p>当下面列出的 SQL 命令被执行时。在这种情况下，环形缓冲区大小为<em>16 MB</em>。</p>
-</li>
-<li><ul>
-<li>*<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-copy.html">从</a><em>命令</em><a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-copy.html">复制</a>*。</li>
-<li>*<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-createtableas.html">CREATE TABLE AS</a>*命令。</li>
-<li><a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-creatematerializedview.html"><em>CREATE MATERIALIZED VIEW</em></a>或 <a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-refreshmaterializedview.html"><em>REFRESH MATERIALIZED VIEW</em></a>命令。</li>
-<li><a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/sql-altertable.html"><em>更改表</em></a>命令。</li>
-</ul>
-</li>
-<li><p>真空处理</p>
-</li>
-<li><p>当自动真空吸尘器执行真空处理时。在这种情况下，环形缓冲区大小为</p>
-</li>
-<li><p>256 KB</p>
-</li>
-<li><p>分配的环形缓冲区在使用后立即释放。环形缓冲区的好处是显而易见的。如果后端进程在不使用环形缓冲区的情况下读取大表，则将缓冲池中所有存储的页面删除（踢出）；因此，缓存命中率降低。环形缓冲区避免了这个问题。</p>
+<p>其他标记位也是通过相同的方式来设置的。</p>
 </li>
 </ol>
-<p> <em>为什么批量读取和真空处理的默认环形缓冲区大小是 256 KB？</em></p>
-<p>为什么是 256 KB？答案在位于缓冲区管理器源目录下的<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/backend/storage/buffer/README">自述文件中</a>进行了解释。</p>
 <blockquote>
-<p>对于顺序扫描，使用 256 KB 环。它小到足以放入 L2 缓存，这使得将页面从 OS 缓存传输到共享缓冲区缓存变得高效。甚至更少通常就足够了，但环必须足够大以容纳扫描中同时固定的所有页面。（剪辑）</p>
+<p>用原子操作替换缓冲区管理器的自旋锁</p>
+<p>在 9.6 版本中，缓冲区管理器的自旋锁将被替换为原子操作。可以参考<a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/9/408/">commitfest </a>中提交日志的内容。如果想了解详细信息，请参</p>
+<p>阅<a target="_blank" rel="noopener" href="http://www.postgresql.org/message-id/flat/2400449.GjM57CE0Yg@dinodell#2400449.GjM57CE0Yg@dinodell">此讨论</a>。</p>
 </blockquote>
-<h2 id="8-6-冲洗脏页面"><a href="#8-6-冲洗脏页面" class="headerlink" title="8.6 冲洗脏页面"></a>8.6 冲洗脏页面</h2><p>除了替换受害页面之外，检查指针和后台编写器进程将脏页面刷新到存储中。两个进程具有相同的功能（刷新脏页）；然而，他们有不同的角色和行为。</p>
-<p>检查点进程将检查点记录写入 WAL 段文件，并在检查点开始时刷新脏页。<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql09.html#_9.7.">第 9.7 节</a>描述了检查点及其开始时间。</p>
-<p>xxxxxxxxxx&nbsp;$ find /home/postgres/archives -mtime +3d -exec rm &nbsp;-f {} ;bash</p>
-<p> <em>为什么检查指针与后台编写器分开？</em></p>
-<p>在 9.1 或更早版本中，后台编写器会定期进行检查点处理。在 9.2 版本中，检查点进程已与后台写入进程分离。由于标题为<a target="_blank" rel="noopener" href="https://www.postgresql.org/message-id/CA%2BU5nMLv2ah-HNHaQ%3D2rxhp_hDJ9jcf-LL2kW3sE4msfnUw9gA%40mail.gmail.com">“分离bgwriter和checkpointer”</a>的提案中描述了原因，因此其语句如下所示。</p>
+<h2 id="8-4-缓冲区管理器的工作原理"><a href="#8-4-缓冲区管理器的工作原理" class="headerlink" title="8.4 缓冲区管理器的工作原理"></a>8.4 缓冲区管理器的工作原理</h2><p>本节介绍缓冲区管理器的工作原理。当后端进程想要访问所需页面时，它会调用 <em>ReadBufferExtended</em> 函数。</p>
+<p>函数 <em>ReadBufferExtended</em> 的行为因场景而异，在逻辑上具体可以分为三种情况。每种情况都将用一小节介绍。第8.4.4节将介绍</p>
+<p>PostgreSOL中基于时钟扫描的页面置换算法。</p>
+<h3 id="8-4-1-访问存储在缓冲池中的页面"><a href="#8-4-1-访问存储在缓冲池中的页面" class="headerlink" title="8.4.1 访问存储在缓冲池中的页面"></a>8.4.1 访问存储在缓冲池中的页面</h3><p>当从缓冲池槽中的页面里读取行时，PostgreSQL 进程获取相应缓冲区描述符的共享 content_lock，因而缓冲池槽可以同时被多个进程读</p>
+<p>取。</p>
+<p>当向页面插入（及更新、删除）行时，该 postgres 后端进程获取相应缓冲区描述符的独占 content_lock （注意，这里必须将相应页面的脏位置设为”1”）。</p>
+<p>访问完页面后，相应缓冲区描述符的引用计数值减1。</p>
+<p>图8.8是访问存储在缓冲池中的页面示意图。</p>
+<p><img src="/medias/image/fig-8-08.png" alt="图8.8 访问存储在缓冲池中的页面"></p>
+<p>我们来介绍最简单的情况，即所需页面已经存储在缓冲池中。在这种情况下，缓冲区管理器会执行以下步骤：</p>
+<ol>
+<li>创建所需页面的 buffer_tag（在本例中 buffer_tag 是’Tag_C’），并使用散列函数计算与描述符相对应的散列桶槽。</li>
+<li>获取相应散列桶槽分区上的 <em>BufMappingLock</em> 共享锁。</li>
+<li>查找标签为’Tag_C’的条目，并从条目中获取buffer_id。本例中buffer_id为2。</li>
+<li>将buffer_id=2的缓冲区描述符钉住，即将描述符的 refcount 和usage_count增加1。</li>
+<li>释放 BufMappingLock。</li>
+<li>访问 bufferid=2 的缓冲池槽。</li>
+</ol>
+<h3 id="8-4-2-将页面从存储加载到空槽"><a href="#8-4-2-将页面从存储加载到空槽" class="headerlink" title="8.4.2 将页面从存储加载到空槽"></a>8.4.2 将页面从存储加载到空槽</h3><p>图 8.9 是将页面从存储加载到空槽的示意图。</p>
+<p><img src="/medias/image/fig-8-09.png" alt="图8.9 将页面从存储加载到空槽"></p>
+<p>在第二种情况下，假设所需页面不在缓冲池中，且 freelist 中有空闲元素（空描述符）。</p>
+<p>这时，缓冲区管理器将执行以下步骤：</p>
+<ol>
+<li><p>查找缓冲区表（本节假设页面不存在，找不到对应页面）。</p>
+<p>第一，创建所需页面的buffer_tag（本例中buffer_tag 为’Tag_E’）并计算其散列桶槽。</p>
+<p>第二，以共享模式获取相应分区上的 BufMappingLock。</p>
+<p>第三，查找缓冲区表（根据假设，这里没找到）。</p>
+<p>第四，释放 BufMappingLock。</p>
+</li>
+<li><p>从 freelist 中获取空缓冲区描述符，并将其钉住。在本例中所获的描述符 buffer_id=4。</p>
+</li>
+<li><p>以独占模式获取相应分区的 BufMappingLock （此锁将在步骤(6)中被释放）。</p>
+</li>
+<li><p>创建一条新的缓冲表数据项：buffer_tag=’Tag_E，buffer id=4，并将其插入缓冲区表中。</p>
+</li>
+<li><p>将页面数据从存储加载至 buffer_id=4 的缓冲池槽中，如下所示:</p>
+<p>第一，以排他模式获取相应描述符的 io_in_progress_lock。</p>
+<p>第二，将相应描述符的 IO_IN_PROGRESS 标记位设置为1，以防其他进程访问。</p>
+<p>第三，将所需的页面数据从存储加载到缓冲池插槽中。</p>
+<p>第四，更改相应描述符的状态，将 IO_IN_PROGRESS 标记位设置为”0”，且VALID标记位设置为”1”。</p>
+<p>第五，释放 io_in_progress_lock。</p>
+</li>
+<li><p>释放相应分区的 BufMappingLock。</p>
+</li>
+<li><p>访问 bufferid=4 的缓冲池槽。</p>
+</li>
+</ol>
+<h3 id="8-4-3-将页面从存储加载到受害者缓冲池槽"><a href="#8-4-3-将页面从存储加载到受害者缓冲池槽" class="headerlink" title="8.4.3 将页面从存储加载到受害者缓冲池槽"></a>8.4.3 将页面从存储加载到受害者缓冲池槽</h3><p>在这种情况下，假设所有缓冲池槽位都被页面占用，且未存储所需的页面。图 8.10、图8.11是将页面从存储加载到受害者缓冲池槽的示意</p>
+<p>图。</p>
+<p><img src="/medias/image/fig-8-10.png" alt="图8.10 将页面从存储加载到受害者缓冲池槽"></p>
+<p><img src="/medias/image/fig-8-11.png" alt="图8.11 将页面从存储加载到受害者缓冲池槽（接图8.10）"></p>
+<p>缓冲区管理器将执行以下步骤：</p>
+<ol>
+<li><p>创建所需页面的 buffer_tag 并查找缓冲表。在本例中假设 buffer_tag 是’Tag_M’（且相应的页面在缓冲区中找不到）。</p>
+</li>
+<li><p>使用时钟扫描算法选择一个受害者缓冲池槽位，从缓冲表中获取包含着受害者槽位 buffer_id 的旧表项，并在缓冲区描述符层将受害</p>
+<p>者槽位的缓冲区描述符钉住。本例中受害者槽的 buffer_id=5，旧表项为 ‘Tag_F’，id = 5。时钟扫描将在下一节介绍。</p>
+</li>
+<li><p>如果受害者页面是脏页，则将其刷盘（write &amp; fsnc），否则进入步骤4。</p>
+<p>在使用新数据覆盖脏页之前，必须将脏页写入存储中。脏页的刷盘步骤如下:</p>
+<p>第一，获取 buffer_id=5 描述符上的共享 content_lock 和独占 io_in_progress_lock 。</p>
+<p>第二，更改相应描述符的状态：相应 IO_IN_PROCESS 位设置为”1”，JUST_DIRTIED 位设置为”0”。</p>
+<p>第三,根据具体情况，调用 <em>XLogFlush()</em> 函数将WAL缓冲区上的 WAL数据写入当前 WAL段文件（WAL和XLogFlush函数将在第9章中介绍）。</p>
+<p>第四，将受害者页面的数据刷盘至存储中。</p>
+<p>第五，更改相应描述符的状态：将 IO_IN_PROCESS 位设置为”0,将VALID位设置为”1”。</p>
+<p>第六，释放 io_in_progress_lock 和 content_lock。</p>
+</li>
+<li><p>以排他模式获取缓冲区表中旧表项所在分区上的 BufMappingLock。</p>
+</li>
+<li><p>获取新表项所在分区上的 BufMappingLock，并将新表项插入缓冲表：</p>
+<p>第一，创建新表项：由 buffer_tag=’Tag M’与受害者的 buffer_id 组成的新表项。</p>
+<p>第二，以独占模式获取新表项所在分区上的 BufMappingLock。</p>
+<p>第三，将新表项插入缓冲区表中。</p>
+</li>
+<li><p>从缓冲表中删除旧表项，并释放旧表项所在分区的 BufMappingLock。</p>
+</li>
+<li><p>将目标页面数据从存储加载至受害者槽位，然后用 buffer_id=5 更新描述符的标识字段，将脏位设置为0，并按流程初始化其他标记</p>
+<p>位。</p>
+</li>
+<li><p>释放新表项所在分区上的 BufMappingLock。</p>
+</li>
+<li><p>访问 buffer_id=5 对应的缓冲区槽位。</p>
+</li>
+</ol>
+<h3 id="8-4-4-页替换算法：时钟扫描"><a href="#8-4-4-页替换算法：时钟扫描" class="headerlink" title="8.4.4 页替换算法：时钟扫描"></a>8.4.4 页替换算法：时钟扫描</h3><p>本节的其余部分介绍了 <strong>时钟扫描</strong>算法。该算法是NFU（Not Frequently Used）算法的变体，开销较低，能高效地选出较少使用的页面。</p>
+<p>我们将缓冲区描述符想象为一个循环列表，如图8.12所示。缓冲区描述符为黑色或灰色的方框，框中的数字显示每个描述符的 </p>
+<p>usage_count。而 nextVictimBuffer 是一个32位的无符号整型变量，它总是指向某个缓冲区描述符并按顺时针顺序旋转。</p>
+<p><img src="/medias/image/fig-8-12.png" alt="图8.12 时钟扫描 "></p>
+<p>伪代码：时钟扫描<br>WHILE true</p>
+<ol>
+<li><p>获取 nextVictimBuffer 指向的候选缓冲区描述符。</p>
+</li>
+<li><p>如果候选描述符未被钉住，则进入步骤3，否则进入步骤4。</p>
+</li>
+<li><p>如果候选描述符的 usage_count 为0，则选择该描述符对应的槽作为受害者，并进入步骤5，否则将此描述符的 usage_count 减1，</p>
+<p>并继续执行步骤4。</p>
+</li>
+<li><p>将 nextVictimBuffer 迭代至下一个描述符（如果到末尾则回绕至头部）并返回步骤1，重复直到找到受害者。</p>
+</li>
+<li><p>返回受害者的 buffer_id。</p>
+</li>
+</ol>
+<p>该算法的伪代码与算法描述如下：</p>
+<ol>
+<li><p>nextVictimBuffer 指向第一个描述符(buffer_id=1)，但因为该描述符被钉住了，所以跳过。</p>
+</li>
+<li><p>nextVictimBuffer 指向第二个描述符(buffer_id=2)，该描述符未被钉住，但其 usage_count 为2，因此该描述符的 usage_count 将减</p>
+<p>1,而nextVictimBuffer 选代至第三个候选描述符。</p>
+</li>
+<li><p>nextVictimBuffer 指向第三个描述符(buffer_id=3)，该描述符未被钉住，但其 usage_count=0，因而成为本轮的受害者。</p>
+</li>
+<li><p>当 nextVictimBuffer 扫过未钉住的描述符时，其 usage_count 会减1。因此只要缓冲池中存在未钉住的描述符，该算法总能在旋转若于次 nextVictimBuffer 后，找到一个 usage_count 为0的受害者。</p>
+</li>
+</ol>
+<h2 id="8-5-环形缓冲器"><a href="#8-5-环形缓冲器" class="headerlink" title="8.5 环形缓冲器"></a>8.5 环形缓冲器</h2><p>在读取或写入大表时，PostgreSQL会使用<strong>环形缓冲区</strong>而不是缓冲池。环形缓冲器是一个很小的临时缓冲区域。当满足下列任一条件时，</p>
+<p>PostgreSQL 将在共享内存中分配一个环形缓冲区。</p>
+<ol>
+<li><p>批量读取，当扫描关系读取数据的大小超过缓冲池的四分之一时，环形缓冲区的大小为256 KB。</p>
+</li>
+<li><p>批量写入，当执行下列的 SQL 命令时。环形缓冲区大小为16 MB。</p>
+<p>COPY FROM</p>
+<p>CREATE TABLE AS</p>
+<p>CREATE MATERIALIZED VIEW 或 REFRESH MATERIALIZED VIEW 命令</p>
+<p>ALTER TABLE</p>
+</li>
+<li><p>清理过程，当自动清理守护进程执行清理过程时，环形缓冲区的大小为256 KB。</p>
+</li>
+</ol>
+<p>分配的环形缓冲区将在使用后立即释放。环形缓冲区的好处显而易见，如果后端进程在不使用环形缓冲区的情况下读取大表，则所有存储</p>
+<p>在缓冲池中的页面都会被移除，这会导致缓存命中率降低。环形缓冲区可以避免此问题。</p>
 <blockquote>
-<p>目前（2011 年）bgwriter 进程执行后台写入、检查点和其他一些职责。这意味着我们无法在不停止后台写入的情况下执行最终检查点 fsync，因此在一个进程中执行这两项操作会对性能产生负面影响。<br>此外，我们在 9.2 中的目标是用锁存器替换轮询循环以降低功耗。bgwriter 循环的复杂性很高，似乎不太可能提出使用锁存器的干净方法。<br>（剪辑）</p>
+<p>为什么批量读取和清理过程的默认环形缓冲区大小为256KB</p>
+<p>源代码中缓冲区管理器目录下的 <a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/backend/storage/buffer/README">README</a>中解释了这个问题。</p>
+<p>顺序扫描使用 256KB的环形缓冲区，它足够小，因而能放入L2缓存中，从而使得操作系统缓存到共享缓冲区的页面传输变得高效。</p>
+<p>通常更小一点也可以，但环形缓冲区需要足够大到能同时容纳扫描中被钉住的所有页面。</p>
+</blockquote>
+<h2 id="8-6-脏页刷盘"><a href="#8-6-脏页刷盘" class="headerlink" title="8.6 脏页刷盘"></a>8.6 脏页刷盘</h2><p>除了置换受害者页面之外，检查点进程和后台写入器进程也会将脏页刷盘至存储中。尽管两个进程都具有相同的功能(脏页刷盘)，但是它</p>
+<p>们有着不同的角色和行为。</p>
+<p>检查点进程将检查点记录写入WAL段文件，并在检查点开始时进行脏页刷盘。第9.7节介绍了检查点和检查点开始的时机。</p>
+<p>后台写入器的目的是通过少量多次的脏页刷盘，减少检查点带来的密集写入的影响。后台写入器会一点点地将脏页落盘，尽可能减少对数</p>
+<p>据库活动造成的影响。在默认情况下，后台写入器每 200ms被唤醒一次(由参数 bgwriter_delay 定义)，且最多刷写 </p>
+<p>bgwriter_lrumaxpages 个页面(默认为100个页面)。</p>
+<blockquote>
+<p>为什么检查点进程与后台写入器相分离</p>
+<p>在 9.1及更低版本中，后台写入器会规律性地执行检查点进程。在 9.2 版本中，检查点进程从后台写入被单独剥离出来。原因在一篇</p>
+<p>题为“将检查点进程与后台写入器相分离”的提案中有介绍。下面是一些摘录:</p>
+<p>当前(在 2011 年)后台写入器进程既执行后台写入，又负责检查点，还处理一些其他的职责。这意味着我们没法在不停止后台写入的</p>
+<p>情况下执行检查点最终的 fsync。因此，在同一个进程中做两件事会有负面的性能影响。</p>
+<p>此外，在9.2版本中，我们的一个目标是通过将轮询循环替换为锁存器，从而降低功耗。bgwriter 中的循环复杂度太高了，以至于无</p>
+<p>法找到一种简单的使用锁存器的方法。</p>
 </blockquote>
 
                 
@@ -882,19 +927,19 @@ UnlockBufHdr(bufferdesc);
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/9.yu-xie-ri-zhi-wal/">
+                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                         
-                        <span class="card-title">9 预写日志—WAL</span>
+                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的每
+                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
                         
                     </div>
                     <div class="publish-info">
@@ -928,22 +973,22 @@ UnlockBufHdr(bufferdesc);
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge right-badge text-color">
-                本篇&nbsp;<i class="far fa-dot-circle"></i>
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/8.huan-chong-qu-guan-li-qi/">
+                <a href="/2021/9.yu-xie-ri-zhi-wal/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="8 缓冲区管理器">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
                         
-                        <span class="card-title">8 缓冲区管理器</span>
+                        <span class="card-title">9 预写日志—WAL</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            缓冲区管理器管理共享内存和持久存储之间的数据传输，并且可以对 DBMS 的性能产生重大影响。PostgreSQL 缓冲区管理器非常有效地工作。
+                            事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的每
                         
                     </div>
                     <div class="publish-info">
@@ -962,7 +1007,6 @@ UnlockBufHdr(bufferdesc);
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
