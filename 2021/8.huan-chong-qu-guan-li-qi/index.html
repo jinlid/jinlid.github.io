@@ -764,18 +764,18 @@ bufferdesc<span class="token operator">-></span>flags <span class="token operato
 <p>顺序扫描使用 256KB的环形缓冲区，它足够小，因而能放入L2缓存中，从而使得操作系统缓存到共享缓冲区的页面传输变得高效。</p>
 <p>通常更小一点也可以，但环形缓冲区需要足够大到能同时容纳扫描中被钉住的所有页面。</p>
 </blockquote>
-<h2 id="8-6-脏页刷盘"><a href="#8-6-脏页刷盘" class="headerlink" title="8.6 脏页刷盘"></a>8.6 脏页刷盘</h2><p>除了置换受害者页面之外，检查点进程和后台写入器进程也会将脏页刷盘至存储中。尽管两个进程都具有相同的功能(脏页刷盘)，但是它</p>
-<p>们有着不同的角色和行为。</p>
+<h2 id="8-6-脏页刷盘"><a href="#8-6-脏页刷盘" class="headerlink" title="8.6 脏页刷盘"></a>8.6 脏页刷盘</h2><p>除了置换受害者页面之外，检查点进程和后台写入器进程也会将脏页刷盘至存储中。尽管两个进程都具有相同的功能（脏页刷盘），但是</p>
+<p>它们有着不同的角色和行为。</p>
 <p>检查点进程将检查点记录写入WAL段文件，并在检查点开始时进行脏页刷盘。第9.7节介绍了检查点和检查点开始的时机。</p>
 <p>后台写入器的目的是通过少量多次的脏页刷盘，减少检查点带来的密集写入的影响。后台写入器会一点点地将脏页落盘，尽可能减少对数</p>
-<p>据库活动造成的影响。在默认情况下，后台写入器每 200ms被唤醒一次(由参数 bgwriter_delay 定义)，且最多刷写 </p>
-<p>bgwriter_lrumaxpages 个页面(默认为100个页面)。</p>
+<p>据库活动造成的影响。在默认情况下，后台写入器每 200ms被唤醒一次（由参数 <code>bgwriter_delay</code> 定义），且最多刷写 </p>
+<p><code>bgwriter_lrumaxpages</code> 个页面（默认为100个页面）。</p>
 <blockquote>
 <p>为什么检查点进程与后台写入器相分离</p>
 <p>在 9.1及更低版本中，后台写入器会规律性地执行检查点进程。在 9.2 版本中，检查点进程从后台写入被单独剥离出来。原因在一篇</p>
-<p>题为“将检查点进程与后台写入器相分离”的提案中有介绍。下面是一些摘录:</p>
-<p>当前(在 2011 年)后台写入器进程既执行后台写入，又负责检查点，还处理一些其他的职责。这意味着我们没法在不停止后台写入的</p>
-<p>情况下执行检查点最终的 fsync。因此，在同一个进程中做两件事会有负面的性能影响。</p>
+<p>题为“将检查点进程与后台写入器相分离”的提案中有介绍。下面是一些摘录：</p>
+<p>当前（在 2011 年）后台写入器进程既执行后台写入，又负责检查点，还处理一些其他的职责。这意味着我们没法在不停止后台写入</p>
+<p>的情况下执行检查点最终的 fsync。因此，在同一个进程中做两件事会有负面的性能影响。</p>
 <p>此外，在9.2版本中，我们的一个目标是通过将轮询循环替换为锁存器，从而降低功耗。bgwriter 中的循环复杂度太高了，以至于无</p>
 <p>法找到一种简单的使用锁存器的方法。</p>
 </blockquote>
@@ -927,19 +927,19 @@ bufferdesc<span class="token operator">-></span>flags <span class="token operato
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2021/5.bing-fa-kong-zhi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">5 并发控制</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
                         
                     </div>
                     <div class="publish-info">

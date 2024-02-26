@@ -418,14 +418,10 @@
                 <p>vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。</p>
 <span id="more"></span>
 
-<p>为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vacuum full。并行VACUUM（通常简称为VACUUM）为表文件的每</p>
-<p>一页删除死元组，并且在此进程运行时，其他事务可以读取表。相反，vacuum full在整个文件中删除死元组并对活元组进行碎片整理，</p>
-<p>在vacuum full运行时，其他事务不能访问表。</p>
+<p>为了去除死亡元组，vacuum进程提供了两种模式，即并行vacuum和vacuum full。并行VACUUM（通常简称为VACUUM）为表文件的每一页删除死元组，并且在此进程运行时，其他事务可以读取表。相反，vacuum full在整个文件中删除死元组并对活元组进行碎片整理，在vacuum full运行时，其他事务不能访问表。</p>
 <blockquote>
-<p>尽管vacuum进程对于PostgreSQL来说是必不可少的，但与其他功能相比，它的功能改进一直很缓慢。例如，在8.0版本之前，这个</p>
-<p>进程必须手动执行（使用psql实用程序或使用cron守护进程），它是在2005年实现autovacuum守护进程时实现的。</p>
-<p>由于vacuum工作涉及扫描整个表，这是一个昂贵的过程。在8.4(2009)版本中，引入了可见性地图(VM)来提高删除死元组的效率。在</p>
-<p>9.6(2016)版本中，通过增强VM改进了冻结过程。</p>
+<p>尽管vacuum进程对于PostgreSQL来说是必不可少的，但与其他功能相比，它的功能改进一直很缓慢。例如，在8.0版本之前，这个进程必须手动执行（使用psql实用程序或使用cron守护进程），它是在2005年实现autovacuum守护进程时实现的。</p>
+<p>由于vacuum工作涉及扫描整个表，这是一个昂贵的过程。在8.4(2009)版本中，引入了可见性地图(VM)来提高删除死元组的效率。在9.6(2016)版本中，通过增强VM改进了冻结过程。</p>
 </blockquote>
 <p>第6.1节概述了VACUUM过程，后面的部分将描述以下内容。</p>
 <ul>
@@ -444,18 +440,17 @@
 </li>
 <li><p>冻结旧的txids</p>
 <p>必要时冻结元组的旧txids。</p>
-<p>更新冻结的txid相关的系统目录(pg_database和pg_class)。</p>
+<p>更新冻结的txid相关的系统目录（pg_database和pg_class）。</p>
 <p>如果可能的话，移除不必要的clog。</p>
 </li>
 <li><p>其他</p>
 <p>更新已处理表的FSM和VM。</p>
-<p>更新一些统计信息(pg_stat_all_tables等)。</p>
+<p>更新一些统计信息（pg_stat_all_tables等）。</p>
 </li>
 </ol>
-<p>本文假定读者熟悉以下术语：死亡元组、冻结txid、FSM和clog。如果不熟悉，请参阅第5章 <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.">死亡元组</a>, <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.10.1.">冻结txid</a>, <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.3.4.">FSM</a>, 和 <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html#_5.4.">clog</a>。 如果你不</p>
-<p>熟悉，请参阅 <a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql05.html">第 5 章</a>， VM将在6.2节中介绍。</p>
+<p>本文假定读者熟悉以下术语：死亡元组、冻结txid、FSM和clog。 如果你不熟悉，请参阅 第 5 章，VM将在6.2节中介绍。</p>
 <p>下面的伪代码描述了vacuum进程。</p>
-<p>伪代码:并行vacuum</p>
+<p>伪代码：并行vacuum</p>
 <pre class="line-numbers language-c"><code class="language-c"><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>  FOR each <span class="token function">table</span>
 <span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span>       Acquire ShareUpdateExclusiveLock lock <span class="token keyword">for</span> the target table
 
@@ -480,48 +475,62 @@
 <span class="token punctuation">(</span><span class="token number">11</span><span class="token punctuation">)</span>  Update statistics and system <span class="token function">catalogs</span>
 <span class="token punctuation">(</span><span class="token number">12</span><span class="token punctuation">)</span>  Remove both unnecessary files and pages of the clog <span class="token keyword">if</span> possible
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>(1) 从指定的表中获取每个表。</p>
-<p>(2) 获取表的ShareUpdateExclusiveLock锁，该锁允许从其他事务中读取数据。</p>
-<p>(3) 扫描所有页面，获取所有死元组，必要时冻结旧元组。</p>
-<p>(4) 如果存在，删除指向相应死亡元组的索引元组。</p>
-<p>(5) 对表格的每一页执行步骤(6)和(7)。</p>
-<p>(6) 删除死元组，重新分配页面中的活元组。</p>
-<p>(7) 分别更新目标表的FSM和VM。</p>
-<p>(8) 使用index_vacuum_cleanup()@indexam.c函数清理索引。</p>
-<p>(9) 如果最后一页没有任何元组，则截断最后一页。</p>
-<p>(10) 更新目标表中与vacuum处理相关的统计数据和系统目录。</p>
-<p>(11) 更新与vacuum处理有关的统计数据和系统目录。</p>
-<p>(12) 如果可能，删除不必要的文件和clog页。</p>
+<ol>
+<li><p>从指定的表中获取每个表。</p>
+</li>
+<li><p>获取表的 <code>ShareUpdateExclusiveLock</code> 锁，该锁允许从其他事务中读取数据。</p>
+</li>
+<li><p>扫描所有页面，获取所有死元组，必要时冻结旧元组。</p>
+</li>
+<li><p>如果存在，删除指向相应死亡元组的索引元组。</p>
+</li>
+<li><p>对表格的每一页执行步骤(6)和(7)。</p>
+</li>
+<li><p>删除死元组，重新分配页面中的活元组。</p>
+</li>
+<li><p>分别更新目标表的FSM和VM。</p>
+</li>
+<li><p>使用 <code>index_vacuum_cleanup()@indexam.c</code> 函数清理索引。</p>
+</li>
+<li><p>如果最后一页没有任何元组，则截断最后一页。</p>
+</li>
+<li><p>更新目标表中与vacuum处理相关的统计数据和系统目录。</p>
+</li>
+<li><p>更新与vacuum处理有关的统计数据和系统目录。</p>
+</li>
+<li><p>如果可能，删除不必要的文件和clog页。</p>
+</li>
+</ol>
 <p>这个伪代码有两个部分：每个表的循环和后处理。内环可以分为三个块，每个块都有独立的任务。</p>
 <p>下面概述了这三个块和后处理。</p>
 <blockquote>
 <p><strong>并行的选项</strong></p>
-<p>VACUUM命令从版本13开始就支持PARALLEL选项，如果设置了该选项并且创建了多个索引，则它将并行处理清空索引和清理索引阶段。注意，该特性仅在VACUUM命令中有效，autovacuum不支持它。</p>
+<p>VACUUM命令从版本13开始就支持 <code>PARALLEL</code> 选项，如果设置了该选项并且创建了多个索引，则它将并行处理清空索引和清理索引阶段。注意，该特性仅在VACUUM命令中有效，autovacuum不支持它。</p>
 </blockquote>
 <h3 id="6-1-1-第一块"><a href="#6-1-1-第一块" class="headerlink" title="6.1.1 第一块"></a>6.1.1 第一块</h3><p>该块执行冻结处理并删除指向死元组的索引元组。</p>
 <p>首先，PostgreSQL扫描一个目标表，建立一个死元组列表，如果可能的话冻结旧元组。列表存储在本地内存的<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/static/runtime-config-resource.html#GUC-MAINTENANCE-WORK-MEM">maintenance_work_mem</a> 中。冻结处理将在6.3节中介绍。</p>
 <p>扫描完成后，PostgreSQL通过引用死元组列表删除索引元组。这个过程在内部被称为“清理阶段”。不用说，这个过程是昂贵的。在版本10或更早的版本中，总是执行清理阶段。在版本11或更高版本中，如果目标索引是B-tree，则是否执行清理阶段由配置参数 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/devel/static/runtime-config-resource.html#RUNTIME-CONFIG-INDEX-VACUUM">vacuum_cleanup_index_scale_factor</a> 决定，请参见该参数的详细说明。</p>
-<p>当maintenance_work_mem已满且扫描未完成时，PostgreSQL将继续执行下一个任务，即步骤(4)到(7)，然后返回步骤(3)，进行剩余扫描。</p>
+<p>当 <code>maintenance_work_mem</code> 已满且扫描未完成时，PostgreSQL将继续执行下一个任务，即步骤4到7，然后返回步骤3，进行剩余扫描。</p>
 <h3 id="6-1-2-第二块"><a href="#6-1-2-第二块" class="headerlink" title="6.1.2 第二块"></a>6.1.2 第二块</h3><p>这个块会删除死元组，并逐页更新FSM和VM。图6.1给出了一个例子：</p>
-<p><img src="/medias/image/fig-6-01-167673093401620.png" alt="Fig. 6.1. Removing a dead tuple."></p>
+<p><img src="/medias/image/fig-6-01-167673093401620.png" alt="图6.1 删除死元组"></p>
 <p>假设表包含三个页面，我们关注第0页(即第一页)。这个页面有三个元组，Tuple_2是一个死元组(图6.1(1))。在这种情况下，PostgreSQL删除Tuple_2并重新排序剩余的元组以修复碎片，然后更新该页的FSM和VM(图6.1(2))。PostgreSQL继续这个过程直到最后一页。</p>
 <p>注意，不必要的行指针不会被删除，它们将在将来被重用。因为，如果删除行指针，则必须更新关联索引的所有索引元组。</p>
 <h3 id="6-1-3-第三块"><a href="#6-1-3-第三块" class="headerlink" title="6.1.3 第三块"></a>6.1.3 第三块</h3><p>第三个块在删除索引之后执行清理，并且还更新与每个目标表的vacuum进程相关的统计信息和系统目录。此外，如果最后一页没有元组，则从表文件中截断它。</p>
-<h3 id="6-1-4-后处理"><a href="#6-1-4-后处理" class="headerlink" title="6.1.4 后处理"></a>6.1.4 后处理</h3><p>当vacuum进程完成时，PostgreSQL会更新一些与vacuum进程相关的统计数据和系统目录，并尽可能删除不必要的clog(章节6.4)。vacuum进程使用环形缓冲器，如<a target="_blank" rel="noopener" href="http://www.interdb.jp/pg/pgsql08.html#_8.5.">第 8.5 节</a>所述，因此处理过的页面不会缓存在共享缓冲区中。</p>
+<h3 id="6-1-4-后处理"><a href="#6-1-4-后处理" class="headerlink" title="6.1.4 后处理"></a>6.1.4 后处理</h3><p>当vacuum进程完成时，PostgreSQL会更新一些与vacuum进程相关的统计数据和系统目录，并尽可能删除不必要的clog(6.4章节)。vacuum进程使用环形缓冲器，如第 8.5 节所述，因此处理过的页面不会缓存在共享缓冲区中。</p>
 <h2 id="6-2-可见性地图"><a href="#6-2-可见性地图" class="headerlink" title="6.2 可见性地图"></a>6.2 可见性地图</h2><blockquote>
 <p>vacuum进程是昂贵的，因此，在8.4版中引入了VM以降低这一成本。</p>
 </blockquote>
 <p>VM的基本概念很简单，每个表都有一个单独的可见性映射，用于保存表文件中每个页面的可见性。页面的可见性决定了每个页面是否有死元组，vacuum进程可以跳过没有死元组的页面。</p>
 <p>图 6.2 显示了VM的使用情况。假设表由三页组成，第0页和第2页包含死元组，而第1页不包含。该表的VM保存了关于哪些页面包含死元组的信息。在这种情况下，vacuum进程通过引用VM的信息跳过第一页。</p>
 <p><img src="/medias/image/fig-6-02.png" alt="图 6.2 VM的使用方式 "></p>
-<p>每个VM由一个或多个8KB的页面组成，该文件以’VM’后缀存储。以relfilenode为18751的表文件为例，其中FSM (18751_fsm)和VM (18751_vm)文件如下所示。</p>
+<p>每个VM由一个或多个8KB的页面组成，该文件以 <code>VM</code> 后缀存储。以relfilenode为18751的表文件为例，其中 <code>FSM</code> (18751_fsm)和 <code>VM</code> (18751_vm)文件如下所示。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">cd</span> <span class="token variable">$PGDATA</span>
 $ <span class="token function">ls</span> -la base/16384/18751*
 -rw------- 1 postgres postgres  8192 Apr 21 10:21 base/16384/18751
 -rw------- 1 postgres postgres 24576 Apr 21 10:18 base/16384/18751_fsm
 -rw------- 1 postgres postgres  8192 Apr 21 10:18 base/16384/18751_vm
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="6-2-1-VM增强"><a href="#6-2-1-VM增强" class="headerlink" title="6.2.1 VM增强"></a>6.2.1 VM增强</h3><p>9.6版本对VM进行了增强，提高了冻结处理的效率。新的VM显示页面可见性，以及关于元组在每个页面中是否冻结的信息(章节6.3.3)。</p>
+<h3 id="6-2-1-VM增强"><a href="#6-2-1-VM增强" class="headerlink" title="6.2.1 VM增强"></a>6.2.1 VM增强</h3><p>9.6版本对VM进行了增强，提高了冻结处理的效率。新的VM显示页面可见性，以及关于元组在每个页面中是否冻结的信息(6.3.3章节)。</p>
 <h2 id="6-3-冻结处理"><a href="#6-3-冻结处理" class="headerlink" title="6.3 冻结处理"></a>6.3 冻结处理</h2><p>冻结处理有两种模式，根据特定条件以任何一种模式执行。为方便起见，这些模式被称为<strong>惰性模式</strong>和<strong>急切模式</strong>。</p>
 <p>冻结处理通常以惰性模式运行，但是，当满足特定条件时，就会运行急切模式。在惰性模式下，冻结处理仅使用目标表的相应 VM 扫描包含死元组的页面。相比之下，急切模式会扫描所有页面，无论每个页面是否包含死元组，它还会更新与冻结处理相关的系统目录，并尽可能删除不必要的clog页面和文件。</p>
 <h3 id="6-3-1-惰性模式"><a href="#6-3-1-惰性模式" class="headerlink" title="6.3.1 惰性模式"></a>6.3.1 惰性模式</h3><p>当开始冻结处理时，PostgreSQL 计算 freezeLimit_txid 并冻结 t_xmin 小于 freezeLimit txid 的元组。</p>
@@ -601,7 +610,7 @@ testdb                  |         1821
 (1 row)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><em>冻结选项</em></p>
-<p>带有 FREEZE 选项的 VACUUM 命令强制冻结指定表中的所有 txid，这是在急切模式下执行的。但是，freezeLimit 设置为 OldestXmin（不是“OldestXmin - Vacuum_freeze_min_age”）。例如，当 txid 5000 执行 VACUUM FULL 命令且没有其他正在运行的事务时，OldesXmin 设置为 5000，小于 5000 的 txid 将被冻结。</p>
+<p>带有 <code>FREEZE</code> 选项的 VACUUM 命令强制冻结指定表中的所有 txid，这是在急切模式下执行的。但是，freezeLimit 设置为 OldestXmin（不是“OldestXmin - Vacuum_freeze_min_age”）。例如，当 txid 5000 执行 VACUUM FULL 命令且没有其他正在运行的事务时，OldesXmin 设置为 5000，小于 5000 的 txid 将被冻结。</p>
 <h3 id="6-3-3-在急切模式下改进冻结处理"><a href="#6-3-3-在急切模式下改进冻结处理" class="headerlink" title="6.3.3 在急切模式下改进冻结处理"></a><strong>6.3.3 在急切模式下改进冻结处理</strong></h3><p>9.5 或更早版本中的急切模式效率不高，因为总是扫描所有页面。例如，在上节示例中，即使第 0 页中的所有元组都被冻结，也会扫描第 0 页。</p>
 <p>为了解决这个问题，9.6 版本对 VM 和冻结过程进行了改进，新 VM 具有关于是否所有元组在每个页面中都被冻结的信息。当以急切模式执行冻结处理时，可以跳过仅包含冻结元组的页面。</p>
 <p>冻结此表时，参考VM信息跳过第0页。冻结第 1 页后，更新关联的 VM 信息，因为该页的所有元组都已冻结。</p>
@@ -642,17 +651,17 @@ testdb=# VACUUM tbl;
 <p>为了应对这种情况，PostgreSQL 提供了 VACUUM FULL 模式。下图显示了该模式的概要。</p>
 <p><strong>VACUUM FULL 模式的概要</strong></p>
 <p><img src="/medias/image/fig-6-09-167673167640731.png" alt="图 13 Full VACUUM 模式的概要"></p>
-<ul>
-<li><p>[1] 新建表文件：图 (1)</p>
+<ol>
+<li><p>新建表文件：图 (1)</p>
 <p>当对一个表执行 VACUUM FULL 命令时，PostgreSQL 首先获取该表的 AccessExclusiveLock 锁，并创建一个大小为 8 KB 的新表文件。AccessExclusiveLock 锁不允许访问。</p>
 </li>
-<li><p>[2] 将活动元组复制到新表中：图 (2)</p>
+<li><p>将活动元组复制到新表中：图 (2)</p>
 <p>PostgreSQL 仅将旧表文件中的活动元组复制到新表中。</p>
 </li>
-<li><p>[3] 删除旧文件，重建索引，更新统计、FSM、VM：图(3)</p>
+<li><p>删除旧文件，重建索引，更新统计、FSM、VM：图(3)</p>
 <p>复制所有活动元组后，PostgreSQL 删除旧文件，重建所有关联的表索引，更新该表的 FSM 和 VM，并更新关联的统计信息和系统目录。</p>
 </li>
-</ul>
+</ol>
 <p>VACUUM FULL 的伪代码如下所示：</p>
 <p><em>伪代码：VACUUM FULL</em></p>
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>  <span class="token keyword">FOR</span> each <span class="token keyword">table</span>
@@ -881,19 +890,19 @@ testdb=# SELECT count(*) as "number of blocks",
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/5.bing-fa-kong-zhi/">
+                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                         
-                        <span class="card-title">5 并发控制</span>
+                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
                         
                     </div>
                     <div class="publish-info">
@@ -930,19 +939,19 @@ testdb=# SELECT count(*) as "number of blocks",
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2021/5.bing-fa-kong-zhi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">5 并发控制</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
                         
                     </div>
                     <div class="publish-info">
