@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -614,7 +614,7 @@ postgres<span class="token operator">=</span><span class="token comment" spellch
 <p>接下来的3个列（client_），将告诉读者一个连接来自何方。PostgreSQL将显示IP地址，甚至主机名（如果被配置）。</p>
 <p>此外，backend_start将会告诉读者一个特定连接何时被启动，xact_start表示一个事务何时被启动，接着还有query_start和state_change。在早期，PostgreSQL只会显示活动查询，在那个时期查询运行时间比现如今更长。在现代硬件上，OLTP查询可能只会消耗不到一毫秒，因此很难捕获到可能做了坏的查询。其解决方案是既显示活动查询，又显示正查看的连接之前执行的查询。</p>
 <p>可能会看到这样的数据：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pid,query_start,state_change,state,query from pg_stat_activity where pid &lt;> pg_backend_pid();</span>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pid,query_start,state_change,state,query from pg_stat_activity where pid &lt;&gt; pg_backend_pid();</span>
 -<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>+------------------------------
 pid          <span class="token operator">|</span> 99619
 query_start  <span class="token operator">|</span> 2022-10-31 21:56:09.317783+08
@@ -624,7 +624,7 @@ query        <span class="token operator">|</span> <span class="token keyword">s
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>在这种情况下，可以看到在第二个连接中正在执行pg_sleep。</p>
 <p>一旦这个查询结束，输出将会改变。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pid,query_start,state_change,state,query from pg_stat_activity where pid &lt;> pg_backend_pid();</span>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pid,query_start,state_change,state,query from pg_stat_activity where pid &lt;&gt; pg_backend_pid();</span>
 -<span class="token punctuation">[</span> RECORD 1 <span class="token punctuation">]</span>+------------------------------
 pid          <span class="token operator">|</span> 99619
 query_start  <span class="token operator">|</span> 2022-10-31 21:56:09.317783+08
@@ -636,7 +636,7 @@ query        <span class="token operator">|</span> <span class="token keyword">s
 <p>因此，pg_stat_activity将让用户对当前系统正在做什么有一个大体上的认识。新的state_change字段更有可能找出开销巨大的查询。</p>
 <p>对于一个不好的查询，PostgreSQL提供了pg_cancel_backend和pg_terminate_backend两个函数来处理这些事情。pg_cancel_backend函数将终止查询，但是保留连接。pg_terminate_backend函数更加激进一些，它将查询和整个数据库连接全部杀死。</p>
 <p>如果想要断开除自己会话之外所有其他的连接，可以这样做：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_terminate_backend(pid) from pg_stat_activity where pid &lt;> pg_backend_pid();</span>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select pg_terminate_backend(pid) from pg_stat_activity where pid &lt;&gt; pg_backend_pid();</span>
  pg_terminate_backend 
 ----------------------
  t
@@ -883,7 +883,7 @@ server closed the connection unexpectedly
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> schemaname<span class="token punctuation">,</span>relname<span class="token punctuation">,</span>seq_scan<span class="token punctuation">,</span>seq_tup_read<span class="token punctuation">,</span>
        seq_tup_read<span class="token operator">/</span>seq_scan <span class="token keyword">as</span> avg<span class="token punctuation">,</span>idx_scan 
 <span class="token keyword">from</span> pg_stat_user_tables 
-<span class="token keyword">where</span> seq_scan <span class="token operator">></span> <span class="token number">0</span> 
+<span class="token keyword">where</span> seq_scan <span class="token operator">&gt;</span> <span class="token number">0</span> 
 <span class="token keyword">order</span> <span class="token keyword">by</span> seq_tup_read <span class="token keyword">desc</span> 
 <span class="token keyword">limit</span> <span class="token number">25</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
@@ -1848,19 +1848,19 @@ hit_percent <span class="token operator">|</span> 99.9199199199199199
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                <a href="/2021/1.shu-ju-ku-ji-qun-shu-ju-ku-he-biao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="1 数据库集群、数据库和表">
                         
-                        <span class="card-title">10 基础备份和时间点恢复</span>
+                        <span class="card-title">1 数据库集群、数据库和表</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            本章和下一章总结了PostgreSQL的基础知识，以帮助阅读后续章节。
                         
                     </div>
                     <div class="publish-info">

@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -521,7 +521,7 @@
 <h2 id="9-4-XLOG-Record的内部布局"><a href="#9-4-XLOG-Record的内部布局" class="headerlink" title="9.4 XLOG Record的内部布局"></a>9.4 XLOG Record的内部布局</h2><p>XLOG Record包括通用标题部分和每个相关联的数据部分。第一部分描述头结构，剩下的两个小节分别解释了9.4或更早版本和9.5版本中数据部分的结构（数据格式在9.5版本中发生了变化）。</p>
 <h3 id="9-4-1-XLOG-Record的头部分"><a href="#9-4-1-XLOG-Record的头部分" class="headerlink" title="9.4.1 XLOG Record的头部分"></a>9.4.1 XLOG Record的头部分</h3><p>所有XLOG记录都有一个由结构体 <code>XLogRecord</code> 定义的通用头部分。在9.4及更早版本的结构体如下所示，在9.5版本中有所更改。</p>
 <pre class="line-numbers language-c"><code class="language-c"><span class="token keyword">typedef</span> <span class="token keyword">struct</span> XLogRecord
-<span class="token punctuation">{</span>
+<span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
    uint32          xl_tot_len<span class="token punctuation">;</span>   <span class="token comment" spellcheck="true">/* total len of entire record */</span>
    TransactionId   xl_xid<span class="token punctuation">;</span>       <span class="token comment" spellcheck="true">/* xact id */</span>
    uint32          xl_len<span class="token punctuation">;</span>       <span class="token comment" spellcheck="true">/* total len of rmgr data */</span>
@@ -530,7 +530,7 @@
    <span class="token comment" spellcheck="true">/* 2 bytes of padding here, initialize to zero */</span>
    XLogRecPtr      xl_prev<span class="token punctuation">;</span>      <span class="token comment" spellcheck="true">/* ptr to previous record in log */</span>
    pg_crc32        xl_crc<span class="token punctuation">;</span>       <span class="token comment" spellcheck="true">/* CRC for this record */</span>
-<span class="token punctuation">}</span> XLogRecord<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> XLogRecord<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>除了两个变量，大部分变量都是显而易见的，不需要描述。</p>
 <p><strong>xl_rmid</strong>和<strong>xl_info</strong>是相关变量的资源管理器，这是与WAL相关的操作集合的写入及XLOG记录重放功能等。资源管理器的数量随着每个PostgreSQL版本的增加而增加，版本10包含以下内容：</p>
@@ -753,7 +753,7 @@
 </ul>
 <p>详细信息如下：</p>
 <p>一个pg_control文件存放在data-directory下的global子目录中；可以使用<strong>pg_controldata</strong>实用程序查看其内容。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> pg_controldata  /usr/local/pgsql/data
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">&gt;</span> pg_controldata  /usr/local/pgsql/data
 pg_control version number:            937
 Catalog version number:               201405111
 Database system identifier:           6035535450242021944
@@ -824,7 +824,7 @@ Prior checkpoint location:            0/C000E70
 <p>PostgreSQL不会清理创建的归档日志，因此您在使用此功能时应该正确管理日志。如果您什么都不做，归档日志的数量将继续增加。</p>
 <p><a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/pgarchivecleanup.html">pg_archivecleanup</a> 工具是针对归档日志管理的有效工具之一。</p>
 <p>此外，unix 命令<code>find</code>可用于删除存档日志。以下命令删除三天前创建的归档日志。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">find</span> /home/postgres/archives -mtime +3d -exec <span class="token function">rm</span>  -f <span class="token punctuation">{</span><span class="token punctuation">}</span> \<span class="token punctuation">;</span>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">find</span> /home/postgres/archives -mtime +3d -exec <span class="token function">rm</span>  -f <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;&amp;#125; \;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
                 
@@ -974,19 +974,19 @@ Prior checkpoint location:            0/C000E70
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2021/8.huan-chong-qu-guan-li-qi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="8 缓冲区管理器">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">8 缓冲区管理器</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            缓冲区管理器管理着共享内存和持久存储之间的数据传输，它会对 DBMS 的性能有着重要的影响。PostgreSQL 的缓冲区管理器十分高效。
                         
                     </div>
                     <div class="publish-info">

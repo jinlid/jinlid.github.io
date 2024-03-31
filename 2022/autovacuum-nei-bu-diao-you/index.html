@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -434,13 +434,13 @@ track_counts <span class="token operator">=</span> on <span class="token comment
 <span class="token attr-name">log_autovacuum_min_duration</span> <span class="token punctuation">=</span> <span class="token attr-value">'250ms' # Or 1s, 1min, 1h, 1d</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>这里是一个例子，日志自动真空真空和分析</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token operator">&lt;</span> 2018-08-06 07:22:35.040 EDT <span class="token operator">></span> LOG: automatic vacuum of table <span class="token string">"vactest.scott.employee"</span><span class="token keyword">:</span> index scans: 0
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token operator">&lt;</span> 2018-08-06 07:22:35.040 EDT <span class="token operator">&gt;</span> LOG: automatic vacuum of table <span class="token string">"vactest.scott.employee"</span><span class="token keyword">:</span> index scans: 0
 pages: 0 removed, 1190 remain, 0 skipped due to pins, 0 skipped frozen
 tuples: 110008 removed, 110008 remain, 0 are dead but not yet removable
 buffer usage: 2402 hits, 2 misses, 0 dirtied
 avg <span class="token function">read</span> rate: 0.057 MB/s, avg <span class="token function">write</span> rate: 0.000 MB/s
 system usage: CPU 0.00s/0.02u sec elapsed 0.27 sec
-<span class="token operator">&lt;</span> 2018-08-06 07:22:35.199 EDT <span class="token operator">></span> LOG: automatic analyze of table <span class="token string">"vactest.scott.employee"</span> system usage: CPU 0.00s/0.02u sec elapsed 0.15 sec
+<span class="token operator">&lt;</span> 2018-08-06 07:22:35.199 EDT <span class="token operator">&gt;</span> LOG: automatic analyze of table <span class="token string">"vactest.scott.employee"</span> system usage: CPU 0.00s/0.02u sec elapsed 0.15 sec
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h3 id="PostgreSQL什么时候在表上运行autovacuum"><a href="#PostgreSQL什么时候在表上运行autovacuum" class="headerlink" title="PostgreSQL什么时候在表上运行autovacuum ?"></a>PostgreSQL什么时候在表上运行autovacuum ?</h3><p>如前所述，postgres中的<code>autovacuum</code>指的是<code>automatic VACUUM</code>和<code>ANALYZE</code>，而不仅仅是<code>VACUUM</code>。根据下面的数学方程，<code>autovacuum</code>或<code>analyze</code>在表上运行。</p>
 <p>有效工作台液位自动真空阈值的计算公式为:</p>
@@ -520,7 +520,7 @@ WHERE schemaname <span class="token operator">=</span> <span class="token string
 <p>考虑在工作台percona.employee上运行<code>autovacuum VACUUM</code>。</p>
 <p>让我们想象一秒钟内会发生什么。(1秒= 1000毫秒)</p>
 <p>在读延迟为0毫秒的最佳情况下，<code>autovacuum</code>可以唤醒并进入睡眠50次(1000毫秒/ 20毫秒)，因为唤醒之间的延迟需要为20毫秒。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">1 second <span class="token operator">=</span> 1000 milliseconds <span class="token operator">=</span> 50 *<span class="token operator">&amp;</span>nbsp<span class="token punctuation">;</span>autovacuum_vacuum_cost_delay
+<pre class="line-numbers language-bash"><code class="language-bash">1 second <span class="token operator">=</span> 1000 milliseconds <span class="token operator">=</span> 50 * autovacuum_vacuum_cost_delay
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>由于在<code>shared_buffers</code>中每次读取一个页面的代价是1，因此在每次唤醒中可以读取200个页面，在50次唤醒中可以读取50*200个页面。</p>
 <p>如果所有带死元组的页面都在共享缓冲区中找到，<code>autovacuum_vacuum_cost_delay</code>为20ms，那么它可以在每轮读取((200 / <code>vacuum_cost_hit</code>) * 8) KB，需要等待<code>autovacuum_vacuum_cost_delay</code>的时间量。</p>
@@ -703,7 +703,7 @@ Options: autovacuum_vacuum_threshold<span class="token operator">=</span>10000, 
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PostgreSQL 集群启动时会启动几个进程。这些进程管理相当多的文件 I/O，管理其他进程，并处理内存分配和许多其他工作。在本文中，我们将重点关注进程及其角色、内存管理以及它们如何协同工作。我们将从再次列出流程开始。
+                            PostgreSQL 集群启动时会启动几个进程。这些进程管理相当多的文件 I/O，管理其他进程，并处理内存分配和许多其他工作。在本文中，我们将重点关注进程及其角色、内存管理以及它们如何协同工作。我们将再次从列出的进程开始。
                         
                     </div>
                     <div class="publish-info">

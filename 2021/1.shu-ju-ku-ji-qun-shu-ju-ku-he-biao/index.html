@@ -63,10 +63,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -633,7 +633,7 @@ drwx------ 2 postgres postgres 4096 Apr 21 10:08 PG_14_202011044
 <p>表空间目录由来自pg_tblspc子目录的符号链接寻址，链接名称与表空间的 OID 值相同。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">ls</span> -l <span class="token variable">$PGDATA</span>/pg_tblspc/
 total 0
-lrwxrwxrwx 1 postgres postgres 21 Apr 21 10:08 16386 -<span class="token operator">></span> /home/postgres/tblspc
+lrwxrwxrwx 1 postgres postgres 21 Apr 21 10:08 16386 -<span class="token operator">&gt;</span> /home/postgres/tblspc
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>如果在表空间下创建新数据库（OID 为 16387），其目录将创建在特定于版本的子目录下。</p>
 <pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">ls</span> -l /home/postgres/tblspc/PG_14_202011044/
@@ -851,24 +851,24 @@ sampledb=# SELECT pg_relation_filepath('newtbl');
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                <a href="/2022/stats-collector-jin-cheng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="stats collector进程">
                         
-                        <span class="card-title">10 基础备份和时间点恢复</span>
+                        <span class="card-title">stats collector进程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            PostgreSQL提供了一大堆系统视图，它们让管理员和开发者之类的人可以深入地审视系统中究竟在做什么。可以了解各种维度的统计信息的解读（table，index，database，replication，sql），锁解读信息，磁盘使用，数据
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-12
                         </span>
                         <span class="publish-author">
                             
@@ -900,19 +900,19 @@ sampledb=# SELECT pg_relation_filepath('newtbl');
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/11-liu-fu-zhi/">
+                <a href="/2021/3.cha-xun-chu-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
                         
-                        <span class="card-title">11 流复制</span>
+                        <span class="card-title">3 查询处理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+                            如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
                         
                     </div>
                     <div class="publish-info">

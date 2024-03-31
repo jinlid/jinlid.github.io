@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -430,24 +430,24 @@
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>然后配置radvd conf文件，例如，</p>
 <pre class="line-numbers language-bash"><code class="language-bash">interface eno1
-<span class="token punctuation">{</span>
+<span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;</span>
    AdvSendAdvert on<span class="token punctuation">;</span>
    AdvManagedFlag off<span class="token punctuation">;</span>
    AdvOtherConfigFlag on<span class="token punctuation">;</span>
    prefix 2020:1:0:0::/64
-   <span class="token punctuation">{</span>
+   <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;</span>
         AdvAutonomous on<span class="token punctuation">;</span>
-   <span class="token punctuation">}</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span><span class="token punctuation">;</span>
+   <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#125;;</span>
+<span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#125;;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>在 Postgres 服务器上配置新的 IPv6 地址以供 radvd 守护进程使用</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> ip -6 addr add 2020:1:0:0::db1/64 dev eno1
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>然后启动<code>radvd</code>守护进程，<code>sudo radvd -l /etc/radvd.conf</code><br>现在，如果您检查客户端计算机端的 IP 地址，您应该看到如下所示的内容：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">></span>  mtu 1500
+<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">&gt;</span>  mtu 1500
         inet 172.20.14.27  netmask 255.255.255.0  broadcast 172.20.14.255
-        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
-        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">></span>
+        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">&gt;</span>
+        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">&gt;</span>
         ether 08:00:27:29:ab:c9  txqueuelen 1000  <span class="token punctuation">(</span>Ethernet<span class="token punctuation">)</span>
         RX packets 118  bytes 38615 <span class="token punctuation">(</span>38.6 KB<span class="token punctuation">)</span>
         RX errors 0  dropped 0  overruns 0  frame 0
@@ -470,21 +470,21 @@ max-lease-time 86400<span class="token punctuation">;</span> <span class="token 
 authoritative<span class="token punctuation">;</span>
 
 <span class="token comment" spellcheck="true">### Subnet</span>
-subnet6 2020:2:0:0::/64 <span class="token punctuation">{</span>
+subnet6 2020:2:0:0::/64 <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;</span>
     range6
         2020:2:0:0::1001  2020:2:0:0::1005<span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
+<span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#125;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>在 Postgres 服务器上配置新的 IPv6 地址以供 DHCPv6 服务器使用</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">sudo</span> ip -6 addr add 2020:2:0:0::db1/64 dev eno1
 <span class="token function">sudo</span> dhcpd -6 -d -cf /etc/dhcp/dhcpd6.conf eno1
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>在客户端计算机端，手动运行 IPv6 的 dhcp 请求。<code>dhclient -6 enp0s3</code>，然后执行 IP 地址检查。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">></span>  mtu 1500
+<pre class="line-numbers language-bash"><code class="language-bash">enp0s3: flags<span class="token operator">=</span>4163<span class="token operator">&lt;</span>UP,BROADCAST,RUNNING,MULTICAST<span class="token operator">&gt;</span>  mtu 1500
         inet 172.20.14.27  netmask 255.255.255.0  broadcast 172.20.14.255
-        inet6 2020:2::1004  prefixlen 128  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
-        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">></span>
-        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">></span>
+        inet6 2020:2::1004  prefixlen 128  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">&gt;</span>
+        inet6 2020:1::8dcf:b8be:dbcc:26c6  prefixlen 64  scopeid 0x0<span class="token operator">&lt;</span>global<span class="token operator">&gt;</span>
+        inet6 fe80::8005:8b22:cd7d:ee39  prefixlen 64  scopeid 0x20<span class="token operator">&lt;</span>link<span class="token operator">&gt;</span>
         ether 08:00:27:29:ab:c9  txqueuelen 1000  <span class="token punctuation">(</span>Ethernet<span class="token punctuation">)</span>
         RX packets 1118  bytes 253355 <span class="token punctuation">(</span>253.3 KB<span class="token punctuation">)</span>
         RX errors 0  dropped 0  overruns 0  frame 0

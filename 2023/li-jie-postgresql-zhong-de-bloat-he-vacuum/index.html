@@ -55,10 +55,10 @@ PostgreSQL中的版本控制是什么?让我们考虑Oracle或My">
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -504,7 +504,7 @@ percona<span class="token operator">=</span><span class="token comment" spellche
 INSERT 0 10
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>现在，让我们从表中删除5条记录。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># DELETE from scott.employee where emp_id > 5;</span>
+<pre class="line-numbers language-bash"><code class="language-bash">percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># DELETE from scott.employee where emp_id &gt; 5;</span>
 DELETE 5
 percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># select count(*) from scott.employee;</span>
  count 
@@ -519,16 +519,16 @@ CREATE EXTENSION
 percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT t_xmin, t_xmax, tuple_data_split('scott.employee'::regclass, t_data, t_infomask, t_infomask2, t_bits) FROM heap_page_items(get_raw_page('scott.employee', 0));</span>
  t_xmin <span class="token operator">|</span> t_xmax <span class="token operator">|</span>              tuple_data_split               
 --------+--------+---------------------------------------------
-    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x01000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x02000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x03000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x04000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x05000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x06000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x07000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x08000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x09000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x0a000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
+    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x01000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x02000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x03000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x04000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x05000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x06000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x07000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x08000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x09000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    668 <span class="token operator">|</span>    669 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x0a000000","\\x09617669","\\x01000000"&amp;#125;</span>
 <span class="token punctuation">(</span>10 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在，即使从表中删除了5条记录，我们仍然可以在表中看到10条记录。此外，您可以在这里观察到<code>t_xmax</code>被设置为删除它们的事务ID。这些已删除的记录保留在同一个表中，以便为仍在访问它们的任何旧事务提供服务。</p>
@@ -544,26 +544,26 @@ UPDATE 10
 percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT t_xmin, t_xmax, tuple_data_split('scott.employee'::regclass, t_data, t_infomask, t_infomask2, t_bits) FROM heap_page_items(get_raw_page('scott.employee', 0));</span>
  t_xmin <span class="token operator">|</span> t_xmax <span class="token operator">|</span>               tuple_data_split                
 --------+--------+-----------------------------------------------
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x01000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x02000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x03000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x04000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x05000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x06000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x07000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x08000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x09000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x0a000000"</span>,<span class="token string">"\\x09617669"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x01000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x02000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x03000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x04000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x05000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x06000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x07000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x08000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x09000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x0a000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x01000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x02000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x03000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x04000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x05000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x06000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x07000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x08000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x09000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    672 <span class="token operator">|</span>    673 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x0a000000","\\x09617669","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x01000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x02000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x03000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x04000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x05000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x06000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x07000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x08000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x09000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x0a000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
 <span class="token punctuation">(</span>20 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>PostgreSQL中的<code>UPDATE</code>将执行插入和删除操作。因此，所有被更新的记录都被删除并插入新值。删除的记录<code>t_xmax</code>值非零。</p>
@@ -664,16 +664,16 @@ percona<span class="token operator">=</span><span class="token comment" spellche
         <span class="token operator">|</span>        <span class="token operator">|</span> 
         <span class="token operator">|</span>        <span class="token operator">|</span> 
         <span class="token operator">|</span>        <span class="token operator">|</span> 
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x01000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x02000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x03000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x04000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x05000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x06000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x07000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x08000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x09000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
-    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token punctuation">{</span><span class="token string">"\\x0a000000"</span>,<span class="token string">"\\x0b61766969"</span>,<span class="token string">"\\x01000000"</span><span class="token punctuation">}</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x01000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x02000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x03000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x04000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x05000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x06000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x07000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x08000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x09000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
+    673 <span class="token operator">|</span>      0 <span class="token operator">|</span> <span class="token operator">&amp;</span><span class="token comment" spellcheck="true">#123;"\\x0a000000","\\x0b61766969","\\x01000000"&amp;#125;</span>
 <span class="token punctuation">(</span>20 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>在上面的日志中，您可能会注意到已删除的元组，并且空间可供重用。但是，在<code>VACUUM</code>之后，这个空间不会被回收到文件系统中。只有将来的插入才能使用这个空间。</p>
@@ -698,7 +698,7 @@ relpages <span class="token operator">|</span> total_bytes <span class="token op
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>现在让我们看看当删除带有emp_id &gt; 500的行时<code>VACUUM</code>的行为</p>
-<pre class="line-numbers language-bash"><code class="language-bash">percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># DELETE from scott.employee where emp_id > 500;</span>
+<pre class="line-numbers language-bash"><code class="language-bash">percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># DELETE from scott.employee where emp_id &gt; 500;</span>
 DELETE 500
 percona<span class="token operator">=</span><span class="token comment" spellcheck="true"># VACUUM ANALYZE scott.employee ;</span>
 VACUUM
@@ -892,13 +892,13 @@ WHERE relname <span class="token operator">=</span> <span class="token string">'
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                <a href="/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）">
                         
-                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
+                        <span class="card-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</span>
                     </div>
                 </a>
                 <div class="card-content article-content">

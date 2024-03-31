@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -966,28 +966,28 @@ table tbody tr th { text-align: right; }
 			<p>So far we've discussed <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969262">query execution stages</a>, <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969296">statistics</a>, and the two basic data access methods: <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969403">Sequential scan</a> and <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969493">Index scan</a>.</p><p>The next item on the list is join methods. This article will remind you what logical join types are out there, and then discuss one of three physical join methods, the Nested loop join. Additionally, we will check out the row <em>memoization</em> feature introduced in PostgreSQL 14.</p><h1>Joins</h1><p><em>Joins</em> are the primary feature of SQL, the foundation that enables its power and agility. Sets of rows (whether pulled directly from a table or formed as a result of an operation) are always joined together in pairs. There are several <em>types</em> of joins.</p><ul><li><p><strong>Inner join.</strong> An <code>INNER JOIN</code> (or usually just <code>JOIN</code>) is a subset of two sets that includes all the row pairs from the two original sets that match the <em>join condition</em>. A join condition is what ties together columns from the first row set with columns from the second one. All the columns involved comprise what is known as the <em>join key</em>.</p><p>If the join condition is an equality operator, as is often the case, then the join is called an <em>equijoin</em>.</p><p>A <em>Cartesian product</em> (or a <code>CROSS JOIN</code>) of two sets includes all possible combinations of pairs of rows from both sets. This is a specific case of an inner join with a TRUE condition.</p></li><li><p><strong>Outer joins.</strong> The <code>LEFT OUTER JOIN</code> (or the <code>LEFT JOIN</code>) supplements the result of an inner join with the rows from the left set which didn't have a corresponding pair in the right set (the contents of the missing right set columns are set to NULLs).</p><p>The <code>RIGHT JOIN</code> works identically, except the joining order is reversed.</p><p>The <code>FULL JOIN</code> is the <code>LEFT JOIN</code> and the <code>RIGHT JOIN</code> combined. It includes rows with missing pairs from both sets, as well as the <code>INNER JOIN</code> result.</p></li><li><p><strong>Semijoins and antijoins.</strong> The <em>semijoin</em> is similar to a regular inner join, but with two key differences. Firstly, it includes only the rows from the first set that have a matching pair in the second set. Secondly, it includes the rows from the first set only once, even if a row happens to have multiple matches in the second set.</p><p>The <em>antijoin</em> includes only those rows from the first set that didn't have a matching pair in the second set.</p><p>SQL does not offer explicit semijoin or antijoin operations, but some expressions (<code>EXISTS</code> and <code>NOT EXISTS</code>, for example) can be used to achieve equivalent results.</p></li></ul><p>All of the above are logical operations. For example, you can represent an inner join as a Cartesian product that retains only the rows that satisfy the join condition. When it comes to hardware, however, there are ways to perform an inner join much more efficiently.</p><p>PostgreSQL offers several join <em>methods</em>:</p><ul><li>Nested loop join</li><li>Hash join</li><li>Merge join</li></ul><p>Join methods are algorithms that execute the join operations in SQL. They often come in various flavours tailored to specific join types. For example, an inner join that uses the nested loop mode will be represented in a plan with a Nested Loop node, but a left outer join using the same mode will look like a Nested Loop Left Join node in the plan.</p><p>Different methods shine in different conditions, and it's the planner's job to select the best one cost-wise.</p><h1>Nested loop join</h1><p>The nested loop algorithm is based on two loops: an <em>inner</em> loop within an <em>outer</em> loop. The outer loop searches through all the rows of the first (outer) set. For every such row, the inner loop searches for matching rows in the second (inner) set. Upon discovering a pair that satisfies the join condition, the node immediately returns it to the parent node, and then resumes scanning.</p><p>The inner loop cycles as many times as there are rows in the outer set. Therefore, the algorithm efficiency depends on several factors:</p><ul><li>Outer set cardinality.</li><li>Existence of an efficient access method that fetches the rows from the inner set.</li><li>Number of repeat row fetches from the inner set.</li></ul><p>Let's look at examples.</p><h1>Cartesian product</h1><p>A nested loop join is the most efficient way to calculate a Cartesian product, regardless of the number of rows in both sets.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> aircrafts_data a1
   <span class="hljs-keyword">CROSS</span> <span class="hljs-keyword">JOIN</span> aircrafts_data a2
-<span class="hljs-keyword">WHERE</span> a2.range > <span class="hljs-number">5000</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                     QUERY PLAN
+<span class="hljs-keyword">WHERE</span> a2.range &gt; <span class="hljs-number">5000</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                     QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.00..2.78 rows=45 width=144)
-   −> Seq Scan on aircrafts_data a1                      outer set
+   −&gt; Seq Scan on aircrafts_data a1                      outer set
        (cost=0.00..1.09 rows=9 width=72)
-   −> Materialize  (cost=0.00..1.14 rows=5 width=72)     inner set
-       −> Seq Scan on aircrafts_data a2
+   −&gt; Materialize  (cost=0.00..1.14 rows=5 width=72)     inner set
+       −&gt; Seq Scan on aircrafts_data a2
            (cost=0.00..1.11 rows=5 width=72)
-           Filter: (range > 5000)
+           Filter: (range &gt; 5000)
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The Nested Loop node is where the algorithm is executed. It always has two children: the top one is the outer set, the bottom one is the inner set.</p><p>The inner set is represented with a Materialize node in this case. When called, the node stores the output of its child node in RAM (up to <em>work_mem</em>, then starts spilling to disk) and then returns it. Upon further calls the node returns the data from memory, avoiding additional table scans.</p><p>An inner join query might generate a similar plan:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">WHERE</span> t.ticket_no = <span class="hljs-string">'0005432000284'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.99..25.05 rows=3 width=136)
-   −> Index Scan using tickets_pkey on tickets t
+   −&gt; Index Scan using tickets_pkey on tickets t
        (cost=0.43..8.45 rows=1 width=104)
        Index Cond: (ticket_no = '0005432000284'::bpchar)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32)
        Index Cond: (ticket_no = '0005432000284'::bpchar)
 (7 rows)
@@ -996,23 +996,23 @@ table tbody tr th { text-align: right; }
     <span class="hljs-number">8.45</span> + <span class="hljs-number">16.58</span> +
     <span class="hljs-number">3</span> * current_setting(<span class="hljs-string">'cpu_tuple_cost'</span>)::<span class="hljs-type">real</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total_cost;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
 −−−−−−−−−−−−−−+−−−−−−−−−−−−
          0.99 |      25.06
 (1 row)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre><p>The imprecision is due to a rounding error. The planner's calculations are performed in floating-point values, which are rounded down to two decimal places for plan readability, while I use rounded-down values as an input.</p><p>Let's come back to the previous example.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> aircrafts_data a1
   <span class="hljs-keyword">CROSS</span> <span class="hljs-keyword">JOIN</span> aircrafts_data a2
-<span class="hljs-keyword">WHERE</span> a2.range > <span class="hljs-number">5000</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                     QUERY PLAN
+<span class="hljs-keyword">WHERE</span> a2.range &gt; <span class="hljs-number">5000</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                     QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.00..2.78 rows=45 width=144)
-   −> Seq Scan on aircrafts_data a1
+   −&gt; Seq Scan on aircrafts_data a1
        (cost=0.00..1.09 rows=9 width=72)
-   −> Materialize  (cost=0.00..1.14 rows=5 width=72)
-       −> Seq Scan on aircrafts_data a2
+   −&gt; Materialize  (cost=0.00..1.14 rows=5 width=72)
+       −&gt; Seq Scan on aircrafts_data a2
            (cost=0.00..1.11 rows=5 width=72)
-           Filter: (range > 5000)
+           Filter: (range &gt; 5000)
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>This plan has a Materialize node, which stores rows in memory and returns them faster upon repeat requests.</p><p>In general, a total join cost comprises:</p><ul><li>Row fetch cost for the outer set, for each row.</li><li>One-time row fetch cost for the inner set, for each row (during which materialization is done).</li><li>(N−1) times the cost of repeat inner set row fetch cost, for each row (where N is the number of rows in the outer set).</li><li>Processing cost for each output row.</li></ul><p>In this example, after the inner rows are fetched for the first time, materialization helps us save on further fetch costs. The cost of the initial Materialize call is in the plan, the cost of further calls is not. Its calculation is beyond the scope of this article, so trust me when I say that in this case the cost of consecutive Materialize node calls is 0.0125.</p><p>Therefore, the total join cost for this example looks like this:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">0.00</span> + <span class="hljs-number">0.00</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">0.00</span> + <span class="hljs-number">0.00</span> <span class="hljs-keyword">AS</span> startup_cost,
   round((
@@ -1020,7 +1020,7 @@ table tbody tr th { text-align: right; }
     <span class="hljs-number">1.14</span> + <span class="hljs-number">8</span> * <span class="hljs-number">0.0125</span> +
     <span class="hljs-number">45</span> * current_setting(<span class="hljs-string">'cpu_tuple_cost'</span>)::<span class="hljs-type">real</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total_cost;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
 −−−−−−−−−−−−−−+−−−−−−−−−−−−
          0.00 |       2.78
 (1 row)
@@ -1029,13 +1029,13 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">WHERE</span> t.book_ref = <span class="hljs-string">'03A76D'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.99..45.67 rows=6 width=136)
-   −> Index Scan using tickets_book_ref_idx on tickets t
+   −&gt; Index Scan using tickets_book_ref_idx on tickets t
        (cost=0.43..12.46 rows=2 width=104)
        Index Cond: (book_ref = '03A76D'::bpchar)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32)
        Index Cond: (ticket_no = t.ticket_no)
 (7 rows)
@@ -1043,7 +1043,7 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> pg_class t, pg_class tf
 <span class="hljs-keyword">WHERE</span> t.relname = <span class="hljs-string">'tickets'</span>
 <span class="hljs-keyword">AND</span> tf.relname = <span class="hljs-string">'ticket_flights'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> rows
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> rows
 −−−−−−
     6
 (1 row)
@@ -1051,7 +1051,7 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> pg_stats t, pg_stats tf
 <span class="hljs-keyword">WHERE</span> t.tablename = <span class="hljs-string">'tickets'</span> <span class="hljs-keyword">AND</span> t.attname = <span class="hljs-string">'ticket_no'</span>
 <span class="hljs-keyword">AND</span> tf.tablename = <span class="hljs-string">'ticket_flights'</span> <span class="hljs-keyword">AND</span> tf.attname = <span class="hljs-string">'ticket_no'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> n_distinct | n_distinct
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> n_distinct | n_distinct
 −−−−−−−−−−−−+−−−−−−−−−−−−
          −1 | −0.3054527
 (1 row)
@@ -1060,7 +1060,7 @@ table tbody tr th { text-align: right; }
 ) <span class="hljs-keyword">AS</span> <span class="hljs-keyword">rows</span>
 <span class="hljs-keyword">FROM</span> pg_class t, pg_class tf
 <span class="hljs-keyword">WHERE</span> t.relname = <span class="hljs-string">'tickets'</span> <span class="hljs-keyword">AND</span> tf.relname = <span class="hljs-string">'ticket_flights'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> rows
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> rows
 −−−−−−
     6
 (1 row)
@@ -1068,14 +1068,14 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">WHERE</span> t.book_ref = <span class="hljs-string">'03A76D'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.99..45.67 rows=6 width=136)
    (actual rows=8 loops=1)
-   −> Index Scan using tickets_book_ref_idx on tickets t
+   −&gt; Index Scan using tickets_book_ref_idx on tickets t
        (cost=0.43..12.46 rows=2 width=104) (actual rows=2 loops=1)
        Index Cond: (book_ref = '03A76D'::bpchar)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32) (actual rows=4 loops=2)
        Index Cond: (ticket_no = t.ticket_no)
 (8 rows)
@@ -1083,13 +1083,13 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">WHERE</span> t.book_ref = <span class="hljs-string">'03A76D'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=0.99..45.67 rows=6 width=136)
-   −> Index Scan using tickets_book_ref_idx on tickets t
+   −&gt; Index Scan using tickets_book_ref_idx on tickets t
        (cost=0.43..12.46 rows=2 width=104)
        Index Cond: (book_ref = '03A76D'::bpchar)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32)
        Index Cond: (ticket_no = t.ticket_no)
 (7 rows)
@@ -1098,7 +1098,7 @@ table tbody tr th { text-align: right; }
     <span class="hljs-number">12.46</span> + <span class="hljs-number">2</span> * <span class="hljs-number">16.58</span> +
     <span class="hljs-number">6</span> * current_setting(<span class="hljs-string">'cpu_tuple_cost'</span>)::<span class="hljs-type">real</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total_cost;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | total_cost
 −−−−−−−−−−−−−−+−−−−−−−−−−−−
          0.99 |      45.68
 (1 row)
@@ -1106,18 +1106,18 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> aircrafts_data a <span class="hljs-keyword">ON</span> f.aircraft_code = a.aircraft_code
 <span class="hljs-keyword">WHERE</span> f.flight_no = <span class="hljs-string">'PG0003'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=5.44..387.10 rows=113 width=135)
-   −> Bitmap Heap Scan on flights f
+   −&gt; Bitmap Heap Scan on flights f
       (cost=5.30..382.22 rows=113 width=63)
       Recheck Cond: (flight_no = 'PG0003'::bpchar)
-      −> Bitmap Index Scan on flights_flight_no_scheduled_depart...
+      −&gt; Bitmap Index Scan on flights_flight_no_scheduled_depart...
           (cost=0.00..5.27 rows=113 width=0)
           Index Cond: (flight_no = 'PG0003'::bpchar)
-   −> Memoize  (cost=0.15..0.27 rows=1 width=72)
+   −&gt; Memoize  (cost=0.15..0.27 rows=1 width=72)
        Cache Key: f.aircraft_code
-       −> Index Scan using aircrafts_pkey on aircrafts_data a
+       −&gt; Index Scan using aircrafts_pkey on aircrafts_data a
            (cost=0.14..0.26 rows=1 width=72)
            Index Cond: (aircraft_code = f.aircraft_code)
 (12 rows)
@@ -1126,21 +1126,21 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> aircrafts_data a <span class="hljs-keyword">ON</span> f.aircraft_code = a.aircraft_code
 <span class="hljs-keyword">WHERE</span> f.flight_no = <span class="hljs-string">'PG0003'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop (actual rows=113 loops=1)
-   −> Bitmap Heap Scan on flights f
+   −&gt; Bitmap Heap Scan on flights f
        (actual rows=113 loops=1)
        Recheck Cond: (flight_no = 'PG0003'::bpchar)
        Heap Blocks: exact=2
-       −> Bitmap Index Scan on flights_flight_no_scheduled_depart...
+       −&gt; Bitmap Index Scan on flights_flight_no_scheduled_depart...
            (actual rows=113 loops=1)
            Index Cond: (flight_no = 'PG0003'::bpchar)
-   −> Memoize (actual rows=1 loops=113)
+   −&gt; Memoize (actual rows=1 loops=113)
        Cache Key: f.aircraft_code
        Hits: 112 Misses: 1 Evictions: 0 Overflows: 0 Memory
        Usage: 1kB
-       −> Index Scan using aircrafts_pkey on aircrafts_data a
+       −&gt; Index Scan using aircrafts_pkey on aircrafts_data a
            (actual rows=1 loops=1)
            Index Cond: (aircraft_code = f.aircraft_code)
 (15 rows)
@@ -1149,16 +1149,16 @@ table tbody tr th { text-align: right; }
   <span class="hljs-keyword">LEFT JOIN</span> boarding_passes bp <span class="hljs-keyword">ON</span> bp.ticket_no = tf.ticket_no
                               <span class="hljs-keyword">AND</span> bp.flight_id = tf.flight_id
 <span class="hljs-keyword">WHERE</span> tf.ticket_no = <span class="hljs-string">'0005434026720'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop Left Join  (cost=1.12..33.35 rows=3 width=57)
    Join Filter: ((bp.ticket_no = tf.ticket_no) AND (bp.flight_id =
    tf.flight_id))
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32)
        Index Cond: (ticket_no = '0005434026720'::bpchar)
-   −> Materialize  (cost=0.56..16.62 rows=3 width=25)
-       −> Index Scan using boarding_passes_pkey on boarding_passe...
+   −&gt; Materialize  (cost=0.56..16.62 rows=3 width=25)
+       −&gt; Index Scan using boarding_passes_pkey on boarding_passe...
            (cost=0.56..16.61 rows=3 width=25)
            Index Cond: (ticket_no = '0005434026720'::bpchar)
 (10 rows)
@@ -1168,29 +1168,29 @@ table tbody tr th { text-align: right; }
   <span class="hljs-keyword">JOIN</span> boarding_passes bp <span class="hljs-keyword">ON</span> bp.ticket_no = tf.ticket_no
                          <span class="hljs-keyword">AND</span> bp.flight_id = tf.flight_id
 <span class="hljs-keyword">WHERE</span> tf.ticket_no = <span class="hljs-string">'0005434026720'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop  (cost=1.12..33.33 rows=3 width=57)
    Join Filter: (tf.flight_id = bp.flight_id)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..16.57 rows=3 width=32)
        Index Cond: (ticket_no = '0005434026720'::bpchar)
-   −> Materialize  (cost=0.56..16.62 rows=3 width=25)
-       −> Index Scan using boarding_passes_pkey on boarding_passe...
+   −&gt; Materialize  (cost=0.56..16.62 rows=3 width=25)
+       −&gt; Index Scan using boarding_passes_pkey on boarding_passe...
            (cost=0.56..16.61 rows=3 width=25)
            Index Cond: (ticket_no = '0005434026720'::bpchar)
 (9 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> enable_mergejoin;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p><em>Right joins</em> are incompatible with nested loops because the nested loop algorithm distinguishes between the inner and the outer set. The outer set is scanned fully, but if the inner one is accessed using index scan, then only the rows that match the join filter are returned. Therefore, some rows may remain unscanned.</p><p><em>Full joins</em> are also incompatible for the same reason.</p><h1>Antijoins and semijoins</h1><p>Antijoins and semijoins are similar in the sense that for each row of the first (outer) set both algorithms want to find only <em>one</em> match in the second (inner) set.</p><p><em>The antijoin</em> returns all the rows of the first set that didn't get a match in the second set. In other words, the algorithm takes a row from the outer set and searches the inner set for a match, and as soon as a match is found, the algorithm stops the search and jumps to the next row of the outer set.</p><p>Antijoins are useful for calculating the <code>NOT EXISTS</code> predicate. Example: find all the aircraft models without a defined seating pattern:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><p><em>Right joins</em> are incompatible with nested loops because the nested loop algorithm distinguishes between the inner and the outer set. The outer set is scanned fully, but if the inner one is accessed using index scan, then only the rows that match the join filter are returned. Therefore, some rows may remain unscanned.</p><p><em>Full joins</em> are also incompatible for the same reason.</p><h1>Antijoins and semijoins</h1><p>Antijoins and semijoins are similar in the sense that for each row of the first (outer) set both algorithms want to find only <em>one</em> match in the second (inner) set.</p><p><em>The antijoin</em> returns all the rows of the first set that didn't get a match in the second set. In other words, the algorithm takes a row from the outer set and searches the inner set for a match, and as soon as a match is found, the algorithm stops the search and jumps to the next row of the outer set.</p><p>Antijoins are useful for calculating the <code>NOT EXISTS</code> predicate. Example: find all the aircraft models without a defined seating pattern:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> aircrafts a
 <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> (
   <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> seats s <span class="hljs-keyword">WHERE</span> s.aircraft_code = a.aircraft_code
 );
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop Anti Join  (cost=0.28..4.65 rows=1 width=40)
-   −> Seq Scan on aircrafts_data ml  (cost=0.00..1.09 rows=9 widt...
-       −> Index Only Scan using seats_pkey on seats s
+   −&gt; Seq Scan on aircrafts_data ml  (cost=0.00..1.09 rows=9 widt...
+       −&gt; Index Only Scan using seats_pkey on seats s
            (cost=0.28..5.55 rows=149 width=4)
            Index Cond: (aircraft_code = ml.aircraft_code)
 (5 rows)
@@ -1198,16 +1198,16 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> aircrafts a
   <span class="hljs-keyword">LEFT JOIN</span> seats s <span class="hljs-keyword">ON</span> a.aircraft_code = s.aircraft_code
 <span class="hljs-keyword">WHERE</span> s.aircraft_code <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NULL</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre><p><em>The semijoin</em> returns all the rows of the first set that got a match in the second set (no searching for repeat matches here either, as they don't affect the result in any way).</p><p>Semijoins are used for calculating the <code>EXISTS</code> predicate. Let's find all the aircrafts with a defined seating pattern:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre><p><em>The semijoin</em> returns all the rows of the first set that got a match in the second set (no searching for repeat matches here either, as they don't affect the result in any way).</p><p>Semijoins are used for calculating the <code>EXISTS</code> predicate. Let's find all the aircrafts with a defined seating pattern:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> aircrafts a
 <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">EXISTS</span> (
   <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> seats s <span class="hljs-keyword">WHERE</span> s.aircraft_code = a.aircraft_code
 );
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop Semi Join  (cost=0.28..6.67 rows=9 width=40)
-   −> Seq Scan on aircrafts_data ml  (cost=0.00..1.09 rows=9 widt...
-   −> Index Only Scan using seats_pkey on seats s
+   −&gt; Seq Scan on aircrafts_data ml  (cost=0.00..1.09 rows=9 widt...
+   −&gt; Index Only Scan using seats_pkey on seats s
        (cost=0.28..5.55 rows=149 width=4)
        Index Cond: (aircraft_code = ml.aircraft_code)
 (5 rows)
@@ -1216,11 +1216,11 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">EXISTS</span> (
   <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> seats s <span class="hljs-keyword">WHERE</span> s.aircraft_code = a.aircraft_code
 );
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                         QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                         QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop Semi Join (actual rows=9 loops=1)
-   −> Seq Scan on aircrafts_data ml (actual rows=9 loops=1)
-   −> Index Only Scan using seats_pkey on seats s
+   −&gt; Seq Scan on aircrafts_data ml (actual rows=9 loops=1)
+   −&gt; Index Only Scan using seats_pkey on seats s
        (actual rows=1 loops=9)
        Index Cond: (aircraft_code = ml.aircraft_code)
        Heap Fetches: 0
@@ -1229,32 +1229,32 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> airports a1
   <span class="hljs-keyword">JOIN</span> airports a2 <span class="hljs-keyword">ON</span> a1.airport_code != a2.airport_code
-                  <span class="hljs-keyword">AND</span> a1.coordinates <@> a2.coordinates < <span class="hljs-number">100</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+                  <span class="hljs-keyword">AND</span> a1.coordinates &lt;@&gt; a2.coordinates &lt; <span class="hljs-number">100</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop
-   Join Filter: ((ml.airport_code <> ml_1.airport_code) AND
-   ((ml.coordinates <@> ml_1.coordinates) < '100'::double precisi...
-   −> Seq Scan on airports_data ml
-   −> Materialize
-       −> Seq Scan on airports_data ml_1
+   Join Filter: ((ml.airport_code &lt;&gt; ml_1.airport_code) AND
+   ((ml.coordinates &lt;@&gt; ml_1.coordinates) &lt; '100'::double precisi...
+   −&gt; Seq Scan on airports_data ml
+   −&gt; Materialize
+       −&gt; Seq Scan on airports_data ml_1
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><h1>Parallel mode</h1><p>The nested loop join can run in the parallel mode.</p><p>The parallelization is done at the outer set level and allows the outer set to be scanned by multiple worker processes simultaneously. Each worker gets a row from the outer set and then sequentially scans the inner set all by itself.</p><p>Here's an example multiple-join query that finds all the passengers that have tickets for a specific flight:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> t.passenger_name
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
   <span class="hljs-keyword">JOIN</span> flights f <span class="hljs-keyword">ON</span> f.flight_id = tf.flight_id
 <span class="hljs-keyword">WHERE</span> f.flight_id = <span class="hljs-number">12345</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Nested Loop
-   −> Index Only Scan using flights_flight_id_status_idx on fligh...
+   −&gt; Index Only Scan using flights_flight_id_status_idx on fligh...
        Index Cond: (flight_id = 12345)
-   −> Gather
+   −&gt; Gather
        Workers Planned: 2
-       −> Nested Loop
-           −> Parallel Seq Scan on ticket_flights tf
+       −&gt; Nested Loop
+           −&gt; Parallel Seq Scan on ticket_flights tf
                Filter: (flight_id = 12345)
-           −> Index Scan using tickets_pkey on tickets t
+           −&gt; Index Scan using tickets_pkey on tickets t
                Index Cond: (ticket_no = tf.ticket_no)
 (10 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The top-level nested loop join runs sequentially, as usual. The outer set contains a single row from the <code>flights</code> table that was fetched using a unique key, so the nested loop is efficient even despite the large number of rows in the inner set.</p><p>The inner set is collected in the parallel mode. Each worker gets its own rows from <code>ticket_flights</code> and joins them with <code>tickets</code> in a nested loop.</p><p><a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969673">Read on</a>.

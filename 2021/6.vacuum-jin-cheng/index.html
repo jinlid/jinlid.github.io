@@ -55,10 +55,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -587,7 +587,7 @@ testdb=# SELECT n.nspname as "Schema", c.relname as "Name", c.relfrozenxid
              FROM pg_catalog.pg_class c
              LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
              WHERE c.relkind IN ('r','')
-                   AND n.nspname <> 'information_schema' AND n.nspname !~ '^pg_toast'
+                   AND n.nspname &lt;&gt; 'information_schema' AND n.nspname !~ '^pg_toast'
                    AND pg_catalog.pg_table_is_visible(c.oid)
                    ORDER BY c.relfrozenxid::text::bigint DESC;
    Schema   |            Name         | relfrozenxid 
@@ -702,7 +702,7 @@ testdb=# SELECT count(*) as "number of pages",
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>如上结果，您可以发现可用空间很少。</p>
 <p>如果你删除几乎元组并执行 VACUUM 命令，你会发现几乎页是空格的。</p>
-<pre class="line-numbers language-sql-monosp"><code class="language-sql-monosp">testdb=# DELETE FROM accounts WHERE aid %10 != 0 OR aid < 100;
+<pre class="line-numbers language-sql-monosp"><code class="language-sql-monosp">testdb=# DELETE FROM accounts WHERE aid %10 != 0 OR aid &lt; 100;
 DELETE 90009
 
 testdb=# VACUUM accounts;
@@ -890,19 +890,19 @@ testdb=# SELECT count(*) as "number of blocks",
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                <a href="/2021/11-liu-fu-zhi/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
                         
-                        <span class="card-title">2 进程和内存架构</span>
+                        <span class="card-title">11 流复制</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                            同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
                         
                     </div>
                     <div class="publish-info">
@@ -939,19 +939,19 @@ testdb=# SELECT count(*) as "number of blocks",
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/5.bing-fa-kong-zhi/">
+                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                         
-                        <span class="card-title">5 并发控制</span>
+                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
                         
                     </div>
                     <div class="publish-info">

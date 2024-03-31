@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -965,7 +965,7 @@ table tbody tr th { text-align: right; }
 			
 			<p>In previous articles we discussed <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969262">query execution stages</a> and <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969296">statistics</a>. Last time, I started on data access methods, namely <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969403">Sequential scan</a>. Today we will cover Index Scan. This article requires a basic understanding of the index method interface. If words like "operator class" and "access method properties" don't ring a bell, check out my <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/4161264">article on indexes</a> from a while back for a refresher.</p><h1>Plain Index Scan</h1><p>Indexes return row version IDs (tuple IDs, or TIDs for short), which can be handled in one of two ways. The first one is <em>Index scan</em>. Most (but not all) index methods have the INDEX SCAN property and support this approach.</p><p>The operation is represented in the plan with an Index Scan node:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">WHERE</span> book_ref = <span class="hljs-string">'9AC0C6'</span> <span class="hljs-keyword">AND</span> total_amount = <span class="hljs-number">48500.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                 QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                 QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Scan using bookings_pkey on bookings
    (cost=0.43..8.45 rows=1 width=21)
@@ -973,7 +973,7 @@ table tbody tr th { text-align: right; }
    Filter: (total_amount = 48500.00)
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Here, the access method returns TIDs one at a time. The indexing mechanism receives an ID, reads the relevant table page, fetches the tuple, checks its visibility and, if all is well, returns the required fields. The whole process repeats until the access method runs out of IDs that match the query.</p><p>The Index Cond line in the plan shows only the conditions that can be filtered using just the index. Additional conditions that can be checked only against the table are listed under the Filter line.</p><p>In other words, index and table scan operations aren't separated into two different nodes, but both execute as a part of the Index Scan node. There is, however, a special node called Tid Scan. It reads tuples from the table using known IDs:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> ctid = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> ctid = <span class="hljs-string">'(0,1)'</span>::tid;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                       QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                       QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Tid Scan on bookings  (cost=0.00..4.01 rows=1 width=21)
    TID Cond: (ctid = '(0,1)'::tid)
@@ -981,22 +981,22 @@ table tbody tr th { text-align: right; }
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre><h2>Cost estimation</h2><p>When calculating an Index scan cost, the system estimates the index access cost and the table pages fetch cost, and then adds them up.</p><p>The index access cost depends entirely on the access method of choice. If a B-tree is used, the bulk of the cost comes from fetching and processing of index pages. The number of pages and rows fetched can be deduced from the total amount of data and the selectivity of the query conditions. Index page access patterns are random by nature (because pages that are logical neighbors aren't usually neighbors on disk too) and therefore the cost of accessing a single page is estimated as <em>random_page_cost</em>. The costs of descending from the tree root to the leaf page and additional expression calculation costs are also included here.</p><p>The CPU component of the table part of the cost includes the processing time of every row (<em>cpu_tuple_cost</em>) multiplied by the number of rows.</p><p>The I/O component of the cost depends on the index access selectivity and the <em>correlation</em> between the order of the tuples on disk to the order in which the access method returns the tuple IDs.</p><h3>High correlation is good</h3><p>In the ideal case, when the tuple order on disk perfectly matches the logical order of the IDs in the index, Index Scan will move from page to page <em>sequentially</em>, reading each page <em>only once</em>.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 4. Index scan _ Postgres Professional_files/indexscan1-en.png"></p><p>This correlation data is a collected statistic:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> attname, correlation
 <span class="hljs-keyword">FROM</span> pg_stats <span class="hljs-keyword">WHERE</span> tablename = <span class="hljs-string">'bookings'</span>
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> abs(correlation) <span class="hljs-keyword">DESC</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">   attname    | correlation
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">   attname    | correlation
 −−−−−−−−−−−−−−+−−−−−−−−−−−−−−
  book_ref     |            1
  total_amount | 0.0026738467
  book_date    |  8.02188e−05
  (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Absolute <code>book_ref</code> values close to 1 indicate a high correlation; values closer to zero indicate a more chaotic distribution.</p><p>Here's an example of an Index scan over a large number of rows:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                 QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                 QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Scan using bookings_pkey on bookings
    (cost=0.43..4638.91 rows=132999 width=21)
-   Index Cond: (book_ref < '100000'::bpchar)
+   Index Cond: (book_ref &lt; '100000'::bpchar)
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The total cost is about 4639.</p><p>The selectivity is estimated at:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> round(<span class="hljs-number">132999</span>::<span class="hljs-type">numeric</span>/reltuples::<span class="hljs-type">numeric</span>, <span class="hljs-number"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> round(<span class="hljs-number">132999</span>::<span class="hljs-type">numeric</span>/reltuples::<span class="hljs-type">numeric</span>, <span class="hljs-number">4</span>)
 <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string">'bookings'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
 −−−−−−−−
  0.0630
 (1 row)
@@ -1023,7 +1023,7 @@ table tbody tr th { text-align: right; }
     )
 )
 <span class="hljs-keyword">SELECT</span> idx_cost, tbl_cost, idx_cost + tbl_cost <span class="hljs-keyword">AS</span> total <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> idx_cost | tbl_cost | total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> idx_cost | tbl_cost | total
 −−−−−−−−−−+−−−−−−−−−−+−−−−−−−
      2457 |     2177 | 4634
 (1 row)
@@ -1031,35 +1031,35 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SET</span> enable_seqscan = <span class="hljs-keyword">off</span>;
 <span class="hljs-keyword">SET</span> enable_bitmapscan = <span class="hljs-keyword">off</span>;
 <span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings
-<span class="hljs-keyword">WHERE</span> book_date < <span class="hljs-string">'2016-08-23 12:00:00+03'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">WHERE</span> book_date &lt; <span class="hljs-string">'2016-08-23 12:00:00+03'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Scan using bookings_book_date_idx on bookings
    (cost=0.43..56957.48 rows=132403 width=21)
-   Index Cond: (book_date < '2016−08−23 12:00:00+03'::timestamp w...
+   Index Cond: (book_date &lt; '2016−08−23 12:00:00+03'::timestamp w...
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>A lower correlation means that the order in which the access method returns tuple IDs will have little to do with the actual positions of the tuples on disk, so every next tuple will be in a different page. This makes the Index Scan node jump from page to page, and the number of page fetches in the worst case scenario will equal the number of tuples.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 4. Index scan _ Postgres Professional_files/indexscan1_1-en.png"></p><p>This doesn't mean, however, that simply substituting <em>seq_page_cost</em> with <em>random_page_cost</em> and <code>relpages</code> with <code>reltuples</code> will give us the correct cost. In fact, that would give us an estimate of 535787, which is much higher than the planner's estimate.</p><p>The key here is caching. Frequently accessed pages are stored in the buffer cache (and in the OS cache too), so the larger the cache size, the higher the chance to find the requested page in it and avoid accessing the disk. The cache size for planning specifically is defined by the <em>effective_cache_size</em> parameter (4GB by default). Lower parameter values increase the expected number of pages to be fetched. I won't put the exact formula here (you can dig it up from the <code>backend/optimizer/path/costsize.c</code> file, under the <code>index_pages_fetched</code> function). What I will put here is a graph illustrating how the number of pages fetched relates to the table size (with the selectivity of 1/2 and the number of rows per page at 10):</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 4. Index scan _ Postgres Professional_files/indexscan2-en.png"></p><p>The dotted lines show where the number of fetches equals half the number of pages (the best possible result at perfect correlation) and half the number of rows (the worst possible result at zero correlation and no cache).</p><p>The <em>effective_cache_size</em> parameter should, in theory, match the total available cache size (including both the PostgreSQL buffer cache and the system cache), but the parameter is only used in cost estimation and does not actually reserve any cache memory, so you can change it around as you see fit, regardless of the actual cache values.</p><p>If you tune the parameter way down to the minimum, you will get a cost estimation very close to the no-cache worst case mentioned before:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> effective_cache_size = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> effective_cache_size = <span class="hljs-string">'8kB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings
-<span class="hljs-keyword">WHERE</span> book_date < <span class="hljs-string">'2016-08-23 12:00:00+03'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">WHERE</span> book_date &lt; <span class="hljs-string">'2016-08-23 12:00:00+03'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Scan using bookings_book_date_idx on bookings
    (cost=0.43..532745.48 rows=132403 width=21)
-   Index Cond: (book_date < '2016−08−23 12:00:00+03'::timestamp w...
+   Index Cond: (book_date &lt; '2016−08−23 12:00:00+03'::timestamp w...
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> effective_cache_size;
 <span class="hljs-keyword">RESET</span> enable_seqscan;
 <span class="hljs-keyword">RESET</span> enable_bitmapscan;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><p>When calculating the table I/O cost, the planner takes into account both the worst and the best case costs, and then picks an intermediate value based on the actual correlation.</p><p>Index Scan is efficient when you scan only some of the tuples from a table. The more the tuple locations in the table correlate with the order in which the access method returns the IDs, the more tuples can be retrieved efficiently using this access method. Conversely, the access method at a lower order correlation becomes inefficient at a very low number of tuples.</p><h1>Index Only Scan</h1><p>When an index contains all the data required to process a query, we call it a <em>covering</em> index for the query. Using a covering index, the access method can retrieve data directly from the index without a single table scan. This is called an <em>Index Only Scan</em> and can be used by any access method with the RETURNABLE property.</p><p>The operation is represented in the plan with an Index Only Scan node:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                   QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre><p>When calculating the table I/O cost, the planner takes into account both the worst and the best case costs, and then picks an intermediate value based on the actual correlation.</p><p>Index Scan is efficient when you scan only some of the tuples from a table. The more the tuple locations in the table correlate with the order in which the access method returns the IDs, the more tuples can be retrieved efficiently using this access method. Conversely, the access method at a lower order correlation becomes inefficient at a very low number of tuples.</p><h1>Index Only Scan</h1><p>When an index contains all the data required to process a query, we call it a <em>covering</em> index for the query. Using a covering index, the access method can retrieve data directly from the index without a single table scan. This is called an <em>Index Only Scan</em> and can be used by any access method with the RETURNABLE property.</p><p>The operation is represented in the plan with an Index Only Scan node:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                   QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Only Scan using bookings_pkey on bookings
    (cost=0.43..3791.91 rows=132999 width=7)
-   Index Cond: (book_ref < '100000'::bpchar)
+   Index Cond: (book_ref &lt; '100000'::bpchar)
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The name suggests that the Index Only Scan node never queries the table, but in some cases it does. PostgreSQL indexes don't store visibility information, so the access method returns the data from <em>every</em> row version that matches the query, regardless of their visibility to the current transaction. Tuple visibility is verified afterwards by the indexing mechanism.</p><p>But if the method has to scan the table for visibility anyway, how is it different from plain Index Scan? The trick is a feature called <em>the visibility map</em>. Each heap relation has a visibility map to keep track of which pages contain only the tuples that are known to be visible to all active transactions. Whenever an index method returns a row ID that points to a page which is flagged in the visibility map, you can tell for certain that all the data there is visible to your transaction.</p><p>The Index Only Scan cost is determined by the number of table pages flagged in the visibility map. This is a collected statistic:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> relpages, relallvisible
 <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string">'bookings'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> relpages | relallvisible
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> relpages | relallvisible
 −−−−−−−−−−+−−−−−−−−−−−−−−−
     13447 |         13446
 (1 row)
@@ -1090,7 +1090,7 @@ table tbody tr th { text-align: right; }
 )
 <span class="hljs-keyword">SELECT</span> idx_cost, tbl_cost, idx_cost + tbl_cost <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> idx_cost | tbl_cost | total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> idx_cost | tbl_cost | total
 −−−−−−−−−−+−−−−−−−−−−+−−−−−−−
      2457 |     1330 |  3787
 (1 row)
@@ -1099,33 +1099,33 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">TABLE</span> bookings_tmp <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">PRIMARY KEY</span>(book_ref);
 <span class="hljs-keyword">ANALYZE</span> bookings_tmp;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
-  <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings_tmp <span class="hljs-keyword">WHERE</span> book_ref < <span class="hljs-string">'100000'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+  <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings_tmp <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Only Scan using bookings_tmp_pkey on bookings_tmp
    (cost=0.43..4712.86 rows=135110 width=7) (actual rows=132109 l...
-   Index Cond: (book_ref < '100000'::bpchar)
+   Index Cond: (book_ref &lt; '100000'::bpchar)
    Heap Fetches: 132109
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Because vacuuming is disabled, the planner has to check the visibility of every row (Heap Fetches). After vacuuming, however, there is no need for that:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">VACUUM</span> bookings_tmp;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
-  <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings_tmp <span class="hljs-keyword">WHERE</span> book_ref < <span class="hljs-string">'100000'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+  <span class="hljs-keyword">SELECT</span> book_ref <span class="hljs-keyword">FROM</span> bookings_tmp <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Only Scan using bookings_tmp_pkey on bookings_tmp
    (cost=0.43..3848.86 rows=135110 width=7) (actual rows=132109 l...
-   Index Cond: (book_ref < '100000'::bpchar)
+   Index Cond: (book_ref &lt; '100000'::bpchar)
    Heap Fetches: 0
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><h1>Indexes with an INCLUDE clause</h1><p>You may want an index to include a specific column (or several) that your queries frequently use, but your index may not be extendable:</p><ul><li>For a unique index, adding an extra column may make the original columns no longer unique.</li><li>The new column data type may lack the appropriate operator class for the index access method.</li></ul><p>If this is the case, you can (in PostgreSQL 11 and higher) supplement an index with columns which are not a part of the search key. While lacking the search functionality, these payload columns can make the index covering for the queries that want these columns.</p><p>People commonly refer to these specific types of indexes as <em>covering</em>, which is technically incorrect. Any index is covering for a query as long as its set of columns <em>covers</em> the set of columns required to execute the query. Whether the index uses any fields added with the INCLUDE clause or not is irrelevant. Furthermore, the same index can be covering for one query but not for another.</p><p>This is an example that replaces an automatically generated primary key index with another one with an extra column:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">UNIQUE</span> <span class="hljs-keyword">INDEX</span> <span class="hljs-keyword">ON</span> bookings(book_ref) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">UNIQUE</span> <span class="hljs-keyword">INDEX</span> <span class="hljs-keyword">ON</span> bookings(book_ref) <span class="hljs-keyword">INCLUDE</span> (book_date);
 <span class="hljs-keyword">BEGIN</span>;
 <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">TABLE</span> bookings <span class="hljs-keyword">DROP</span> <span class="hljs-keyword">CONSTRAINT</span> bookings_pkey <span class="hljs-keyword">CASCADE</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">NOTICE:  drop cascades to constraint tickets_book_ref_fkey on table
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">NOTICE:  drop cascades to constraint tickets_book_ref_fkey on table
 tickets
 ALTER TABLE
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">TABLE</span> bookings <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">CONSTRAINT</span> bookings_pkey <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">TABLE</span> bookings <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">CONSTRAINT</span> bookings_pkey <span class="hljs-keyword">PRIMARY KEY</span>
   <span class="hljs-keyword">USING</span> <span class="hljs-keyword">INDEX</span> bookings_book_ref_book_date_idx; <span class="hljs-comment">-- new index</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">NOTICE:  ALTER TABLE / ADD CONSTRAINT USING INDEX will rename index
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">NOTICE:  ALTER TABLE / ADD CONSTRAINT USING INDEX will rename index
 "bookings_book_ref_book_date_idx" to "bookings_pkey"
 ALTER TABLE
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><code class="language-pgsql hljs">
@@ -1133,71 +1133,71 @@ ALTER TABLE
 <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">FOREIGN KEY</span> (book_ref) <span class="hljs-keyword">REFERENCES</span> bookings(book_ref);
 <span class="hljs-keyword">COMMIT</span>;
 <span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> book_ref, book_date
-<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref < <span class="hljs-string">'100000'</span>;
+<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'100000'</span>;
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Index Only Scan using bookings_pkey on bookings  (cost=0.43..437...
-   Index Cond: (book_ref < '100000'::bpchar)
+   Index Cond: (book_ref &lt; '100000'::bpchar)
 (2 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre><h1>Bitmap Scan</h1><p>While Index Scan is effective at high correlation, it falls short when the correlation drops to the point where the scanning pattern is more random than sequential and the number of page fetches increases. One solution here is to collect all the tuple IDs beforehand, sort them by page number, and then use them to scan the table. This is how <em>Bitmap Scan</em>, the second basic index scan method, works. It is available to any access method with the BITMAP SCAN property.</p><p>Consider the following plan:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">INDEX</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">INDEX</span> <span class="hljs-keyword">ON</span> bookings(total_amount);
 <span class="hljs-keyword">EXPLAIN</span>
 <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount = <span class="hljs-number">48500.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Bitmap Heap Scan on bookings  (cost=54.63..7040.42 rows=2865 wid...
    Recheck Cond: (total_amount = 48500.00)
-   −> Bitmap Index Scan on bookings_total_amount_idx
+   −&gt; Bitmap Index Scan on bookings_total_amount_idx
        (cost=0.00..53.92 rows=2865 width=0)
        Index Cond: (total_amount = 48500.00)
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The Bitmap Scan operation is represented by two nodes: Bitmap Index Scan and Bitmap Heap Scan. The Bitmap Index Scan calls the access method, which generates the <em>bitmap</em> of all the tuple IDs.</p><p>A bitmap consists of multiple chunks, each corresponding to a single page in the table. The number of tuples on a page is limited due to a significant header size of each tuple (up to 256 tuples per standard page). As each page corresponds to a bitmap chunk, the chunks are created large enough to accommodate this maximum number of tuples (32 bytes per standard page).</p><p>The Bitmap Heap Scan node scans the bitmap chunk by chunk, goes to the corresponding pages, and fetches all the tuples there which are marked in the bitmap. Thus, the pages are fetched in ascending order, and each page is only fetched once.</p><p>The actual scan order is not sequential because the pages are probably not located one after another on the disk. The operating system's prefetching is useless here, so Bitmap Heap Scan employs its own prefetching functionality (and it's the only node to do so) by asynchronously reading the <em>effective_io_concurrency</em> of the pages. This functionality largely depends on whether or not your system supports the <code>posix_fadvise</code> function. If it does, you can set the parameter (on the table space level) in accordance with your hardware capabilities.</p><h2>Map precision</h2><p>When a query requests tuples from a large number of pages, the bitmap of these pages can occupy a significant amount of local memory. The allowed bitmap size is limited by the <em>work_mem</em> parameter. If a bitmap reaches the maximum allowed size, some of its chunks start to get upscaled: each upscaled chunk's bit is matched to a page instead of a tuple, and the chunk then covers a range of pages instead of just one. This keeps the bitmap size manageable while sacrificing some accuracy. You can check your bitmap accuracy with the <code>EXPLAIN ANALYZE</code> command:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>)
-<span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount > <span class="hljs-number">150000.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount &gt; <span class="hljs-number">150000.00</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Bitmap Heap Scan on bookings (actual rows=242691 loops=1)
-   Recheck Cond: (total_amount > 150000.00)
+   Recheck Cond: (total_amount &gt; 150000.00)
    Heap Blocks: exact=13447
-   −> Bitmap Index Scan on bookings_total_amount_idx (actual rows...
-       Index Cond: (total_amount > 150000.00)
+   −&gt; Bitmap Index Scan on bookings_total_amount_idx (actual rows...
+       Index Cond: (total_amount &gt; 150000.00)
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>In this case the bitmap was small enough to accommodate all the tuples data without upscaling. This is what we call an <em>exact</em> bitmap. If we lower the <em>work_mem</em> value, some bitmap chunks will be upscaled. This will make the bitmap <em>lossy</em>:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'512kB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>)
-<span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount > <span class="hljs-number">150000.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount &gt; <span class="hljs-number">150000.00</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Bitmap Heap Scan on bookings (actual rows=242691 loops=1)
-   Recheck Cond: (total_amount > 150000.00)
+   Recheck Cond: (total_amount &gt; 150000.00)
    Rows Removed by Index Recheck: 1145721
    Heap Blocks: exact=5178 lossy=8269
-   −> Bitmap Index Scan on bookings_total_amount_idx (actual rows...
-       Index Cond: (total_amount > 150000.00)
+   −&gt; Bitmap Index Scan on bookings_total_amount_idx (actual rows...
+       Index Cond: (total_amount &gt; 150000.00)
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>When fetching a table page using an upscaled bitmap chunk, the planner has to recheck its tuples against the query conditions. This step is always represented by the Recheck Cond line in the plan, whether the checking actually takes place or not. The number of rows filtered out is displayed under Rows Removed by Index Recheck.</p><p>On large data sets, even a bitmap where each chunk was upscaled may still exceed the work_mem size. If this is the case, the <em>work_mem</em> limit is simply ignored, and no additional upscaling or buffering is done.</p><h2>Bitmap operations</h2><p>A query may include multiple fields in its filter conditions. These fields may each have a separate index. Bitmap Scan allows us to take advantage of multiple indexes at once. Each index gets a row version bitmap built for it, and the bitmaps are then ANDed and ORed together. Example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings
-<span class="hljs-keyword">WHERE</span> book_date < <span class="hljs-string">'2016-08-28'</span> <span class="hljs-keyword">AND</span> total_amount > <span class="hljs-number">250000</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">WHERE</span> book_date &lt; <span class="hljs-string">'2016-08-28'</span> <span class="hljs-keyword">AND</span> total_amount &gt; <span class="hljs-number">250000</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Bitmap Heap Scan on bookings
-   Recheck Cond: ((total_amount > '250000'::numeric) AND (book_da...
-   −> BitmapAnd
-       −> Bitmap Index Scan on bookings_total_amount_idx
-           Index Cond: (total_amount > '250000'::numeric)
-       −> Bitmap Index Scan on bookings_book_date_idx
-           Index Cond: (book_date < '2016−08−28 00:00:00+03'::tim...
+   Recheck Cond: ((total_amount &gt; '250000'::numeric) AND (book_da...
+   −&gt; BitmapAnd
+       −&gt; Bitmap Index Scan on bookings_total_amount_idx
+           Index Cond: (total_amount &gt; '250000'::numeric)
+       −&gt; Bitmap Index Scan on bookings_book_date_idx
+           Index Cond: (book_date &lt; '2016−08−28 00:00:00+03'::tim...
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>In this example the BitmapAnd node ANDs two bitmaps together.</p><p>When exact bitmaps are ANDed and ORed together, they remain exact (unless the resulting bitmap exceeds the <em>work_mem</em> limit). Any upscaled chunks in the original bitmaps remain upscaled in the resulting bitmap.</p><h2>Cost estimation</h2><p>Consider this Bitmap Scan example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span>
 <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount = <span class="hljs-number">28000.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Bitmap Heap Scan on bookings  (cost=599.48..14444.96 rows=31878 ...
    Recheck Cond: (total_amount = 28000.00)
-   −> Bitmap Index Scan on bookings_total_amount_idx
+   −&gt; Bitmap Index Scan on bookings_total_amount_idx
        (cost=0.00..591.51 rows=31878 width=0)
        Index Cond: (total_amount = 28000.00)
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The planner estimates the selectivity here at approximately:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> round(<span class="hljs-number">31878</span>::<span class="hljs-type">numeric</span>/reltuples::<span class="hljs-type">numeric</span>, <span class="hljs-number"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> round(<span class="hljs-number">31878</span>::<span class="hljs-type">numeric</span>/reltuples::<span class="hljs-type">numeric</span>, <span class="hljs-number">4</span>)
 <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string">'bookings'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
 −−−−−−−−
  0.0151
 (1 row)
@@ -1210,7 +1210,7 @@ ALTER TABLE
   <span class="hljs-keyword">SELECT</span> relpages * <span class="hljs-number">0.0151</span> <span class="hljs-keyword">AS</span> pages, reltuples * <span class="hljs-number">0.0151</span> <span class="hljs-keyword">AS</span> tuples
   <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string">'bookings_total_amount_idx'</span>
 ) c;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> round
 −−−−−−−
    589
 (1 row)
@@ -1230,7 +1230,7 @@ ALTER TABLE
   sqrt(pages_fetched / relpages) <span class="hljs-keyword">AS</span> cost_per_page,
   tuples_fetched
 <span class="hljs-keyword">FROM</span> t;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> pages_fetched | cost_per_page | tuples_fetched
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> pages_fetched | cost_per_page | tuples_fetched
 −−−−−−−−−−−−−−−+−−−−−−−−−−−−−−−+−−−−−−−−−−−−−−−−
          13447 |             1 | 31878
 (1 row)
@@ -1258,48 +1258,48 @@ ALTER TABLE
 )
 <span class="hljs-keyword">SELECT</span> startup_cost, run_cost, startup_cost + run_cost <span class="hljs-keyword">AS</span> total_cost
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | run_cost | total_cost
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup_cost | run_cost | total_cost
 −−−−−−−−−−−−−−+−−−−−−−−−−+−−−−−−−−−−−−
           597 |    13845 |      14442
 (1 row)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre><h1>Parallel Index Scans</h1><p>All the index scans (plain, Index Only and Bitmap) can run in parallel.</p><p>The parallel scan costs are calculated the same way sequential scan costs are, but (as is the case with parallel sequential scans) the distribution of processing resources between parallel processes brings the total cost down. The I/O operations are synchronized between processes and are performed sequentially, so no changes here. Let me demonstrate several examples of parallel plans without getting into cost estimation.</p><p>Parallel Index Scan:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> sum(total_amount)
-<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref < <span class="hljs-string">'400000'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_ref &lt; <span class="hljs-string">'400000'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate  (cost=19192.81..19192.82 rows=1 width=32)
-   −> Gather  (cost=19192.59..19192.80 rows=2 width=32)
+   −&gt; Gather  (cost=19192.59..19192.80 rows=2 width=32)
        Workers Planned: 2
-       −> Partial Aggregate  (cost=18192.59..18192.60 rows=1 widt...
-           −> Parallel Index Scan using bookings_pkey on bookings
+       −&gt; Partial Aggregate  (cost=18192.59..18192.60 rows=1 widt...
+           −&gt; Parallel Index Scan using bookings_pkey on bookings
                (cost=0.43..17642.82 rows=219907 width=6)
-               Index Cond: (book_ref < '400000'::bpchar)
+               Index Cond: (book_ref &lt; '400000'::bpchar)
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Parallel Index Only Scan:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> sum(total_amount)
-<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount < <span class="hljs-number">50000.00</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> total_amount &lt; <span class="hljs-number">50000.00</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate  (cost=23370.60..23370.61 rows=1 width=32)
-   −> Gather  (cost=23370.38..23370.59 rows=2 width=32)
+   −&gt; Gather  (cost=23370.38..23370.59 rows=2 width=32)
        Workers Planned: 2
-       −> Partial Aggregate  (cost=22370.38..22370.39 rows=1 widt...
-           −> Parallel Index Only Scan using bookings_total_amoun...
+       −&gt; Partial Aggregate  (cost=22370.38..22370.39 rows=1 widt...
+           −&gt; Parallel Index Only Scan using bookings_total_amoun...
                (cost=0.43..21387.27 rows=393244 width=6)
-               Index Cond: (total_amount < 50000.00)
+               Index Cond: (total_amount &lt; 50000.00)
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>During a Bitmap Index Scan, the building of the bitmap in the Bitmap Index Scan node is always performed by a single process. When the bitmap is done, the scanning is performed in parallel in the Parallel Bitmap Heap Scan node:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> sum(total_amount)
-<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_date < <span class="hljs-string">'2016-10-01'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span class="hljs-keyword">FROM</span> bookings <span class="hljs-keyword">WHERE</span> book_date &lt; <span class="hljs-string">'2016-10-01'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
 Finalize Aggregate  (cost=21492.21..21492.22 rows=1 width=32)
-  −> Gather  (cost=21491.99..21492.20 rows=2 width=32)
+  −&gt; Gather  (cost=21491.99..21492.20 rows=2 width=32)
       Workers Planned: 2
-      −> Partial Aggregate  (cost=20491.99..20492.00 rows=1 widt...
-          −> Parallel Bitmap Heap Scan on bookings
+      −&gt; Partial Aggregate  (cost=20491.99..20492.00 rows=1 widt...
+          −&gt; Parallel Bitmap Heap Scan on bookings
               (cost=4891.17..20133.01 rows=143588 width=6)
-              Recheck Cond: (book_date < '2016−10−01 00:00:00+03...
-              −> Bitmap Index Scan on bookings_book_date_idx
+              Recheck Cond: (book_date &lt; '2016−10−01 00:00:00+03...
+              −&gt; Bitmap Index Scan on bookings_book_date_idx
                   (cost=0.00..4805.01 rows=344611 width=0)
-                  Index Cond: (book_date < '2016−10−01 00:00:00+...
+                  Index Cond: (book_date &lt; '2016−10−01 00:00:00+...
 (10 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><h1>Comparison of access methods</h1><p>This graph displays the dependency between the cost of various access methods and the selectivity of conditions:</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 4. Index scan _ Postgres Professional_files/indexscan4-en.png"></p><p>The graph is qualitative, the exact numbers will obviously depend on dataset and parameter values.</p><p>Sequential Scan is selectivity-agnostic and usually outperforms others after a certain selectivity threshold.</p><p>The Index Scan cost is highly dependent on the correlation between the physical order of the tuples on disk and the order in which the access method returns the IDs. Index Scan at perfect correlation outperforms the others even at higher selectivities, but at a low correlation (which is usually the case) the cost is high and quickly overtakes the Sequential Scan cost. All told, Index Scan reigns supreme in one very important case: whenever an index (usually a unique index) is used to fetch a single row.</p><p>Only Index Scan can outperform the others&nbsp;(when applicable), including even Sequential Scan during full table scans. Its performance, however, depends highly on the visibility map, and degrades down to the Index Scan level in the worst-case scenario.</p><p>The Bitmap Scan cost, while dependent on the memory limit allocated for the bitmap, is still more reliable than the Index Scan cost. This access method performs worse than Index Scan at perfect correlation, but outperforms it by far when the correlation is low.</p><p>Each access method shines in specific situations; none is always worse or always better than the others. The planner always goes the distance to select the most efficient access method for every specific case. For its estimations to be accurate, up-to-date statistics are paramount.</p><p><a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969618">Read on</a>.
 		</p></div>

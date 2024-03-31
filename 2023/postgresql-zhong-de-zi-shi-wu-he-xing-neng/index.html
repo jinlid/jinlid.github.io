@@ -53,10 +53,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -422,43 +422,43 @@
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ROLLBACK</span> <span class="token keyword">TO</span> <span class="token keyword">SAVEPOINT</span> name<span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <h2 id="子事务的使用"><a href="#子事务的使用" class="headerlink" title="子事务的使用"></a>子事务的使用</h2><p>子事务在较长的事务中很有用。在 PostgreSQL 中，事务内的任何错误都会中止事务：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">&gt;</span> BEGIN<span class="token punctuation">;</span>
 BEGIN
-test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
      ?column?      
 -------------------
  Some work is <span class="token keyword">done</span>
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
  
-test<span class="token operator">=</span><span class="token operator">></span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
 ERROR:  division by zero
-test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">></span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">&gt;</span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
 ERROR:  current transaction is aborted, commands ignored <span class="token keyword">until</span> end of transaction block
-test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">></span> COMMIT<span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">!</span><span class="token operator">&gt;</span> COMMIT<span class="token punctuation">;</span>
 ROLLBACK
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>对于执行大量工作的事务，这是非常烦人的，因为这意味着迄今为止完成的所有工作都会丢失。子事务可以帮助您从这种情况中恢复：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">></span> BEGIN<span class="token punctuation">;</span>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token operator">&gt;</span> BEGIN<span class="token punctuation">;</span>
 BEGIN
-test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SELECT <span class="token string">'Some work is done'</span><span class="token punctuation">;</span>
      ?column?      
 -------------------
  Some work is <span class="token keyword">done</span>
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
  
-test<span class="token operator">=</span><span class="token operator">></span> SAVEPOINT a<span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SAVEPOINT a<span class="token punctuation">;</span>
 SAVEPOINT
-test<span class="token operator">=</span><span class="token operator">></span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SELECT 12 / <span class="token punctuation">(</span>factorial<span class="token punctuation">(</span>0<span class="token punctuation">)</span> - 1<span class="token punctuation">)</span><span class="token punctuation">;</span>
 ERROR:  division by zero
-test<span class="token operator">=</span><span class="token operator">></span> ROLLBACK TO SAVEPOINT a<span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> ROLLBACK TO SAVEPOINT a<span class="token punctuation">;</span>
 ROLLBACK
-test<span class="token operator">=</span><span class="token operator">></span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> SELECT <span class="token string">'try to do more work'</span><span class="token punctuation">;</span>
       ?column?       
 ---------------------
  try to <span class="token keyword">do</span> <span class="token function">more</span> work
 <span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
  
-test<span class="token operator">=</span><span class="token operator">></span> COMMIT<span class="token punctuation">;</span>
+test<span class="token operator">=</span><span class="token operator">&gt;</span> COMMIT<span class="token punctuation">;</span>
 COMMIT
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>请注意，当回滚旧事务时，<code>ROLLBACK TO SAVEPOINT</code>会启动另一个子事务<code>a</code>。</p>
@@ -822,13 +822,13 @@ tps <span class="token operator">=</span> 68.993993 <span class="token punctuati
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">
+                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
                         
-                        <span class="card-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</span>
+                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
                     </div>
                 </a>
                 <div class="card-content article-content">

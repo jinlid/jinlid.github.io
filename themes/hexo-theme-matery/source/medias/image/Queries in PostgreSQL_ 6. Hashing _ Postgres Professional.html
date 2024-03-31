@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -966,75 +966,75 @@ table tbody tr th { text-align: right; }
 			<p>So far we have covered query <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969262">execution stages</a>, <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969296">statistics</a>, <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969403">sequential</a> and <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969493">index scan</a>, and have moved on to joins.</p><p>The previous article focused on the <a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969618">nested loop join</a>, and in this one I will explain the <em>hash join</em>. I will also briefly mention group-bys and distincs.</p><h2>One-pass hash join</h2><p>The hash join looks for matching pairs using a hash table, which has to be prepared in advance. Here's an example of a plan with a hash join:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join
    Hash Cond: (tf.ticket_no = t.ticket_no)
-   −> Seq Scan on ticket_flights tf
-   −> Hash
-       −> Seq Scan on tickets t (5 rows)
+   −&gt; Seq Scan on ticket_flights tf
+   −&gt; Hash
+       −&gt; Seq Scan on tickets t (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>First, the Hash Join node calls the Hash node. The Hash node fetches all the inner set rows from its child node and arranges them into a <em>hash table</em>.</p><p>A hash table stores data as <em>hash key</em> and <em>value</em> pairs. This makes key-value search time constant and unaffected by hash table size. A <em>hash function</em> distributes hash keys randomly and evenly across a limited number of <em>buckets</em>. The total number of buckets is always two to the power <em>N</em>, and the bucket number for a given hash key is the last <em>N</em> bits of its hash function result.</p><p>So, during the <strong>first stage</strong>, the hash join begins by scanning all the inner set rows. The hash value of each row is computed by applying a hash function to the join attributes (Hash Cond), and all the fields from the row required for the query are stored in a hash table.</p><p>Ideally, the hash join wants to read all the data in one pass, but it needs enough memory for the entire hash table to fit at once. The amount of memory allocated for a hash table is <em>work_mem × hash_mem_multiplier</em> (the latter is 1.0 by default).</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash1-en.png"></p><p>Let's use <code>EXPLAIN ANALYZE</code> and have a look at memory utilization:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'256MB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> b.book_ref = t.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join (actual rows=2949857 loops=1)
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Seq Scan on tickets t (actual rows=2949857 loops=1)
-   −> Hash (actual rows=2111110 loops=1)
+   −&gt; Seq Scan on tickets t (actual rows=2949857 loops=1)
+   −&gt; Hash (actual rows=2111110 loops=1)
        Buckets: 4194304 Batches: 1 Memory Usage: 145986kB
-       −> Seq Scan on bookings b (actual rows=2111110 loops=1)
+       −&gt; Seq Scan on bookings b (actual rows=2111110 loops=1)
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Unlike the nested loop join, which treats the inner and the outer sets differently, the hash join can easily swap the sets around. The smaller set is usually selected as the inner set because this way the hash table will be smaller.</p><p>In this case, the allocated memory was enough: the hash table took up about 143MB (Memory Usage), with 4 million (2<sup>22</sup>) buckets. This allows the join to execute in one pass (Batches).</p><p>We can modify the query to select a single column. This will decrease the hash table size to 111MB:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> b.book_ref
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> b.book_ref = t.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join (actual rows=2949857 loops=1)
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Index Only Scan using tickets_book_ref_idx on tickets t
+   −&gt; Index Only Scan using tickets_book_ref_idx on tickets t
        (actual rows=2949857 loops=1)
        Heap Fetches: 0
-   −> Hash (actual rows=2111110 loops=1)
+   −&gt; Hash (actual rows=2111110 loops=1)
        Buckets: 4194304 Batches: 1 Memory Usage: 113172kB
-       −> Seq Scan on bookings b (actual rows=2111110 loops=1)
+       −&gt; Seq Scan on bookings b (actual rows=2111110 loops=1)
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> work_mem;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>Yet another reason to be specific with your queries and try to avoid the <code>SELECT *</code> command.</p><p>The number of hash table buckets is selected in such a way as to have just one row per bucket, on average. A more compact distribution would increase the chance of hash collisions, and a more loose one would take up unnecessary amounts of memory. The minimum calculated number of buckets is increased to the closest power of two.</p><p>(With wide enough rows, the expected size of the hash table with an appropriate number of buckets can exceed the allocated memory. Whenever that happens, the algorithm splits the inner set into multiple batches and switches into the two-pass mode.)</p><p>No output can be returned until the first stage is complete.</p><p>During the <strong>second stage</strong> (after the hash table is built), the Hash Join node calls its second child node and fetches the outer set. For each fetched row, the hash table is probed for the matching rows, and a hash value is calculated for the join attributes (using the same hash function as before).</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash2-en.png"></p><p>All matches and returned to the Hash Join node.</p><p>Now let's try a more branching plan with two hash joins. This query returns the names of all passengers and all their booked flights:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><p>Yet another reason to be specific with your queries and try to avoid the <code>SELECT *</code> command.</p><p>The number of hash table buckets is selected in such a way as to have just one row per bucket, on average. A more compact distribution would increase the chance of hash collisions, and a more loose one would take up unnecessary amounts of memory. The minimum calculated number of buckets is increased to the closest power of two.</p><p>(With wide enough rows, the expected size of the hash table with an appropriate number of buckets can exceed the allocated memory. Whenever that happens, the algorithm splits the inner set into multiple batches and switches into the two-pass mode.)</p><p>No output can be returned until the first stage is complete.</p><p>During the <strong>second stage</strong> (after the hash table is built), the Hash Join node calls its second child node and fetches the outer set. For each fetched row, the hash table is probed for the matching rows, and a hash value is calculated for the join attributes (using the same hash function as before).</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash2-en.png"></p><p>All matches and returned to the Hash Join node.</p><p>Now let's try a more branching plan with two hash joins. This query returns the names of all passengers and all their booked flights:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> t.passenger_name, f.flight_no
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
   <span class="hljs-keyword">JOIN</span> flights f <span class="hljs-keyword">ON</span> f.flight_id = tf.flight_id;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                  QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                  QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join
    Hash Cond: (tf.flight_id = f.flight_id)
-   −> Hash Join
+   −&gt; Hash Join
        Hash Cond: (tf.ticket_no = t.ticket_no)
-       −> Seq Scan on ticket_flights tf
-       −> Hash
-           −> Seq Scan on tickets t
-   −> Hash
-       −> Seq Scan on flights f
+       −&gt; Seq Scan on ticket_flights tf
+       −&gt; Hash
+           −&gt; Seq Scan on tickets t
+   −&gt; Hash
+       −&gt; Seq Scan on flights f
 (9 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>First, <code>tickets</code> are joined with <code>ticket_flights</code>, with a hash table built for <code>tickets</code>. Then, the resulting set is joined with <code>flights</code>, with a hash table built for <code>flights</code>.</p><p>Cost estimation. I've explained join cardinality in the previous article. The calculation is method-agnostic, so I won't repeat myself here. The cost estimation, however, is different.</p><p>The Hash node cost is considered equal to its child node cost. This is a dummy value used only in the plan output. All the real estimates are included within the Hash Join cost.</p><p>Consider this example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> seats s <span class="hljs-keyword">ON</span> s.aircraft_code = f.aircraft_code;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join  (cost=38.13..278507.28 rows=16518865 width=78)
    (actual rows=16518865 loops=1)
    Hash Cond: (f.aircraft_code = s.aircraft_code)
-   −> Seq Scan on flights f  (cost=0.00..4772.67 rows=214867 widt...
+   −&gt; Seq Scan on flights f  (cost=0.00..4772.67 rows=214867 widt...
        (actual rows=214867 loops=1)
-   −> Hash  (cost=21.39..21.39 rows=1339 width=15)
+   −&gt; Hash  (cost=21.39..21.39 rows=1339 width=15)
        (actual rows=1339 loops=1)
        Buckets: 2048 Batches: 1 Memory Usage: 79kB
-       −> Seq Scan on seats s  (cost=0.00..21.39 rows=1339 width=15)
+       −&gt; Seq Scan on seats s  (cost=0.00..21.39 rows=1339 width=15)
            (actual rows=1339 loops=1)
 (10 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The startup cost is primarily the hash table building cost. It comprises:</p><ul><li>Full inner set fetch cost (we need that to build the table).</li><li>Hash value calculation cost for each join field, for each inner set row (estimated at cpu_operator_cost per operation).</li><li>Hash table insert cost for each inner set row (estimated at cpu_operator_cost per row).</li><li>Startup outer set fetch cost (so that we have something to join with).</li></ul><p>The total cost then adds the actual join costs:</p><ul><li>Hash value calculation cost for each join field, for each outer set row (estimated at cpu_operator_cost per operation).</li><li>Join condition recheck cost (necessary to avoid hash collisions, estimated at cpu_operator_cost per operator).</li><li>Output processing cost (cpu_operator_cost per row).</li></ul><p>The interesting part here is determining exactly how many rechecks are necessary to complete the join. This number is estimated as the number of outer rows multiplied by a certain fraction of the number of inner rows (which reside in the hash table). The calculation is more complex than that and also depends on how uniform the data is. For our specific example, the fraction equals 0.150122, and I won't bore you with the exact details of the calculation.</p><p>With all that in mind, we can calculate the total cost estimate:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">cost</span>(startup) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">cost</span>(startup) <span class="hljs-keyword">AS</span> (
@@ -1054,7 +1054,7 @@ table tbody tr th { text-align: right; }
     current_setting(<span class="hljs-string">'cpu_tuple_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">16518865</span>
 )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">cost</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
 −−−−−−−−−+−−−−−−−−−−−
    38.13 | 278507.26
 (1 row)
@@ -1062,32 +1062,32 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> b.book_ref = t.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join (actual rows=2949857 loops=1)
    Hash Cond: (t.book_ref = b.book_ref)
    Buffers: shared hit=7205 read=55657, temp read=55126
    written=55126
-   −> Seq Scan on tickets t (actual rows=2949857 loops=1)
+   −&gt; Seq Scan on tickets t (actual rows=2949857 loops=1)
        Buffers: shared read=49415
-       −> Hash (actual rows=2111110 loops=1)
+       −&gt; Hash (actual rows=2111110 loops=1)
            Buckets: 65536 Batches: 64 Memory Usage: 2277kB
            Buffers: shared hit=7205 read=6242, temp written=10858
-           −> Seq Scan on bookings b (actual rows=2111110 loops=1)
+           −&gt; Seq Scan on bookings b (actual rows=2111110 loops=1)
                Buffers: shared hit=7205 read=6242
 (11 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>This is the same example from before, but this time the default <em>work_mem</em> value is used. With just 4MB available, the hash table can't fit into the memory, so the algorithm decides to split it into 64 batches, with 64K buckets in total. When the hash table is built at the Hash node, the data is written into temporary files (temp written). During the join stage (the Hash Join node), the files are both read from and written into (temp read, temp written).</p><p>If you want more information on temporary files, you can set the <em>log_temp_files</em> parameter to zero. This will force the server to log a record of each file and its size upon deletion.</p><h2>Dynamic plan adjustment</h2><p>There are two possible issues that can mess up the plan. The first one is a non-uniform distribution.</p><p>If the values in the join key columns are distributed non-uniformly, different batches will have varying numbers of rows.</p><p>If the largest batch is any other but the first one, all the rows will have to be written on disk first and read from disk later. This is especially important for the outer set, as it usually is the larger one. Therefore, if we have the most common values statistics built for the outer set (in other words, if the outer set is a table and the join is done on one column, with no multivariate MCV lists), the rows with hash codes that match the MCV list are treated as belonging to the first batch. This is called skew optimization, and it helps reduce the input/output overhead during two-pass joining.</p><p>The second possible issue is outdated statistics.</p><p>Both issues may cause the size of some (or all) batches to be larger than expected, and the hash table may surpass the allocated memory as a result.</p><p>The algorithm can spot this during the table building stage and double the number of batches on the fly to avoid overflowing. Basically, it splits each batch in two. Half of the rows from each batch (assuming a uniform distribution) remains in memory, the other half is stored in a new temporary file on disk.</p><p>This could happen during one-pass joins as well. In fact, both one-pass and two-pass joins are governed by the same code. I'm only calling them differently to avoid confusion.</p><p>The number of batches can never decrease. If the planner has overestimated the batch sizes, it doesn't merge smaller batches together.</p><p>Splitting the batches may still prove inefficient when non-uniform distribution is at play. For example, the join key column may store <em>the same</em> value in every row. This will put all the rows in the same batch because the hash function will always return the same value. In this specific case there's nothing to do but watch the hash table grow, despite all the limiting parameters. In theory, this could be solved with a multi-pass join that checks a fraction of a batch at a time, but this has not been implemented yet.</p><p>To demonstrate the dynamic batch number increase, we will have to do something to trick the planner:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> bookings_copy (<span class="hljs-keyword">LIKE</span> bookings <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> bookings_copy (<span class="hljs-keyword">LIKE</span> bookings <span class="hljs-keyword">INCLUDING INDEXES</span>)
 <span class="hljs-keyword">WITH</span> (autovacuum_enabled = <span class="hljs-keyword">off</span>);
 <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> bookings_copy <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">INSERT 0 2111110
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">INSERT 0 2111110
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">DELETE</span> <span class="hljs-keyword">FROM</span> bookings_copy <span class="hljs-keyword">WHERE</span> random() &lt; <span class="hljs-number"><code class="language-pgsql hljs"><span class="hljs-keyword">DELETE</span> <span class="hljs-keyword">FROM</span> bookings_copy <span class="hljs-keyword">WHERE</span> random() &lt; <span class="hljs-number">0.9</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">DELETE 1899931
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">DELETE 1899931
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">ANALYZE</span> bookings_copy;
 <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> bookings_copy <span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">ON</span> <span class="hljs-keyword">CONFLICT</span> <span class="hljs-keyword">DO</span> <span class="hljs-keyword">NOTHING</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">INSERT 0 1899931
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">INSERT 0 1899931
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> reltuples <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> reltuples <span class="hljs-keyword">FROM</span> pg_class <span class="hljs-keyword">WHERE</span> relname = <span class="hljs-string">'bookings_copy'</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> reltuples
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> reltuples
 −−−−−−−−−−−
     211179
 (1 row)
@@ -1095,42 +1095,42 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings_copy b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> b.book_ref = t.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join (actual rows=2949857 loops=1)
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Seq Scan on tickets t (actual rows=2949857 loops=1)
-   −> Hash (actual rows=2111110 loops=1)
+   −&gt; Seq Scan on tickets t (actual rows=2949857 loops=1)
+   −&gt; Hash (actual rows=2111110 loops=1)
        Buckets: 65536 (originally 65536) Batches: 32 (originally 8)
        Memory Usage: 4040kB
-       −> Seq Scan on bookings_copy b (actual rows=2111110 loops=1)
+       −&gt; Seq Scan on bookings_copy b (actual rows=2111110 loops=1)
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p><strong>Cost estimation.</strong> Here's the same example from the one-pass join section, but now I set an extremely low memory limit, forcing the planner to use two batches. This increases the cost:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'64kB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> seats s <span class="hljs-keyword">ON</span> s.aircraft_code = f.aircraft_code;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Join  (cost=45.13..283139.28 rows=16518865 width=78)
    (actual rows=16518865 loops=1)
    Hash Cond: (f.aircraft_code = s.aircraft_code)
-   −> Seq Scan on flights f  (cost=0.00..4772.67 rows=214867 widt...
+   −&gt; Seq Scan on flights f  (cost=0.00..4772.67 rows=214867 widt...
        (actual rows=214867 loops=1)
-   −> Hash  (cost=21.39..21.39 rows=1339 width=15)
+   −&gt; Hash  (cost=21.39..21.39 rows=1339 width=15)
        (actual rows=1339 loops=1)
        Buckets: 2048 Batches: 2 Memory Usage: 55kB
-       −> Seq Scan on seats s  (cost=0.00..21.39 rows=1339 width=15)
+       −&gt; Seq Scan on seats s  (cost=0.00..21.39 rows=1339 width=15)
            (actual rows=1339 loops=1)
 (10 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> work_mem;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>The join cost itself is increased by the temporary file writing and reading costs.</p><p>The startup cost will increase by the estimated cost of writing the number of pages sufficient to store the required fields from all the inner set rows. The first batch isn't written to disk when the hash table is built, but that is not taken into account by the estimate, so it doesn't depend on the number of batches.</p><p>The total cost is increased by the cost estimate for reading the stored inner set rows from disk and then writing and reading the outer set rows.</p><p>Both reading and writing are assumed to be sequential, and their costs for one row are estimated using the <em>seq_page_cost</em> parameter.</p><p>In this example, the number of pages for the inner set is estimated at 7, and for the outer set at 2309. By adding these costs to the one-pass estimate from before, we get the same estimate that the planner ends up with:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">38.13</span> + <span class="hljs-comment"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">38.13</span> + <span class="hljs-comment">-- one-pass startup cost</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><p>The join cost itself is increased by the temporary file writing and reading costs.</p><p>The startup cost will increase by the estimated cost of writing the number of pages sufficient to store the required fields from all the inner set rows. The first batch isn't written to disk when the hash table is built, but that is not taken into account by the estimate, so it doesn't depend on the number of batches.</p><p>The total cost is increased by the cost estimate for reading the stored inner set rows from disk and then writing and reading the outer set rows.</p><p>Both reading and writing are assumed to be sequential, and their costs for one row are estimated using the <em>seq_page_cost</em> parameter.</p><p>In this example, the number of pages for the inner set is estimated at 7, and for the outer set at 2309. By adding these costs to the one-pass estimate from before, we get the same estimate that the planner ends up with:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">38.13</span> + <span class="hljs-comment"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">38.13</span> + <span class="hljs-comment">-- one-pass startup cost</span>
   current_setting(<span class="hljs-string">'seq_page_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">7</span>
   <span class="hljs-keyword">AS</span> startup,
 <span class="hljs-number">279232.27</span> + <span class="hljs-comment">-- one-pass total cost</span>
   current_setting(<span class="hljs-string">'seq_page_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">2</span> * (<span class="hljs-number">7</span> + <span class="hljs-number">2309</span>)
   <span class="hljs-keyword">AS</span> total;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
 −−−−−−−−−+−−−−−−−−−−−
    45.13 | 283864.27
 (1 row)
@@ -1140,140 +1140,140 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> count(*)
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate (actual rows=1 loops=1)
-   −> Gather (actual rows=3 loops=1)
+   −&gt; Gather (actual rows=3 loops=1)
        Workers Planned: 2
        Workers Launched: 2
-       −> Partial Aggregate (actual rows=1 loops=3)
-           −> Hash Join (actual rows=983286 loops=3)
+       −&gt; Partial Aggregate (actual rows=1 loops=3)
+           −&gt; Hash Join (actual rows=983286 loops=3)
                Hash Cond: (t.book_ref = b.book_ref)
-               −> Parallel Index Only Scan using tickets_book_ref...
+               −&gt; Parallel Index Only Scan using tickets_book_ref...
                    Heap Fetches: 0
-               −> Hash (actual rows=2111110 loops=3)
+               −&gt; Hash (actual rows=2111110 loops=3)
                    Buckets: 4194304 Batches: 1 Memory Usage:
                    113172kB
-                   −> Seq Scan on bookings b (actual rows=2111110...
+                   −&gt; Seq Scan on bookings b (actual rows=2111110...
 (13 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> enable_parallel_hash;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>Each process first makes a hash table for <code>bookings</code>. Then, the processes scan <code>tickets</code> in the Parallel Index Only Scan mode and match their sets of rows against the hash table.</p><p>The hash table size limit applies to each parallel process separately, so the total memory allocated will be (in this case) three times more than what the plan says under Memory Usage.</p><h2>Parallel one-pass hash join</h2><p>While the regular hash join may benefit from being run in parallel (especially with an inner set tiny enough to not be a concern for parallelization), the larger sets perform better with a dedicated parallel hash join algorithm, which has been introduced in PostgreSQL 11.</p><p>A significant advantage of the new algorithm is its ability to build the hash table in <em>shared</em>, dynamically allocated memory, which makes it accessible to all the participating parallel processes.</p><p>This allows all the processes to allocate their personal memory allowances towards building the shared table, instead of each building the same personal table. The larger memory pool can accommodate a larger table, increasing the chances that the whole table will fit and the join could be done in one pass.</p><p>During the <strong>first stage</strong>, under the Parallel Hash node, all the parallel processes scan the inner set in parallel and build a shared hash table.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash6-en.png"></p><p>Every process has to complete its part before the algorithm moves forward.</p><p>During the <strong>second stage</strong> (the Parallel Hash Join node), each process matches its part of the outer set with the shared hash table in parallel.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash7-en.png"></p><p>Here's an example of this at work:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'64MB'</span>;
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><p>Each process first makes a hash table for <code>bookings</code>. Then, the processes scan <code>tickets</code> in the Parallel Index Only Scan mode and match their sets of rows against the hash table.</p><p>The hash table size limit applies to each parallel process separately, so the total memory allocated will be (in this case) three times more than what the plan says under Memory Usage.</p><h2>Parallel one-pass hash join</h2><p>While the regular hash join may benefit from being run in parallel (especially with an inner set tiny enough to not be a concern for parallelization), the larger sets perform better with a dedicated parallel hash join algorithm, which has been introduced in PostgreSQL 11.</p><p>A significant advantage of the new algorithm is its ability to build the hash table in <em>shared</em>, dynamically allocated memory, which makes it accessible to all the participating parallel processes.</p><p>This allows all the processes to allocate their personal memory allowances towards building the shared table, instead of each building the same personal table. The larger memory pool can accommodate a larger table, increasing the chances that the whole table will fit and the join could be done in one pass.</p><p>During the <strong>first stage</strong>, under the Parallel Hash node, all the parallel processes scan the inner set in parallel and build a shared hash table.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash6-en.png"></p><p>Every process has to complete its part before the algorithm moves forward.</p><p>During the <strong>second stage</strong> (the Parallel Hash Join node), each process matches its part of the outer set with the shared hash table in parallel.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash7-en.png"></p><p>Here's an example of this at work:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'64MB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> count(*)
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate (actual rows=1 loops=1)
-   −> Gather (actual rows=3 loops=1)
+   −&gt; Gather (actual rows=3 loops=1)
        Workers Planned: 2
        Workers Launched: 2
-       −> Partial Aggregate (actual rows=1 loops=3)
-           −> Parallel Hash Join (actual rows=983286 loops=3)
+       −&gt; Partial Aggregate (actual rows=1 loops=3)
+           −&gt; Parallel Hash Join (actual rows=983286 loops=3)
               Hash Cond: (t.book_ref = b.book_ref)
-              −> Parallel Index Only Scan using tickets_book_ref...
+              −&gt; Parallel Index Only Scan using tickets_book_ref...
                   Heap Fetches: 0
-              −> Parallel Hash (actual rows=703703 loops=3)
+              −&gt; Parallel Hash (actual rows=703703 loops=3)
                   Buckets: 4194304 Batches: 1 Memory Usage: 115424kB
-                  −> Parallel Seq Scan on bookings b (actual row...
+                  −&gt; Parallel Seq Scan on bookings b (actual row...
 (13 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> work_mem;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>This is the same query that we ran in the previous section, but I used the parameter <code>enable_parallel_hash</code> there to explicitly restrict this type of execution.</p><p>Despite having half the memory for the hash table compared to the previous example, this one executed in a single pass because of the shared memory feature (Memory Usage). The hash table here is a bit larger, but we don't need any others, so the total memory usage has decreased.</p><h2>Parallel two-pass hash join</h2><p>For a hash table large enough, even the shared memory of all the processes may not suffice to store it all at once. This fact may turn up during planning, or later, during the execution stage. When this occurs, another two-pass algorithm steps in, one very different from all the ones from before.</p><p>The major difference is that it uses a separate smaller hash table for each worker process instead of a single large hash table, and that each worker processes batches independently from the others. The smaller tables still reside in shared memory, accessible to other workers. If the algorithm discovers that the join operation isn't going to be a one-batch job during the planning stage, it builds the tables for each worker right away. If the insufficiency is discovered during the execution stage, the large table gets rebuilt into the smaller ones.</p><p>The <strong>first stage</strong> of the algorithm has the processes scan the inner set in parallel, split it into batches and write them into temporary files. Because each process scans only its portion of the inner set, none will build an entire hash table for any batch (including the first one). The entire set of rows of a batch is compiled into a dedicated file that all the processes write to as they sync up. This is why here, unlike with the non-parallel and parallel one-pass variations, every single batch gets stored on disk.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash8-en.png"></p><p>When all the processes are done with the hashing, the <strong>second stage</strong> begins. Here, the non-parallel algorithm would have started matching the outer set rows from the first batch with the hash table. The parallel one, however, doesn't have a full table yet, and has the batches processed independently. First, the algorithm scans the outer set in parallel, splits it into batches and stores the batches in separate temporary files on disk. At this stage, the scanned rows don't need a hash table built for them, so the number of batches will never increase.</p><p>When the processes are done scanning, the algorithm ends up with <em>2N</em> temporary files storing inner and outer set batches.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash9-en.png"></p><p>Now, each process takes a batch and performs the actual join. It pulls the inner set from disk into the hash table, scans the outer set rows and matches them against the hash table rows. When done with the batch, the process selects another available batch, and so on.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hasha-en.png"></p><p>If there are no unprocessed batches left, the process teams up with another process to help it finish up its batch. They can do that because all the hash tables reside in shared memory.</p><p>This approach outperforms the algorithm with a single large shared table, because the collaboration between processes is easier and the synchronization overhead is smaller.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hashb-en.png"></p><h2>Modifications</h2><p>The hash join algorithm is not exclusive to inner joins; any other type of join, be it left, right, full, outer, semi- or anti-join, can utilize it just as well. The limitation, however, is that the join condition has to be an equality operator.</p><p>I have demonstrated some of the operations in the nested loop join example before. This is a <em>right outer join</em> example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><p>This is the same query that we ran in the previous section, but I used the parameter <code>enable_parallel_hash</code> there to explicitly restrict this type of execution.</p><p>Despite having half the memory for the hash table compared to the previous example, this one executed in a single pass because of the shared memory feature (Memory Usage). The hash table here is a bit larger, but we don't need any others, so the total memory usage has decreased.</p><h2>Parallel two-pass hash join</h2><p>For a hash table large enough, even the shared memory of all the processes may not suffice to store it all at once. This fact may turn up during planning, or later, during the execution stage. When this occurs, another two-pass algorithm steps in, one very different from all the ones from before.</p><p>The major difference is that it uses a separate smaller hash table for each worker process instead of a single large hash table, and that each worker processes batches independently from the others. The smaller tables still reside in shared memory, accessible to other workers. If the algorithm discovers that the join operation isn't going to be a one-batch job during the planning stage, it builds the tables for each worker right away. If the insufficiency is discovered during the execution stage, the large table gets rebuilt into the smaller ones.</p><p>The <strong>first stage</strong> of the algorithm has the processes scan the inner set in parallel, split it into batches and write them into temporary files. Because each process scans only its portion of the inner set, none will build an entire hash table for any batch (including the first one). The entire set of rows of a batch is compiled into a dedicated file that all the processes write to as they sync up. This is why here, unlike with the non-parallel and parallel one-pass variations, every single batch gets stored on disk.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash8-en.png"></p><p>When all the processes are done with the hashing, the <strong>second stage</strong> begins. Here, the non-parallel algorithm would have started matching the outer set rows from the first batch with the hash table. The parallel one, however, doesn't have a full table yet, and has the batches processed independently. First, the algorithm scans the outer set in parallel, splits it into batches and stores the batches in separate temporary files on disk. At this stage, the scanned rows don't need a hash table built for them, so the number of batches will never increase.</p><p>When the processes are done scanning, the algorithm ends up with <em>2N</em> temporary files storing inner and outer set batches.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hash9-en.png"></p><p>Now, each process takes a batch and performs the actual join. It pulls the inner set from disk into the hash table, scans the outer set rows and matches them against the hash table rows. When done with the batch, the process selects another available batch, and so on.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hasha-en.png"></p><p>If there are no unprocessed batches left, the process teams up with another process to help it finish up its batch. They can do that because all the hash tables reside in shared memory.</p><p>This approach outperforms the algorithm with a single large shared table, because the collaboration between processes is easier and the synchronization overhead is smaller.</p><p><img data-no-retina="1" src="./Queries in PostgreSQL_ 6. Hashing _ Postgres Professional_files/hashb-en.png"></p><h2>Modifications</h2><p>The hash join algorithm is not exclusive to inner joins; any other type of join, be it left, right, full, outer, semi- or anti-join, can utilize it just as well. The limitation, however, is that the join condition has to be an equality operator.</p><p>I have demonstrated some of the operations in the nested loop join example before. This is a <em>right outer join</em> example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">LEFT OUTER JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Right Join
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Seq Scan on tickets t
-   −> Hash
-       −> Seq Scan on bookings b
+   −&gt; Seq Scan on tickets t
+   −&gt; Hash
+       −&gt; Seq Scan on bookings b
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Note that the logical left join operation in the query transforms into a physical right join operation in the plan.</p><p>On the logical level, the <code>bookings</code> table would be the outer table (to the left of the equality operator), and the <code>tickets</code> table would be the inner one (to the right from the operator). If joined like that, the resulting table would include all the bookings without any tickets.</p><p>On the physical level, the planner determines which set is the inner one and which is the outer one not by their positions in the query, but by the relative join cost. This usually results in the set with the smaller hash table taking the inner spot, as is the case here with <code>bookings</code>. So, the join type switches from left to right in the plan.</p><p>It works the other way around, too. If you specify that you want a right outer join (to get all the tickets that have no associated bookings), the plan will use the left join:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">RIGHT OUTER JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Left Join
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Seq Scan on tickets t
-   −> Hash
-       −> Seq Scan on bookings b
+   −&gt; Seq Scan on tickets t
+   −&gt; Hash
+       −&gt; Seq Scan on bookings b
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>And a full join, to top it all off:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">FULL</span> <span class="hljs-keyword">OUTER</span> <span class="hljs-keyword">JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">               QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Hash Full Join
    Hash Cond: (t.book_ref = b.book_ref)
-   −> Seq Scan on tickets t
-       −> Hash
-           −> Seq Scan on bookings b
+   −&gt; Seq Scan on tickets t
+       −&gt; Hash
+           −&gt; Seq Scan on bookings b
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The parallel hash join is not currently supported for the right and the left join (but it is <a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/33/2903/">being worked on</a>). Note how in the next example the bookings table is used as the outer set. If the outer join was supported, it would have been selected as the inner set.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> sum(b.total_amount)
 <span class="hljs-keyword">FROM</span> bookings b
   <span class="hljs-keyword">LEFT OUTER JOIN</span> tickets t <span class="hljs-keyword">ON</span> t.book_ref = b.book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate
-   −> Gather
+   −&gt; Gather
        Workers Planned: 2
-       −> Partial Aggregate
-           −> Parallel Hash Left Join
+       −&gt; Partial Aggregate
+           −&gt; Parallel Hash Left Join
                Hash Cond: (b.book_ref = t.book_ref)
-               −> Parallel Seq Scan on bookings b
-               −> Parallel Hash
-                   −> Parallel Index Only Scan using tickets_book...
+               −&gt; Parallel Seq Scan on bookings b
+               −&gt; Parallel Hash
+                   −&gt; Parallel Index Only Scan using tickets_book...
 (9 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><h2>Grouping and distinct values</h2><p>Grouping values for aggregation and removing duplicate values can be done by algorithms similar to the join algorithms. One of the approaches is to build a hash table for the required fields. Each value is placed in the table only if there is no such value in the table already. This results in a hash table containing only distinct values.</p><p>The planner node responsible for this approach is called HashAggregate.</p><p>Below are some examples. Number of seats by fare class (<code>GROUP BY</code>):</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> fare_conditions, count(*)
 <span class="hljs-keyword">FROM</span> seats
 <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> fare_conditions;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  HashAggregate
    Group Key: fare_conditions
-   −> Seq Scan on seats
+   −&gt; Seq Scan on seats
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>List of classes (<code>DISTINCT</code>):</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span> fare_conditions
 <span class="hljs-keyword">FROM</span> seats;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  HashAggregate
    Group Key: fare_conditions
-   −> Seq Scan on seats
+   −&gt; Seq Scan on seats
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Fare class plus another value (<code>UNION</code>):</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> fare_conditions
 <span class="hljs-keyword">FROM</span> seats
 <span class="hljs-keyword">UNION</span>
 <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">NULL</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  HashAggregate
    Group Key: seats.fare_conditions
-   −> Append
-       −> Seq Scan on seats
-       −> Result
+   −&gt; Append
+       −&gt; Seq Scan on seats
+       −&gt; Result
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The Append node is where the sets of rows are combined, but it doesn't remove any duplicate values, which is something the <code>UNION</code> operation demands. This is done separately at the HashAggregate node.</p><p>Just like with a hash join, the amount of memory available for the hash table cannot exceed <em>work_mem × hash_mem_multiplier</em>.</p><p>If the hash table fits, the aggregation is done in one batch, as in this example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span> amount
 <span class="hljs-keyword">FROM</span> ticket_flights;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  HashAggregate (actual rows=338 loops=1)
    Group Key: amount
    Batches: 1 Memory Usage: 61kB
-   −> Seq Scan on ticket_flights (actual rows=8391852 loops=1)
+   −&gt; Seq Scan on ticket_flights (actual rows=8391852 loops=1)
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>There aren't many distinct values, so the hash table takes up just 61KB (Memory Usage).</p><p>As soon as the table no longer fits into the memory, the excess values start getting spilled to disk, split into several partitions based on specific bits of their hash values. The number of partitions is always a power of two and is selected in such a way as to allow each partition's hash table to fit into the memory. The estimate is prone to statistical inaccuracies, so the resulting desired number of partitions gets multiplied by 1.5 for good measure, further decreasing the size of each partition and increasing the chance that it can be processed in a single batch.</p><p>As soon as the data set is scanned, the node returns the aggregation results for the values from the hash table.</p><p>Then, the hash table is wiped and the next partition is scanned from its temporary file and processed just like a regular set of rows. In some cases, a partition's hash table may overflow again. If this happens, the "extra" rows are once again split into partitions and stored on disk.</p><p>As you recall, the two-pass hash join algorithm moves all the most common values into the first batch to save some I/O time. There's no need to do that for aggregation because it only stores the overflowing rows on disk, not all of them. The most common values will probably show up in the set early enough and will secure a spot in the hash table anyway.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span> flight_id
 <span class="hljs-keyword">FROM</span> ticket_flights;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                         QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                         QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  HashAggregate (actual rows=150588 loops=1)
    Group Key: flight_id
    Batches: 5 Memory Usage: 4145kB Disk Usage: 98184kB
-   −> Seq Scan on ticket_flights (actual rows=8391852 loops=1)
+   −&gt; Seq Scan on ticket_flights (actual rows=8391852 loops=1)
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>In this example, the number of distinct values is high enough for the hash table to not fit into the memory limit. The data was processed in 5 batches: one for the initial set and four more for the four partitions stored on disk.</p><p><a target="_blank" rel="noopener" href="https://postgrespro.com/blog/pgsql/5969770">Read on</a>.
 		</p></div>

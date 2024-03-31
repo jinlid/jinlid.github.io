@@ -53,10 +53,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -464,7 +464,7 @@ Seq Scan on sampletable <span class="token punctuation">(</span>cost<span class=
 ----------------------------------------------------------------------------
 Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<span class="token operator">=</span>9313.62<span class="token punctuation">..</span>68396.35 rows<span class="token operator">=</span>402218 width<span class="token operator">=</span>11<span class="token punctuation">)</span>
        Recheck Cond: <span class="token punctuation">(</span>x <span class="token operator">&lt;</span> <span class="token string">'423'</span>::numeric<span class="token punctuation">)</span>
-       -<span class="token operator">></span> Bitmap Index Scan on idx_x <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>9213.07 rows<span class="token operator">=</span>402218 width<span class="token operator">=</span>0<span class="token punctuation">)</span>
+       -<span class="token operator">&gt;</span> Bitmap Index Scan on idx_x <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>9213.07 rows<span class="token operator">=</span>402218 width<span class="token operator">=</span>0<span class="token punctuation">)</span>
           Index Cond: <span class="token punctuation">(</span>x <span class="token operator">&lt;</span> <span class="token string">'423'</span>::numeric<span class="token punctuation">)</span>
 <span class="token punctuation">(</span>4 rows<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
@@ -621,13 +621,13 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-zi-shi-wu-he-xing-neng/">
+                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的子事务和性能">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
                         
-                        <span class="card-title">POSTGRESQL中的子事务和性能</span>
+                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -670,24 +670,24 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                <a href="/2023/li-jie-postgresql-zhong-de-bloat-he-vacuum/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="POSTGRESQL中的连接策略和性能">
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="理解PostgreSQL中的Bloat和VACUUM">
                         
-                        <span class="card-title">POSTGRESQL中的连接策略和性能</span>
+                        <span class="card-title">理解PostgreSQL中的Bloat和VACUUM</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            与其他RDBMS相比，PostgreSQL中MVCC(多版本并发控制)的实现是不同的和特殊的。PostgreSQL中的MVCC控制哪些元组可以通过版本控制对事务可见。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-25
                             </span>
                         <span class="publish-author">
                             

@@ -56,10 +56,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -601,8 +601,8 @@
 <p>将其 refcount 和 usage_count 的值加1。</p>
 <p>释放自旋锁。</p>
 <pre class="line-numbers language-c-monosp"><code class="language-c-monosp">LockBufHdr(bufferdesc);    /* Acquire a spinlock */
-bufferdesc->refcont++;
-bufferdesc->usage_count++;
+bufferdesc-&gt;refcont++;
+bufferdesc-&gt;usage_count++;
 UnlockBufHdr(bufferdesc); /* Release the spinlock */
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 </li>
@@ -617,7 +617,7 @@ UnlockBufHdr(bufferdesc); /* Release the spinlock */
 <span class="token macro property">#<span class="token directive keyword">define</span> BM_JUST_DIRTIED      (1 &lt;&lt; 5)    </span><span class="token comment" spellcheck="true">/* 开始写之后数据刚被修改 */</span>
 
 <span class="token function">LockBufHdr</span><span class="token punctuation">(</span>bufferdesc<span class="token punctuation">)</span><span class="token punctuation">;</span>
-bufferdesc<span class="token operator">-></span>flags <span class="token operator">|</span><span class="token operator">=</span> BM_DIRTY<span class="token punctuation">;</span>
+bufferdesc<span class="token operator">-&gt;</span>flags <span class="token operator">|</span><span class="token operator">=</span> BM_DIRTY<span class="token punctuation">;</span>
 <span class="token function">UnlockBufHdr</span><span class="token punctuation">(</span>bufferdesc<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>其他标记位也是通过相同的方式来设置的。</p>
@@ -927,19 +927,19 @@ bufferdesc<span class="token operator">-></span>flags <span class="token operato
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/5.bing-fa-kong-zhi/">
+                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                         
-                        <span class="card-title">5 并发控制</span>
+                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
                         
                     </div>
                     <div class="publish-info">
@@ -976,19 +976,19 @@ bufferdesc<span class="token operator">-></span>flags <span class="token operato
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2021/9.yu-xie-ri-zhi-wal/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">9 预写日志—WAL</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的每
                         
                     </div>
                     <div class="publish-info">

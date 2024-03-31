@@ -52,10 +52,10 @@
 
     <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
 
-<meta name="generator" content="Hexo 6.3.0">
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css">
 <style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
-<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+</head>
 
 
 <body>
@@ -974,12 +974,12 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Merge Join
    Merge Cond: (t.ticket_no = tf.ticket_no)
-   −> Index Scan using tickets_pkey on tickets t
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using tickets_pkey on tickets t
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Here, the optimizer selected this join method because it returns the output ordered by the key specified under the <code>ORDER BY</code> clause. When selecting a plan, the optimizer considers the ordering of the input and tries to avoid sorting altogether whenever possible. In addition to that, the resulting output can be used as an input for another merge join as long as the ordering stays intact:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
@@ -987,27 +987,27 @@ table tbody tr th { text-align: right; }
   <span class="hljs-keyword">JOIN</span> boarding_passes bp <span class="hljs-keyword">ON</span> bp.ticket_no = tf.ticket_no
                          <span class="hljs-keyword">AND</span> bp.flight_id = tf.flight_id
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Merge Join
    Merge Cond: (tf.ticket_no = t.ticket_no)
-   −> Merge Join
+   −&gt; Merge Join
        Merge Cond: ((tf.ticket_no = bp.ticket_no) AND (tf.flight_...
-       −> Index Scan using ticket_flights_pkey on ticket_flights tf
-       −> Index Scan using boarding_passes_pkey on boarding_passe...
-  −> Index Scan using tickets_pkey on tickets t
+       −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
+       −&gt; Index Scan using boarding_passes_pkey on boarding_passe...
+  −&gt; Index Scan using tickets_pkey on tickets t
 (7 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The <code>ticket_flights</code> and <code>boarding_passes</code> tables are merged first. The tables have a composite primary key (<code>ticket_no</code>, <code>flight_id</code>), so the output is ordered by these two columns. The resulting set of rows is then merged with the <code>tickets</code> table, which is ordered by <code>ticket_no</code>.</p><p>The merge is completed in one pass over the two data sets and does not require any extra memory. The algorithm uses two pointers, which point at the current (or initially, the first) rows of the two sets.</p><p>If the keys of the current rows don't match, one of the pointers (the one that points at the row with the lower key) moves one step forward. This repeats until a match is found. Matching rows are returned to the parent node, and the inner set pointer moves one step forward. The algorithm repeats until it reaches the end of either set.</p><p>This specific algorithm can handle duplicate keys in the inner but not in the outer set. An additional step is introduced to fix that: whenever the outer pointer moves but the key remains the same, the inner pointer is returned to the first row that matches the key. This way, every outer set row will be matched with all inner set rows that have the same key.</p><p>There is another variation of the algorithm that can perform outer joins, but it is based on the same principle.</p><p>The merge join is designed to work with the equity operator, so it supports only equijoins (but there is <a target="_blank" rel="noopener" href="https://commitfest.postgresql.org/33/3160/">an effort</a> to support other comparison operators as well).</p><p><strong>Cost estimation.</strong> Consider the example from before:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Merge Join  (cost=0.99..822358.66 rows=8391852 width=136)
    Merge Cond: (t.ticket_no = tf.ticket_no)
-   −> Index Scan using tickets_pkey on tickets t
+   −&gt; Index Scan using tickets_pkey on tickets t
        (cost=0.43..139110.29 rows=2949857 width=104)
-   −> Index Scan using ticket_flights_pkey on ticket_flights tf
+   −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
        (cost=0.56..570975.58 rows=8391852 width=32)
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Initially, the startup cost includes at least the startup costs of the child nodes.</p><p>In addition to that, you more often than not will have to scan at least some fraction of both data sets before the first match is found. To estimate this fraction, you can use a histogram to compare the minimal join keys in both sets. In this case, however, the range of ticket numbers in both tables is the same.</p><p>The total cost of the node is the sum of the data retrieval cost from its children and the data processing cost.</p><p>Because the algorithm stops when it reaches the end of either of the two sets (except when performing an outer join, of course), a fraction of the second set may remain unscanned. You can estimate the size of that fraction by comparing the maximum keys of both sets. In this case, both our sets will be scanned fully, so we include the full total costs of the child nodes into the parent's total cost.</p><p>Additionally, duplicate keys may cause some of the inner set rows to be scanned multiple times. The number of repeat scans is proportional to the difference between the join result and the inner set cardinality.</p><p>Here, these cardinalities are the same, which means there are no duplicates.</p><p>The data processing cost comprises key comparisons and result output. The number of comparisons could be estimated by adding up the cardinalities of both sets and the number of repeat outer set row scans. The cost of one comparison is estimated as <em>cpu_operator_cost</em>, the row output cost as <em>cpu_tuple_cost</em>.</p><p>Now we can calculate the join cost for our example:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">0.43</span> + <span class="hljs-number">0.56</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">SELECT</span> <span class="hljs-number">0.43</span> + <span class="hljs-number">0.56</span> <span class="hljs-keyword">AS</span> startup,
@@ -1016,7 +1016,7 @@ table tbody tr th { text-align: right; }
     current_setting(<span class="hljs-string">'cpu_tuple_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">8391852</span> +
     current_setting(<span class="hljs-string">'cpu_operator_cost'</span>)::<span class="hljs-type">real</span> * (<span class="hljs-number">2949857</span> + <span class="hljs-number">8391852</span>)
 )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup |   total
 −−−−−−−−−+−−−−−−−−−−−
     0.99 | 822358.66
 (1 row)
@@ -1025,100 +1025,100 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> count(*), sum(tf.amount)
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize Aggregate
-   −> Gather
+   −&gt; Gather
        Workers Planned: 2
-       −> Partial Aggregate
-           −> Merge Join
+       −&gt; Partial Aggregate
+           −&gt; Merge Join
                Merge Cond: (tf.ticket_no = t.ticket_no)
-               −> Parallel Index Scan using ticket_flights_pkey o...
-               −> Index Only Scan using tickets_pkey on tickets t
+               −&gt; Parallel Index Scan using ticket_flights_pkey o...
+               −&gt; Index Only Scan using tickets_pkey on tickets t
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Full and right outer joins are not supported in this mode.</p><h2>Modifications</h2><p>The merge join supports all logical join types. The only limitation is that for full and right outer joins the join condition must be a valid expression for the merge operation (<code>outer column equals inner column</code> or <code>column equals constant</code>). For other logical join types, any non-mergejoinable conditions are applied to the output after the merging is complete, but it's impossible to do so for full and right outer joins.</p><p>Below is an example of a full merge join:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">FULL</span> <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Sort
    Sort Key: t.ticket_no
-   −> Merge Full Join
+   −&gt; Merge Full Join
        Merge Cond: (t.ticket_no = tf.ticket_no)
-       −> Index Scan using tickets_pkey on tickets t
-       −> Index Scan using ticket_flights_pkey on ticket_flights tf
+       −&gt; Index Scan using tickets_pkey on tickets t
+       −&gt; Index Scan using ticket_flights_pkey on ticket_flights tf
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Inner and left outer merge joins preserve the ordering. Full and right outer joins do not, because NULL values that may appear among the data will break the ordering. This is where the Sort node comes in to reorder the output. It increases the cost, making the hash join a more attractive alternative, so we had to explicitly disable it for the demonstration.</p><p>In the next example, however, the hash join is selected anyway because a full join with non-mergejoinable conditions cannot be done in any other way.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> tickets t
   <span class="hljs-keyword">FULL</span> <span class="hljs-keyword">JOIN</span> ticket_flights tf <span class="hljs-keyword">ON</span> tf.ticket_no = t.ticket_no
-                             <span class="hljs-keyword">AND</span> tf.amount > <span class="hljs-number">0</span>
+                             <span class="hljs-keyword">AND</span> tf.amount &gt; <span class="hljs-number">0</span>
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> t.ticket_no;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                  QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                  QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Sort
    Sort Key: t.ticket_no
-   −> Hash Full Join
+   −&gt; Hash Full Join
        Hash Cond: (tf.ticket_no = t.ticket_no)
-       Join Filter: (tf.amount > '0'::numeric)
-       −> Seq Scan on ticket_flights tf
-       −> Hash
-           −> Seq Scan on tickets t
+       Join Filter: (tf.amount &gt; '0'::numeric)
+       −&gt; Seq Scan on ticket_flights tf
+       −&gt; Hash
+           −&gt; Seq Scan on tickets t
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">RESET</span> enable_hashjoin;
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>Sorting</h1><p>If either of the sets (or both) isn't ordered by the join key, it must be sorted before merging. This necessary sorting is done under the Sort node in the plan.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></span></pre><h1>Sorting</h1><p>If either of the sets (or both) isn't ordered by the join key, it must be sorted before merging. This necessary sorting is done under the Sort node in the plan.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> airports_data dep <span class="hljs-keyword">ON</span> f.departure_airport = dep.airport_code
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> dep.airport_code;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                       QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                       QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Merge Join
    Merge Cond: (f.departure_airport = dep.airport_code)
-   −> Sort
+   −&gt; Sort
        Sort Key: f.departure_airport
-       −> Seq Scan on flights f
-   −> Sort
+       −&gt; Seq Scan on flights f
+   −&gt; Sort
        Sort Key: dep.airport_code
-       −> Seq Scan on airports_data dep
+       −&gt; Seq Scan on airports_data dep
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The sorting algorithm itself is universal. It can be invoked by an <code>ORDER BY</code> clause by itself or within a window function:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> flight_id,
   row_number() <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> flight_no <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> flight_id)
 <span class="hljs-keyword">FROM</span> flights f;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">              QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">              QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  WindowAgg
-   −> Sort
+   −&gt; Sort
        Sort Key: flight_no, flight_id
-       −> Seq Scan on flights f
+       −&gt; Seq Scan on flights f
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Here, the WindowAgg node calculates the window function over a data set pre-sorted by the Sort node.</p><p>The planner has an arsenal of sorting modes to choose from. The example above showcases two of those (Sort Method). As always, you can dig in for more details with <code>EXPLAIN ANALYZE</code>:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>,<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>,<span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>,<span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>,<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>,<span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>,<span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights f
   <span class="hljs-keyword">JOIN</span> airports_data dep <span class="hljs-keyword">ON</span> f.departure_airport = dep.airport_code
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> dep.airport_code;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Merge Join (actual rows=214867 loops=1)
    Merge Cond: (f.departure_airport = dep.airport_code)
-   −> Sort (actual rows=214867 loops=1)
+   −&gt; Sort (actual rows=214867 loops=1)
        Sort Key: f.departure_airport
        Sort Method: external merge Disk: 17136kB
-       −> Seq Scan on flights f (actual rows=214867 loops=1)
-   −> Sort (actual rows=104 loops=1)
+       −&gt; Seq Scan on flights f (actual rows=214867 loops=1)
+   −&gt; Sort (actual rows=104 loops=1)
        Sort Key: dep.airport_code
        Sort Method: quicksort Memory: 52kB
-       −> Seq Scan on airports_data dep (actual rows=104 loops=1)
+       −&gt; Seq Scan on airports_data dep (actual rows=104 loops=1)
 (10 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><h2>Quicksort</h2><p>If the data to be sorted fits into the allowed memory (<em>work_mem</em>) completely, then the good old <em>Quicksort</em> algorithm is used. You can find its description on the first pages of any computer science textbook, so I will not repeat it here.</p><p>For the implementation, the sorting is done by a specific component that selects the most appropriate algorithm for the task.</p><p><strong>Cost estimation.</strong> Let's look at how the algorithm sorts a small table:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> airports_data
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> airport_code;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Sort  (cost=7.52..7.78 rows=104 width=145)
    Sort Key: airport_code
-   −> Seq Scan on airports_data  (cost=0.00..4.04 rows=104 width=...
+   −&gt; Seq Scan on airports_data  (cost=0.00..4.04 rows=104 width=...
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The complexity of sorting n values is O(<em>n</em> log<sub>2</sub><em>n</em>). One comparison operation costs twice the value of <em>cpu_operator_cost</em>. You need to scan and sort the <em>whole</em> set to get a result, so the startup sorting cost will include both the comparison operations cost and the total cost of the child node.</p><p>The total sorting cost will include, in addition to that, the processing cost for each row of the Sort node output, estimated as <em>cpu_operator_cost</em> per row (instead of the default <em>cpu_tuple_cost</em> because it is cheap).</p><p>So, the sorting cost for the example above would be calculated like this:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword">AS</span> (
   <span class="hljs-keyword">SELECT</span> <span class="hljs-number">4.04</span> + round((
@@ -1131,7 +1131,7 @@ table tbody tr th { text-align: right; }
     current_setting(<span class="hljs-string">'cpu_operator_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">104</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup | total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup | total
 −−−−−−−−−+−−−−−−−
     7.52 | 7.78
 (1 row)
@@ -1139,15 +1139,15 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">FROM</span> seats
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> seat_no
 <span class="hljs-keyword">LIMIT</span> <span class="hljs-number">100</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Limit  (cost=72.57..72.82 rows=100 width=15)
    (actual rows=100 loops=1)
-   −> Sort  (cost=72.57..75.91 rows=1339 width=15)
+   −&gt; Sort  (cost=72.57..75.91 rows=1339 width=15)
        (actual rows=100 loops=1)
        Sort Key: seat_no
        Sort Method: top−N heapsort Memory: 33kB
-       −> Seq Scan on seats  (cost=0.00..21.39 rows=1339 width=15)
+       −&gt; Seq Scan on seats  (cost=0.00..21.39 rows=1339 width=15)
            (actual rows=1339 loops=1)
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>In order to find the <em>k</em> highest (lowest) values out of <em>n</em>, the algorithm first creates a data structure called a <em>heap</em> and adds <em>k</em> first rows into it. Then it continues adding rows into the heap one by one, but after each one, it expels one lowest (highest) value from the heap. When it runs out of new rows to add, the heap is left with the <em>k</em> highest or lowest values.</p><p>The term <em>heap</em> here refers to a <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Heap_(data_structure)">specific data structure</a> and should not be confused with database tables, which often go by the same name.</p><p><strong>Cost estimation.</strong> The algorithm complexity is O(<em>n</em> log<sub>2</sub><em>k</em>), but each operation costs more compared to Quicksort, so the cost calculation formula uses <em>n</em> log<sub>2</sub>2<em>k</em> as an estimate.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword">AS</span> (
@@ -1161,7 +1161,7 @@ table tbody tr th { text-align: right; }
     current_setting(<span class="hljs-string">'cpu_operator_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">100</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup | total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup | total
 −−−−−−−−−+−−−−−−−
    72.57 | 72.82
 (1 row)
@@ -1169,23 +1169,23 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> scheduled_departure;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                            QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Sort (actual rows=214867 loops=1)
    Sort Key: scheduled_departure
    Sort Method: external merge Disk: 17136kB
    Buffers: shared hit=610 read=2017, temp read=2142 written=2150
-   −> Seq Scan on flights (actual rows=214867 loops=1)
+   −&gt; Seq Scan on flights (actual rows=214867 loops=1)
        Buffers: shared hit=607 read=2017
 (6 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>There are more statistics about the temporary files to be found in the server log (with the parameter <em>log_temp_buffers</em> on).</p><p><strong>Cost estimation.</strong> Let's look at the external merge sort plan again:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> scheduled_departure;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Sort  (cost=31883.96..32421.12 rows=214867 width=63)
    Sort Key: scheduled_departure
-   −> Seq Scan on flights  (cost=0.00..4772.67 rows=214867 width=63)
+   −&gt; Seq Scan on flights  (cost=0.00..4772.67 rows=214867 width=63)
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Here, the basic comparison cost is the same as in Quicksort, but there's also an I/O cost added on top. All input data is first dumped to disk, then read from disk for merging (multiple times, if there are too many individual files to be merged in one pass).</p><p>The volume of data written to disk depends on the number and size of rows in the input data set. In this example, the query pulls all the columns from the <code>flights</code> table, so the data size will be close to the table size, except it will not include any tuple headers and page metadata (2309 pages vs 2624). Here, one iteration is enough to sort the data.</p><p>The I/O operations (both reading and writing) are estimated to be sequential 3/4 of the time and random 1/4 of the time.</p><p>So in the end, the sorting cost will be calculated like this:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup) <span class="hljs-keyword">AS</span> (
   <span class="hljs-keyword">SELECT</span> <span class="hljs-number">4772.67</span> + round((
@@ -1200,7 +1200,7 @@ table tbody tr th { text-align: right; }
   startup + round(( current_setting(<span class="hljs-string">'cpu_operator_cost'</span>)::<span class="hljs-type">real</span> * <span class="hljs-number">214867</span>
   )::<span class="hljs-type">numeric</span>, <span class="hljs-number">2</span>) <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup  |  total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs"> startup  |  total
 −−−−−−−−−−+−−−−−−−−−−
  31883.96 | 32421.13
 (1 row)
@@ -1208,7 +1208,7 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> total_amount, book_date;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Incremental Sort (actual rows=2111110 loops=1)
    Sort Key: total_amount, book_date
@@ -1217,60 +1217,60 @@ table tbody tr th { text-align: right; }
    Memory: 30kB Peak Memory: 30kB
    Pre−sorted Groups: 2624 Sort Method: quicksort Average
    Memory: 3152kB Peak Memory: 3259kB
-   −> Index Scan using bookings_total_amount_idx on bookings (ac...
+   −&gt; Index Scan using bookings_total_amount_idx on bookings (ac...
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>As evident from the plan, the set is pre-sorted by <code>total_amount</code>, being the output of an index scan against this column (Presorted Key). The <code>EXPLAIN ANALYZE</code> command also shows us the time it took to process the data. The Full-sort Groups value displays the number of rows that were clumped together and sorted regularly, and the Pre-sorted Groups shows the number of large groups that were incrementally sorted by the <code>book_date</code> column. In-memory Quicksort was used in both cases. The variation in the size of the groups is caused by the distribution of booking costs, which is non-uniform.</p><p>In PostgreSQL 14 and above, incremental sort also works with window functions:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> row_number() <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> total_amount, book_date)
 <span class="hljs-keyword">FROM</span> bookings;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                           QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  WindowAgg
-   −> Incremental Sort
+   −&gt; Incremental Sort
        Sort Key: total_amount, book_date
        Presorted Key: total_amount
-       −> Index Scan using bookings_total_amount_idx on bookings
+       −&gt; Index Scan using bookings_total_amount_idx on bookings
 (5 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p><strong>Cost estimation.</strong> Incremental sort cost depends on the estimated number of groups and the estimated cost of sorting an average group (which we have covered before).</p><p>The startup cost shows the cost of sorting one (the first) group because that's enough for the node to begin output. The total cost includes the cost of sorting all the groups.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> total_amount, book_date;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Incremental Sort  (cost=45.10..282293.40 rows=2111110 width=21)
    Sort Key: total_amount, book_date
    Presorted Key: total_amount
-   −> Index Scan using bookings_total_amount_idx on bookings  (co...
+   −&gt; Index Scan using bookings_total_amount_idx on bookings  (co...
 (4 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>I'll skip the details of the calculation here.</p><h2>Parallel mode</h2><p>Sorting can be performed in parallel. That said, while the workers return their outputs sorted, the Gather node doesn't order them in any way, only appends the input in whatever order it comes in. To keep the rows ordered, another node is employed: Gather Merge.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">analyze</span>, <span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">timing</span> <span class="hljs-keyword">off</span>, <span class="hljs-keyword">summary</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> *
 <span class="hljs-keyword">FROM</span> flights
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> scheduled_departure
 <span class="hljs-keyword">LIMIT</span> <span class="hljs-number">10</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Limit (actual rows=10 loops=1)
-   −> Gather Merge (actual rows=10 loops=1)
+   −&gt; Gather Merge (actual rows=10 loops=1)
        Workers Planned: 1
        Workers Launched: 1
-       −> Sort (actual rows=8 loops=2)
+       −&gt; Sort (actual rows=8 loops=2)
            Sort Key: scheduled_departure
            Sort Method: top−N heapsort Memory: 27kB
            Worker 0: Sort Method: top−N heapsort Memory: 27kB
-           −> Parallel Seq Scan on flights (actual rows=107434 lo...
+           −&gt; Parallel Seq Scan on flights (actual rows=107434 lo...
 (9 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The Gather Merge node uses a binary heap to sort the rows coming in from workers. In essence, it just merges several sets of rows, much like the external merge sort, but there are some differences under the hood, one of them being that the Gather Merge node is optimized for working with a small, fixed number of data sources and for receiving rows one by one, without block I/O.</p><p><strong>Cost estimation.</strong> The Gather Merge startup cost depends on the child node startup cost. As with the Gather node, there is also the worker processes startup cost, estimated as the <em>parallel_setup_cost</em> parameter value.</p><p>In addition to that, there is the binary heap building cost, which comprises sorting <em>n</em> items where <em>n</em> is the number of parallel workers, that is, <em>n</em> log<sub>2</sub><em>n</em>. The comparison operation cost is estimated as <em>cpu_operator_cost</em> times two. The resulting cost is usually insignificant because the number of workers is never that high.</p><p>The total cost then adds to that the data retrieval cost by the child node (performed by multiple workers) and the data output cost from the workers. The retrieval and output costs are estimated as <em>parallel_tuple_cost</em> per row plus 5% on account of possible delays.</p><p>Lastly, there is the binary heap update, which requires log<sub>2</sub><em>n</em> comparison operations plus auxiliary operations. Its cost is estimated as log <em>N</em> (2 <em>cpu_operator_cost</em>) + <em>cpu_operator_cost</em> per input row.</p><p>Here's another plan with a Gather Merge:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> <span class="hljs-keyword">SELECT</span> amount, count(*)
 <span class="hljs-keyword">FROM</span> ticket_flights
 <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> amount;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                             QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Finalize GroupAggregate  (cost=123399.62..123485.00 rows=337 wid...
    Group Key: amount
-   −> Gather Merge  (cost=123399.62..123478.26 rows=674 width=14)
+   −&gt; Gather Merge  (cost=123399.62..123478.26 rows=674 width=14)
        Workers Planned: 2
-       −> Sort  (cost=122399.59..122400.44 rows=337 width=14)
+       −&gt; Sort  (cost=122399.59..122400.44 rows=337 width=14)
            Sort Key: amount
-           −> Partial HashAggregate  (cost=122382.07..122385.44 r...
+           −&gt; Partial HashAggregate  (cost=122382.07..122385.44 r...
                Group Key: amount
-               −> Parallel Seq Scan on ticket_flights  (cost=0.00...
+               −&gt; Parallel Seq Scan on ticket_flights  (cost=0.00...
 (9 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>Note that the workers here perform a partial hash aggregation before passing the results to the Sort node. This is efficient because aggregation cuts down on the number of rows. Then, the Sort node passes the output to the leader process to be assembled by the Gather Merge node. The final aggregation make use of a sorted list of values instead of hashing.</p><p>In this example, there are three parallel processes (including the leader), so the Gather Merge cost would be calculated as follows:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup, run) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">WITH</span> <span class="hljs-keyword">costs</span>(startup, run) <span class="hljs-keyword">AS</span> (
   <span class="hljs-keyword">SELECT</span> round((
@@ -1290,44 +1290,44 @@ table tbody tr th { text-align: right; }
 <span class="hljs-keyword">SELECT</span> <span class="hljs-number">122399.59</span> + startup <span class="hljs-keyword">AS</span> startup,
   <span class="hljs-number">122400.44</span> + startup + run <span class="hljs-keyword">AS</span> total
 <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">costs</span>;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">  startup  |   total
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">  startup  |   total
 −−−−−−−−−−−+−−−−−−−−−−−
  123399.61 | 123478.26
 (1 row)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre><h1>Grouping and distinct values</h1><p>The example from before shows that grouping values for aggregation (and removal of duplicate values) can be done both by hashing as well as by sorting. In a sorted list, groups of duplicate values can be found in a single pass.</p><p>A simple node called Unique performs the task of selecting distinct values from a given list:</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span> book_ref
 <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                        QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                        QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  Result
-   −> Unique
-       −> Index Only Scan using bookings_pkey on bookings
+   −&gt; Unique
+       −&gt; Index Only Scan using bookings_pkey on bookings
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The aggregation itself is performed under the GroupAggregate node.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword"><code class="language-pgsql hljs"><span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>) <span class="hljs-keyword">SELECT</span> book_ref, count(*)
 <span class="hljs-keyword">FROM</span> bookings
 <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> book_ref
 <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> book_ref;
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                      QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">                      QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  GroupAggregate
    Group Key: book_ref
-   −> Index Only Scan using bookings_pkey on bookings
+   −&gt; Index Only Scan using bookings_pkey on bookings
 (3 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>In parallel plans, this node will be replaced by Partial GroupAggregate, and the aggregation will be finalized under Finalize GroupAggregate.</p><p>In PostgreSQL 10 and above, both hashing and sorting can be used by the same node when grouping is performed over multiple sets (under <code>GROUPING SETS</code>, <code>CUBE</code>, and <code>ROLLUP</code> clauses). The details of the algorithm are too complicated to cover within the scope of this article, but we can have a look at an example instead. In this plan, grouping is performed over three different columns, and memory is limited.</p><pre class="line-numbers language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string"><code class="language-pgsql hljs"><span class="hljs-keyword">SET</span> work_mem = <span class="hljs-string">'64kB'</span>;
 <span class="hljs-keyword">EXPLAIN</span> (<span class="hljs-keyword">costs</span> <span class="hljs-keyword">off</span>)
 <span class="hljs-keyword">SELECT</span> count(*)
 <span class="hljs-keyword">FROM</span> flights
 <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> <span class="hljs-keyword">GROUPING SETS</span> (aircraft_code, flight_no, departure_airport);
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></span></pre> <pre class="line-numbers language-plaintext hljs"><code class="language-plaintext hljs">          QUERY PLAN
 −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
  MixedAggregate
    Hash Key: departure_airport
    Group Key: aircraft_code
    Sort Key: flight_no
      Group Key: flight_no
-   −> Sort
+   −&gt; Sort
        Sort Key: aircraft_code
-       −> Seq Scan on flights
+       −&gt; Seq Scan on flights
 (8 rows)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>The aggregate node, MixedAggregate, receives a set of rows pre-sorted by <em>aircraft_code</em>.</p><p>First, the set is scanned, and the rows are grouped by <em>aircraft_code</em> (Group Key). As the rows are being scanned, they are reordered by <em>flight_no</em> (either by Quicksort in memory (if sufficient) or by external sort on disk, just like the Sort node does it). At the same time, the rows are recorded into a hash table under the key <em>departure_airport</em> (either in-memory or in temporary files on disk, just like with the HashAggregate).</p><p>Next, the set that just got sorted by <em>flight_no</em> is scanned and grouped by the same key (Sort Key and the nested Group Key). If grouping by another column were required, the rows would have been reordered accordingly at this stage.</p><p>Finally, the hash table from the first step is scanned and the values are grouped by <em>departure_airport</em> (Hash Key).</p><h1>Comparison of join methods</h1><p>There are three methods that can be used to join two data sets, each with its own advantages and disadvantages.</p><p>The <em>nested loop join</em> requires zero setup time and can start returning resulting rows immediately. This is the only method that doesn't need to scan the entire set, provided that index access is available. These properties make the nested loop join (together with indexes) the perfect choice for OLTP systems with lots of short queries returning just a few rows at a time.</p><p>The shortcomings of the algorithm become apparent when data volumes increase. For the Cartesian product calculation, the algorithm's complexity is quadratic: the cost is proportionate to the product of the sizes of the two data sets. In practice, the pure Cartesian product calculation doesn't appear all that often. Generally, there is a certain number of rows in the inner set index-scanned per each outer set row, and this number is independent of the total number of rows in the inner set (for example, the average number of tickets per booking doesn't depend on the total number of bookings or the total number of tickets booked). Therefore, the complexity increase will usually be linear, not quadratic, albeit with a high linear coefficient.</p><p>Another important feature of the nested loop join is its versatility. While other join methods support only equijoins, this algorithm can operate with any join conditions. This makes the algorithm fit for almost any kind of query and conditions (except for the full join, which can't be done in a nested loop). Remember, however, that non-equijoins of large data sets are inherently inefficient.</p><p>The <em>hash join</em> is what you want to use for large data sets. With enough memory, the hash join can join two data sets in one pass. In other words, its complexity is linear. The hash join, paired together with sequential scanning, is most often seen in environments with OLAP queries that process large amounts of data.</p><p>The algorithm is a poor fit for use cases where latency is more important than throughput because it cannot start returning data until the whole hash table is completed.</p><p>In addition to that, the hash join is limited to equijoins only. Lastly, the data type you are working with must be hashable (but it is rarely an issue).</p><p>In PostgreSQL 14 and above, the nested loop join can occasionally compete with the hash join thanks to the ability to cache the inner set rows by the Memorize node (which is also based on a hash table). The nested loop join can pull ahead under certain conditions because it doesn't have to scan the inner set in its entirety while the hash join does.</p><p>The <em>merge join</em> works well with both short OLTP queries and long OLAP ones. It's got linear complexity (both sets have to be scanned only once), needs little memory and can start output immediately. The only caveat is that the data sets have to be pre-sorted. The ideal scenario is when the input comes right from an index scan. This is also a natural choice for small sets of rows. With larger amounts of data, index access remains efficient only as long as there are little to no table access.</p><p>Without a proper index, the data sets have to be sorted, and sorting has a higher-than-linear complexity: O(<em>n</em> log<sub>2</sub><em>n</em>). Because of this, the merge join usually falls behind the hash join, except for the cases when the output also has to be sorted.</p><p>The merge join does not discriminate between the inner and the outer set, which is a nice perk. The efficiency of both the nested loop join and the hash join will sink if the planner assigns the inner and outer sets incorrectly, while for the merge join this is not an issue.</p><p>Like the hash join, the merge join can operate only with equijoins. Additionally, the data type must have a B-Tree operator class.</p><p>The image below illustrates approximate costs of different join methods at various join selectivity values.</p><p><img alt="" data-no-retina="1" src="./Queries in PostgreSQL_ 7. Sort and merge _ Postgres Professional_files/5.png.1528x919.jpg"></p><p>When selectivity is high, the nested loop join scans both tables by index, but at high selectivity it switches to full scan and the graph becomes linear.</p><p>The hash join uses full scan for both tables in this example. The "step" on the graph represents the moment the hash table no longer fits into memory and the data starts spilling to disk.</p><p>The merge join with index scan shows a small increase in cost as selectivity increases. With enough <em>work_mem</em>, the hash join outperforms the merge join, but when it comes to temporary files, the merge join pulls ahead.</p><p>The merge join and sort graph shows how the cost increases when index scan is not available and pre-sorting is required. Like with the hash join, the "step" represents the moment when the algorithm runs out of memory and begins spilling data into temporary files.</p><p>This is just an example and the graph will look a bit different from case to case.</p><p>&nbsp;</p><p>We've reached the end of this article series! There is a lot more to talk about, but I hope that now you understand the basics.</p><p>This series as well as my previous articles became the foundation for my book, “<strong>PostgreSQL Internals</strong>”. We've released the first chapters to the public already, available <a target="_blank" rel="noopener" href="https://postgrespro.com/community/books/internals">here</a>. A big thank you to all of my readers! Your feedback helps me improve my work.</p><p>Stay tuned for more!
 		</p></div>
