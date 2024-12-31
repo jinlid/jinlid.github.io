@@ -1,0 +1,138 @@
+在 Flask 中实现定时任务，可以使用不同的方案，常见的两种方式是：
+
+使用 APScheduler：这是一个 Python 库，可以用来调度定时任务，并且与 Flask 集成良好。
+使用 Celery：这是一个分布式任务队列，适用于更复杂的定时任务或需要分布式处理的场景。
+以下是这两种方式的实现方法：
+
+1. 使用 APScheduler 实现定时任务
+APScheduler（Advanced Python Scheduler）是一个轻量级的任务调度库，支持定时执行任务，可以与 Flask 集成来进行周期性任务调度。
+
+步骤：
+安装 APScheduler：
+
+bash
+pip install apscheduler
+编写 Flask 代码：
+
+python
+from flask import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
+import time
+
+app = Flask(__name__)
+
+# 定义一个定时任务
+def job_function():
+    print("定时任务正在执行...")
+    # 你可以在这里写你想执行的任务，比如更新数据库、发送邮件等
+    # 例如：
+    # send_email()  # 执行邮件发送任务
+
+# 定义错误回调
+def job_listener(event):
+    if event.exception:
+        print(f"任务 {event.job_id} 执行失败")
+    else:
+        print(f"任务 {event.job_id} 执行成功")
+
+# 设置定时任务
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(job_function, 'interval', seconds=10, id='job1')  # 每10秒执行一次任务
+    scheduler.add_listener(job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+    scheduler.start()
+
+@app.route('/')
+def index():
+    return 'Flask 定时任务示例'
+
+if __name__ == '__main__':
+    start_scheduler()  # 启动定时任务调度器
+    app.run(debug=True)
+解释：
+
+job_function 是你想定期执行的任务函数。
+scheduler.add_job(job_function, 'interval', seconds=10, id='job1') 定义了一个每 10 秒执行一次的定时任务。
+job_listener 用来监听任务是否成功执行，若执行失败，可以输出错误信息。
+通过调用 start_scheduler() 启动定时任务。
+运行 Flask 应用后，APScheduler 将在后台运行，并按计划执行任务。
+
+注意：
+APScheduler 是线程安全的，但在 Flask 应用中使用时，一定要确保它在单独的线程中运行，或者使用背景调度器。
+你可以调整 interval 的参数，设置为每分钟、每天或每周执行等。
+2. 使用 Celery 实现定时任务
+Celery 是一个强大的异步任务队列/任务调度框架，通常用于复杂的后台任务、分布式计算任务、定时任务等。
+
+步骤：
+安装 Celery 和 Redis（用于任务队列）：
+
+bash
+pip install celery redis
+创建 Flask 应用并集成 Celery：
+
+python
+from flask import Flask
+from celery import Celery
+import time
+
+app = Flask(__name__)
+
+# 设置 Flask 配置，指明 Celery 使用的 Redis broker
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+# 创建 Celery 实例
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
+@celery.task
+def job_function():
+    print("定时任务正在执行...")
+    # 执行具体任务
+    time.sleep(2)  # 模拟耗时任务
+    print("定时任务完成")
+
+@app.route('/')
+def index():
+    return 'Flask Celery 定时任务示例'
+
+if __name__ == '__main__':
+    app.run(debug=True)
+设置定时任务（使用 Celery Beat）：
+
+使用 Celery Beat 来定期触发任务。
+
+python
+from celery.schedules import crontab
+
+# 设置定时任务，每 10 秒执行一次
+celery.conf.beat_schedule = {
+    'run-every-10-seconds': {
+        'task': 'app.job_function',
+        'schedule': 10.0,  # 每 10 秒执行一次
+    },
+}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+启动 Flask 应用，Celery worker 和 Celery Beat：
+
+在一个终端中启动 Flask：
+
+bash
+python app.py
+在另外一个终端中启动 Celery Worker：
+
+bash
+celery -A app.celery worker
+在另一个终端中启动 Celery Beat：
+
+bash
+celery -A app.celery beat
+注意：
+Celery 是一个分布式任务队列，可以在多个机器或进程中并行执行任务，适用于需要高并发或分布式的场景。
+在本地开发时，通常使用 Redis 作为消息队列，但 Celery 支持多种不同的消息队列，例如 RabbitMQ。
+总结
+如果你的任务简单且不需要分布式处理，使用 APScheduler 是一种快速且易于集成的方式。
+如果你的任务需要分布式处理或者有复杂的任务队列需求，可以考虑使用 Celery。它适用于大规模的异步任务和定时任务调度。
