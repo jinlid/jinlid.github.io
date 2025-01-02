@@ -1,0 +1,18 @@
+CREATE INDEX search_idx ON commit_record USING gin(search_vector);				
+				
+-- 使用 title 和 content 字段生成 search_vector
+UPDATE commit_record SET search_vector = 
+    to_tsvector('english', commit_sha || ' ' || commit_author || ' ' ||commit_message);
+
+	
+CREATE OR REPLACE FUNCTION update_search_vector() 
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := to_tsvector('english', NEW.commit_sha || ' ' || NEW.commit_author || ' ' ||NEW.commit_message);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_search_vector
+BEFORE INSERT OR UPDATE ON commit_record
+FOR EACH ROW EXECUTE FUNCTION update_search_vector();
