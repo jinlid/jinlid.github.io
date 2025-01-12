@@ -1,18 +1,51 @@
-CREATE INDEX search_idx ON commit_record USING gin(search_vector);				
-				
--- 使用 title 和 content 字段生成 search_vector
-UPDATE commit_record SET search_vector = 
-    to_tsvector('english', commit_sha || ' ' || commit_author || ' ' ||commit_message);
+cat /lib/systemd/system/docker.service
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network-online.target docker.socket firewalld.service containerd.service time-set.target
+Wants=network-online.target containerd.service
+Requires=docker.socket
 
-	
-CREATE OR REPLACE FUNCTION update_search_vector() 
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.search_vector := to_tsvector('english', NEW.commit_sha || ' ' || NEW.commit_author || ' ' ||NEW.commit_message);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+[Service]
+Type=notify
+# the default is not to use systemd for cgroups because the delegate issues still
+# exists and systemd currently does not support the cgroup feature set required
+# for containers run by docker
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock
+ExecReload=/bin/kill -s HUP $MAINPID
+TimeoutStartSec=0
+RestartSec=2
+Restart=always
 
-CREATE TRIGGER trigger_update_search_vector
-BEFORE INSERT OR UPDATE ON commit_record
-FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+# Note that StartLimit* options were moved from "Service" to "Unit" in systemd 229.
+# Both the old, and new location are accepted by systemd 229 and up, so using the old location
+# to make them work for either version of systemd.
+StartLimitBurst=3
+
+# Note that StartLimitInterval was renamed to StartLimitIntervalSec in systemd 230.
+# Both the old, and new name are accepted by systemd 230 and up, so using the old name to make
+# this option work for either version of systemd.
+StartLimitInterval=60s
+
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
+LimitNPROC=infinity
+LimitCORE=infinity
+# Older systemd versions default to a LimitNOFILE of 1024:1024, which is insufficient for many
+# applications including dockerd itself and will be inherited. Raise the hard limit, while
+# preserving the soft limit for select(2).
+LimitNOFILE=1024:524288
+
+# Comment TasksMax if your systemd version does not support it.
+# Only systemd 226 and above support this option.
+TasksMax=infinity
+
+# set delegate yes so that systemd does not reset the cgroups of docker containers
+Delegate=yes
+
+# kill only the docker process, not all processes in the cgroup
+KillMode=process
+OOMScoreAdjust=-500
+
+[Install]
+WantedBy=multi-user.target
