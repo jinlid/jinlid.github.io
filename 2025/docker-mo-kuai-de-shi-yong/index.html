@@ -4,13 +4,13 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="11 流复制, jinlid&#39;s blog">
-    <meta name="description" content="同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+    <meta name="keywords" content="docker模块的使用, jinlid&#39;s blog">
+    <meta name="description" content="创建docker客户端
+import docker
 
-
-在流复制中，有三种类型的进程协同工作:
-
-主服务器上的walsender进程向备服务器发送WAL (Writ">
+# 创建 Docker 客户端
+client = docker.from_env()
+#client = docker.DockerClient(base_url=&#34;tcp://192.">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -22,7 +22,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>11 流复制 | jinlid&#39;s blog</title>
+    <title>docker模块的使用 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -342,12 +342,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">11 流复制</h1>
+                    <h1 class="description center-align post-title">docker模块的使用</h1>
                 </div>
             </div>
         </div>
@@ -396,7 +396,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-08-13
+                    2025-01-14
                 </div>
                 
 
@@ -417,154 +417,169 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。</p>
-<span id="more"></span>
+                <p>创建docker客户端</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> docker
 
-<p>在流复制中，有三种类型的进程协同工作:</p>
-<ul>
-<li>主服务器上的walsender进程向备服务器发送WAL (Write-Ahead Log)数据。</li>
-<li>备服务器上的walreceiver进程接收WAL数据。</li>
-<li>备服务器上的startup进程重放WAL数据。</li>
-</ul>
-<p>walsender和walreceiver使用单个TCP连接进行通信。</p>
-<p>[TOC]</p>
-<h3 id="11-1-启动流复制"><a href="#11-1-启动流复制" class="headerlink" title="11.1 启动流复制"></a>11.1 启动流复制</h3><p>图11.1显示了流复制的启动顺序图：</p>
-<p> <img src="/medias/image/fig-11-01.png" alt="图11.1 复制启动顺序"></p>
-<p>(1) 启动主备服务器。</p>
-<p>(2) 备服务器启动startup进程。</p>
-<p>(3) 备服务器启动walreceiver进程。</p>
-<p>(4) walreceiver向主服务器发送连接请求。如果主服务器没有运行，walreceiver会定期发送这些请求。</p>
-<p>(5) 当主服务器收到连接请求时，启动walsender进程，walsender和walreceiver之间建立TCP连接。</p>
-<p>(6) walreceiver发送备用数据库集群的最新LSN（日志序列号）。这在信息技术领域被称为握手。</p>
-<p>(7) 如果备端最新的LSN小于主端最新的LSN， walsender将前一个LSN的WAL数据发送给后一个LSN。这样的WAL数据是由存储在主服务器的pg_xlog子目录（在版本10或更高版本中为pg_wal子目录）中的WAL段提供的。备服务器重新回放收到的WAL数据。在这个阶段中，备用服务器赶上了主服务器，因此称为追赶（catch-up）。</p>
-<p>(8) 流复制开始工作。</p>
-<p>每个walsender进程保持一个适合于连接的walreceiver或应用程序的工作阶段的状态。以下是walsender进程的可能状态:</p>
-<ul>
-<li><p>startup——从开始walsender到握手结束。见图11.1(5)-(6)。</p>
-</li>
-<li><p>catch-up——在追赶阶段。见图11.1(7)。</p>
-</li>
-<li><p>streaming——当流复制正在工作时。见图11.1(8)。</p>
-</li>
-<li><p>backup—为备份工具（如pg_basebackup实用程序）发送整个数据库集群的文件。</p>
-</li>
-</ul>
-<p><code>pg_stat_replication</code> 视图显示所有正在运行的walsender的状态。一个例子如下:</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT application_name,state FROM pg_stat_replication;</span>
- application_name <span class="token operator">|</span>   state
-------------------+-----------
- standby1         <span class="token operator">|</span> streaming
- standby2         <span class="token operator">|</span> streaming
- pg_basebackup    <span class="token operator">|</span> backup
-<span class="token punctuation">(</span>3 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>如上所示，两个walsender正在运行，为连接的备服务器发送WAL数据，另一个walsender正在运行，为pg_basebackup实用程序发送数据库集群的所有文件。</p>
-<blockquote>
-<p><strong>如果备用服务器长时间处于停止状态后重新启动，会发生什么情况?</strong></p>
-<p>在版本9.3或更早的版本中，如果备服务器所需的主服务器的WAL段已经被回收，备服务器就不能赶上主服务器。对于这个问题没有可靠的解决方案，只能为配置参数<code>wal_keep_segments</code>设置一个较大的值，以减少发生这种情况的可能性。这是一个权宜之计。</p>
-<p>在9.4或更高版本中，可以通过使用复制槽来防止这个问题。复制槽是一个扩展了WAL数据发送灵活性的特性，主要用于逻辑复制，这也为这个问题提供了解决方案——通过暂停回收过程，可以将包含pg_xlog（或pg_wal，如果版本10或更高）下未发送数据的WAL段文件保留在复制槽中。详细信息请参考<a target="_blank" rel="noopener" href="http://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION-SLOTS">官方文档</a>。</p>
-</blockquote>
-<h3 id="11-2-如何进行流复制"><a href="#11-2-如何进行流复制" class="headerlink" title="11.2 如何进行流复制"></a>11.2 如何进行流复制</h3><p>流复制有两个方面：日志传送和数据库同步。日志传送是其中主要的一个方面，因为主服务器在写入WAL (Write-Ahead Log)数据时会将其发送到连接的备服务器。同步复制需要数据库同步，其中主服务器与每个备用服务器通信以同步它们的数据库集群。</p>
-<p>为了准确地理解流复制是如何工作的，我们应该了解一个主服务器如何管理多个备用服务器。在本节中，我们将从简单的一主一备系统开始，然后在下一节中讨论一主多备。</p>
-<h4 id="11-2-1-主备间的通信"><a href="#11-2-1-主备间的通信" class="headerlink" title="11.2.1 主备间的通信"></a>11.2.1 主备间的通信</h4><p>假设备服务器处于同步复制模式，但 <code>hot_standby</code> 配置参数被禁用，<code>wal_level</code>为 replica。主服务器的主要参数如下所示:</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">'standby1'</span>
-<span class="token attr-name">hot_standby</span> <span class="token punctuation">=</span> <span class="token attr-value">off</span>
-<span class="token attr-name">wal_level</span> <span class="token punctuation">=</span> <span class="token attr-value">reprica</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>此外，在第9.5节提到的三个写入WAL数据的触发器中，我们主要关注这里提交的事务。</p>
-<p>假设主服务器上的一个后端进程以自动提交模式发出一条简单的INSERT语句。后端启动事务，发出INSERT语句，然后立即提交事务。让我们进一步探讨如何完成这个提交操作。如图11.2中顺序图所示：</p>
-<p><img src="/medias/image/fig-11-02.png" alt="图11.2 流复制的通信顺序图"></p>
-<p>(1) 后端进程通过执行 <em>XLogInsert()</em> 和 <em>XLogFlush()</em> 函数将WAL数据写入和刷新到WAL段文件中。</p>
-<p>(2) walsender进程将写入WAL段的WAL数据发送给walreceiver进程。</p>
-<p>(3) 后端进程发送WAL数据后，继续等待备服务器的ACK响应。更准确地说，后端进程通过执行内部函数 <em>SyncRepWaitForLSN()</em> 获得一个锁存器，并等待它被释放。</p>
-<p>(4) 备服务器上的walreceiver通过系统调用 <em>write()</em>  将收到的WAL数据写入备服务器的WAL段，并返回一个ACK响应给walsender。</p>
-<p>(5) walreceiver使用系统调用（如*fsync()*）将WAL数据刷新到WAL段，并向walsender返回另一个ACK响应，并通知启动进程WAL数据更新。</p>
-<p>(6) startup进程回放已经写入WAL段的WAL数据。</p>
-<p>(7) walsender在收到walreceiver的ACK响应后，释放后端进程的锁存器，然后，后端进程的提交或中止操作将完成。锁存器释放的时间取决于参数 <code>synchronous_commit</code>。默认是on，当接收到步骤(5)的ACK时，锁存器被释放，而当接收到步骤(4)的ACK时，锁存器是remote_write。</p>
-<p>每个ACK响应将备服务器的内部信息通知给主服务器。它包括以下四个项目：</p>
-<ul>
-<li><p>最近一次写入WAL数据的LSN位置。</p>
-</li>
-<li><p>最近一次WAL数据刷写的LSN位置。</p>
-</li>
-<li><p>在strartup进程中重放最新WAL数据的LSN位置。</p>
-</li>
-<li><p>发送响应时的时间戳。</p>
-</li>
-</ul>
-<p>Walreceiver不仅在写入和刷新WAL数据时返回ACK响应，而且还作为备服务器的心跳定期返回。因此，主服务器总是能够准确地了解所有连接的备服务器的状态。</p>
-<p>执行如下所示的查询，可以显示连接的备服务器的LSN相关信息：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT application_name AS host,</span>
-        write_location AS write_LSN, flush_location AS flush_LSN, 
-        replay_location AS replay_LSN FROM pg_stat_replication<span class="token punctuation">;</span>
-
-   host   <span class="token operator">|</span> write_lsn <span class="token operator">|</span> flush_lsn <span class="token operator">|</span> replay_lsn 
-----------+-----------+-----------+------------
- standby1 <span class="token operator">|</span> 0/5000280 <span class="token operator">|</span> 0/5000280 <span class="token operator">|</span> 0/5000280
- standby2 <span class="token operator">|</span> 0/5000280 <span class="token operator">|</span> 0/5000280 <span class="token operator">|</span> 0/5000280
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 创建 Docker 客户端</span>
+client <span class="token operator">=</span> docker<span class="token punctuation">.</span>from_env<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true">#client = docker.DockerClient(base_url="tcp://192.168.137.129:2375")</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="镜像管理"><a href="#镜像管理" class="headerlink" title="镜像管理"></a>镜像管理</h3><p>列出所有镜像</p>
+<pre class="line-numbers language-python"><code class="language-python">images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> image <span class="token keyword">in</span> images<span class="token punctuation">:</span>
+    dics <span class="token operator">=</span> json<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>image<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>dics<span class="token punctuation">[</span><span class="token string">'RepoTags'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>查看镜像信息</p>
+<pre class="line-numbers language-python"><code class="language-python">images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+image_json <span class="token operator">=</span> <span class="token punctuation">[</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>image<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span> <span class="token keyword">for</span> image <span class="token keyword">in</span> images<span class="token punctuation">]</span>
+<span class="token keyword">for</span> img <span class="token keyword">in</span> image_json<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>img<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>方法</strong></p>
+<p>通过镜像 ID 或镜像名称来移除镜像</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">remove_image</span><span class="token punctuation">(</span>image_name_or_id<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 移除镜像</span>
+        client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>remove<span class="token punctuation">(</span>image_name_or_id<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Image '{image_name_or_id}' removed successfully."</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>ImageNotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Image '{image_name_or_id}' not found."</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error removing image '{image_name_or_id}': {e}"</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<blockquote>
-<p>心跳间隔设置为 <code>wal_receiver_status_interval</code> 参数，默认为10秒。</p>
-</blockquote>
-<h4 id="11-2-2-发生故障时的行为"><a href="#11-2-2-发生故障时的行为" class="headerlink" title="11.2.2 发生故障时的行为"></a>11.2.2 发生故障时的行为</h4><p>在本小节中，描述了当同步备服务器发生故障时主服务器的行为，以及如何处理这种情况。</p>
-<p>即使同步备服务器发生故障，不再能够返回ACK响应，主服务器也会一直等待响应。这意味着不能提交正在运行的事务，也不能启动后续的查询处理。换句话说，所有主服务器操作实际上都停止了（流复制不支持通过超时自动恢复到异步模式的功能）。</p>
-<p>有两种方法可以避免这种情况。其中一种方法是使用多个备服务器来提高系统可用性，另一种是手动从同步模式切换到异步模式，步骤如下：</p>
-<ol>
-<li><p>将参数<code>synchronous_standby_names</code>设置为“空字符”。</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">''</span>
+<p>删除所有未使用的镜像（即悬空镜像）</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">prune_unused_images</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>prune<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Unused images pruned successfully."</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error pruning unused images: {e}"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>构建镜像</p>
+<pre class="line-numbers language-python"><code class="language-python">build_args <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'URL'</span><span class="token punctuation">:</span> <span class="token string">'https://mirrors.aliyun.com/postgresql/source'</span><span class="token punctuation">,</span>
+    <span class="token string">'PGVERSION'</span><span class="token punctuation">:</span> <span class="token string">'15.10'</span>
+<span class="token punctuation">}</span>
+
+logs<span class="token operator">=</span><span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    image<span class="token punctuation">,</span> logs <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>build<span class="token punctuation">(</span>
+        path<span class="token operator">=</span>BASE_DIR <span class="token operator">+</span> <span class="token string">'/scripts'</span><span class="token punctuation">,</span>
+        tag<span class="token operator">=</span><span class="token string">'postgresql:15.10'</span><span class="token punctuation">,</span>
+        buildargs<span class="token operator">=</span>build_args<span class="token punctuation">,</span>
+        rm<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+    <span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>logs<span class="token punctuation">)</span>
+<span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>DockerException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Error building image:'</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span>
+<span class="token keyword">finally</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 遍历日志输出</span>
+    <span class="token keyword">for</span> line <span class="token keyword">in</span> logs<span class="token punctuation">:</span>
+        <span class="token keyword">if</span> <span class="token string">'stream'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
+            stream <span class="token operator">=</span> line<span class="token punctuation">[</span><span class="token string">'stream'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 去掉可能的前后空格</span>
+            <span class="token keyword">if</span> stream<span class="token punctuation">:</span>  <span class="token comment" spellcheck="true"># 只有非空内容才打印</span>
+                <span class="token keyword">print</span><span class="token punctuation">(</span>stream<span class="token punctuation">)</span>
+        <span class="token keyword">elif</span> <span class="token string">'error'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error: {line['error']}"</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 如果有错误，打印错误信息</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="容器管理"><a href="#容器管理" class="headerlink" title="容器管理"></a>容器管理</h3><p>创建并启动容器</p>
+<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>run<span class="token punctuation">(</span><span class="token string">'alpine'</span><span class="token punctuation">,</span> <span class="token string">'echo hello world'</span><span class="token punctuation">,</span> detach<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>logs<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取容器的日志输出</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>列出所有容器</p>
+<pre class="line-numbers language-python"><code class="language-python">containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p> 获取所有容器（包括停止的容器）</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_all_containers</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 获取所有容器的信息，包含正在运行和已停止的容器</span>
+        containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span>all<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+
+        <span class="token comment" spellcheck="true"># 将每个容器信息格式化为 JSON</span>
+        containers_json <span class="token operator">=</span> <span class="token punctuation">[</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>container<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span> <span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">]</span>
+
+        <span class="token comment" spellcheck="true"># 输出容器的 JSON 信息</span>
+        <span class="token keyword">for</span> container_info <span class="token keyword">in</span> containers_json<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>container_info<span class="token punctuation">)</span>
+
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error retrieving container list: {e}"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>查看容器的详细信息</p>
+<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'postgresql_16.61'</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取指定容器</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取容器的详细信息</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>停止容器</p>
+<pre class="line-numbers language-python"><code class="language-python">container<span class="token punctuation">.</span>stop<span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-</li>
-<li><p>执行带reload选项的pg_ctl命令。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">></span> pg_ctl -D <span class="token variable">$PGDATA</span> reload
+<p>删除容器</p>
+<pre class="line-numbers language-python"><code class="language-python">container<span class="token punctuation">.</span>remove<span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-</li>
-</ol>
-<p>上述过程不会影响已连接的客户端。主服务器将继续进行事务处理，同时保留客户端和各自后端进程之间的所有会话。</p>
-<h3 id="11-3-管理多个备用服务器"><a href="#11-3-管理多个备用服务器" class="headerlink" title="11.3 管理多个备用服务器"></a>11.3 管理多个备用服务器</h3><p>在本节中，将描述流复制与多个备服务器的工作方式。</p>
-<h4 id="11-3-1-sync-priority-和-sync-state"><a href="#11-3-1-sync-priority-和-sync-state" class="headerlink" title="11.3.1 sync_priority 和 sync_state"></a>11.3.1 <code>sync_priority</code> 和 <code>sync_state</code></h4><p>主服务器将sync_priority和sync_state属性分配给所有受管理的备服务器，并根据其各自的值处理每个备服务器（主服务器分配这些值，即使它只管理一个备服务器，这在前一节中没有提到）。</p>
-<p><code>sync_priority</code> 表示同步模式下备服务器的优先级。该值越小，优先级越高。而特殊值0表示备服务器处于<strong>异步模式</strong>。备服务器的优先级按照主服务器的配置参数 <code>synchronous_standby_names</code> 中列出的顺序分配。例如，以下配置中，standby1和standby2的优先级分别为1和2。</p>
-<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">synchronous_standby_names</span> <span class="token punctuation">=</span> <span class="token attr-value">'standby1, standby2'</span>
+<h3 id="容器网络"><a href="#容器网络" class="headerlink" title="容器网络"></a>容器网络</h3><p>列出所有网络</p>
+<pre class="line-numbers language-python"><code class="language-python">networks <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> network <span class="token keyword">in</span> networks<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>network<span class="token punctuation">.</span>name<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>创建网络</p>
+<pre class="line-numbers language-python"><code class="language-python">network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>create<span class="token punctuation">(</span><span class="token string">'my_network'</span><span class="token punctuation">,</span> driver<span class="token operator">=</span><span class="token string">'bridge'</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>(未在此参数中列出的备用服务器为异步模式，优先级为0)</p>
-<p><code>sync_state</code> 是备服务器的状态。以下是可能的状态:</p>
-<ul>
-<li><strong>sync</strong> 备服务器处于同步模式，是当前正在工作的最高优先级的备服务器。</li>
-<li>**potential **备服务器处于同步模式，并且是当前正在工作的低优先级备服务器。如果当前同步备服务器出现故障，则将此备服务器提升为同步状态。</li>
-<li>**async **备服务器为异步模式(它永远不会处于“sync”或“potential”模式)。</li>
-</ul>
-<p>备服务器的优先级和状态可以通过发出以下查询来显示：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT application_name AS host, </span>
-         sync_priority, sync_state FROM pg_stat_replication<span class="token punctuation">;</span>
-   host   <span class="token operator">|</span> sync_priority <span class="token operator">|</span> sync_state
-----------+---------------+------------
- standby1 <span class="token operator">|</span>             1 <span class="token operator">|</span> <span class="token function">sync</span>
- standby2 <span class="token operator">|</span>             2 <span class="token operator">|</span> potential
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="11-3-2-主服务器如何管理多个备服务器"><a href="#11-3-2-主服务器如何管理多个备服务器" class="headerlink" title="11.3.2 主服务器如何管理多个备服务器"></a>11.3.2 主服务器如何管理多个备服务器</h4><p>主服务器只等待来自同步备服务器的ACK响应。换句话说，主服务器只确认同步备服务器对WAL数据的写入和刷新。因此，流复制确保只有同步备服务器与主服务器处于一致和同步的状态。</p>
-<p>图11.3显示了潜在备服务器的ACK响应早于主备服务器的ACK响应返回的情况。在这种情况下，主服务器没有完成当前事务的提交操作，而是继续等待备服务器的ACK响应。当主进程接收到响应时，后端进程释放锁存器并完成当前事务处理。</p>
-<p> <img src="/medias/image/fig-11-03.png" alt="图11.3 管理多个备用服务器"></p>
-<p>standby1和standby2的 <code>sync_state</code> 分别为’sync’和’potential’。</p>
-<ol>
-<li>尽管收到了潜在备服务器的ACK响应，主进程的后端进程仍然继续等待同步备服务器的ACK响应。</li>
-<li>主后端进程收到同步备服务器的ACK响应后，释放锁存器，完成当前事务处理。</li>
-</ol>
-<p>相反，同步备服务器的ACK响应比潜在服务器的更早返回，主服务器立即完成当前事务的提交操作，而不用确保潜在的备服务器是否写入和刷新WAL数据。</p>
-<h4 id="11-3-3-发生故障时的行为"><a href="#11-3-3-发生故障时的行为" class="headerlink" title="11.3.3 发生故障时的行为"></a>11.3.3 发生故障时的行为</h4><p>再次看看当备服务器发生故障时主服务器的行为。</p>
-<p>当潜在或异步备服务器发生故障时，主服务器将终止连接到故障备用服务器的walsender进程，并继续所有处理。换句话说，主服务器的事务处理不会受到任何一种备服务器故障的影响。</p>
-<p>当同步备服务器发生故障时，主服务器终止连接到故障备服务器的walsender进程，并用优先级最高的潜在备服务器替换同步备服务器，见图11.4。与上面描述的故障相反，主服务器上的查询处理将从故障点开始暂停，直到同步备服务器被替换。因此，备服务器的故障检测是提高复制系统可用性的一个非常重要的功能，故障检测将在下一节中描述。</p>
-<p> <img src="/medias/image/fig-11-04.png" alt="图11.4 更换同步备用服务器"></p>
-<p>在任何情况下，如果一个或多个备服务器以同步模式运行，则主服务器始终只保留一个同步备服务器，并且该同步备服务器始终与主服务器保持一致和同步状态。</p>
-<h3 id="11-4-检测备服务器故障"><a href="#11-4-检测备服务器故障" class="headerlink" title="11.4 检测备服务器故障"></a>11.4 检测备服务器故障</h3><p>流复制使用两个常见的故障检测过程，完全不需要任何特殊的硬件。</p>
-<p><strong>1 备服务器进程失败检测</strong></p>
-<p>当检测到walsender和walreceiver之间的连接中断时，主服务器立即判断备服务器或walreceiver进程故障。当底层网络函数因写入或读取walreceiver的套接字接口失败而返回错误时，主服务器也立即确定其失败。</p>
-<p><strong>2 硬件和网络故障检测</strong></p>
-<p>如果walreceiver在 <code>wal_sender_timeout</code> 参数设置的时间内（默认为60秒）没有返回任何内容，则主服务器将确定备服务器故障。与上面描述的故障不同，即使备服务器由于某些故障（例如备服务器的硬件故障、网络故障等）不再能够发送任何响应，也需要一定的时间（最长为wal_sender_timeout秒）来确认主服务器上备服务器的死亡。</p>
-<p>根据故障的类型，通常可以在故障发生后立即检测到，而有时在故障发生和检测到故障之间可能有一段时间延迟。特别是，如果在同步备服务器中发生后一种类型的故障，则主服务器上的所有事务处理都将停止，直到检测到备服务器的故障，即使多个潜在的备服务器可能一直在工作。</p>
-<blockquote>
-<p>在9.2或更早的版本中，参数 <code>wal_sender_timeout</code> 被称为 <code>replication_timeout</code>。</p>
-</blockquote>
+<p>创建自定义网络</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 定义网络名称</span>
+network_name <span class="token operator">=</span> <span class="token string">"postgrenetwork"</span>
+<span class="token comment" spellcheck="true"># 尝试获取网络</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 查找指定名称的网络</span>
+    network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>get<span class="token punctuation">(</span>network_name<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' already exists."</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> NotFound<span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 如果网络不存在，则创建该网络</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' does not exist. Creating..."</span><span class="token punctuation">)</span>
+    network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
+        network_name<span class="token punctuation">,</span>
+        driver<span class="token operator">=</span><span class="token string">"bridge"</span><span class="token punctuation">,</span>
+        ipam<span class="token operator">=</span>docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMConfig<span class="token punctuation">(</span>
+            pool_configs<span class="token operator">=</span><span class="token punctuation">[</span>docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMPool<span class="token punctuation">(</span>subnet<span class="token operator">=</span><span class="token string">"172.19.1.0/24"</span><span class="token punctuation">)</span><span class="token punctuation">]</span>
+        <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' created successfully."</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>获取所有容器 IP</p>
+<pre class="line-numbers language-python"><code class="language-python">containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span>all<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 获取每个容器的 IP 地址</span>
+ip_address_list <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 获取容器的网络信息</span>
+    networks <span class="token operator">=</span> container<span class="token punctuation">.</span>attrs<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'NetworkSettings'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'Networks'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 遍历所有网络，打印每个容器的 IP 地址</span>
+    <span class="token keyword">for</span> network_name<span class="token punctuation">,</span> network_info <span class="token keyword">in</span> networks<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        ip_address <span class="token operator">=</span> network_info<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'IPAddress'</span><span class="token punctuation">)</span>
+        ip_address_list<span class="token punctuation">.</span>append<span class="token punctuation">(</span>ip_address<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>ip_address_list<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="容器日志"><a href="#容器日志" class="headerlink" title="容器日志"></a>容器日志</h3><p>查看日志</p>
+<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'container_id_or_name'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>logs<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="执行命令"><a href="#执行命令" class="headerlink" title="执行命令"></a>执行命令</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 获取已经存在的容器</span>
+container_name <span class="token operator">=</span> <span class="token string">"postgresql_16.6"</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+    container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_name<span class="token punctuation">)</span>
+    exec_command <span class="token operator">=</span> container<span class="token punctuation">.</span>exec_run<span class="token punctuation">(</span><span class="token string">"echo 'Hello!'"</span><span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 执行命令并获取结果</span>
+    output <span class="token operator">=</span> exec_command<span class="token punctuation">.</span>output<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">"utf-8"</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取输出结果并解码</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>output<span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 如果需要执行更多复杂的 shell 命令（例如获取 shell 会话），你可以使用类似以下的命令</span>
+    exec_command <span class="token operator">=</span> container<span class="token punctuation">.</span>exec_run<span class="token punctuation">(</span><span class="token string">"pg_ctl start"</span><span class="token punctuation">)</span>
+    output <span class="token operator">=</span> exec_command<span class="token punctuation">.</span>output<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">"utf-8"</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>output<span class="token punctuation">)</span>
+<span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Container {container_name} not found!"</span><span class="token punctuation">)</span>
+<span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"An error occurred: {e}"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -591,7 +606,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2021/11-liu-fu-zhi/">https://jinlid.github.io/2021/11-liu-fu-zhi/</a>
+                    <a href="https://jinlid.github.io/2025/docker-mo-kuai-de-shi-yong/">https://jinlid.github.io/2025/docker-mo-kuai-de-shi-yong/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -709,29 +724,30 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
                         
-                        <span class="card-title">2 进程和内存架构</span>
+                        <span class="card-title">docker模块的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                            
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -744,6 +760,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -762,24 +779,24 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                <a href="/2024/zai-postgresql-zhong-chuang-jian-he-shua-xin-wu-hua-shi-tu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="在POSTGRESQL中创建和刷新物化视图">
                         
-                        <span class="card-title">10 基础备份和时间点恢复</span>
+                        <span class="card-title">在POSTGRESQL中创建和刷新物化视图</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            “物化视图”是一个数据库对象，它存储预先计算的数据库查询的结果，并可以根据需要轻松刷新该结果。物化视图是几乎所有高级数据库系统的一个组成部分。当然，PostgreSQL 还提供对物化视图的支持，并为最终用户提供强大的工具来处理更耗时的请求。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
                             </span>
                         <span class="publish-author">
                             
