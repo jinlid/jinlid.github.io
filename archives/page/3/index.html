@@ -498,23 +498,22 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/8.huan-chong-qu-guan-li-qi/">
+                        <a href="/2021/6.vacuum-jin-cheng/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="8 缓冲区管理器">
+                                <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
                                 
-                                <span class="card-title">8 缓冲区管理器</span>
+                                <span class="card-title">6 vacuum进程</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    缓冲区管理器管理着共享内存和持久存储之间的数据传输，它会对 DBMS 的性能有着重要的影响。PostgreSQL 的缓冲区管理器十分高效。
+                                    vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
 
 
-[TOC]
-本章介绍了 PostgreSQL 的缓冲区管理器。图8.1展示了缓冲区管理器存储和后
+为了去除死元组，清理过程有两种模式，即并发vacuum和vacuum full。并发VACUUM删除表文件每个页面的死元组，
                                 
                             </div>
                             <div class="publish-info">
@@ -561,24 +560,23 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/5.bing-fa-kong-zhi/">
+                        <a href="/2021/8.huan-chong-qu-guan-li-qi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                                <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="8 缓冲区管理器">
                                 
-                                <span class="card-title">5 并发控制</span>
+                                <span class="card-title">8 缓冲区管理器</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+                                    缓冲区管理器管理着共享内存和持久存储之间的数据传输，它会对 DBMS 的性能有着重要的影响。PostgreSQL 的缓冲区管理器十分高效。
 
 
 [TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
+本章介绍了 PostgreSQL 的缓冲区管理器。图8.1展示了缓冲区管理器存储和后
                                 
                             </div>
                             <div class="publish-info">
