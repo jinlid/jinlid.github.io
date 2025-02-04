@@ -1,0 +1,52 @@
+import threading
+from flask_socketio import SocketIO
+import subprocess
+import time
+
+# 创建一个事件对象，用于通知 data1 已启动
+data1_ready_event = threading.Event()
+
+def install_postgresql(data, app, socketio):
+    """
+    安装 PostgreSQL 的通用函数
+    """
+    print(f"Installing PostgreSQL for {data}...")
+    # 调用 shell 脚本安装 PostgreSQL
+    subprocess.run(["./install_postgresql.sh", data], check=True)
+    print(f"PostgreSQL installed for {data}.")
+
+def start_postgresql(data, app, socketio):
+    """
+    启动 PostgreSQL 的通用函数
+    """
+    print(f"Starting PostgreSQL for {data}...")
+    # 调用 shell 脚本启动 PostgreSQL
+    subprocess.run(["./start_postgresql.sh", data], check=True)
+    print(f"PostgreSQL started for {data}.")
+
+def long_running_task(data, app, socketio):
+    """
+    长时间运行的任务
+    """
+    # 安装 PostgreSQL
+    install_postgresql(data, app, socketio)
+
+    if data == "data1":
+        # 如果是 data1，启动 PostgreSQL 并通知 data2
+        start_postgresql(data, app, socketio)
+        print("data1 is ready, notifying data2...")
+        data1_ready_event.set()  # 通知 data2，data1 已启动
+    else:
+        # 如果是 data2，等待 data1 启动
+        print("data2 is waiting for data1 to be ready...")
+        data1_ready_event.wait()  # 等待 data1 启动
+        print("data1 is ready, starting pg_basebackup for data2...")
+        # 执行 pg_basebackup 操作
+        subprocess.run(["pg_basebackup", "-h", "data1", "-D", "/path/to/data2", "-U", "repl", "-P", "-Xs", "-R"], check=True)
+        print("pg_basebackup completed for data2.")
+        # 启动 data2 的 PostgreSQL
+        start_postgresql(data, app, socketio)
+
+# 启动两个后台任务
+socketio.start_background_task(long_running_task, "data1", app, socketio)
+socketio.start_background_task(long_running_task, "data2", app, socketio)
