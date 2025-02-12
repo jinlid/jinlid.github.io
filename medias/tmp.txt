@@ -1,52 +1,84 @@
+import psycopg2
 import threading
-from flask_socketio import SocketIO
-import subprocess
 import time
 
-# 创建一个事件对象，用于通知 data1 已启动
-data1_ready_event = threading.Event()
+# 数据库连接配置
+conn_config = {
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "123456",
+    "host": "192.168.137.129",
+    "port": "24461"
+}
 
-def install_postgresql(data, app, socketio):
-    """
-    安装 PostgreSQL 的通用函数
-    """
-    print(f"Installing PostgreSQL for {data}...")
-    # 调用 shell 脚本安装 PostgreSQL
-    subprocess.run(["./install_postgresql.sh", data], check=True)
-    print(f"PostgreSQL installed for {data}.")
+# 每个线程执行的查询
+def execute_queries(thread_id):
+    conn = psycopg2.connect(**conn_config)
+    cursor = conn.cursor()
+    for i in range(1000):  # 每个线程执行1000次查询
+        cursor.execute("INSERT INTO test_table (data) VALUES (%s)", (f"data_{thread_id}_{i}",))
+        conn.commit()
+        cursor.execute("SELECT * FROM test_table WHERE id = %s", (i % 100 + 1,))
+        cursor.fetchall()
+        time.sleep(0.1)  # 模拟间隔
+    cursor.close()
+    conn.close()
 
-def start_postgresql(data, app, socketio):
-    """
-    启动 PostgreSQL 的通用函数
-    """
-    print(f"Starting PostgreSQL for {data}...")
-    # 调用 shell 脚本启动 PostgreSQL
-    subprocess.run(["./start_postgresql.sh", data], check=True)
-    print(f"PostgreSQL started for {data}.")
+# 创建并启动多个线程
+threads = []
+for i in range(10):  # 创建50个线程
+    thread = threading.Thread(target=execute_queries, args=(i,))
+    threads.append(thread)
+    thread.start()
 
-def long_running_task(data, app, socketio):
-    """
-    长时间运行的任务
-    """
-    # 安装 PostgreSQL
-    install_postgresql(data, app, socketio)
+# 等待所有线程完成
+for thread in threads:
+    thread.join()
 
-    if data == "data1":
-        # 如果是 data1，启动 PostgreSQL 并通知 data2
-        start_postgresql(data, app, socketio)
-        print("data1 is ready, notifying data2...")
-        data1_ready_event.set()  # 通知 data2，data1 已启动
-    else:
-        # 如果是 data2，等待 data1 启动
-        print("data2 is waiting for data1 to be ready...")
-        data1_ready_event.wait()  # 等待 data1 启动
-        print("data1 is ready, starting pg_basebackup for data2...")
-        # 执行 pg_basebackup 操作
-        subprocess.run(["pg_basebackup", "-h", "data1", "-D", "/path/to/data2", "-U", "repl", "-P", "-Xs", "-R"], check=True)
-        print("pg_basebackup completed for data2.")
-        # 启动 data2 的 PostgreSQL
-        start_postgresql(data, app, socketio)
+print("All threads finished.")
 
-# 启动两个后台任务
-socketio.start_background_task(long_running_task, "data1", app, socketio)
-socketio.start_background_task(long_running_task, "data2", app, socketio)
+import psycopg2
+import threading
+import time
+
+# 数据库连接信息
+db_params = {
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "123456",
+    "host": "192.168.137.129",
+    "port": "24461"
+}
+
+# 长时间查询的 SQL 语句，模拟占用内存
+query = "SELECT pg_sleep(1);"  # 这里模拟一个 60 秒的空查询，实际情况可以用复杂查询来替代
+
+# 创建一个线程的目标函数
+def run_query():
+    try:
+        conn = psycopg2.connect(**db_params)
+        cursor = conn.cursor()
+        while True:
+            cursor.execute(query)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error: {e}")
+
+# 启动多个线程
+def create_threads(thread_count):
+    threads = []
+    for _ in range(thread_count):
+        thread = threading.Thread(target=run_query)
+        threads.append(thread)
+        thread.start()
+
+    # 等待所有线程完成
+    for thread in threads:
+        thread.join()
+
+# 模拟运行
+if __name__ == "__main__":
+    start_time = time.time()
+    create_threads(10)  # 启动 100 个线程
+    print(f"Execution Time: {time.time() - start_time} seconds")
