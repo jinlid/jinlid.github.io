@@ -498,19 +498,23 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/9.yu-xie-ri-zhi-wal/">
+                        <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="9 预写日志—WAL">
+                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                                 
-                                <span class="card-title">9 预写日志—WAL</span>
+                                <span class="card-title">7 仅堆元组和仅索引扫描</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    事务日志是数据库的重要组成部分，因为所有的数据库管理系统都要求即使发生系统故障也不丢失任何数据。它是数据库系统中所有更改操作的历史日志，以确保没有由于故障（例如电源故障）或其他导致服务器崩溃的服务器故障而丢失数据。由于日志包含有关已执行的每
+                                    本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+
+
+[TOC]
+7.1 仅堆元组（热）HOT 在 8.3 版中实现，当更新的行存储在与存储旧行的同一表页中时，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
                                 
                             </div>
                             <div class="publish-info">
