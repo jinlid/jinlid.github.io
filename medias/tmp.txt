@@ -1,84 +1,76 @@
-import psycopg2
-import threading
-import time
+package main
 
-# 数据库连接配置
-conn_config = {
-    "dbname": "postgres",
-    "user": "postgres",
-    "password": "123456",
-    "host": "192.168.137.129",
-    "port": "24461"
+import (
+	"database/sql"
+	"fmt"
+	"os"
+	"strconv"
+	"sync"
+
+	_ "github.com/lib/pq" // 导入驱动
+)
+
+const (
+	maxGoroutines = 100 // 限制并发 goroutine 数量
+)
+
+var wg sync.WaitGroup
+
+func main() {
+	// 检查命令行参数
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: go run main.go <task_count>")
+		return
+	}
+
+	// 解析命令行参数
+	taskCount, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		fmt.Printf("Invalid task count: %v\n", err)
+		return
+	}
+	dbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"127.0.0.1", 5432, "postgres", "123456", "postgres")
+	db, err := sql.Open("postgres", dbInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	// 设置连接池
+	db.SetMaxOpenConns(20) // 根据数据库性能调整
+	db.SetMaxIdleConns(10)
+
+	// 创建任务通道
+	taskChan := make(chan int, maxGoroutines)
+
+	// 启动 worker
+	for i := 0; i < maxGoroutines; i++ {
+		go worker(db, taskChan)
+	}
+
+	// 分发任务
+	for i := 1; i <= taskCount; i++ {
+		wg.Add(1)
+		taskChan <- i
+	}
+
+	// 等待所有任务完成
+	wg.Wait()
+	close(taskChan)
+	fmt.Println("\nData scan completed.")
 }
 
-# 每个线程执行的查询
-def execute_queries(thread_id):
-    conn = psycopg2.connect(**conn_config)
-    cursor = conn.cursor()
-    for i in range(1000):  # 每个线程执行1000次查询
-        cursor.execute("INSERT INTO test_table (data) VALUES (%s)", (f"data_{thread_id}_{i}",))
-        conn.commit()
-        cursor.execute("SELECT * FROM test_table WHERE id = %s", (i % 100 + 1,))
-        cursor.fetchall()
-        time.sleep(0.1)  # 模拟间隔
-    cursor.close()
-    conn.close()
-
-# 创建并启动多个线程
-threads = []
-for i in range(10):  # 创建50个线程
-    thread = threading.Thread(target=execute_queries, args=(i,))
-    threads.append(thread)
-    thread.start()
-
-# 等待所有线程完成
-for thread in threads:
-    thread.join()
-
-print("All threads finished.")
-
-import psycopg2
-import threading
-import time
-
-# 数据库连接信息
-db_params = {
-    "dbname": "postgres",
-    "user": "postgres",
-    "password": "123456",
-    "host": "192.168.137.129",
-    "port": "24461"
+func worker(db *sql.DB, taskChan <-chan int) {
+	for range taskChan {
+		//rows, err := db.Query("select txid_current()")
+		//if err != nil {
+		//	fmt.Printf("Query error: %v\n", err)
+		//	wg.Done()
+		//	continue
+		//}
+		db.Query("select txid_current()")
+		rows.Close() // 及时关闭结果集
+		wg.Done()
+	}
 }
-
-# 长时间查询的 SQL 语句，模拟占用内存
-query = "SELECT pg_sleep(1);"  # 这里模拟一个 60 秒的空查询，实际情况可以用复杂查询来替代
-
-# 创建一个线程的目标函数
-def run_query():
-    try:
-        conn = psycopg2.connect(**db_params)
-        cursor = conn.cursor()
-        while True:
-            cursor.execute(query)
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error: {e}")
-
-# 启动多个线程
-def create_threads(thread_count):
-    threads = []
-    for _ in range(thread_count):
-        thread = threading.Thread(target=run_query)
-        threads.append(thread)
-        thread.start()
-
-    # 等待所有线程完成
-    for thread in threads:
-        thread.join()
-
-# 模拟运行
-if __name__ == "__main__":
-    start_time = time.time()
-    create_threads(10)  # 启动 100 个线程
-    print(f"Execution Time: {time.time() - start_time} seconds")
