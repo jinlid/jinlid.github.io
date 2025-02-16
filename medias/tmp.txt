@@ -63,13 +63,12 @@ func main() {
 
 func worker(db *sql.DB, taskChan <-chan int) {
 	for range taskChan {
-		//rows, err := db.Query("select txid_current()")
-		//if err != nil {
-		//	fmt.Printf("Query error: %v\n", err)
-		//	wg.Done()
-		//	continue
-		//}
-		db.Query("select txid_current()")
+		rows, err := db.Query("select txid_current()")
+		if err != nil {
+			fmt.Printf("Query error: %v\n", err)
+			wg.Done()
+			continue
+		}
 		rows.Close() // 及时关闭结果集
 		wg.Done()
 	}

@@ -498,23 +498,22 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                        <a href="/2021/6.vacuum-jin-cheng/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                                <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
                                 
-                                <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                                <span class="card-title">6 vacuum进程</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                                    vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
 
 
-[TOC]
-7.1 仅堆元组（热）HOT 在 8.3 版中实现，当更新的行存储在与存储旧行的同一表页中时，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
+为了去除死元组，清理过程有两种模式，即并发vacuum和vacuum full。并发VACUUM删除表文件每个页面的死元组，
                                 
                             </div>
                             <div class="publish-info">
@@ -561,22 +560,23 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/6.vacuum-jin-cheng/">
+                        <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
+                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
                                 
-                                <span class="card-title">6 vacuum进程</span>
+                                <span class="card-title">7 仅堆元组和仅索引扫描</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
+                                    本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
 
 
-为了去除死元组，清理过程有两种模式，即并发vacuum和vacuum full。并发VACUUM删除表文件每个页面的死元组，
+[TOC]
+7.1 仅堆元组（热）HOT 在 8.3 版中实现，当更新的行存储在与存储旧行的同一表页中时，以有效地使用索引和表的页。HOT 还减少了 VACUUM 处理的
                                 
                             </div>
                             <div class="publish-info">
