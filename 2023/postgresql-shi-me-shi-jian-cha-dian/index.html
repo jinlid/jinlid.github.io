@@ -5,8 +5,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="POSTGRESQL：什么是检查点？, jinlid&#39;s blog">
-    <meta name="description" content="检查点是PostgreSQL的核心概念。然而，许多人并不知道它们到底是什么，也不知道如何调整检查点以达到最高效率。这篇文章将解释检查点和检查点调优，并希望你对这些重要的数据库内部机制有所启发。
-PostgreSQL如何写入数据在我们更详细地">
+    <meta name="description" content="检查点是PostgreSQL的核心机制之一，然而许多用户对其工作原理和优化方法并不了解。本文将深入解析检查点机制及其调优策略，帮助读者更好地理解这一重要的数据库内部运作原理。
+PostgreSQL数据写入机制在深入探讨检查点之前，有必要先了">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -413,50 +413,50 @@ PostgreSQL如何写入数据在我们更详细地">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>检查点是PostgreSQL的核心概念。然而，许多人并不知道它们到底是什么，也不知道如何调整检查点以达到最高效率。这篇文章将解释检查点和检查点调优，并希望你对这些重要的数据库内部机制有所启发。</p>
-<h2 id="PostgreSQL如何写入数据"><a href="#PostgreSQL如何写入数据" class="headerlink" title="PostgreSQL如何写入数据"></a>PostgreSQL如何写入数据</h2><p>在我们更详细地讨论检查点之前，了解 PostgreSQL 如何写入数据非常重要。我们看一下下面的图片：</p>
+                <p>检查点是PostgreSQL的核心机制之一，然而许多用户对其工作原理和优化方法并不了解。本文将深入解析检查点机制及其调优策略，帮助读者更好地理解这一重要的数据库内部运作原理。</p>
+<h2 id="PostgreSQL数据写入机制"><a href="#PostgreSQL数据写入机制" class="headerlink" title="PostgreSQL数据写入机制"></a>PostgreSQL数据写入机制</h2><p>在深入探讨检查点之前，有必要先了解PostgreSQL的数据写入流程。让我们通过下图来直观理解：</p>
 <p><img src="/medias/image/checkpoint_Zeichenfl%C3%A4che-1-168865652657132.png" alt="img"></p>
-<p>最重要的是，我们必须假设崩溃随时可能发生。为什么这是相关的？好吧，我们想确保你的数据库永远不会被损坏。结果是我们无法直接向数据文件写入数据。为什么呢？假设我们要向数据文件写入“1234”。如果我们在“12”之后崩溃了呢？结果将是表中的某一行出错。也许索引项会丢失，等等——我们必须不惜一切代价防止这种情况发生。</p>
-<p>因此，需要一种更复杂的写数据方法。它是如何工作的？PostgreSQL做的第一件事是将数据发送到WAL(预写日志)。WAL就像一个偏执的包含二进制更改的顺序磁带。如果添加了一行，WAL可能包含一条记录，表明数据文件中的一行必须被更改，它可能包含一些更改索引条目的指令，可能需要写入一个额外的块等等。它只是包含一个更改流。</p>
-<p>一旦数据被发送到WAL，PostgreSQL将对共享缓冲区中块的缓存版本进行更改。请注意，数据仍然不在数据文件中。我们现在有了WAL条目以及对共享缓冲区的更改。如果一个读请求进来，它无论如何都不会到达数据文件——因为数据在缓存中找到了。</p>
-<p>在某些时候，这些修改过的内存页会由 <code>background writer</code> 写入磁盘。重要的是，数据可能被乱序写入，这不是问题。记住，如果用户想要读取数据，PostgreSQL会在向操作系统请求数据块之前检查共享缓冲区。因此，脏块的写入顺序并不重要。甚至可以稍晚一点写入数据，以增加在一次I/O请求中向磁盘发送多个更改的几率。</p>
-<h2 id="摆脱-WAL"><a href="#摆脱-WAL" class="headerlink" title="摆脱 WAL"></a>摆脱 WAL</h2><p>但是，我们不能无限期地将数据写入 WAL。在某些时候，空间必须被回收，这正是检查点的好处。</p>
+<p>数据库系统必须始终考虑崩溃的可能性。为确保数据完整性，PostgreSQL采用了特殊的写入机制。直接写入数据文件存在风险：假设我们要写入”1234”，如果在写入”12”后发生崩溃，将导致数据损坏或索引丢失等严重后果。</p>
+<p>为此，PostgreSQL采用了WAL（Write-Ahead Logging，预写日志）机制。WAL就像一个严格记录所有二进制变更的顺序日志。当新增一行数据时，WAL会记录数据文件的修改指令、索引更新等信息，形成完整的变更流。</p>
+<p>数据首先写入WAL，然后在共享缓冲区中更新对应的缓存块。需要注意的是，此时数据尚未写入数据文件。当读取请求到达时，系统会直接从缓存中获取数据，而不会访问数据文件。</p>
+<p>随后，后台写入进程（background writer）会将修改过的内存页写入磁盘。值得注意的是，这些写入操作可以是乱序的，因为读取请求会优先检查共享缓冲区。这种设计允许系统延迟写入，从而可能将多个变更合并到一次I/O操作中，提高效率。</p>
+<h2 id="WAL回收与检查点机制"><a href="#WAL回收与检查点机制" class="headerlink" title="WAL回收与检查点机制"></a>WAL回收与检查点机制</h2><p>WAL不能无限增长，需要定期回收空间，这正是检查点的主要作用之一。</p>
 <p><img src="/medias/image/checkpoint2_Zeichenfl%C3%A4che-1-168865653150034.png" alt="PostgreSQL 检查点"></p>
-<p>检查点的目的是确保在某个点之前创建的所有脏缓冲区都发送到磁盘，以便可以回收到该点的 WAL。PostgreSQL 的方法是启动一个检查点进程，将那些丢失的更改写入磁盘。但是，此过程不会尽快将数据发送到磁盘。原因是我们希望使 I/O 曲线变平以保证稳定的响应时间。</p>
-<p>控制检查点传播的参数是</p>
-<pre class="line-numbers language-sql"><code class="language-sql">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW checkpoint_completion_target;</span>
+<p>检查点的核心功能是确保在特定时间点之前的所有脏缓冲区都写入磁盘，从而可以安全地回收之前的WAL空间。PostgreSQL通过专门的检查点进程来完成这项工作，但不会立即将所有数据写入磁盘，而是采用平滑的I/O策略来保证系统响应时间的稳定性。</p>
+<p>检查点的执行进度由以下参数控制：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW checkpoint_completion_target;</span>
 checkpoint_completion_target
-<span class="token comment" spellcheck="true">------------------------------</span>
-<span class="token number">0.5</span>
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+------------------------------
+0.5
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>其理念是在下一个检查点开始之前，检查点已经完成了一半。实际上，0.7 - 0.9 的值似乎是大多数工作负载的最佳选择，请随意尝试。</p>
+<p>该参数表示在下一个检查点开始前，当前检查点应完成的进度比例。通常，0.7-0.9是大多数工作负载的最佳取值区间。</p>
 <blockquote>
-<p>在 PostgreSQL 14 中，此参数很可能不再存在。硬编码值将为 0.9，这将使用户更容易使用。</p>
+<p>注意：在PostgreSQL 14中，该参数可能会被移除，默认值将固定为0.9，以简化用户配置。</p>
 </blockquote>
-<p>下一个重要问题是：检查点何时真正启动？有一些参数可以控制此行为：</p>
-<pre class="line-numbers language-sql"><code class="language-sql">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW checkpoint_timeout;</span>
+<p>检查点的触发时机由以下参数决定：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW checkpoint_timeout;</span>
 checkpoint_timeout
-<span class="token comment" spellcheck="true">--------------------</span>
+--------------------
 5min
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 test<span class="token operator">=</span><span class="token comment" spellcheck="true"># SHOW max_wal_size;</span>
 max_wal_size
-<span class="token comment" spellcheck="true">--------------</span>
+--------------
 1GB
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>如果系统负载较低，检查点会在一段时间后发生。默认值为 5 分钟。但是，我们建议增加该值以优化写入性能。</p>
+<p>在系统负载较低时，检查点会按时间间隔触发（默认5分钟）。建议适当增加该值以优化写入性能。</p>
 <blockquote>
-<p>请随意更改这些值。它们会影响性能，但不会以任何方式危及您的数据。除了性能之外，任何数据都不会面临风险。</p>
+<p>提示：这些参数的调整只会影响性能，不会危及数据安全。</p>
 </blockquote>
-<p><code>max_wal_size</code> 有点棘手：首先，这是一个软限制，而不是硬限制。WAL 的数量可以超过这个数量。该参数的想法是告诉 PostgreSQL 它可能积累多少 WAL，并相应地调整检查点。一般规则是：增加该值将导致更多的空间消耗，但同时会提高写入性能。</p>
-<p>那么为什么不将 <code>max_wal_size</code> 设置为无穷大呢？第一个原因很明显：您将需要大量空间。然而，还有更多——以防数据库崩溃，PostgreSQL 必须重复自上一个检查点以来的所有更改。换句话说，崩溃后，您的数据库可能需要更长的时间才能恢复，因为自上一个检查点以来累积了大量的 WAL。从好的方面来说，如果检查点距离增加，性能确实会提高，但是可以做和实现是有限的。在某些时候，投入更多的存储空间来解决问题并不会再改变任何事情。</p>
-<p><code>background writer</code> 会将一些脏块写入磁盘。然而，在许多情况下，检查点进程本身会完成更多的工作。因此，更多地关注检查点而不是优化<code>background writer</code> 是有意义的。</p>
-<h2 id="min-wal-size"><a href="#min-wal-size" class="headerlink" title="min_wal_size"></a>min_wal_size</h2><p>人们经常询问 <code>min_wal_size</code>  和  <code>max_wal_size</code> 的含义，关于这两个参数有很多混淆，让我来解释一下这是怎么回事。如前所述，PostgreSQL会自己调整检查点距离。它试图将WAL保持在 <code>max_wal_size</code> 以下。但是，如果您的系统处于空闲状态，PostgreSQL将再次逐渐减少WAL的数量，直到  <code>min_wal_size</code>。这不是一个快速的过程，它是逐渐发生的，需要很长一段时间。</p>
-<p>让我们假设一个简单的场景来说明这种情况。假设您有一个系统，在工作日处于繁重的写负载下，但在周末空闲。因此，周五下午，WAL的大小很大。然而，在这个周末PostgreSQL会逐渐减少WAL的大小。当星期一再次开始加载时，那些丢失的WAL文件将被重新创建(这可能是一个性能方面的问题)。</p>
-<p>因此，与 <code>max_wal_size</code> 相比，最好不要将 <code>min_wal_size</code> 设置得太低，这样再次加载时可以减少创建新的WAL文件的需要。</p>
-<h2 id="最后-…"><a href="#最后-…" class="headerlink" title="最后 …"></a>最后 …</h2><p>检查点是一个重要的主题，它们对于实现良好的性能至关重要。</p>
+<p><code>max_wal_size</code>是一个软限制参数，WAL大小可能超过该值。它主要用于指导PostgreSQL调整检查点频率。一般来说，增加该值会提高写入性能，但也会占用更多存储空间。</p>
+<p>为什么不将<code>max_wal_size</code>设置为无限大？原因有二：首先需要大量存储空间；其次，数据库崩溃后需要重放自上次检查点以来的所有WAL记录，过大的WAL会导致恢复时间延长。因此，需要在性能和恢复时间之间找到平衡点。</p>
+<p>虽然<code>background writer</code>会处理部分脏块的写入，但在大多数情况下，检查点进程承担了主要工作。因此，优化重点应放在检查点而非后台写入进程上。</p>
+<h2 id="min-wal-size解析"><a href="#min-wal-size解析" class="headerlink" title="min_wal_size解析"></a>min_wal_size解析</h2><p><code>min_wal_size</code>和<code>max_wal_size</code>经常引起混淆。PostgreSQL会自动调整检查点间隔，努力将WAL大小控制在<code>max_wal_size</code>以下。当系统空闲时，PostgreSQL会逐渐减少WAL大小，直至<code>min_wal_size</code>，这个过程是渐进且缓慢的。</p>
+<p>举例说明：假设系统在工作日有大量写负载，周末空闲。周五下午WAL可能较大，周末期间PostgreSQL会逐步缩减WAL大小。当周一重新开始负载时，系统需要重新创建WAL文件，这可能影响性能。</p>
+<p>因此，建议不要将<code>min_wal_size</code>设置得过低，以减少重新创建WAL文件的开销。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>检查点是PostgreSQL性能优化的关键环节。通过合理配置相关参数，可以在数据安全性和系统性能之间找到最佳平衡点。理解检查点机制及其调优方法，对于数据库管理员优化系统性能具有重要意义。</p>
 
                 
             </div>
@@ -605,13 +605,13 @@ max_wal_size
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-re-geng-xin-yi-huo-de-geng-hao-de-xing-neng/">
+                <a href="/2023/tcp-lian-jie-guan-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="POSTGRESQL中的热更新以获得更好的性能">
+                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="TLS：TCP连接管理">
                         
-                        <span class="card-title">POSTGRESQL中的热更新以获得更好的性能</span>
+                        <span class="card-title">TLS：TCP连接管理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -622,14 +622,14 @@ max_wal_size
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
+                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-17
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Linux/" class="post-category">
+                                    Linux
                                 </a>
                             
                             
@@ -639,8 +639,8 @@ max_wal_size
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/Linux/">
+                        <span class="chip bg-color">Linux</span>
                     </a>
                     
                 </div>

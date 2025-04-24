@@ -4,9 +4,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）, jinlid&#39;s blog">
-    <meta name="description" content="很多人询问PostgreSQL 中的索引扫描。本博客旨在对该主题进行基本介绍。许多人不知道优化器在处理单个查询时会做什么。我决定展示如何访问表并给出示例。让我们开始使用 PostgreSQL 索引。
-索引是良好性能的支柱。如果没有正确的索引">
+    <meta name="keywords" content="jinlid&#39;s blog">
+    <meta name="description" content="PostgreSQL在查询处理中采用了多种数据连接和聚合技术，其中基于哈希的方法因其在特定场景和数据规模下的高效性而备受关注。本文将深入探讨PostgreSQL中的哈希连接和哈希聚合机制，解析其工作原理及影响算法性能的关键参数。
+一、哈希聚">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +18,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础） | jinlid&#39;s blog</title>
+    <title>jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +338,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">POSTGRESQL索引：索引扫描、位图扫描、顺序扫描（基础）</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -365,25 +365,12 @@
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                    <div class="article-tag">
-                        
-                            <a href="/tags/postgresql/">
-                                <span class="chip bg-color">postgresql</span>
-                            </a>
-                        
-                    </div>
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
                     
                 </div>
                 <div class="col s5 right-align">
-                    
-                    <div class="post-cate">
-                        <i class="fas fa-bookmark fa-fw icon-category"></i>
-                        
-                            <a href="/categories/postgresql/" class="post-category">
-                                postgresql
-                            </a>
-                        
-                    </div>
                     
                 </div>
             </div>
@@ -392,7 +379,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-07-04
+                    2025-02-23
                 </div>
                 
 
@@ -413,66 +400,75 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>很多人询问PostgreSQL 中的<a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/15/using-explain.html">索引扫描</a>。本博客旨在对该主题进行基本介绍。许多人不知道优化器在处理单个查询时会做什么。我决定展示如何访问表并给出示例。让我们开始使用 PostgreSQL 索引。</p>
-<p>索引是良好性能的支柱。如果没有正确的索引，您的 PostgreSQL 数据库可能会陷入困境，最终用户可能会抱怨查询速度慢和响应时间差。因此，了解 PostgreSQL 在查询单个列时做出哪些选择是有意义的。</p>
-<h2 id="在-PostgreSQL-中准备一些演示数据"><a href="#在-PostgreSQL-中准备一些演示数据" class="headerlink" title="在 PostgreSQL 中准备一些演示数据"></a><strong>在 PostgreSQL 中准备一些演示数据</strong></h2><p>为了向您展示事情是如何运作的，我们可以使用一个表：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE sampletable (x numeric);</span>
-CREATE TABLE
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>如果您的表几乎为空，您将永远不会看到索引扫描，因为查询索引可能会产生太大的开销 - 直接扫描表并丢弃与查询不匹配的任何行会更便宜。</p>
-<p>因此，为了演示索引的实际工作原理，我们可以向之前创建的表中添加 1000 万个随机行：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># INSERT INTO sampletable</span>
-         SELECT random<span class="token punctuation">(</span><span class="token punctuation">)</span> * 10000
-         FROM generate_series<span class="token punctuation">(</span>1, 10000000<span class="token punctuation">)</span><span class="token punctuation">;</span>
-INSERT 0 10000000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p>然后创建索引：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE INDEX idx_x ON sampletable(x);</span>
-CREATE INDEX
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>加载如此多的数据后，最好创建优化器统计信息，以防 autovacuum 尚未跟上。PostgreSQL 优化器需要这些统计信息来决定是否使用索引：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># ANALYZE ; </span>
-ANALYZE
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>在 PostgreSQL 中，btree 使用 Lehman-Yao 高并发 btree（将在后面的博客中更详细地介绍）。</p>
-<p><img src="/medias/image/02_PostgreSQL-Complete-B-tree-168865667503438.jpg" alt="postgresql 索引 B 树"></p>
-<p><img src="/medias/image/01_PostgreSQL-B-tree-168865667653040.jpg" alt="postgresql 索引 B 树"></p>
-<h2 id="在-PostgreSQL-中选择一小部分数据"><a href="#在-PostgreSQL-中选择一小部分数据" class="headerlink" title="在 PostgreSQL 中选择一小部分数据"></a><strong>在 PostgreSQL 中选择一小部分数据</strong></h2><p>当只选择一小部分行时，PostgreSQL 可以直接询问索引。在这种情况下，它甚至可以使用“仅索引扫描”，因为所需的所有列实际上已经在索引中：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM sampletable WHERE x = 42353;</span>
-                               QUERY PLAN
------------------------------------------------------------------------
-Index Only Scan using idx_x on sampletable <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.43<span class="token punctuation">..</span>8.45 rows<span class="token operator">=</span>1 width<span class="token operator">=</span>11<span class="token punctuation">)</span>
-      Index Cond: <span class="token punctuation">(</span>x <span class="token operator">=</span> <span class="token string">'42353'</span>::numeric<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>使用索引仅选择少数行将非常高效。但是，如果选择更多数据，则扫描索引和表的成本会太高。</p>
-<h2 id="PostgreSQL-索引：从-PostgreSQL-的表中选择大量数据"><a href="#PostgreSQL-索引：从-PostgreSQL-的表中选择大量数据" class="headerlink" title="PostgreSQL 索引：从 PostgreSQL 的表中选择大量数据"></a><strong>PostgreSQL 索引：从 PostgreSQL 的表中选择大量数据</strong></h2><p>但是，如果您从表中选择大量数据，PostgreSQL 将回退到顺序扫描。在这种情况下，读取整个表并仅过滤掉几行是最好的方法。</p>
-<p>下面是它的工作原理：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM sampletable WHERE x &lt; 42353;</span>
-                            QUERY PLAN
----------------------------------------------------------------
-Seq Scan on sampletable <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>179054.03 rows<span class="token operator">=</span>9999922 width<span class="token operator">=</span>11<span class="token punctuation">)</span>
-    Filter: <span class="token punctuation">(</span>x <span class="token operator">&lt;</span> <span class="token string">'42353'</span>::numeric<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>PostgreSQL 将过滤掉那些不必要的行并只返回其余的。在这种情况下，这确实是最理想的做法。因此，顺序扫描并不总是不好——在某些用例中，顺序扫描实际上是完美的。</p>
-<p>不过：请记住，过于频繁地顺序扫描大型表在某些时候会造成损害。</p>
-<h2 id="PostgreSQL：利用位图扫描"><a href="#PostgreSQL：利用位图扫描" class="headerlink" title="PostgreSQL：利用位图扫描"></a><strong>PostgreSQL：利用位图扫描</strong></h2><p>如果你只选择了少量的行，PostgreSQL将决定索引扫描——如果你选择了大多数行，PostgreSQL将决定完全读取表。但是，如果索引扫描读取的数据太多，导致效率低下，而顺序扫描读取的数据太少，该怎么办？该问题的解决方案是使用位图扫描。位图扫描背后的思想是，一个块在扫描期间只使用一次。如果您想使用多个索引来扫描单个表，它也非常有用。</p>
-<p>发生的情况如下：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">test<span class="token operator">=</span><span class="token comment" spellcheck="true"># explain SELECT * FROM sampletable WHERE x &lt; 423;</span>
-                                    QUERY PLAN
-----------------------------------------------------------------------------
-Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<span class="token operator">=</span>9313.62<span class="token punctuation">..</span>68396.35 rows<span class="token operator">=</span>402218 width<span class="token operator">=</span>11<span class="token punctuation">)</span>
-       Recheck Cond: <span class="token punctuation">(</span>x <span class="token operator">&lt;</span> <span class="token string">'423'</span>::numeric<span class="token punctuation">)</span>
-       -<span class="token operator">></span> Bitmap Index Scan on idx_x <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>9213.07 rows<span class="token operator">=</span>402218 width<span class="token operator">=</span>0<span class="token punctuation">)</span>
-          Index Cond: <span class="token punctuation">(</span>x <span class="token operator">&lt;</span> <span class="token string">'423'</span>::numeric<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>4 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>PostgreSQL将首先扫描索引，并在扫描结束时编译所需的行/块。然后PostgreSQL将获取这个列表并转到表中真正获取这些行。这种机制的美妙之处在于，即使你使用了多个索引，这种机制也可以正常工作。</p>
-<blockquote>
-<p>因此，位图扫描对性能有很大贡献。</p>
-</blockquote>
-<p><img src="/medias/image/03_PostgreSQL-Bitmap-scan-168865667947542.jpg" alt="postgresql 位图扫描"></p>
+                <p>PostgreSQL在查询处理中采用了多种数据连接和聚合技术，其中基于哈希的方法因其在特定场景和数据规模下的高效性而备受关注。本文将深入探讨PostgreSQL中的哈希连接和哈希聚合机制，解析其工作原理及影响算法性能的关键参数。</p>
+<p>一、哈希聚合机制解析</p>
+<p>当在包含GROUP BY子句的查询中使用SUM、COUNT或AVG等聚合函数时，查询规划器可能会选择哈希聚合策略。该过程的核心是创建哈希表：PostgreSQL遍历每一行数据，对GROUP BY键进行哈希计算，并根据哈希值将行分配到相应的位置。具有相同哈希值的行会被归入同一个”桶”（bucket）中。在处理完所有相关行后，PostgreSQL利用哈希表中的数据计算每个组的最终聚合结果。</p>
+<p>示例查询：</p>
+<p>sql</p>
+<p>复制</p>
+<pre><code>SELECT id, SUM(Amount)
+FROM Sales
+GROUP BY id;
+</code></pre>
+<p>在此查询中，id列的值被用于哈希计算。PostgreSQL在分配行到不同桶的同时，开始聚合Amount值。例如，当处理到id为1、Amount为100的第一行时，id 1的总和初始化为100。随后若遇到另一个id为1的行（假设Amount为150），则更新id 1的总和为250（100+150）。最终，哈希表中将存储每个id对应的聚合总额，并将结果返回给客户端。</p>
+<p>二、哈希连接机制详解</p>
+<p>哈希连接的执行计划涉及基于连接键创建哈希表，通常选择较小的表来构建。哈希表创建完成后，系统会扫描较大的表，计算每行连接键的哈希值，并在哈希表中查找匹配行。</p>
+<p>哈希连接的适用场景：</p>
+<ul>
+<li>连接条件基于等值运算符（=）</li>
+<li>处理大规模数据集</li>
+<li>通过禁用嵌套循环连接（enable_nestloop）和合并连接（enable_mergejoin）强制使用哈希连接</li>
+</ul>
+<p>哈希表以键值对形式存储数据，提供O(1)时间复杂度的数据检索，这意味着检索时间不受哈希表大小影响。哈希键被分散存储在多个桶中。</p>
+<p>三、哈希连接中的”桶”概念</p>
+<p>桶用于分组具有相同哈希值的行。创建哈希表时，每个唯一哈希值对应一个桶，相同哈希值的行存储在同一个桶中，这使得连接操作中的行匹配更加高效。桶的总数总是2的N次方，特定哈希键对应的桶号是其哈希函数结果的最后N位。</p>
+<p>例如，若哈希键为10001001，使用8个桶（2^3），则分配的桶号为001。</p>
+<p>四、哈希连接的优势</p>
+<p>相较于嵌套循环连接，哈希连接在处理大数据集时表现更优，因为它避免了重复扫描整个数据集。此外，当处理未排序数据且哈希表能完全放入内存时，哈希连接通常比聚集合并连接更高效。</p>
+<p>五、哈希操作的内存使用</p>
+<p>哈希表的最大内存使用量由以下参数控制：</p>
+<ol>
+<li>work_mem：指定用于排序和哈希表的内存分配。增加work_mem可以创建更大的哈希表，提升哈希连接性能。</li>
+<li>hash_mem_multiplier：计算哈希操作允许使用的最大内存，公式为：<br>总内存 = work_mem * hash_mem_multiplier<br>在PostgreSQL 15中，该参数的默认值从1.0提高到2.0，意味着哈希操作现在可以使用两倍的work_mem基础值。这一调整是因为哈希操作的性能受数据唯一性、行数和数据大小等因素影响，其内存需求较难预测。</li>
+<li>temp_file_limit：限制进程可用于临时文件的最大磁盘空间，包括排序、哈希操作和游标的临时文件。默认值-1表示可在pgsql_tmp目录中创建无限量的临时文件。</li>
+</ol>
+<p>六、哈希表超出内存时的处理</p>
+<p>当哈希表过大无法完全放入内存时，PostgreSQL会将数据划分为称为批处理（batches）的较小子集。这些批处理依次处理，并使用临时文件存储无法放入内存的数据。具体过程如下：</p>
+<ol>
+<li>将数据划分为批处理，批处理数量总是2的幂次方</li>
+<li>每个批处理通过调整桶数量来适应可用内存</li>
+<li>首先为第一个批处理构建哈希表，属于该批处理的行保留在内存中，其他行存入临时文件</li>
+<li>处理外部表时，匹配第一个批处理的行，不属于该批处理的行存入临时文件</li>
+<li>完成第一个批处理后，清空哈希表，处理下一个批处理</li>
+<li>重复该过程直到所有批处理完成</li>
+</ol>
+<p>七、示例分析</p>
+<p>sql</p>
+<p>复制</p>
+<pre><code>-&gt;  Hash Join  (cost=1.36..29.43 rows=1000 width=70) (actual time=0.038..0.350 rows=1000 loops=1)
+    Hash Cond: (fc.category_id = c.category_id)
+    -&gt;  Seq Scan on film_category fc  (cost=0.00..16.00 rows=1000 width=4) (actual time=0.010..0.134 rows=1000 loops=1)
+    -&gt;  Hash  (cost=1.16..1.16 rows=16 width=72) (actual time=0.018..0.018 rows=16 loops=1)
+          Buckets: 1024  Batches: 1  Memory Usage: 9kB
+          -&gt;  Seq Scan on category c  (cost=0.00..1.16 rows=16 width=72) (actual time=0.010..0.012 rows=16 loops=1)
+Planning time: 0.393 ms
+Execution time: 5.271 ms
+</code></pre>
+<p>关键点分析：</p>
+<ol>
+<li>category表作为哈希表（内部表），film_category表作为外部表</li>
+<li>仅需1个批处理，表明哈希表成功在分配内存中创建和管理，使用了9KB的work_mem</li>
+<li>若出现多个批处理，则可能需要增加work_mem或hash_mem_multiplier</li>
+<li>使用EXPLAIN命令的buffers选项可获取溢出文件大小的详细信息</li>
+</ol>
+<p>八、注意事项</p>
+<ol>
+<li>确保表统计信息及时更新，可适当设置autoanalyze参数或手动执行ANALYZE命令</li>
+<li>谨慎设置work_mem和hash_mem_multiplier，过高设置可能导致内存使用过高，影响其他查询</li>
+<li>哈希连接特别适用于整数和字符串数据类型</li>
+<li>数据分布不均会影响哈希连接效率</li>
+<li>查询中包含不必要的列会增加哈希表大小和内存需求</li>
+</ol>
 
                 
             </div>
@@ -499,7 +495,7 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/">https://jinlid.github.io/2023/postgresql-suo-yin-suo-yin-sao-miao-wei-tu-sao-miao-shun-xu-sao-miao-ji-chu/</a>
+                    <a href="https://jinlid.github.io/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">https://jinlid.github.io/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -536,11 +532,7 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            
-                                <a href="/tags/postgresql/">
-                                    <span class="chip bg-color">postgresql</span>
-                                </a>
-                            
+                            <span class="chip bg-color">无标签</span>
                         </div>
                     
                 </div>
@@ -621,13 +613,13 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
+                <a href="/2025/ajax-shang-chuan-wen-jian/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -638,27 +630,15 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-04-24
                         </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
                             
                         </span>
                     </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
                 </div>
                 
             </div>
@@ -670,24 +650,24 @@ Bitmap Heap Scan on sampletable <span class="token punctuation">(</span>cost<spa
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/li-jie-postgresql-zhong-de-bloat-he-vacuum/">
+                <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="理解PostgreSQL中的Bloat和VACUUM">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
                         
-                        <span class="card-title">理解PostgreSQL中的Bloat和VACUUM</span>
+                        <span class="card-title">docker模块的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            与其他RDBMS相比，PostgreSQL中MVCC的实现是不同的和特殊的。PostgreSQL中的MVCC控制哪些元组可以通过版本控制对事务可见。
+                            
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-25
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                             </span>
                         <span class="publish-author">
                             
