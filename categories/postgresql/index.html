@@ -395,11 +395,11 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 15">
+                <a href="/categories/postgresql/" title="postgresql: 14">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">15</span>
+                        <span class="tag-length">14</span>
                     </span>
                 </a>
                 
@@ -504,53 +504,6 @@ client = docker.from_env()
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/postgresql-shi-me-shi-jian-cha-dian/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="POSTGRESQL：什么是检查点？">
-                            
-                            <span class="card-title">POSTGRESQL：什么是检查点？</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                检查点是PostgreSQL的核心机制之一，然而许多用户对其工作原理和优化方法并不了解。本文将深入解析检查点机制及其调优策略，帮助读者更好地理解这一重要的数据库内部运作原理。
-PostgreSQL数据写入机制在深入探讨检查点之前，有必要先了
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-05
                             </span>
                             <span class="publish-author">
                                 
@@ -727,24 +680,24 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/11-liu-fu-zhi/">
+                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
                             
-                            <span class="card-title">11 流复制</span>
+                            <span class="card-title">2 进程和内存架构</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
 
 
-在流复制中，有三种类型的进程协同工作:
+[TOC]
+2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
 
-主服务器上的walsender进程向备服务器发送WAL (Writ
                             
                         </div>
                         <div class="publish-info">
@@ -791,6 +744,57 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
                         <div class="summary block-with-text">
                             
                                 在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/11-liu-fu-zhi/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                            
+                            <span class="card-title">11 流复制</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+
+
+在流复制中，有三种类型的进程协同工作:
+
+主服务器上的walsender进程向备服务器发送WAL (Writ
                             
                         </div>
                         <div class="publish-info">

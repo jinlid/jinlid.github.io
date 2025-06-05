@@ -404,12 +404,10 @@
 <p>一、哈希聚合机制解析</p>
 <p>当在包含GROUP BY子句的查询中使用SUM、COUNT或AVG等聚合函数时，查询规划器可能会选择哈希聚合策略。该过程的核心是创建哈希表：PostgreSQL遍历每一行数据，对GROUP BY键进行哈希计算，并根据哈希值将行分配到相应的位置。具有相同哈希值的行会被归入同一个”桶”（bucket）中。在处理完所有相关行后，PostgreSQL利用哈希表中的数据计算每个组的最终聚合结果。</p>
 <p>示例查询：</p>
-<p>sql</p>
-<p>复制</p>
-<pre><code>SELECT id, SUM(Amount)
-FROM Sales
-GROUP BY id;
-</code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> id<span class="token punctuation">,</span> <span class="token function">SUM</span><span class="token punctuation">(</span>Amount<span class="token punctuation">)</span>
+<span class="token keyword">FROM</span> Sales
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> id<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>在此查询中，id列的值被用于哈希计算。PostgreSQL在分配行到不同桶的同时，开始聚合Amount值。例如，当处理到id为1、Amount为100的第一行时，id 1的总和初始化为100。随后若遇到另一个id为1的行（假设Amount为150），则更新id 1的总和为250（100+150）。最终，哈希表中将存储每个id对应的聚合总额，并将结果返回给客户端。</p>
 <p>二、哈希连接机制详解</p>
 <p>哈希连接的执行计划涉及基于连接键创建哈希表，通常选择较小的表来构建。哈希表创建完成后，系统会扫描较大的表，计算每行连接键的哈希值，并在哈希表中查找匹配行。</p>
@@ -443,17 +441,15 @@ GROUP BY id;
 <li>重复该过程直到所有批处理完成</li>
 </ol>
 <p>七、示例分析</p>
-<p>sql</p>
-<p>复制</p>
-<pre><code>-&gt;  Hash Join  (cost=1.36..29.43 rows=1000 width=70) (actual time=0.038..0.350 rows=1000 loops=1)
-    Hash Cond: (fc.category_id = c.category_id)
-    -&gt;  Seq Scan on film_category fc  (cost=0.00..16.00 rows=1000 width=4) (actual time=0.010..0.134 rows=1000 loops=1)
-    -&gt;  Hash  (cost=1.16..1.16 rows=16 width=72) (actual time=0.018..0.018 rows=16 loops=1)
-          Buckets: 1024  Batches: 1  Memory Usage: 9kB
-          -&gt;  Seq Scan on category c  (cost=0.00..1.16 rows=16 width=72) (actual time=0.010..0.012 rows=16 loops=1)
-Planning time: 0.393 ms
-Execution time: 5.271 ms
-</code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span> <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.36</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">29.43</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> width<span class="token operator">=</span><span class="token number">70</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.038</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.350</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+    <span class="token keyword">Hash</span> Cond: <span class="token punctuation">(</span><span class="token number">fc</span><span class="token punctuation">.</span>category_id <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>category_id<span class="token punctuation">)</span>
+    <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> film_category <span class="token number">fc</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">16.00</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.010</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.134</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+    <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.16</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.16</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> width<span class="token operator">=</span><span class="token number">72</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.018</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.018</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+          Buckets: <span class="token number">1024</span>  Batches: <span class="token number">1</span>  Memory <span class="token keyword">Usage</span>: 9kB
+          <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> category <span class="token number">c</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.16</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> width<span class="token operator">=</span><span class="token number">72</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.010</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.012</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+Planning time: <span class="token number">0.393</span> ms
+Execution time: <span class="token number">5.271</span> ms
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>关键点分析：</p>
 <ol>
 <li>category表作为哈希表（内部表），film_category表作为外部表</li>
