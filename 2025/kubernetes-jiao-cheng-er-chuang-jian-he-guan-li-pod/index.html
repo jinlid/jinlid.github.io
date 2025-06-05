@@ -4,9 +4,14 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="TLS：TCP连接管理, jinlid&#39;s blog">
-    <meta name="description" content="TCP是一种面向连接的的单播协议。在发送数据之前，通信双方必须在彼此之间建立一条连接。TCP服务模型是一个字节流。TCP必须检测并修补所有在IP层（或下面的层）产生的丢包、重复以及错误等数据传输问题。
-TCP连接的建立和终止一个TCP连接由">
+    <meta name="keywords" content="jinlid&#39;s blog">
+    <meta name="description" content="第二部分：创建和管理Pod1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
+kubectl run mynginx --image=nginx
+
+# 查看Pod状态
+kubectl get pods
+
+1.">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +23,7 @@ TCP连接的建立和终止一个TCP连接由">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>TLS：TCP连接管理 | jinlid&#39;s blog</title>
+    <title>jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +343,12 @@ TCP连接的建立和终止一个TCP连接由">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/22.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">TLS：TCP连接管理</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -365,25 +370,12 @@ TCP连接的建立和终止一个TCP连接由">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                    <div class="article-tag">
-                        
-                            <a href="/tags/Linux/">
-                                <span class="chip bg-color">Linux</span>
-                            </a>
-                        
-                    </div>
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
                     
                 </div>
                 <div class="col s5 right-align">
-                    
-                    <div class="post-cate">
-                        <i class="fas fa-bookmark fa-fw icon-category"></i>
-                        
-                            <a href="/categories/Linux/" class="post-category">
-                                Linux
-                            </a>
-                        
-                    </div>
                     
                 </div>
             </div>
@@ -392,7 +384,7 @@ TCP连接的建立和终止一个TCP连接由">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2023-07-17
+                    2025-06-05
                 </div>
                 
 
@@ -413,21 +405,73 @@ TCP连接的建立和终止一个TCP连接由">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>TCP是一种面向连接的的单播协议。在发送数据之前，通信双方必须在彼此之间建立一条连接。TCP服务模型是一个字节流。TCP必须检测并修补所有在IP层（或下面的层）产生的丢包、重复以及错误等数据传输问题。</p>
-<h4 id="TCP连接的建立和终止"><a href="#TCP连接的建立和终止" class="headerlink" title="TCP连接的建立和终止"></a>TCP连接的建立和终止</h4><p>一个TCP连接由一对端点或套接字构成，其中通信的每一端都由一对唯一的IP地址和端口号所标识。一个TCP连接通常分为3个阶段：启动、数据传输和退出。下图显示了一个典型的TCP连接的建立和关闭过程（不包含数据传输）。</p>
-<p><img src="/medias/image/image-20230418212623713.png" alt="image-20230418212623713"></p>
-<p>为了建立一个TCP连接，需要完成以下步骤：</p>
+                <h2 id="第二部分：创建和管理Pod"><a href="#第二部分：创建和管理Pod" class="headerlink" title="第二部分：创建和管理Pod"></a>第二部分：创建和管理Pod</h2><h3 id="1-创建Pod的几种方式"><a href="#1-创建Pod的几种方式" class="headerlink" title="1. 创建Pod的几种方式"></a>1. 创建Pod的几种方式</h3><h4 id="1-1-使用kubectl-run命令"><a href="#1-1-使用kubectl-run命令" class="headerlink" title="1.1 使用kubectl run命令"></a>1.1 使用kubectl run命令</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 创建简单Pod</span>
+kubectl run mynginx --image<span class="token operator">=</span>nginx
+
+<span class="token comment" spellcheck="true"># 查看Pod状态</span>
+kubectl get pods
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="1-2-使用YAML文件创建Pod"><a href="#1-2-使用YAML文件创建Pod" class="headerlink" title="1.2 使用YAML文件创建Pod"></a>1.2 使用YAML文件创建Pod</h4><p>创建nginx.yml文件：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
+      <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>应用YAML文件：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx.yml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="1-3-创建Deployment（推荐生产使用）"><a href="#1-3-创建Deployment（推荐生产使用）" class="headerlink" title="1.3 创建Deployment（推荐生产使用）"></a>1.3 创建Deployment（推荐生产使用）</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl create deployment nginx --image<span class="token operator">=</span>nginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="2-Pod管理操作"><a href="#2-Pod管理操作" class="headerlink" title="2. Pod管理操作"></a>2. Pod管理操作</h3><h4 id="2-1-查看Pod"><a href="#2-1-查看Pod" class="headerlink" title="2.1 查看Pod"></a>2.1 查看Pod</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看所有Pod</span>
+kubectl get pods
+
+<span class="token comment" spellcheck="true"># 查看Pod详细信息</span>
+kubectl get pods -o wide
+
+<span class="token comment" spellcheck="true"># 查看特定Pod详情</span>
+kubectl describe pod mynginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="2-2-查看Pod日志"><a href="#2-2-查看Pod日志" class="headerlink" title="2.2 查看Pod日志"></a>2.2 查看Pod日志</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl logs mynginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="2-3-进入Pod容器"><a href="#2-3-进入Pod容器" class="headerlink" title="2.3 进入Pod容器"></a>2.3 进入Pod容器</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl <span class="token function">exec</span> -it mynginx -- /bin/bash
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="2-4-端口转发"><a href="#2-4-端口转发" class="headerlink" title="2.4 端口转发"></a>2.4 端口转发</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl port-forward pod/mynginx 8080:80
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="2-5-删除Pod"><a href="#2-5-删除Pod" class="headerlink" title="2.5 删除Pod"></a>2.5 删除Pod</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod mynginx
+
+<span class="token comment" spellcheck="true"># 通过YAML文件删除</span>
+kubectl delete -f nginx.yml
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h4 id="3-1-Pod状态异常"><a href="#3-1-Pod状态异常" class="headerlink" title="3.1 Pod状态异常"></a>3.1 Pod状态异常</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看Pod详情</span>
+kubectl describe pod <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
+
+<span class="token comment" spellcheck="true"># 查看Pod日志</span>
+kubectl logs <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="3-2-证书错误"><a href="#3-2-证书错误" class="headerlink" title="3.2 证书错误"></a>3.2 证书错误</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
+<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
+<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
+<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
+<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="3-3-移除节点"><a href="#3-3-移除节点" class="headerlink" title="3.3 移除节点"></a>3.3 移除节点</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
+kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
+kubectl delete node node01
+
+<span class="token comment" spellcheck="true"># 在节点上清理</span>
+kubeadm reset
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了Pod创建管理的完整流程，包括：</p>
 <ol>
-<li>客户端发送一个 <code>SYN</code> 报文段，并指明自己想要连接的端口号和它的客户端初始序列号 <code>K</code>。客户端发送的这个 <code>SYN</code> 报文段称作段1。</li>
-<li>服务端也发送自己的 <code>SYN</code> 报文段作为响应，并包含了它的初始序列号 <code>L</code>。该段称为段2。同时为了确认客户端的 <code>SYN</code>，服务端将其包含的<code>K</code> 数值加1后作为返回的 <code>ACK</code> 值。因此，每发送一个 <code>SYN</code>，序列号就会自动加1。这样出现丢包的情况，该 <code>SYN</code> 段将会重传。</li>
-<li>为了确认服务器的 <code>SYN</code>，客户端将 <code>L</code> 的数值加1后作为返回的 <code>ACK</code> 数值。这称为段3。</li>
+<li>多种Pod创建方式</li>
+<li>日常Pod管理操作</li>
+<li>常见问题排查方法</li>
 </ol>
-<p>连接如何关闭：</p>
-<ol>
-<li>连接的主动者发送一个 <code>FIN</code> 段指明接收者希望看到的自己当前的序列号 <code>M</code>。</li>
-<li>连接的被动关闭者将 <code>M</code> 的值加1作为相应的 <code>ACK</code> 值，以表明它已经成功接收到主动关闭者发送的 <code>FIN</code>。此时，上层的应用程序会被告知连接的另一端已经提出了关闭操作。接着，被动关闭者将身份转变为主动关闭者，并发送自己的 <code>FIN</code>。该报文段的序列号为 <code>N</code>。</li>
-<li>为了完成连接的关闭，最后发送的报文段还包含一个 <code>ACK</code> 用于确认上一个 <code>FIN</code>。值得注意的是，如果出现 <code>FIN</code> 丢失的情况，那么发送方将重新传输直到接收到一个 <code>ACK</code> 确认为止。</li>
-</ol>
+<p>对于生产环境，建议使用Deployment而不是直接创建Pod，以获得更好的弹性和管理能力。</p>
 
                 
             </div>
@@ -454,7 +498,7 @@ TCP连接的建立和终止一个TCP连接由">
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2023/tcp-lian-jie-guan-li/">https://jinlid.github.io/2023/tcp-lian-jie-guan-li/</a>
+                    <a href="https://jinlid.github.io/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">https://jinlid.github.io/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -491,11 +535,7 @@ TCP连接的建立和终止一个TCP连接由">
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            
-                                <a href="/tags/Linux/">
-                                    <span class="chip bg-color">Linux</span>
-                                </a>
-                            
+                            <span class="chip bg-color">无标签</span>
                         </div>
                     
                 </div>
@@ -572,60 +612,12 @@ TCP连接的建立和终止一个TCP连接由">
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
-            <div class="card">
-                <a href="/2024/zai-postgresql-zhong-chuang-jian-he-shua-xin-wu-hua-shi-tu/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="在POSTGRESQL中创建和刷新物化视图">
-                        
-                        <span class="card-title">在POSTGRESQL中创建和刷新物化视图</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            “物化视图”是一个数据库对象，它存储预先计算的数据库查询的结果，并可以根据需要轻松刷新该结果。物化视图是几乎所有高级数据库系统的一个组成部分。当然，PostgreSQL 还提供对物化视图的支持，并为最终用户提供强大的工具来处理更耗时的请求。
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
             </div>
             <div class="card">
-                <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                <a href="/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
                     <div class="card-image">
                         
                         
@@ -642,7 +634,45 @@ TCP连接的建立和终止一个TCP连接由">
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-05
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        
+                        <span class="card-title"></span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-02-23
                             </span>
                         <span class="publish-author">
                             
