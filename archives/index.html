@@ -631,20 +631,23 @@ typora-root-url: ../../theme
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
+                        <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
+                                <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
                                 
-                                <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
+                                <span class="card-title">Kubernetes教程（一）集群部署</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。
-1. 准备 Deployment 配置文件首先创建一个 YAML
+                                    1. 环境准备1.1 系统配置# 设置主机名
+echo 'master' > /etc/hostname  # 在master节点执行
+echo 'node01' > /etc/hostname  # 在node01节点执行
+
+# 配置ho
                                 
                             </div>
                             <div class="publish-info">
@@ -691,23 +694,20 @@ typora-root-url: ../../theme
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
+                        <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
+                                <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
                                 
-                                <span class="card-title">Kubernetes教程（一）集群部署</span>
+                                <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    1. 环境准备1.1 系统配置# 设置主机名
-echo 'master' > /etc/hostname  # 在master节点执行
-echo 'node01' > /etc/hostname  # 在node01节点执行
-
-# 配置ho
+                                    本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。
+1. 准备 Deployment 配置文件首先创建一个 YAML
                                 
                             </div>
                             <div class="publish-info">
@@ -1037,19 +1037,24 @@ Docker（本地构建镜像）
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                        <a href="/2021/11-liu-fu-zhi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                                <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
                                 
-                                <span class="card-title">10 基础备份和时间点恢复</span>
+                                <span class="card-title">11 流复制</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                                    同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+
+
+在流复制中，有三种类型的进程协同工作:
+
+主服务器上的walsender进程向备服务器发送WAL (Writ
                                 
                             </div>
                             <div class="publish-info">
