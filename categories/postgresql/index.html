@@ -395,11 +395,20 @@
                 
                 
                 
-                <a href="/categories/postgresql/" title="postgresql: 14">
+                <a href="/categories/postgresql/" title="postgresql: 12">
                     <span class="chip center-align waves-effect waves-light
                              chip-active "
                             style="background-color: #F9EBEA;">postgresql
-                        <span class="tag-length">14</span>
+                        <span class="tag-length">12</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/categories/Kubernetes/" title="Kubernetes: 4">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            style="background-color: #F5EEF8;">Kubernetes
+                        <span class="tag-length">4</span>
                     </span>
                 </a>
                 
@@ -429,110 +438,15 @@
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                创建docker客户端
-import docker
+                                本教程将详细介绍如何使用 Docker SDK for Python 来管理 Docker 容器、镜像和网络。
+1. 安装与初始化安装 Docker SDKpip install docker
 
-# 创建 Docker 客户端
-client = docker.from_env()
-#client = docker.DockerClient(base_url="tcp://192.
+创建 Docker 客户端import do
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
                                 <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2024/zai-postgresql-zhong-chuang-jian-he-shua-xin-wu-hua-shi-tu/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="在POSTGRESQL中创建和刷新物化视图">
-                            
-                            <span class="card-title">在POSTGRESQL中创建和刷新物化视图</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                “物化视图”是一个数据库对象，它存储预先计算的数据库查询的结果，并可以根据需要轻松刷新该结果。物化视图是几乎所有高级数据库系统的一个组成部分。当然，PostgreSQL 还提供对物化视图的支持，并为最终用户提供强大的工具来处理更耗时的请求。
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
-                            
-                            <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 hot_standby_feedback 参数的真正作用是什么。
-VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
                             </span>
                             <span class="publish-author">
                                 
@@ -611,24 +525,73 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/3.cha-xun-chu-li/">
+                    <a href="/2021/6.vacuum-jin-cheng/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
+                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
                             
-                            <span class="card-title">3 查询处理</span>
+                            <span class="card-title">6 vacuum进程</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
+                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
 
 
-本章由以下三部分组成:
+为了去除死元组，清理过程有两种模式，即并发vacuum和vacuum full。并发VACUUM删除表文件每个页面的死元组，
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
 
-第3.
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
+                            
+                            <span class="card-title">5 并发控制</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
+
+
+[TOC]
+
+共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                             
                         </div>
                         <div class="publish-info">
@@ -713,24 +676,24 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
             
             <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/11-liu-fu-zhi/">
+                    <a href="/2021/3.cha-xun-chu-li/">
                         <div class="card-image tag-image">
                             
                             
-                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="3 查询处理">
                             
-                            <span class="card-title">11 流复制</span>
+                            <span class="card-title">3 查询处理</span>
                         </div>
                     </a>
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+                                如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
 
 
-在流复制中，有三种类型的进程协同工作:
+本章由以下三部分组成:
 
-主服务器上的walsender进程向备服务器发送WAL (Writ
+第3.
                             
                         </div>
                         <div class="publish-info">
@@ -777,6 +740,57 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
                         <div class="summary block-with-text">
                             
                                 在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/11-liu-fu-zhi/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                            
+                            <span class="card-title">11 流复制</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+
+
+在流复制中，有三种类型的进程协同工作:
+
+主服务器上的walsender进程向备服务器发送WAL (Writ
                             
                         </div>
                         <div class="publish-info">

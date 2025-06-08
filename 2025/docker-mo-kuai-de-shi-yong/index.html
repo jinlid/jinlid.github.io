@@ -5,12 +5,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="docker模块的使用, jinlid&#39;s blog">
-    <meta name="description" content="创建docker客户端
-import docker
+    <meta name="description" content="本教程将详细介绍如何使用 Docker SDK for Python 来管理 Docker 容器、镜像和网络。
+1. 安装与初始化安装 Docker SDKpip install docker
 
-# 创建 Docker 客户端
-client = docker.from_env()
-#client = docker.DockerClient(base_url=&#34;tcp://192.">
+创建 Docker 客户端import do">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -417,169 +415,314 @@ client = docker.from_env()
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>创建docker客户端</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> docker
+                <p>本教程将详细介绍如何使用 Docker SDK for Python 来管理 Docker 容器、镜像和网络。</p>
+<h2 id="1-安装与初始化"><a href="#1-安装与初始化" class="headerlink" title="1. 安装与初始化"></a>1. 安装与初始化</h2><h3 id="安装-Docker-SDK"><a href="#安装-Docker-SDK" class="headerlink" title="安装 Docker SDK"></a>安装 Docker SDK</h3><pre class="line-numbers language-bash"><code class="language-bash">pip <span class="token function">install</span> docker
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="创建-Docker-客户端"><a href="#创建-Docker-客户端" class="headerlink" title="创建 Docker 客户端"></a>创建 Docker 客户端</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> docker
 
-<span class="token comment" spellcheck="true"># 创建 Docker 客户端</span>
+<span class="token comment" spellcheck="true"># 最简单的方式 - 使用环境变量</span>
 client <span class="token operator">=</span> docker<span class="token punctuation">.</span>from_env<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token comment" spellcheck="true">#client = docker.DockerClient(base_url="tcp://192.168.137.129:2375")</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="镜像管理"><a href="#镜像管理" class="headerlink" title="镜像管理"></a>镜像管理</h3><p>列出所有镜像</p>
-<pre class="line-numbers language-python"><code class="language-python">images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 或者指定 Docker 守护进程地址</span>
+<span class="token comment" spellcheck="true"># client = docker.DockerClient(base_url="tcp://192.168.137.129:2375")</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="2-镜像管理"><a href="#2-镜像管理" class="headerlink" title="2. 镜像管理"></a>2. 镜像管理</h2><h3 id="列出所有镜像"><a href="#列出所有镜像" class="headerlink" title="列出所有镜像"></a>列出所有镜像</h3><pre class="line-numbers language-python"><code class="language-python">images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token keyword">for</span> image <span class="token keyword">in</span> images<span class="token punctuation">:</span>
-    dics <span class="token operator">=</span> json<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>image<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span><span class="token punctuation">)</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>dics<span class="token punctuation">[</span><span class="token string">'RepoTags'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p>查看镜像信息</p>
-<pre class="line-numbers language-python"><code class="language-python">images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
-image_json <span class="token operator">=</span> <span class="token punctuation">[</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>image<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span> <span class="token keyword">for</span> image <span class="token keyword">in</span> images<span class="token punctuation">]</span>
-<span class="token keyword">for</span> img <span class="token keyword">in</span> image_json<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>img<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>方法</strong></p>
-<p>通过镜像 ID 或镜像名称来移除镜像</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">remove_image</span><span class="token punctuation">(</span>image_name_or_id<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"ID: {image.short_id}, Tags: {image.tags}"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h3 id="查看镜像详细信息"><a href="#查看镜像详细信息" class="headerlink" title="查看镜像详细信息"></a>查看镜像详细信息</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> json
+
+images <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> image <span class="token keyword">in</span> images<span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>image<span class="token punctuation">.</span>attrs<span class="token punctuation">,</span> indent<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="删除镜像"><a href="#删除镜像" class="headerlink" title="删除镜像"></a>删除镜像</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">remove_image</span><span class="token punctuation">(</span>image_name_or_id<span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token keyword">try</span><span class="token punctuation">:</span>
-        <span class="token comment" spellcheck="true"># 移除镜像</span>
         client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>remove<span class="token punctuation">(</span>image_name_or_id<span class="token punctuation">)</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Image '{image_name_or_id}' removed successfully."</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"成功删除镜像: {image_name_or_id}"</span><span class="token punctuation">)</span>
     <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>ImageNotFound<span class="token punctuation">:</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Image '{image_name_or_id}' not found."</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"镜像不存在: {image_name_or_id}"</span><span class="token punctuation">)</span>
     <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error removing image '{image_name_or_id}': {e}"</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>删除所有未使用的镜像（即悬空镜像）</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">prune_unused_images</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"删除镜像时出错: {e}"</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+remove_image<span class="token punctuation">(</span><span class="token string">"alpine:latest"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="清理未使用的镜像"><a href="#清理未使用的镜像" class="headerlink" title="清理未使用的镜像"></a>清理未使用的镜像</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">prune_unused_images</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token keyword">try</span><span class="token punctuation">:</span>
-        client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>prune<span class="token punctuation">(</span><span class="token punctuation">)</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Unused images pruned successfully."</span><span class="token punctuation">)</span>
+        result <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>prune<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"已清理未使用的镜像, 释放空间: {result['SpaceReclaimed']}字节"</span><span class="token punctuation">)</span>
     <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error pruning unused images: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"清理镜像时出错: {e}"</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>构建镜像</p>
-<pre class="line-numbers language-python"><code class="language-python">build_args <span class="token operator">=</span> <span class="token punctuation">{</span>
+<h3 id="构建镜像"><a href="#构建镜像" class="headerlink" title="构建镜像"></a>构建镜像</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">build_image</span><span class="token punctuation">(</span>dockerfile_path<span class="token punctuation">,</span> tag<span class="token punctuation">,</span> build_args<span class="token operator">=</span>None<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        build_output <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+        image<span class="token punctuation">,</span> logs <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>build<span class="token punctuation">(</span>
+            path<span class="token operator">=</span>dockerfile_path<span class="token punctuation">,</span>
+            tag<span class="token operator">=</span>tag<span class="token punctuation">,</span>
+            buildargs<span class="token operator">=</span>build_args <span class="token operator">or</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+            rm<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+            forcerm<span class="token operator">=</span><span class="token boolean">True</span>
+        <span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 处理构建日志</span>
+        <span class="token keyword">for</span> line <span class="token keyword">in</span> logs<span class="token punctuation">:</span>
+            <span class="token keyword">if</span> <span class="token string">'stream'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
+                stream <span class="token operator">=</span> line<span class="token punctuation">[</span><span class="token string">'stream'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token keyword">if</span> stream<span class="token punctuation">:</span>
+                    build_output<span class="token punctuation">.</span>append<span class="token punctuation">(</span>stream<span class="token punctuation">)</span>
+                    <span class="token keyword">print</span><span class="token punctuation">(</span>stream<span class="token punctuation">)</span>
+            <span class="token keyword">elif</span> <span class="token string">'error'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
+                error_msg <span class="token operator">=</span> line<span class="token punctuation">[</span><span class="token string">'error'</span><span class="token punctuation">]</span>
+                <span class="token keyword">raise</span> Exception<span class="token punctuation">(</span>f<span class="token string">"构建错误: {error_msg}"</span><span class="token punctuation">)</span>
+        
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"成功构建镜像: {tag}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> image
+    <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"构建镜像时出错: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+build_args <span class="token operator">=</span> <span class="token punctuation">{</span>
     <span class="token string">'URL'</span><span class="token punctuation">:</span> <span class="token string">'https://mirrors.aliyun.com/postgresql/source'</span><span class="token punctuation">,</span>
     <span class="token string">'PGVERSION'</span><span class="token punctuation">:</span> <span class="token string">'15.10'</span>
 <span class="token punctuation">}</span>
-
-logs<span class="token operator">=</span><span class="token punctuation">[</span><span class="token punctuation">]</span>
-<span class="token keyword">try</span><span class="token punctuation">:</span>
-    image<span class="token punctuation">,</span> logs <span class="token operator">=</span> client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>build<span class="token punctuation">(</span>
-        path<span class="token operator">=</span>BASE_DIR <span class="token operator">+</span> <span class="token string">'/scripts'</span><span class="token punctuation">,</span>
-        tag<span class="token operator">=</span><span class="token string">'postgresql:15.10'</span><span class="token punctuation">,</span>
-        buildargs<span class="token operator">=</span>build_args<span class="token punctuation">,</span>
-        rm<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
-    <span class="token punctuation">)</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>logs<span class="token punctuation">)</span>
-<span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>DockerException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'Error building image:'</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span>
-<span class="token keyword">finally</span><span class="token punctuation">:</span>
-    <span class="token comment" spellcheck="true"># 遍历日志输出</span>
-    <span class="token keyword">for</span> line <span class="token keyword">in</span> logs<span class="token punctuation">:</span>
-        <span class="token keyword">if</span> <span class="token string">'stream'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
-            stream <span class="token operator">=</span> line<span class="token punctuation">[</span><span class="token string">'stream'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 去掉可能的前后空格</span>
-            <span class="token keyword">if</span> stream<span class="token punctuation">:</span>  <span class="token comment" spellcheck="true"># 只有非空内容才打印</span>
-                <span class="token keyword">print</span><span class="token punctuation">(</span>stream<span class="token punctuation">)</span>
-        <span class="token keyword">elif</span> <span class="token string">'error'</span> <span class="token keyword">in</span> line<span class="token punctuation">:</span>
-            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error: {line['error']}"</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 如果有错误，打印错误信息</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="容器管理"><a href="#容器管理" class="headerlink" title="容器管理"></a>容器管理</h3><p>创建并启动容器</p>
-<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>run<span class="token punctuation">(</span><span class="token string">'alpine'</span><span class="token punctuation">,</span> <span class="token string">'echo hello world'</span><span class="token punctuation">,</span> detach<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>logs<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取容器的日志输出</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>列出所有容器</p>
-<pre class="line-numbers language-python"><code class="language-python">containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p> 获取所有容器（包括停止的容器）</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_all_containers</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+build_image<span class="token punctuation">(</span>
+    dockerfile_path<span class="token operator">=</span><span class="token string">'./dockerfiles'</span><span class="token punctuation">,</span>
+    tag<span class="token operator">=</span><span class="token string">'postgresql:15.10'</span><span class="token punctuation">,</span>
+    build_args<span class="token operator">=</span>build_args
+<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-容器管理"><a href="#3-容器管理" class="headerlink" title="3. 容器管理"></a>3. 容器管理</h2><h3 id="创建并运行容器"><a href="#创建并运行容器" class="headerlink" title="创建并运行容器"></a>创建并运行容器</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">run_container</span><span class="token punctuation">(</span>image_name<span class="token punctuation">,</span> command<span class="token operator">=</span>None<span class="token punctuation">,</span> detach<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span> 
+                  name<span class="token operator">=</span>None<span class="token punctuation">,</span> ports<span class="token operator">=</span>None<span class="token punctuation">,</span> volumes<span class="token operator">=</span>None<span class="token punctuation">,</span> 
+                  environment<span class="token operator">=</span>None<span class="token punctuation">,</span> network<span class="token operator">=</span>None<span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token keyword">try</span><span class="token punctuation">:</span>
-        <span class="token comment" spellcheck="true"># 获取所有容器的信息，包含正在运行和已停止的容器</span>
-        containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span>all<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
-
-        <span class="token comment" spellcheck="true"># 将每个容器信息格式化为 JSON</span>
-        containers_json <span class="token operator">=</span> <span class="token punctuation">[</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>container<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span> <span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">]</span>
-
-        <span class="token comment" spellcheck="true"># 输出容器的 JSON 信息</span>
-        <span class="token keyword">for</span> container_info <span class="token keyword">in</span> containers_json<span class="token punctuation">:</span>
-            <span class="token keyword">print</span><span class="token punctuation">(</span>container_info<span class="token punctuation">)</span>
-
-    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
-        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Error retrieving container list: {e}"</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>查看容器的详细信息</p>
-<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'postgresql_16.61'</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取指定容器</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>attrs<span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取容器的详细信息</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>停止容器</p>
-<pre class="line-numbers language-python"><code class="language-python">container<span class="token punctuation">.</span>stop<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>删除容器</p>
-<pre class="line-numbers language-python"><code class="language-python">container<span class="token punctuation">.</span>remove<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h3 id="容器网络"><a href="#容器网络" class="headerlink" title="容器网络"></a>容器网络</h3><p>列出所有网络</p>
-<pre class="line-numbers language-python"><code class="language-python">networks <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
-<span class="token keyword">for</span> network <span class="token keyword">in</span> networks<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>network<span class="token punctuation">.</span>name<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>创建网络</p>
-<pre class="line-numbers language-python"><code class="language-python">network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>create<span class="token punctuation">(</span><span class="token string">'my_network'</span><span class="token punctuation">,</span> driver<span class="token operator">=</span><span class="token string">'bridge'</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>创建自定义网络</p>
-<pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 定义网络名称</span>
-network_name <span class="token operator">=</span> <span class="token string">"postgrenetwork"</span>
-<span class="token comment" spellcheck="true"># 尝试获取网络</span>
-<span class="token keyword">try</span><span class="token punctuation">:</span>
-    <span class="token comment" spellcheck="true"># 查找指定名称的网络</span>
-    network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>get<span class="token punctuation">(</span>network_name<span class="token punctuation">)</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' already exists."</span><span class="token punctuation">)</span>
-<span class="token keyword">except</span> NotFound<span class="token punctuation">:</span>
-    <span class="token comment" spellcheck="true"># 如果网络不存在，则创建该网络</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' does not exist. Creating..."</span><span class="token punctuation">)</span>
-    network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
-        network_name<span class="token punctuation">,</span>
-        driver<span class="token operator">=</span><span class="token string">"bridge"</span><span class="token punctuation">,</span>
-        ipam<span class="token operator">=</span>docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMConfig<span class="token punctuation">(</span>
-            pool_configs<span class="token operator">=</span><span class="token punctuation">[</span>docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMPool<span class="token punctuation">(</span>subnet<span class="token operator">=</span><span class="token string">"172.19.1.0/24"</span><span class="token punctuation">)</span><span class="token punctuation">]</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>run<span class="token punctuation">(</span>
+            image<span class="token operator">=</span>image_name<span class="token punctuation">,</span>
+            command<span class="token operator">=</span>command<span class="token punctuation">,</span>
+            detach<span class="token operator">=</span>detach<span class="token punctuation">,</span>
+            name<span class="token operator">=</span>name<span class="token punctuation">,</span>
+            ports<span class="token operator">=</span>ports <span class="token operator">or</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+            volumes<span class="token operator">=</span>volumes <span class="token operator">or</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+            environment<span class="token operator">=</span>environment <span class="token operator">or</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+            network<span class="token operator">=</span>network
         <span class="token punctuation">)</span>
-    <span class="token punctuation">)</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Network '{network_name}' created successfully."</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"成功创建容器: {container.id}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> container
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"创建容器时出错: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+container <span class="token operator">=</span> run_container<span class="token punctuation">(</span>
+    image_name<span class="token operator">=</span><span class="token string">"alpine"</span><span class="token punctuation">,</span>
+    command<span class="token operator">=</span><span class="token string">"echo hello world"</span><span class="token punctuation">,</span>
+    name<span class="token operator">=</span><span class="token string">"test_container"</span>
+<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="列出容器"><a href="#列出容器" class="headerlink" title="列出容器"></a>列出容器</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">list_containers</span><span class="token punctuation">(</span>all_containers<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span>all<span class="token operator">=</span>all_containers<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"找到 {len(containers)} 个容器:"</span><span class="token punctuation">)</span>
+        <span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"ID: {container.short_id}, Name: {container.name}, Status: {container.status}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> containers
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"获取容器列表时出错: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+list_containers<span class="token punctuation">(</span>all_containers<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="获取容器详细信息"><a href="#获取容器详细信息" class="headerlink" title="获取容器详细信息"></a>获取容器详细信息</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_container_info</span><span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>container<span class="token punctuation">.</span>attrs<span class="token punctuation">,</span> indent<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> container<span class="token punctuation">.</span>attrs
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器不存在: {container_id_or_name}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"获取容器信息时出错: {e}"</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+get_container_info<span class="token punctuation">(</span><span class="token string">"postgresql_16.6"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="停止和删除容器"><a href="#停止和删除容器" class="headerlink" title="停止和删除容器"></a>停止和删除容器</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">stop_and_remove_container</span><span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 停止容器</span>
+        <span class="token keyword">if</span> container<span class="token punctuation">.</span>status <span class="token operator">==</span> <span class="token string">'running'</span><span class="token punctuation">:</span>
+            container<span class="token punctuation">.</span>stop<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"已停止容器: {container_id_or_name}"</span><span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 删除容器</span>
+        container<span class="token punctuation">.</span>remove<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"已删除容器: {container_id_or_name}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> <span class="token boolean">True</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器不存在: {container_id_or_name}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"操作容器时出错: {e}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token boolean">False</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+stop_and_remove_container<span class="token punctuation">(</span><span class="token string">"test_container"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="4-网络管理"><a href="#4-网络管理" class="headerlink" title="4. 网络管理"></a>4. 网络管理</h2><h3 id="列出网络"><a href="#列出网络" class="headerlink" title="列出网络"></a>列出网络</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">list_networks</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        networks <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"找到 {len(networks)} 个网络:"</span><span class="token punctuation">)</span>
+        <span class="token keyword">for</span> network <span class="token keyword">in</span> networks<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Name: {network.name}, Driver: {network.attrs['Driver']}, Scope: {network.attrs['Scope']}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> networks
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"获取网络列表时出错: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+list_networks<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="创建自定义网络"><a href="#创建自定义网络" class="headerlink" title="创建自定义网络"></a>创建自定义网络</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">create_custom_network</span><span class="token punctuation">(</span>network_name<span class="token punctuation">,</span> driver<span class="token operator">=</span><span class="token string">'bridge'</span><span class="token punctuation">,</span> subnet<span class="token operator">=</span>None<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 检查网络是否已存在</span>
+        existing_networks <span class="token operator">=</span> <span class="token punctuation">[</span>n<span class="token punctuation">.</span>name <span class="token keyword">for</span> n <span class="token keyword">in</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>list<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">]</span>
+        <span class="token keyword">if</span> network_name <span class="token keyword">in</span> existing_networks<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"网络已存在: {network_name}"</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>get<span class="token punctuation">(</span>network_name<span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 配置IPAM（如果指定了子网）</span>
+        ipam_config <span class="token operator">=</span> None
+        <span class="token keyword">if</span> subnet<span class="token punctuation">:</span>
+            ipam_config <span class="token operator">=</span> docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMConfig<span class="token punctuation">(</span>
+                pool_configs<span class="token operator">=</span><span class="token punctuation">[</span>docker<span class="token punctuation">.</span>types<span class="token punctuation">.</span>IPAMPool<span class="token punctuation">(</span>subnet<span class="token operator">=</span>subnet<span class="token punctuation">)</span><span class="token punctuation">]</span>
+            <span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 创建网络</span>
+        network <span class="token operator">=</span> client<span class="token punctuation">.</span>networks<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
+            network_name<span class="token punctuation">,</span>
+            driver<span class="token operator">=</span>driver<span class="token punctuation">,</span>
+            ipam<span class="token operator">=</span>ipam_config
+        <span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"成功创建网络: {network_name}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> network
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"创建网络时出错: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+create_custom_network<span class="token punctuation">(</span>
+    network_name<span class="token operator">=</span><span class="token string">"postgrenetwork"</span><span class="token punctuation">,</span>
+    subnet<span class="token operator">=</span><span class="token string">"172.19.1.0/24"</span>
+<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="获取容器IP地址"><a href="#获取容器IP地址" class="headerlink" title="获取容器IP地址"></a>获取容器IP地址</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_container_ips</span><span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span>
+        networks <span class="token operator">=</span> container<span class="token punctuation">.</span>attrs<span class="token punctuation">[</span><span class="token string">'NetworkSettings'</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">'Networks'</span><span class="token punctuation">]</span>
+        
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器 {container_id_or_name} 的IP地址:"</span><span class="token punctuation">)</span>
+        <span class="token keyword">for</span> network_name<span class="token punctuation">,</span> network_info <span class="token keyword">in</span> networks<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"{network_name}: {network_info['IPAddress']}"</span><span class="token punctuation">)</span>
+        
+        <span class="token keyword">return</span> networks
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器不存在: {container_id_or_name}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"获取容器IP时出错: {e}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+get_container_ips<span class="token punctuation">(</span><span class="token string">"postgresql_16.6"</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>获取所有容器 IP</p>
-<pre class="line-numbers language-python"><code class="language-python">containers <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>list<span class="token punctuation">(</span>all<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
-<span class="token comment" spellcheck="true"># 获取每个容器的 IP 地址</span>
-ip_address_list <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
-<span class="token keyword">for</span> container <span class="token keyword">in</span> containers<span class="token punctuation">:</span>
-    <span class="token comment" spellcheck="true"># 获取容器的网络信息</span>
-    networks <span class="token operator">=</span> container<span class="token punctuation">.</span>attrs<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'NetworkSettings'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'Networks'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
-    <span class="token comment" spellcheck="true"># 遍历所有网络，打印每个容器的 IP 地址</span>
-    <span class="token keyword">for</span> network_name<span class="token punctuation">,</span> network_info <span class="token keyword">in</span> networks<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
-        ip_address <span class="token operator">=</span> network_info<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'IPAddress'</span><span class="token punctuation">)</span>
-        ip_address_list<span class="token punctuation">.</span>append<span class="token punctuation">(</span>ip_address<span class="token punctuation">)</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>ip_address_list<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="容器日志"><a href="#容器日志" class="headerlink" title="容器日志"></a>容器日志</h3><p>查看日志</p>
-<pre class="line-numbers language-python"><code class="language-python">container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'container_id_or_name'</span><span class="token punctuation">)</span>
-<span class="token keyword">print</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span>logs<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="执行命令"><a href="#执行命令" class="headerlink" title="执行命令"></a>执行命令</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 获取已经存在的容器</span>
-container_name <span class="token operator">=</span> <span class="token string">"postgresql_16.6"</span>
-<span class="token keyword">try</span><span class="token punctuation">:</span>
-    container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_name<span class="token punctuation">)</span>
-    exec_command <span class="token operator">=</span> container<span class="token punctuation">.</span>exec_run<span class="token punctuation">(</span><span class="token string">"echo 'Hello!'"</span><span class="token punctuation">)</span>
-    <span class="token comment" spellcheck="true"># 执行命令并获取结果</span>
-    output <span class="token operator">=</span> exec_command<span class="token punctuation">.</span>output<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">"utf-8"</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 获取输出结果并解码</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>output<span class="token punctuation">)</span>
-    <span class="token comment" spellcheck="true"># 如果需要执行更多复杂的 shell 命令（例如获取 shell 会话），你可以使用类似以下的命令</span>
-    exec_command <span class="token operator">=</span> container<span class="token punctuation">.</span>exec_run<span class="token punctuation">(</span><span class="token string">"pg_ctl start"</span><span class="token punctuation">)</span>
-    output <span class="token operator">=</span> exec_command<span class="token punctuation">.</span>output<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">"utf-8"</span><span class="token punctuation">)</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>output<span class="token punctuation">)</span>
-<span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"Container {container_name} not found!"</span><span class="token punctuation">)</span>
-<span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
-    <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"An error occurred: {e}"</span><span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-容器日志与命令执行"><a href="#5-容器日志与命令执行" class="headerlink" title="5. 容器日志与命令执行"></a>5. 容器日志与命令执行</h2><h3 id="查看容器日志"><a href="#查看容器日志" class="headerlink" title="查看容器日志"></a>查看容器日志</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_container_logs</span><span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">,</span> tail<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span>
+        logs <span class="token operator">=</span> container<span class="token punctuation">.</span>logs<span class="token punctuation">(</span>tail<span class="token operator">=</span>tail<span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器 {container_id_or_name} 的日志:"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>logs<span class="token punctuation">)</span>
+        <span class="token keyword">return</span> logs
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器不存在: {container_id_or_name}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"获取日志时出错: {e}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+get_container_logs<span class="token punctuation">(</span><span class="token string">"postgresql_16.6"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="在容器中执行命令"><a href="#在容器中执行命令" class="headerlink" title="在容器中执行命令"></a>在容器中执行命令</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">exec_command_in_container</span><span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">,</span> command<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        container <span class="token operator">=</span> client<span class="token punctuation">.</span>containers<span class="token punctuation">.</span>get<span class="token punctuation">(</span>container_id_or_name<span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 执行命令</span>
+        exec_result <span class="token operator">=</span> container<span class="token punctuation">.</span>exec_run<span class="token punctuation">(</span>
+            cmd<span class="token operator">=</span>command<span class="token punctuation">,</span>
+            stdout<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+            stderr<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+            stdin<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span>
+            tty<span class="token operator">=</span><span class="token boolean">False</span>
+        <span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 解码输出</span>
+        output <span class="token operator">=</span> exec_result<span class="token punctuation">.</span>output<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span>
+        exit_code <span class="token operator">=</span> exec_result<span class="token punctuation">.</span>exit_code
+        
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"在容器 {container_id_or_name} 中执行命令: {command}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"退出码: {exit_code}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"输出:"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>output<span class="token punctuation">)</span>
+        
+        <span class="token keyword">return</span> output<span class="token punctuation">,</span> exit_code
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>NotFound<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"容器不存在: {container_id_or_name}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> docker<span class="token punctuation">.</span>errors<span class="token punctuation">.</span>APIError <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"执行命令时出错: {e}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> None<span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span>
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+exec_command_in_container<span class="token punctuation">(</span><span class="token string">"postgresql_16.6"</span><span class="token punctuation">,</span> <span class="token string">"ps aux"</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="6-综合示例"><a href="#6-综合示例" class="headerlink" title="6. 综合示例"></a>6. 综合示例</h2><h3 id="部署一个简单的Web应用"><a href="#部署一个简单的Web应用" class="headerlink" title="部署一个简单的Web应用"></a>部署一个简单的Web应用</h3><pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">deploy_web_app</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 1. 拉取镜像</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"正在拉取nginx镜像..."</span><span class="token punctuation">)</span>
+        client<span class="token punctuation">.</span>images<span class="token punctuation">.</span>pull<span class="token punctuation">(</span><span class="token string">"nginx:latest"</span><span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 2. 创建网络</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"正在创建网络..."</span><span class="token punctuation">)</span>
+        network <span class="token operator">=</span> create_custom_network<span class="token punctuation">(</span><span class="token string">"web_network"</span><span class="token punctuation">)</span>
+        
+        <span class="token comment" spellcheck="true"># 3. 运行容器</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"正在启动容器..."</span><span class="token punctuation">)</span>
+        container <span class="token operator">=</span> run_container<span class="token punctuation">(</span>
+            image_name<span class="token operator">=</span><span class="token string">"nginx:latest"</span><span class="token punctuation">,</span>
+            name<span class="token operator">=</span><span class="token string">"web_server"</span><span class="token punctuation">,</span>
+            ports<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">'80/tcp'</span><span class="token punctuation">:</span> <span class="token number">8080</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+            network<span class="token operator">=</span><span class="token string">"web_network"</span><span class="token punctuation">,</span>
+            detach<span class="token operator">=</span><span class="token boolean">True</span>
+        <span class="token punctuation">)</span>
+        
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"部署成功!"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"访问地址: http://localhost:8080"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> container
+    <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>f<span class="token string">"部署失败: {e}"</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> None
+
+<span class="token comment" spellcheck="true"># 使用示例</span>
+deploy_web_app<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了 Docker SDK for Python 的主要功能：</p>
+<ol>
+<li><strong>镜像管理</strong> - 列出、构建、删除镜像</li>
+<li><strong>容器管理</strong> - 创建、启动、停止、删除容器</li>
+<li><strong>网络管理</strong> - 创建自定义网络，查看容器IP</li>
+<li><strong>日志与命令</strong> - 查看容器日志，在容器内执行命令</li>
+<li><strong>综合应用</strong> - 完整的应用部署流程</li>
+</ol>
+<p>通过这些功能，您可以轻松地在 Python 程序中集成 Docker 管理功能，实现自动化部署和管理容器化应用。</p>
 
                 
             </div>
@@ -728,7 +871,7 @@ container_name <span class="token operator">=</span> <span class="token string">
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">
+                <a href="/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">
                     <div class="card-image">
                         
                         
@@ -745,7 +888,7 @@ container_name <span class="token operator">=</span> <span class="token string">
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2025-02-23
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-06-07
                         </span>
                         <span class="publish-author">
                             
@@ -765,31 +908,31 @@ container_name <span class="token operator">=</span> <span class="token string">
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/zai-postgresql-zhong-chuang-jian-he-shua-xin-wu-hua-shi-tu/">
+                <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="在POSTGRESQL中创建和刷新物化视图">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
                         
-                        <span class="card-title">在POSTGRESQL中创建和刷新物化视图</span>
+                        <span class="card-title">Kubernetes教程（一）集群部署</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            “物化视图”是一个数据库对象，它存储预先计算的数据库查询的结果，并可以根据需要轻松刷新该结果。物化视图是几乎所有高级数据库系统的一个组成部分。当然，PostgreSQL 还提供对物化视图的支持，并为最终用户提供强大的工具来处理更耗时的请求。
+                            
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                             
                             
@@ -799,8 +942,8 @@ container_name <span class="token operator">=</span> <span class="token string">
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
                     </a>
                     
                 </div>

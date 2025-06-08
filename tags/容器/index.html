@@ -4,14 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="jinlid&#39;s blog">
-    <meta name="description" content="第二部分：创建和管理Pod1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
-kubectl run mynginx --image=nginx
-
-# 查看Pod状态
-kubectl get pods
-
-1.">
+    <meta name="keywords" content="标签: 容器, jinlid&#39;s blog">
+    <meta name="description" content="jinlid&#39;s blog">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -23,7 +17,7 @@ kubectl get pods
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>jinlid&#39;s blog</title>
+    <title>标签: 容器 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -339,464 +333,224 @@ kubectl get pods
 
 </header>
 
-    
-
-
-
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
-    <div class="container" style="right: 0px;left: 0px;">
-        <div class="row">
-            <div class="col s12 m12 l12">
-                <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-
-<main class="post-container content">
-
-    
+    <div class="bg-cover pd-header about-cover">
+    <div class="container">
     <div class="row">
-    <div id="main-content" class="col s12 m12 l9">
-        <!-- 文章内容详情 -->
-<div id="artDetail">
+    <div class="col s10 offset-s1 m8 offset-m2 l8 offset-l2">
+        <div class="brand">
+            <div class="title center-align">
+                
+                    subtitle
+                
+            </div>
+
+            <div class="description center-align">
+                
+                <span id="subtitle"></span>
+                <script src="/libs/typed/typed.js"></script>
+                <script>
+                    var typed = new Typed("#subtitle", {
+                        strings: [ 
+                            
+                                "从来没有真正的绝境, 只有心灵的迷途",
+                            
+                                "Never really desperate, only the lost of the soul",
+                            
+                        ],
+                        startDelay: 300,
+                        typeSpeed: 100,
+                        loop: true,
+                        backSpeed: 50,
+                        showCursor: true
+                    });
+                </script>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // 每天切换 banner 图.  Switch banner image every day.
+    var bannerUrl = "/medias/banner/" + new Date().getDay() + '.jpg';
+    $('.bg-cover').css('background-image', 'url(' + bannerUrl + ')');
+</script>
+
+
+    </div>
+</div>
+
+<main class="content">
+
+    
+
+<div id="tags" class="container chip-container">
     <div class="card">
-        <div class="card-content article-info">
-            <div class="row tag-cate">
-                <div class="col s7">
-                    
-                          <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
-                          </div>
-                    
-                </div>
-                <div class="col s5 right-align">
-                    
-                </div>
+        <div class="card-content">
+            <div class="tag-title center-align">
+                <i class="fas fa-tags"></i>&nbsp;&nbsp;文章标签
             </div>
-
-            <div class="post-info">
+            <div class="tag-chips">
                 
-                <div class="post-date info-break-policy">
-                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2025-06-05
-                </div>
                 
-
+                <a href="/tags/postgresql/" title="postgresql: 12">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="postgresql" style="background-color: #F9EBEA;">postgresql
+                        <span class="tag-length">12</span>
+                    </span>
+                </a>
                 
-
                 
-
-                
-
+                <a href="/tags/%E5%AE%B9%E5%99%A8/" title="容器: 4">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-active "
+                            data-tagname="容器" style="background-color: #F5EEF8;">容器
+                        <span class="tag-length">4</span>
+                    </span>
+                </a>
                 
             </div>
         </div>
-        <hr class="clearfix">
-
-        
-
-        
-
-        <div class="card-content article-card-content">
-            <div id="articleContent">
-                <h2 id="第二部分：创建和管理Pod"><a href="#第二部分：创建和管理Pod" class="headerlink" title="第二部分：创建和管理Pod"></a>第二部分：创建和管理Pod</h2><h3 id="1-创建Pod的几种方式"><a href="#1-创建Pod的几种方式" class="headerlink" title="1. 创建Pod的几种方式"></a>1. 创建Pod的几种方式</h3><h4 id="1-1-使用kubectl-run命令"><a href="#1-1-使用kubectl-run命令" class="headerlink" title="1.1 使用kubectl run命令"></a>1.1 使用kubectl run命令</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 创建简单Pod</span>
-kubectl run mynginx --image<span class="token operator">=</span>nginx
-
-<span class="token comment" spellcheck="true"># 查看Pod状态</span>
-kubectl get pods
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="1-2-使用YAML文件创建Pod"><a href="#1-2-使用YAML文件创建Pod" class="headerlink" title="1.2 使用YAML文件创建Pod"></a>1.2 使用YAML文件创建Pod</h4><p>创建nginx.yml文件：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
-      <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>应用YAML文件：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx.yml
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="1-3-创建Deployment（推荐生产使用）"><a href="#1-3-创建Deployment（推荐生产使用）" class="headerlink" title="1.3 创建Deployment（推荐生产使用）"></a>1.3 创建Deployment（推荐生产使用）</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl create deployment nginx --image<span class="token operator">=</span>nginx
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h3 id="2-Pod管理操作"><a href="#2-Pod管理操作" class="headerlink" title="2. Pod管理操作"></a>2. Pod管理操作</h3><h4 id="2-1-查看Pod"><a href="#2-1-查看Pod" class="headerlink" title="2.1 查看Pod"></a>2.1 查看Pod</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看所有Pod</span>
-kubectl get pods
-
-<span class="token comment" spellcheck="true"># 查看Pod详细信息</span>
-kubectl get pods -o wide
-
-<span class="token comment" spellcheck="true"># 查看特定Pod详情</span>
-kubectl describe pod mynginx
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="2-2-查看Pod日志"><a href="#2-2-查看Pod日志" class="headerlink" title="2.2 查看Pod日志"></a>2.2 查看Pod日志</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl logs mynginx
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="2-3-进入Pod容器"><a href="#2-3-进入Pod容器" class="headerlink" title="2.3 进入Pod容器"></a>2.3 进入Pod容器</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl <span class="token function">exec</span> -it mynginx -- /bin/bash
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="2-4-端口转发"><a href="#2-4-端口转发" class="headerlink" title="2.4 端口转发"></a>2.4 端口转发</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl port-forward pod/mynginx 8080:80
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="2-5-删除Pod"><a href="#2-5-删除Pod" class="headerlink" title="2.5 删除Pod"></a>2.5 删除Pod</h4><pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod mynginx
-
-<span class="token comment" spellcheck="true"># 通过YAML文件删除</span>
-kubectl delete -f nginx.yml
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h4 id="3-1-Pod状态异常"><a href="#3-1-Pod状态异常" class="headerlink" title="3.1 Pod状态异常"></a>3.1 Pod状态异常</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看Pod详情</span>
-kubectl describe pod <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
-
-<span class="token comment" spellcheck="true"># 查看Pod日志</span>
-kubectl logs <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-2-证书错误"><a href="#3-2-证书错误" class="headerlink" title="3.2 证书错误"></a>3.2 证书错误</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
-<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-3-移除节点"><a href="#3-3-移除节点" class="headerlink" title="3.3 移除节点"></a>3.3 移除节点</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
-kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
-kubectl delete node node01
-
-<span class="token comment" spellcheck="true"># 在节点上清理</span>
-kubeadm reset
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了Pod创建管理的完整流程，包括：</p>
-<ol>
-<li>多种Pod创建方式</li>
-<li>日常Pod管理操作</li>
-<li>常见问题排查方法</li>
-</ol>
-<p>对于生产环境，建议使用Deployment而不是直接创建Pod，以获得更好的弹性和管理能力。</p>
-
-                
-            </div>
-            <hr/>
-
-            
-
-    <div class="reprint" id="reprint-statement">
-        
-            <div class="reprint__author">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-user">
-                        文章作者:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
-                </span>
-            </div>
-            <div class="reprint__type">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-link">
-                        文章链接:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">https://jinlid.github.io/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/</a>
-                </span>
-            </div>
-            <div class="reprint__notice">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-copyright">
-                        版权声明:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    本博客所有文章除特別声明外，均采用
-                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
-                    许可协议。转载请注明来源
-                    <a href="/about" target="_blank">JINLID</a>
-                    !
-                </span>
-            </div>
-        
     </div>
+</div>
 
-    <script async defer>
-      document.addEventListener("copy", function (e) {
-        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
-        M.toast({html: toastHTML})
-      });
+    
 
-      function navToReprintStatement() {
-        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
-      }
-    </script>
-
-
-
-            <div class="tag_share" style="display: block;">
-                <div class="post-meta__tag-list" style="display: inline-block;">
-                    
-                        <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
+    <article id="articles" class="container articles">
+        <div class="row tags-posts">
+            
+            
+            <div class="article tag-post col s12 m6 l4" data-tags="容器" data-aos="fade-up">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-shi-bu-shu-flask-ying-yong/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="Kubernetes教程（十）部署Flask应用">
+                            
+                            <span class="card-title">Kubernetes教程（十）部署Flask应用</span>
                         </div>
-                    
-                </div>
-                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
-                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
-<div id="article-share">
-
-    
-    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
-    <script src="/libs/share/js/social-share.min.js"></script>
-    
-
-    
-
-</div>
-
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-                <div id="reward">
-    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
-
-    <!-- Modal Structure -->
-    <div id="rewardModal" class="modal">
-        <div class="modal-content">
-            <a class="close modal-close"><i class="fas fa-times"></i></a>
-            <h4 class="reward-title">你的赏识是我前进的动力</h4>
-            <div class="reward-content">
-                <div class="reward-tabs">
-                    <ul class="tabs row">
-                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
-                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
-                    </ul>
-                    <div id="alipay">
-                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
-                    </div>
-                    <div id="wechat">
-                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+            
+            <div class="article tag-post col s12 m6 l4" data-tags="容器" data-aos="fade-up">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
+                            
+                            <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    $(function () {
-        $('.tabs').tabs();
-    });
-</script>
-
+            
+            
+            <div class="article tag-post col s12 m6 l4" data-tags="容器" data-aos="fade-up">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
+                            
+                            <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="article tag-post col s12 m6 l4" data-tags="容器" data-aos="fade-up">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
+                        <div class="card-image tag-image">
+                            
+                            
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
+                            
+                            <span class="card-title">Kubernetes教程（一）集群部署</span>
+                        </div>
+                    </a>
+                    <div class="card-content article-content">
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
         </div>
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-<article id="prenext-posts" class="prev-next articles">
-    <div class="row article-row">
-        
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
-            <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
-            <div class="card">
-                <a href="/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
-                        
-                        <span class="card-title"></span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-05
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-user fa-fw"></i>
-                            JINLID
-                            
-                        </span>
-                    </div>
-                </div>
-
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
-                        
-                        <span class="card-title"></span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-02-23
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-user fa-fw"></i>
-                            JINLID
-                            
-                        </span>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-        
-    </div>
-</article>
-
-</div>
-
-
-
-<!-- 代码块功能依赖 -->
-<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
-
-
-
-<!-- 代码语言 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
-
-
-<!-- 代码块复制 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
-
-
-<!-- 代码块收缩 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
-
-
-
-    </div>
-    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
-        <div class="toc-widget card" style="background-color: white;">
-            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
-            <div id="toc-content"></div>
-        </div>
-    </div>
-</div>
-
-<!-- TOC 悬浮按钮. -->
-
-<div id="floating-toc-btn" class="hide-on-med-and-down">
-    <a class="btn-floating btn-large bg-color">
-        <i class="fas fa-list-ul"></i>
-    </a>
-</div>
-
-
-<script src="/libs/tocbot/tocbot.min.js"></script>
-<script>
-    $(function () {
-        tocbot.init({
-            tocSelector: '#toc-content',
-            contentSelector: '#articleContent',
-            headingsOffset: -($(window).height() * 0.4 - 45),
-            collapseDepth: Number('0'),
-            headingSelector: 'h2, h3, h4'
-        });
-
-        // Set scroll toc fixed.
-        let tocHeight = parseInt($(window).height() * 0.4 - 64);
-        let $tocWidget = $('.toc-widget');
-        $(window).scroll(function () {
-            let scroll = $(window).scrollTop();
-            /* add post toc fixed. */
-            if (scroll > tocHeight) {
-                $tocWidget.addClass('toc-fixed');
-            } else {
-                $tocWidget.removeClass('toc-fixed');
-            }
-        });
-
-        
-        /* 修复文章卡片 div 的宽度. */
-        let fixPostCardWidth = function (srcId, targetId) {
-            let srcDiv = $('#' + srcId);
-            if (srcDiv.length === 0) {
-                return;
-            }
-
-            let w = srcDiv.width();
-            if (w >= 450) {
-                w = w + 21;
-            } else if (w >= 350 && w < 450) {
-                w = w + 18;
-            } else if (w >= 300 && w < 350) {
-                w = w + 16;
-            } else {
-                w = w + 14;
-            }
-            $('#' + targetId).width(w);
-        };
-
-        // 切换TOC目录展开收缩的相关操作.
-        const expandedClass = 'expanded';
-        let $tocAside = $('#toc-aside');
-        let $mainContent = $('#main-content');
-        $('#floating-toc-btn .btn-floating').click(function () {
-            if ($tocAside.hasClass(expandedClass)) {
-                $tocAside.removeClass(expandedClass).hide();
-                $mainContent.removeClass('l9');
-            } else {
-                $tocAside.addClass(expandedClass).show();
-                $mainContent.addClass('l9');
-            }
-            fixPostCardWidth('artDetail', 'prenext-posts');
-        });
-        
-    });
-</script>
-
-    
-
+    </article>
 </main>
 
 

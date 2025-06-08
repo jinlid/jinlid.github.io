@@ -629,7 +629,7 @@
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                    <a href="/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">
                         <div class="card-image">
                             
                             
@@ -642,56 +642,19 @@
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                第二部分：创建和管理Pod1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
-kubectl run mynginx --image=nginx
+                                title: Kubernetes教程（四）Service 管理教程
+date: 2024-06-07
+categories: 
+- Kubernetes 
+tags: 
+- 容器
 
-# 查看Pod状态
-kubectl get pods
-
-1.
+typora-root-url: ../../theme
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-05
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-user fa-fw"></i>
-                                JINLID
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                </div>
-            </div>
-              <!-- 隐藏某个文章 -->
-            
-             <!-- 隐藏某个文章 -->
-            <div class="article col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">
-                        <div class="card-image">
-                            
-                            
-                            <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
-                            
-                            <span class="card-title"></span>
-                        </div>
-                    </a>
-
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                PostgreSQL在查询处理中采用了多种数据连接和聚合技术，其中基于哈希的方法因其在特定场景和数据规模下的高效性而备受关注。本文将深入探讨PostgreSQL中的哈希连接和哈希聚合机制，解析其工作原理及影响算法性能的关键参数。
-一、哈希聚
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-02-23
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-07
                             </span>
                             <span class="publish-author">
                                 
@@ -723,12 +686,10 @@ kubectl get pods
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                创建docker客户端
-import docker
+                                本教程将详细介绍如何使用 Docker SDK for Python 来管理 Docker 容器、镜像和网络。
+1. 安装与初始化安装 Docker SDKpip install docker
 
-# 创建 Docker 客户端
-client = docker.from_env()
-#client = docker.DockerClient(base_url="tcp://192.
+创建 Docker 客户端import do
                             
                         </div>
                         <div class="publish-info">
@@ -764,32 +725,36 @@ client = docker.from_env()
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2024/zai-postgresql-zhong-chuang-jian-he-shua-xin-wu-hua-shi-tu/">
+                    <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="在POSTGRESQL中创建和刷新物化视图">
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
                             
-                            <span class="card-title">在POSTGRESQL中创建和刷新物化视图</span>
+                            <span class="card-title">Kubernetes教程（一）集群部署</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                “物化视图”是一个数据库对象，它存储预先计算的数据库查询的结果，并可以根据需要轻松刷新该结果。物化视图是几乎所有高级数据库系统的一个组成部分。当然，PostgreSQL 还提供对物化视图的支持，并为最终用户提供强大的工具来处理更耗时的请求。
+                                1. 环境准备1.1 系统配置# 设置主机名
+echo 'master' > /etc/hostname  # 在master节点执行
+echo 'node01' > /etc/hostname  # 在node01节点执行
+
+# 配置ho
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-05-07
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                             <span class="publish-author">
                                 
                                 <i class="fas fa-bookmark fa-fw icon-category"></i>
                                 
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                                 
                                 
@@ -800,8 +765,8 @@ client = docker.from_env()
                     
                     <div class="card-action article-tags">
                         
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
+                        <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                            <span class="chip bg-color">容器</span>
                         </a>
                         
                     </div>
@@ -813,70 +778,33 @@ client = docker.from_env()
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2023/postgresql-zhong-de-lian-jie-ce-lue-he-xing-neng/">
+                    <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
                             
-                            <span class="card-title"></span>
+                            <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                PostgreSQL 连接策略详解：如何选择最佳策略以优化查询性能在 PostgreSQL 中，连接操作是查询性能的关键因素之一。PostgreSQL 提供了三种不同的连接策略：Nested Loop Join、Hash Join 和 Me
+                                本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。
+1. 准备 Deployment 配置文件首先创建一个 YAML
                             
                         </div>
                         <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-user fa-fw"></i>
-                                JINLID
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                </div>
-            </div>
-              <!-- 隐藏某个文章 -->
-            
-             <!-- 隐藏某个文章 -->
-            <div class="article col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2023/hot-standby-feedback-dao-di-zuo-liao-shi-me/">
-                        <div class="card-image">
-                            
-                            
-                            <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="HOT_STANDBY_FEEDBACK到底做了什么">
-                            
-                            <span class="card-title">HOT_STANDBY_FEEDBACK到底做了什么</span>
-                        </div>
-                    </a>
-
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                许多使用 PostgreSQL 流复制的人可能想知道 postgresql.conf 中的 hot_standby_feedback 参数的真正作用是什么。
-VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-07-04
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                             <span class="publish-author">
                                 
                                 <i class="fas fa-bookmark fa-fw icon-category"></i>
                                 
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                                 
                                 
@@ -887,8 +815,118 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
                     
                     <div class="card-action article-tags">
                         
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
+                        <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                            <span class="chip bg-color">容器</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+              <!-- 隐藏某个文章 -->
+            
+             <!-- 隐藏某个文章 -->
+            <div class="article col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                        <div class="card-image">
+                            
+                            
+                            <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
+                            
+                            <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
+                        </div>
+                    </a>
+
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
+kubectl run mynginx --image=nginx
+
+# 查看Pod状态
+kubectl get pods
+
+1.2 使用YAML文件创建P
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                            <span class="chip bg-color">容器</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+              <!-- 隐藏某个文章 -->
+            
+             <!-- 隐藏某个文章 -->
+            <div class="article col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2024/kubernetes-jiao-cheng-shi-bu-shu-flask-ying-yong/">
+                        <div class="card-image">
+                            
+                            
+                            <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="Kubernetes教程（十）部署Flask应用">
+                            
+                            <span class="card-title">Kubernetes教程（十）部署Flask应用</span>
+                        </div>
+                    </a>
+
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                1. 环境准备确保已安装以下工具：
+
+kubectl（Kubernetes 命令行工具）
+Docker（本地构建镜像）
+可用的 Kubernetes 集群（如 Minikube、Kind 或云服务商提供的集群）
+
+2. 创建命名空间创建 p
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                            <span class="chip bg-color">容器</span>
                         </a>
                         
                     </div>
@@ -998,20 +1036,20 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                    <a href="/2021/11-liu-fu-zhi/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
                             
-                            <span class="card-title">10 基础备份和时间点恢复</span>
+                            <span class="card-title">11 流复制</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
                             
                         </div>
                         <div class="publish-info">
@@ -1047,20 +1085,20 @@ VACUUM 在 PostgreSQL 中做什么VACUUM 是 PostgreS
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/11-liu-fu-zhi/">
+                    <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
                             
-                            <span class="card-title">11 流复制</span>
+                            <span class="card-title">10 基础备份和时间点恢复</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+                                在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
                             
                         </div>
                         <div class="publish-info">

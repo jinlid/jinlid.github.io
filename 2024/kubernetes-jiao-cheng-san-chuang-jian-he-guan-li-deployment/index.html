@@ -4,9 +4,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="jinlid&#39;s blog">
-    <meta name="description" content="PostgreSQL在查询处理中采用了多种数据连接和聚合技术，其中基于哈希的方法因其在特定场景和数据规模下的高效性而备受关注。本文将深入探讨PostgreSQL中的哈希连接和哈希聚合机制，解析其工作原理及影响算法性能的关键参数。
-一、哈希聚">
+    <meta name="keywords" content="Kubernetes教程（三）创建和管理Deployment, jinlid&#39;s blog">
+    <meta name="description" content="本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。
+1. 准备 Deployment 配置文件首先创建一个 YAML">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +18,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>jinlid&#39;s blog</title>
+    <title>Kubernetes教程（三）创建和管理Deployment | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +338,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
+                    <h1 class="description center-align post-title">Kubernetes教程（三）创建和管理Deployment</h1>
                 </div>
             </div>
         </div>
@@ -365,12 +365,25 @@
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                          <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
-                          </div>
+                    <div class="article-tag">
+                        
+                            <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                                <span class="chip bg-color">容器</span>
+                            </a>
+                        
+                    </div>
                     
                 </div>
                 <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                            </a>
+                        
+                    </div>
                     
                 </div>
             </div>
@@ -379,7 +392,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2025-02-23
+                    2024-06-07
                 </div>
                 
 
@@ -400,71 +413,105 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>PostgreSQL在查询处理中采用了多种数据连接和聚合技术，其中基于哈希的方法因其在特定场景和数据规模下的高效性而备受关注。本文将深入探讨PostgreSQL中的哈希连接和哈希聚合机制，解析其工作原理及影响算法性能的关键参数。</p>
-<p>一、哈希聚合机制解析</p>
-<p>当在包含GROUP BY子句的查询中使用SUM、COUNT或AVG等聚合函数时，查询规划器可能会选择哈希聚合策略。该过程的核心是创建哈希表：PostgreSQL遍历每一行数据，对GROUP BY键进行哈希计算，并根据哈希值将行分配到相应的位置。具有相同哈希值的行会被归入同一个”桶”（bucket）中。在处理完所有相关行后，PostgreSQL利用哈希表中的数据计算每个组的最终聚合结果。</p>
-<p>示例查询：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> id<span class="token punctuation">,</span> <span class="token function">SUM</span><span class="token punctuation">(</span>Amount<span class="token punctuation">)</span>
-<span class="token keyword">FROM</span> Sales
-<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> id<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>在此查询中，id列的值被用于哈希计算。PostgreSQL在分配行到不同桶的同时，开始聚合Amount值。例如，当处理到id为1、Amount为100的第一行时，id 1的总和初始化为100。随后若遇到另一个id为1的行（假设Amount为150），则更新id 1的总和为250（100+150）。最终，哈希表中将存储每个id对应的聚合总额，并将结果返回给客户端。</p>
-<p>二、哈希连接机制详解</p>
-<p>哈希连接的执行计划涉及基于连接键创建哈希表，通常选择较小的表来构建。哈希表创建完成后，系统会扫描较大的表，计算每行连接键的哈希值，并在哈希表中查找匹配行。</p>
-<p>哈希连接的适用场景：</p>
-<ul>
-<li>连接条件基于等值运算符（=）</li>
-<li>处理大规模数据集</li>
-<li>通过禁用嵌套循环连接（enable_nestloop）和合并连接（enable_mergejoin）强制使用哈希连接</li>
+                <p>本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。</p>
+<h2 id="1-准备-Deployment-配置文件"><a href="#1-准备-Deployment-配置文件" class="headerlink" title="1. 准备 Deployment 配置文件"></a>1. 准备 Deployment 配置文件</h2><p>首先创建一个 YAML 文件来定义我们的 Deployment：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">touch</span> nginx-deployment.yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>将以下内容写入 <code>nginx-deployment.yaml</code> 文件：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx<span class="token punctuation">-</span>deployment<span class="token punctuation">-</span>new
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">3</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+      <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+        <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
+          <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
+          <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="配置文件解析："><a href="#配置文件解析：" class="headerlink" title="配置文件解析："></a>配置文件解析：</h3><ul>
+<li><code>apiVersion: apps/v1</code>: 指定使用的 Kubernetes API 版本</li>
+<li><code>kind: Deployment</code>: 声明这是一个 Deployment 资源</li>
+<li><code>replicas: 3</code>: 指定需要运行 3 个 Pod 副本</li>
+<li><code>selector</code>: 定义 Deployment 如何找到要管理的 Pod</li>
+<li><code>template</code>: 定义 Pod 的模板，包括元数据和容器规格</li>
 </ul>
-<p>哈希表以键值对形式存储数据，提供O(1)时间复杂度的数据检索，这意味着检索时间不受哈希表大小影响。哈希键被分散存储在多个桶中。</p>
-<p>三、哈希连接中的”桶”概念</p>
-<p>桶用于分组具有相同哈希值的行。创建哈希表时，每个唯一哈希值对应一个桶，相同哈希值的行存储在同一个桶中，这使得连接操作中的行匹配更加高效。桶的总数总是2的N次方，特定哈希键对应的桶号是其哈希函数结果的最后N位。</p>
-<p>例如，若哈希键为10001001，使用8个桶（2^3），则分配的桶号为001。</p>
-<p>四、哈希连接的优势</p>
-<p>相较于嵌套循环连接，哈希连接在处理大数据集时表现更优，因为它避免了重复扫描整个数据集。此外，当处理未排序数据且哈希表能完全放入内存时，哈希连接通常比聚集合并连接更高效。</p>
-<p>五、哈希操作的内存使用</p>
-<p>哈希表的最大内存使用量由以下参数控制：</p>
+<h2 id="2-创建-Deployment"><a href="#2-创建-Deployment" class="headerlink" title="2. 创建 Deployment"></a>2. 创建 Deployment</h2><p>应用配置文件创建 Deployment:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx-deployment.yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>预期输出：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">deployment.apps/mynginx-deployment-new created
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="3-查看-Deployment-状态"><a href="#3-查看-Deployment-状态" class="headerlink" title="3. 查看 Deployment 状态"></a>3. 查看 Deployment 状态</h2><p>检查 Deployment 是否创建成功：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get deployment
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>预期输出类似：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+mynginx-deployment-new    3/3     3            3           30s
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>查看 Deployment 的详细信息：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl describe deployment mynginx-deployment-new
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这将显示 Deployment 的详细配置和状态信息。</p>
+<h2 id="4-查看相关资源"><a href="#4-查看相关资源" class="headerlink" title="4. 查看相关资源"></a>4. 查看相关资源</h2><p>检查由 Deployment 创建的 ReplicaSet：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get replicaset
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>预期输出类似：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">NAME                                DESIRED   CURRENT   READY   AGE
+mynginx-deployment-new-7cfb8ff87f   3         3         3       2m
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>查看由 ReplicaSet 创建的 Pod：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -o wide --show-labels
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre><code>NAME                                      READY   STATUS    LABELS
+mynginx-deployment-new-7cfb8ff87f-llhx6   1/1     Running   app=nginx,track=stable
+mynginx-deployment-new-7cfb8ff87f-n2p5k   1/1     Running   app=nginx,track=stable
+mynginx-deployment-new-7cfb8ff87f-x9z7q   1/1     Running   app=nginx,track=stable
+</code></pre>
+<h2 id="5-扩缩容-Deployment"><a href="#5-扩缩容-Deployment" class="headerlink" title="5. 扩缩容 Deployment"></a>5. 扩缩容 Deployment</h2><p>将 Pod 副本数从 3 缩减到 2：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl scale deployment mynginx-deployment-new --replicas<span class="token operator">=</span>2
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>验证 Pod 数量：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>现在应该只看到 2 个 Pod 在运行。</p>
+<h2 id="6-测试-Deployment-的自愈能力"><a href="#6-测试-Deployment-的自愈能力" class="headerlink" title="6. 测试 Deployment 的自愈能力"></a>6. 测试 Deployment 的自愈能力</h2><p>手动删除一个 Pod，观察 Deployment 的行为：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod mynginx-deployment-new-7cfb8ff87f-llhx6
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>立即检查 Pod 状态：</p>
+<pre><code>kubectl get pods -w
+</code></pre>
+<p>你会看到 Kubernetes 自动创建了一个新的 Pod 来替换被删除的 Pod，以维持指定的副本数。</p>
+<h2 id="7-删除-Deployment"><a href="#7-删除-Deployment" class="headerlink" title="7. 删除 Deployment"></a>7. 删除 Deployment</h2><p>当不再需要 Deployment 时，可以删除它：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete deployment mynginx-deployment-new
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这将删除 Deployment 及其管理的所有 Pod。</p>
+<h2 id="8-验证删除结果"><a href="#8-验证删除结果" class="headerlink" title="8. 验证删除结果"></a>8. 验证删除结果</h2><p>检查所有资源是否已删除：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get deployment
+kubectl get pods
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>应该看不到任何相关资源。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过本教程，你学会了：</p>
 <ol>
-<li>work_mem：指定用于排序和哈希表的内存分配。增加work_mem可以创建更大的哈希表，提升哈希连接性能。</li>
-<li>hash_mem_multiplier：计算哈希操作允许使用的最大内存，公式为：<br>总内存 = work_mem * hash_mem_multiplier<br>在PostgreSQL 15中，该参数的默认值从1.0提高到2.0，意味着哈希操作现在可以使用两倍的work_mem基础值。这一调整是因为哈希操作的性能受数据唯一性、行数和数据大小等因素影响，其内存需求较难预测。</li>
-<li>temp_file_limit：限制进程可用于临时文件的最大磁盘空间，包括排序、哈希操作和游标的临时文件。默认值-1表示可在pgsql_tmp目录中创建无限量的临时文件。</li>
+<li>如何定义 Kubernetes Deployment</li>
+<li>如何创建和管理 Deployment</li>
+<li>如何查看 Deployment 及其相关资源</li>
+<li>如何进行扩缩容操作</li>
+<li>如何测试 Deployment 的自愈能力</li>
+<li>如何清理 Deployment 资源</li>
 </ol>
-<p>六、哈希表超出内存时的处理</p>
-<p>当哈希表过大无法完全放入内存时，PostgreSQL会将数据划分为称为批处理（batches）的较小子集。这些批处理依次处理，并使用临时文件存储无法放入内存的数据。具体过程如下：</p>
-<ol>
-<li>将数据划分为批处理，批处理数量总是2的幂次方</li>
-<li>每个批处理通过调整桶数量来适应可用内存</li>
-<li>首先为第一个批处理构建哈希表，属于该批处理的行保留在内存中，其他行存入临时文件</li>
-<li>处理外部表时，匹配第一个批处理的行，不属于该批处理的行存入临时文件</li>
-<li>完成第一个批处理后，清空哈希表，处理下一个批处理</li>
-<li>重复该过程直到所有批处理完成</li>
-</ol>
-<p>七、示例分析</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span> <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.36</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">29.43</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> width<span class="token operator">=</span><span class="token number">70</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.038</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.350</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
-    <span class="token keyword">Hash</span> Cond: <span class="token punctuation">(</span><span class="token number">fc</span><span class="token punctuation">.</span>category_id <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>category_id<span class="token punctuation">)</span>
-    <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> film_category <span class="token number">fc</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">16.00</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.010</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.134</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1000</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
-    <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.16</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.16</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> width<span class="token operator">=</span><span class="token number">72</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.018</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.018</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
-          Buckets: <span class="token number">1024</span>  Batches: <span class="token number">1</span>  Memory <span class="token keyword">Usage</span>: 9kB
-          <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> category <span class="token number">c</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.16</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> width<span class="token operator">=</span><span class="token number">72</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.010</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.012</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">16</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
-Planning time: <span class="token number">0.393</span> ms
-Execution time: <span class="token number">5.271</span> ms
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>关键点分析：</p>
-<ol>
-<li>category表作为哈希表（内部表），film_category表作为外部表</li>
-<li>仅需1个批处理，表明哈希表成功在分配内存中创建和管理，使用了9KB的work_mem</li>
-<li>若出现多个批处理，则可能需要增加work_mem或hash_mem_multiplier</li>
-<li>使用EXPLAIN命令的buffers选项可获取溢出文件大小的详细信息</li>
-</ol>
-<p>八、注意事项</p>
-<ol>
-<li>确保表统计信息及时更新，可适当设置autoanalyze参数或手动执行ANALYZE命令</li>
-<li>谨慎设置work_mem和hash_mem_multiplier，过高设置可能导致内存使用过高，影响其他查询</li>
-<li>哈希连接特别适用于整数和字符串数据类型</li>
-<li>数据分布不均会影响哈希连接效率</li>
-<li>查询中包含不必要的列会增加哈希表大小和内存需求</li>
-</ol>
+<p>Deployment 是 Kubernetes 中最常用的工作负载资源之一，它提供了声明式更新、滚动升级和回滚等功能，是管理无状态应用的理想选择。</p>
 
                 
             </div>
@@ -491,7 +538,7 @@ Execution time: <span class="token number">5.271</span> ms
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/">https://jinlid.github.io/2025/shen-ru-li-jie-postgresql-zhong-de-ha-xi-ju-he-yu-ha-xi-lian-jie/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -528,7 +575,11 @@ Execution time: <span class="token number">5.271</span> ms
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
+                            
+                                <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                                    <span class="chip bg-color">容器</span>
+                                </a>
+                            
                         </div>
                     
                 </div>
@@ -609,13 +660,13 @@ Execution time: <span class="token number">5.271</span> ms
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2025/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
                         
-                        <span class="card-title"></span>
+                        <span class="card-title">Kubernetes教程（一）集群部署</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -626,15 +677,27 @@ Execution time: <span class="token number">5.271</span> ms
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2025-06-05
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                         </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-user fa-fw"></i>
-                            JINLID
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                            
                             
                         </span>
                     </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
+                    </a>
+                    
                 </div>
                 
             </div>
@@ -646,13 +709,13 @@ Execution time: <span class="token number">5.271</span> ms
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2025/docker-mo-kuai-de-shi-yong/">
+                <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
+                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
                         
-                        <span class="card-title">docker模块的使用</span>
+                        <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -663,14 +726,14 @@ Execution time: <span class="token number">5.271</span> ms
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                             
                             
@@ -680,8 +743,8 @@ Execution time: <span class="token number">5.271</span> ms
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
                     </a>
                     
                 </div>
