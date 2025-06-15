@@ -458,7 +458,7 @@ Docker（本地构建镜像）
   <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">serviceName</span><span class="token punctuation">:</span> postgres
-  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">2</span>
   <span class="token key atrule">selector</span><span class="token punctuation">:</span>
     <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
       <span class="token key atrule">app</span><span class="token punctuation">:</span> postgres
@@ -543,26 +543,22 @@ COPY . .
 
 # 暴露 Flask 默认端口
 EXPOSE 5000
+ 
+# 关闭 Flask 调试模式（通过环境变量控制）
+ENV FLASK_DEBUG=0
 
-# 定义环境变量
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=production
-
-# 验证应用文件是否存在（调试用）
-RUN ls -la /app
-
-# 运行应用（根据实际情况修改模块名和应用实例名）
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+# 使用 Gunicorn 启动（替代 app.run()）
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "flask_movie.app:app"]
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><strong>构建镜像</strong>：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">docker build -t flask-movie-app <span class="token keyword">.</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <h4 id="7-部署-Flask-应用到-Kubernetes"><a href="#7-部署-Flask-应用到-Kubernetes" class="headerlink" title="7. 部署 Flask 应用到 Kubernetes"></a><strong>7. 部署 Flask 应用到 Kubernetes</strong></h4><p>创建 Deployment 部署 Flask 应用：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># flask-movie-deployment.yaml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
 <span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
   <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
   <span class="token key atrule">selector</span><span class="token punctuation">:</span>
@@ -576,39 +572,38 @@ CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
       <span class="token key atrule">containers</span><span class="token punctuation">:</span>
       <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
         <span class="token key atrule">image</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie<span class="token punctuation">-</span>app
-        <span class="token key atrule">imagePullPolicy</span><span class="token punctuation">:</span> Never  <span class="token comment" spellcheck="true"># 使用本地镜像</span>
+        <span class="token key atrule">imagePullPolicy</span><span class="token punctuation">:</span> Never
         <span class="token key atrule">ports</span><span class="token punctuation">:</span>
         <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">5000</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><strong>执行命令</strong>：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f flask-movie-deployment.yaml
-kubectl get pods  <span class="token comment" spellcheck="true"># 查看应用 Pod 状态</span>
+kubectl get pods -n postgres-ns -o wide  <span class="token comment" spellcheck="true"># 查看应用 Pod 状态</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <h4 id="8-为-Flask-应用创建-NodePort-服务"><a href="#8-为-Flask-应用创建-NodePort-服务" class="headerlink" title="8. 为 Flask 应用创建 NodePort 服务"></a><strong>8. 为 Flask 应用创建 NodePort 服务</strong></h4><p>创建 Service 资源将 Flask 应用暴露到集群外部：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># flask-movie-service.yaml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
 <span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
   <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie<span class="token punctuation">-</span>service
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">selector</span><span class="token punctuation">:</span>
-    <span class="token key atrule">app</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie  <span class="token comment" spellcheck="true"># 匹配 Pod 的 label</span>
   <span class="token key atrule">ports</span><span class="token punctuation">:</span>
     <span class="token punctuation">-</span> <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
-      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">80        </span><span class="token comment" spellcheck="true"># 服务端口</span>
-      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">5000  </span><span class="token comment" spellcheck="true"># 容器端口</span>
-      <span class="token key atrule">nodePort</span><span class="token punctuation">:</span> <span class="token number">30080   </span><span class="token comment" spellcheck="true"># 节点端口（范围：30000-32767）</span>
-  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">5000      </span><span class="token comment" spellcheck="true"># Service 端口</span>
+      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">5000 </span><span class="token comment" spellcheck="true"># Pod 端口</span>
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort      <span class="token comment" spellcheck="true"># 或 LoadBalancer/ClusterIP</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><strong>执行命令</strong>：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f flask-movie-service.yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p><strong>验证服务</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get services flask-movie-service
-
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get svc -n postgres-ns
 <span class="token comment" spellcheck="true"># 输出示例：</span>
-<span class="token comment" spellcheck="true"># NAME                TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE</span>
-<span class="token comment" spellcheck="true"># flask-movie-service NodePort   10.100.100.100  &lt;none>        80:30080/TCP     1m</span>
+NAME                  TYPE       CLUSTER-IP      EXTERNAL-IP   PORT<span class="token punctuation">(</span>S<span class="token punctuation">)</span>          AGE
+flask-movie-service   NodePort   10.110.185.40   <span class="token operator">&lt;</span>none<span class="token operator">></span>        5000:30000/TCP   11m
+postgres              NodePort   10.99.247.133   <span class="token operator">&lt;</span>none<span class="token operator">></span>        5432:32039/TCP   23h
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h4 id="9-访问-Flask-应用"><a href="#9-访问-Flask-应用" class="headerlink" title="9. 访问 Flask 应用"></a><strong>9. 访问 Flask 应用</strong></h4><p>通过任意节点 IP 和 NodePort 访问应用：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 获取集群节点 IP</span>
@@ -619,7 +614,7 @@ NODE_IP<span class="token operator">=</span><span class="token punctuation">$(</
   NODE_IP<span class="token operator">=</span><span class="token punctuation">$(</span>kubectl get nodes -o jsonpath<span class="token operator">=</span><span class="token string">'{.items[0].status.addresses[?(@.type=="InternalIP")].address}'</span><span class="token punctuation">)</span>
 <span class="token keyword">fi</span>
 
-<span class="token keyword">echo</span> <span class="token string">"访问地址: http://<span class="token variable">$NODE_IP</span>:30080"</span>
+<span class="token keyword">echo</span> <span class="token string">"访问地址: http://<span class="token variable">$NODE_IP</span>:30000"</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h4 id="10-故障排除"><a href="#10-故障排除" class="headerlink" title="10. 故障排除"></a><strong>10. 故障排除</strong></h4><p>若部署失败，可使用以下命令排查问题：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看 StatefulSet 状态</span>
@@ -816,13 +811,13 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                <a href="/2024/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="Kubernetes教程（四）创建和管理Service">
                         
-                        <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
+                        <span class="card-title">Kubernetes教程（四）创建和管理Service</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -865,24 +860,24 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2023/postgresql-fu-wu-qi-jia-gou/">
+                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="PostgreSQL服务器架构">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
                         
-                        <span class="card-title">PostgreSQL服务器架构</span>
+                        <span class="card-title">10 基础备份和时间点恢复</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            PostgreSQL 集群启动时会启动几个进程。这些进程管理相当多的文件 I/O，管理其他进程，并处理内存分配和许多其他工作。在本文中，我们将重点关注进程及其角色、内存管理以及它们如何协同工作。我们将再次从列出的进程开始。
+                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2023-02-11
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
                             </span>
                         <span class="publish-author">
                             

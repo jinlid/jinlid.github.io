@@ -4,11 +4,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程（一）集群部署, jinlid&#39;s blog">
-    <meta name="description" content="1. 环境准备1.1 系统配置# 设置主机名
-echo &#39;master&#39; &gt; /etc/hostname  # 在master节点执行
-echo &#39;node01&#39; &gt; /etc/hostname  # 在node01节点执行
-echo &#39;n">
+    <meta name="keywords" content="jinlid&#39;s blog">
+    <meta name="description" content="本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容、节点选择以及删除 Deployment 的全过程。
+1. 准备 Deployment 配置文件首先创建一">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +18,7 @@ echo &#39;n">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程（一）集群部署 | jinlid&#39;s blog</title>
+    <title>jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -340,12 +338,12 @@ echo &#39;n">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程（一）集群部署</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -367,25 +365,12 @@ echo &#39;n">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                    <div class="article-tag">
-                        
-                            <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                                <span class="chip bg-color">容器</span>
-                            </a>
-                        
-                    </div>
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
                     
                 </div>
                 <div class="col s5 right-align">
-                    
-                    <div class="post-cate">
-                        <i class="fas fa-bookmark fa-fw icon-category"></i>
-                        
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                Kubernetes
-                            </a>
-                        
-                    </div>
                     
                 </div>
             </div>
@@ -394,7 +379,7 @@ echo &#39;n">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-07
+                    2025-06-15
                 </div>
                 
 
@@ -415,156 +400,144 @@ echo &#39;n">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h3><h4 id="1-1-系统配置"><a href="#1-1-系统配置" class="headerlink" title="1.1 系统配置"></a>1.1 系统配置</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 设置主机名</span>
-<span class="token keyword">echo</span> <span class="token string">'master'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在master节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node01'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node01节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node02'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node02节点执行</span>
-
-<span class="token comment" spellcheck="true"># 配置hosts文件</span>
-<span class="token function">cat</span> <span class="token operator">>></span> /etc/hosts <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-192.168.137.226 master
-192.168.137.227 node01
-192.168.137.228 node02
-EOF</span>
-
-<span class="token comment" spellcheck="true"># 关闭防火墙</span>
-systemctl stop firewalld
-systemctl disable firewalld
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="1-2-禁用swap"><a href="#1-2-禁用swap" class="headerlink" title="1.2 禁用swap"></a>1.2 禁用swap</h4><pre class="line-numbers language-bash"><code class="language-bash">swapoff -a
-<span class="token function">sed</span> -i <span class="token string">'/\&lt;swap\>/ s/^/#/'</span> /etc/fstab
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="2-安装Docker"><a href="#2-安装Docker" class="headerlink" title="2. 安装Docker"></a>2. 安装Docker</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装指定版本Docker</span>
-yum -y <span class="token function">install</span> docker-ce-19.03.13-3.el8
-
-<span class="token comment" spellcheck="true"># 配置Docker</span>
-<span class="token function">tee</span> <span class="token operator">></span> /etc/docker/daemon.json <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
-  "registry-mirrors": ["https://docker.registry.cyou",
-    "https://docker-cf.registry.cyou",
-    "https://dockercf.jsdelivr.fyi",
-    "https://docker.jsdelivr.fyi",
-    "https://dockertest.jsdelivr.fyi",
-    "https://mirror.aliyuncs.com",
-    "https://dockerproxy.com",
-    "https://mirror.baidubce.com",
-    "https://docker.m.daocloud.io",
-    "https://docker.nju.edu.cn",
-    "https://docker.mirrors.sjtug.sjtu.edu.cn",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://mirror.iscas.ac.cn",
-    "https://docker.rainbond.cc"]
-}
-EOF</span>
-
-<span class="token comment" spellcheck="true"># 启动Docker</span>
-systemctl <span class="token function">enable</span> docker
-systemctl start docker
-
-<span class="token function">useradd</span> -m jinli
-<span class="token comment" spellcheck="true"># 将用户加入docker组</span>
-<span class="token function">usermod</span> -a -G docker jinli
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3-网络初始化配置"><a href="#3-网络初始化配置" class="headerlink" title="3. 网络初始化配置"></a>3. 网络初始化配置</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /usr/bin/k8s-init.sh <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-#!/bin/bash
-iptables -P FORWARD ACCEPT
-EOF</span>
-
-<span class="token function">chmod</span> +x /usr/bin/k8s-init.sh
-
-<span class="token function">cat</span> <span class="token operator">></span> /usr/lib/systemd/system/k8s-init.service <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[Unit]
-Description=Kubernetes Init Task
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/k8s-init.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF</span>
-
-systemctl <span class="token function">enable</span> k8s-init
-systemctl start k8s-init
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-安装Kubernetes组件"><a href="#4-安装Kubernetes组件" class="headerlink" title="4. 安装Kubernetes组件"></a>4. 安装Kubernetes组件</h3><h4 id="4-1-配置yum源"><a href="#4-1-配置yum源" class="headerlink" title="4.1 配置yum源"></a>4.1 配置yum源</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/yum.repos.d/kubernetes.repo <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[kubernetes]
-name=Kubernetes
-baseurl=https://mirrors.aliyuncs.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.aliyuncs.com/kubernetes/yum/doc/yum-key.gpg
-       https://mirrors.aliyuncs.com/kubernetes/yum/doc/rpm-package-key.gpg
-repo_gpgcheck=1
-EOF</span>
-
-yum clean all
-yum makecache
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="4-2-安装kubeadm-kubelet和kubectl"><a href="#4-2-安装kubeadm-kubelet和kubectl" class="headerlink" title="4.2 安装kubeadm, kubelet和kubectl"></a>4.2 安装kubeadm, kubelet和kubectl</h4><pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> -y kubelet-1.20.1-0 kubeadm-1.20.1-0 kubectl-1.20.1-0
-systemctl <span class="token function">enable</span> kubelet
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="5-初始化Master节点"><a href="#5-初始化Master节点" class="headerlink" title="5. 初始化Master节点"></a>5. 初始化Master节点</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 初始化集群</span>
-kubeadm init \
-  --kubernetes-version<span class="token operator">=</span>1.20.1 \
-  --image-repository registry.aliyuncs.com/google_containers \
-  --pod-network-cidr<span class="token operator">=</span>192.168.2.0/24 \
-  --service-cidr<span class="token operator">=</span>10.96.0.0/12
-
-<span class="token comment" spellcheck="true"># 配置kubectl</span>
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="6-安装网络插件-Calico"><a href="#6-安装网络插件-Calico" class="headerlink" title="6. 安装网络插件(Calico)"></a>6. 安装网络插件(Calico)</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p ~/k8s/calico
-<span class="token function">cd</span> ~/k8s/calico
-curl -L https://docs.projectcalico.org/v3.18/manifests/calico.yaml -o calico-v3.18.yaml
-<span class="token function">sed</span> -i -e <span class="token string">"s?192.168.0.0/16?192.168.2.0/24?g"</span> calico-v3.18.yaml
-kubectl apply -f calico-v3.18.yaml
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="7-加入Worker节点"><a href="#7-加入Worker节点" class="headerlink" title="7. 加入Worker节点"></a>7. 加入Worker节点</h3><p>在master节点获取加入命令：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm token create --print-join-command
+                <p>本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容、节点选择以及删除 Deployment 的全过程。</p>
+<h2 id="1-准备-Deployment-配置文件"><a href="#1-准备-Deployment-配置文件" class="headerlink" title="1. 准备 Deployment 配置文件"></a>1. 准备 Deployment 配置文件</h2><p>首先创建一个 YAML 文件来定义我们的 Deployment：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">touch</span> nginx-deployment.yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在node01和node02节点执行：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm reset
-kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token <span class="token operator">&lt;</span>token<span class="token operator">></span> --discovery-token-ca-cert-hash sha256:<span class="token operator">&lt;</span>hash<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="8-配置kube-proxy使用ipvs模式"><a href="#8-配置kube-proxy使用ipvs模式" class="headerlink" title="8. 配置kube-proxy使用ipvs模式"></a>8. 配置kube-proxy使用ipvs模式</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl edit cm kube-proxy -n kube-system
-<span class="token comment" spellcheck="true"># 修改mode为ipvs</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="9-验证集群状态"><a href="#9-验证集群状态" class="headerlink" title="9. 验证集群状态"></a>9. 验证集群状态</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl get nodes
-kubectl get pods -n kube-system
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h4 id="3-1-证书错误"><a href="#3-1-证书错误" class="headerlink" title="3.1 证书错误"></a>3.1 证书错误</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
-<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-2-移除节点"><a href="#3-2-移除节点" class="headerlink" title="3.2 移除节点"></a>3.2 移除节点</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
-kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
-kubectl delete node node01
-
-<span class="token comment" spellcheck="true"># 在节点上清理</span>
-kubeadm reset
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了从Kubernetes集群部署的完整流程，包括：</p>
+<p>将以下内容写入 <code>nginx-deployment.yaml</code> 文件：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx<span class="token punctuation">-</span>deployment<span class="token punctuation">-</span>new
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">3</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+      <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+        <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
+          <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
+          <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="基础配置文件解析："><a href="#基础配置文件解析：" class="headerlink" title="基础配置文件解析："></a>基础配置文件解析：</h3><ul>
+<li><code>apiVersion: apps/v1</code>: 指定使用的 Kubernetes API 版本</li>
+<li><code>kind: Deployment</code>: 声明这是一个 Deployment 资源</li>
+<li><code>replicas: 3</code>: 指定需要运行 3 个 Pod 副本</li>
+<li><code>selector</code>: 定义 Deployment 如何找到要管理的 Pod</li>
+<li><code>template</code>: 定义 Pod 的模板，包括元数据和容器规格</li>
+</ul>
+<h2 id="2-添加节点选择器-nodeSelector"><a href="#2-添加节点选择器-nodeSelector" class="headerlink" title="2. 添加节点选择器 (nodeSelector)"></a>2. 添加节点选择器 (nodeSelector)</h2><p>要指定 Pod 运行在特定节点上，我们需要：</p>
 <ol>
-<li>环境准备和依赖安装</li>
-<li>Kubernetes集群初始化</li>
-<li>网络插件安装</li>
-<li>工作节点加入</li>
-<li>常见问题排查方法</li>
+<li>首先给目标节点打标签</li>
+<li>然后在 Deployment 中添加 nodeSelector</li>
 </ol>
+<h3 id="2-1-给节点打标签"><a href="#2-1-给节点打标签" class="headerlink" title="2.1 给节点打标签"></a>2.1 给节点打标签</h3><p>假设我们要将 Pod 调度到 node02 上：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl label nodes node02 node-type<span class="token operator">=</span>worker
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>验证标签是否添加成功：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get nodes --show-labels
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="2-2-更新-Deployment-配置"><a href="#2-2-更新-Deployment-配置" class="headerlink" title="2.2 更新 Deployment 配置"></a>2.2 更新 Deployment 配置</h3><p>修改 <code>nginx-deployment.yaml</code>，添加 nodeSelector：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx<span class="token punctuation">-</span>deployment<span class="token punctuation">-</span>new
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">3</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+      <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
+        <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
+          <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
+          <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
+      <span class="token key atrule">nodeSelector</span><span class="token punctuation">:</span>
+        <span class="token key atrule">node-type</span><span class="token punctuation">:</span> worker  <span class="token comment" spellcheck="true"># 与前面添加的标签匹配</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-创建-Deployment"><a href="#3-创建-Deployment" class="headerlink" title="3. 创建 Deployment"></a>3. 创建 Deployment</h2><p>应用配置文件创建 Deployment:</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx-deployment.yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>预期输出：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">deployment.apps/mynginx-deployment-new created
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="4-查看-Deployment-状态"><a href="#4-查看-Deployment-状态" class="headerlink" title="4. 查看 Deployment 状态"></a>4. 查看 Deployment 状态</h2><p>检查 Deployment 是否创建成功：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get deployment -o wide
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>查看 Pod 调度到的节点：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -o wide
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>你应该能看到所有 Pod 都被调度到了 node02 上。</p>
+<h2 id="5-验证节点选择器"><a href="#5-验证节点选择器" class="headerlink" title="5. 验证节点选择器"></a>5. 验证节点选择器</h2><p>为了验证节点选择器是否生效，可以尝试：</p>
+<p>删除节点标签：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl label nodes node02 node-type-
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>观察 Pod 状态：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -o wide -w
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>你会发现 Pod 会变成 Pending 状态，因为不再有节点满足选择条件。</p>
+<p>恢复节点标签：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl label nodes node02 node-type<span class="token operator">=</span>worker
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>Pod 应该会恢复正常运行状态。</p>
+<h2 id="6-扩缩容-Deployment"><a href="#6-扩缩容-Deployment" class="headerlink" title="6. 扩缩容 Deployment"></a>6. 扩缩容 Deployment</h2><p>将 Pod 副本数从 3 缩减到 2：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl scale deployment mynginx-deployment-new --replicas<span class="token operator">=</span>2
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>验证 Pod 数量和所在节点：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -o wide
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="7-更新-Deployment-配置"><a href="#7-更新-Deployment-配置" class="headerlink" title="7. 更新 Deployment 配置"></a>7. 更新 Deployment 配置</h2><p>你可以修改 YAML 文件后重新应用：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx-deployment.yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>或者直接使用命令修改：</p>
+<pre class="line-numbers language-ba"><code class="language-ba">kubectl edit deployment mynginx-deployment-new
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="8-清理资源"><a href="#8-清理资源" class="headerlink" title="8. 清理资源"></a>8. 清理资源</h2><p>删除 Deployment 和节点标签：</p>
+<pre class="line-numbers language-ba"><code class="language-ba">kubectl delete deployment mynginx-deployment-new
+kubectl label nodes node02 node-type-
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="节点选择高级用法"><a href="#节点选择高级用法" class="headerlink" title="节点选择高级用法"></a>节点选择高级用法</h2><p>除了简单的节点选择，你还可以使用：</p>
+<ol>
+<li><strong>节点亲和性 (nodeAffinity)</strong> - 更灵活的节点选择规则</li>
+<li><strong>Pod 亲和性/反亲和性</strong> - 控制 Pod 之间的调度关系</li>
+<li><strong>污点和容忍度 (Taints and Tolerations)</strong> - 限制 Pod 调度到特定节点</li>
+</ol>
+<p>示例：使用节点亲和性</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">affinity</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodeAffinity</span><span class="token punctuation">:</span>
+    <span class="token key atrule">requiredDuringSchedulingIgnoredDuringExecution</span><span class="token punctuation">:</span>
+      <span class="token key atrule">nodeSelectorTerms</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> node<span class="token punctuation">-</span>type
+          <span class="token key atrule">operator</span><span class="token punctuation">:</span> In
+          <span class="token key atrule">values</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> worker
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过本教程，你学会了：</p>
+<ol>
+<li>如何定义 Kubernetes Deployment</li>
+<li>如何使用 nodeSelector 控制 Pod 调度</li>
+<li>如何给节点添加和管理标签</li>
+<li>如何进行 Deployment 的基本操作</li>
+<li>如何验证节点选择器的效果</li>
+<li>了解更高级的调度策略</li>
+</ol>
+<p>节点选择是 Kubernetes 调度系统的重要组成部分，合理使用可以优化资源利用率和应用性能。</p>
 
                 
             </div>
@@ -591,7 +564,7 @@ kubeadm reset
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/</a>
+                    <a href="https://jinlid.github.io/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-deployment/">https://jinlid.github.io/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-deployment/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -628,11 +601,7 @@ kubeadm reset
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            
-                                <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                                    <span class="chip bg-color">容器</span>
-                                </a>
-                            
+                            <span class="chip bg-color">无标签</span>
                         </div>
                     
                 </div>
@@ -709,66 +678,18 @@ kubeadm reset
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2025/docker-mo-kuai-de-shi-yong/">
+                <a href="/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-deployment/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">docker模块的使用</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
-                        
-                        <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -779,27 +700,53 @@ kubeadm reset
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-15
                             </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
                             
                         </span>
                     </div>
                 </div>
+
                 
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
-                    </a>
-                    
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        
+                        <span class="card-title"></span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-14
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
+                            
+                        </span>
+                    </div>
                 </div>
                 
             </div>

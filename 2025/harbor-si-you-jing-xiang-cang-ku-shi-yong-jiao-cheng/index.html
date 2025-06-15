@@ -4,11 +4,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程（一）集群部署, jinlid&#39;s blog">
-    <meta name="description" content="1. 环境准备1.1 系统配置# 设置主机名
-echo &#39;master&#39; &gt; /etc/hostname  # 在master节点执行
-echo &#39;node01&#39; &gt; /etc/hostname  # 在node01节点执行
-echo &#39;n">
+    <meta name="keywords" content="jinlid&#39;s blog">
+    <meta name="description" content="Harbor 私有镜像仓库使用教程1. 环境准备1.1 安装 Docker Compose# 下载 Docker Compose
+wget https://github.com/docker/compose/releases/downloa">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +18,7 @@ echo &#39;n">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程（一）集群部署 | jinlid&#39;s blog</title>
+    <title>jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -340,12 +338,12 @@ echo &#39;n">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程（一）集群部署</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -367,25 +365,12 @@ echo &#39;n">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                    <div class="article-tag">
-                        
-                            <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                                <span class="chip bg-color">容器</span>
-                            </a>
-                        
-                    </div>
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
                     
                 </div>
                 <div class="col s5 right-align">
-                    
-                    <div class="post-cate">
-                        <i class="fas fa-bookmark fa-fw icon-category"></i>
-                        
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                Kubernetes
-                            </a>
-                        
-                    </div>
                     
                 </div>
             </div>
@@ -394,7 +379,7 @@ echo &#39;n">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-07
+                    2025-06-14
                 </div>
                 
 
@@ -415,156 +400,109 @@ echo &#39;n">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h3><h4 id="1-1-系统配置"><a href="#1-1-系统配置" class="headerlink" title="1.1 系统配置"></a>1.1 系统配置</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 设置主机名</span>
-<span class="token keyword">echo</span> <span class="token string">'master'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在master节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node01'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node01节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node02'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node02节点执行</span>
+                <h1 id="Harbor-私有镜像仓库使用教程"><a href="#Harbor-私有镜像仓库使用教程" class="headerlink" title="Harbor 私有镜像仓库使用教程"></a>Harbor 私有镜像仓库使用教程</h1><h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><h3 id="1-1-安装-Docker-Compose"><a href="#1-1-安装-Docker-Compose" class="headerlink" title="1.1 安装 Docker Compose"></a>1.1 安装 Docker Compose</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Docker Compose</span>
+<span class="token function">wget</span> https://github.com/docker/compose/releases/download/v2.37.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 
-<span class="token comment" spellcheck="true"># 配置hosts文件</span>
-<span class="token function">cat</span> <span class="token operator">>></span> /etc/hosts <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-192.168.137.226 master
-192.168.137.227 node01
-192.168.137.228 node02
-EOF</span>
+<span class="token comment" spellcheck="true"># 添加执行权限</span>
+<span class="token function">chmod</span> +x /usr/local/bin/docker-compose
 
-<span class="token comment" spellcheck="true"># 关闭防火墙</span>
-systemctl stop firewalld
-systemctl disable firewalld
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="1-2-禁用swap"><a href="#1-2-禁用swap" class="headerlink" title="1.2 禁用swap"></a>1.2 禁用swap</h4><pre class="line-numbers language-bash"><code class="language-bash">swapoff -a
-<span class="token function">sed</span> -i <span class="token string">'/\&lt;swap\>/ s/^/#/'</span> /etc/fstab
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="2-安装Docker"><a href="#2-安装Docker" class="headerlink" title="2. 安装Docker"></a>2. 安装Docker</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装指定版本Docker</span>
-yum -y <span class="token function">install</span> docker-ce-19.03.13-3.el8
+<span class="token comment" spellcheck="true"># 验证安装</span>
+docker-compose version
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="2-安装-Harbor"><a href="#2-安装-Harbor" class="headerlink" title="2. 安装 Harbor"></a>2. 安装 Harbor</h2><h3 id="2-1-下载并解压-Harbor"><a href="#2-1-下载并解压-Harbor" class="headerlink" title="2.1 下载并解压 Harbor"></a>2.1 下载并解压 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Harbor 离线安装包</span>
+<span class="token function">wget</span> https://github.com/goharbor/harbor/releases/download/v2.6.1/harbor-offline-installer-v2.6.1.tgz
 
-<span class="token comment" spellcheck="true"># 配置Docker</span>
-<span class="token function">tee</span> <span class="token operator">></span> /etc/docker/daemon.json <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
-  "registry-mirrors": ["https://docker.registry.cyou",
-    "https://docker-cf.registry.cyou",
-    "https://dockercf.jsdelivr.fyi",
-    "https://docker.jsdelivr.fyi",
-    "https://dockertest.jsdelivr.fyi",
-    "https://mirror.aliyuncs.com",
-    "https://dockerproxy.com",
-    "https://mirror.baidubce.com",
-    "https://docker.m.daocloud.io",
-    "https://docker.nju.edu.cn",
-    "https://docker.mirrors.sjtug.sjtu.edu.cn",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://mirror.iscas.ac.cn",
-    "https://docker.rainbond.cc"]
-}
-EOF</span>
+<span class="token comment" spellcheck="true"># 解压安装包</span>
+<span class="token function">tar</span> xf harbor-offline-installer-v2.6.1.tgz
 
-<span class="token comment" spellcheck="true"># 启动Docker</span>
-systemctl <span class="token function">enable</span> docker
-systemctl start docker
+<span class="token comment" spellcheck="true"># 进入 Harbor 目录</span>
+<span class="token function">cd</span> harbor
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="2-2-配置-Harbor"><a href="#2-2-配置-Harbor" class="headerlink" title="2.2 配置 Harbor"></a>2.2 配置 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 复制配置文件模板</span>
+<span class="token function">cp</span> harbor.yml.tmpl harbor.yml
 
-<span class="token function">useradd</span> -m jinli
-<span class="token comment" spellcheck="true"># 将用户加入docker组</span>
-<span class="token function">usermod</span> -a -G docker jinli
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3-网络初始化配置"><a href="#3-网络初始化配置" class="headerlink" title="3. 网络初始化配置"></a>3. 网络初始化配置</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /usr/bin/k8s-init.sh <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-#!/bin/bash
-iptables -P FORWARD ACCEPT
-EOF</span>
-
-<span class="token function">chmod</span> +x /usr/bin/k8s-init.sh
-
-<span class="token function">cat</span> <span class="token operator">></span> /usr/lib/systemd/system/k8s-init.service <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[Unit]
-Description=Kubernetes Init Task
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/k8s-init.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF</span>
-
-systemctl <span class="token function">enable</span> k8s-init
-systemctl start k8s-init
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-安装Kubernetes组件"><a href="#4-安装Kubernetes组件" class="headerlink" title="4. 安装Kubernetes组件"></a>4. 安装Kubernetes组件</h3><h4 id="4-1-配置yum源"><a href="#4-1-配置yum源" class="headerlink" title="4.1 配置yum源"></a>4.1 配置yum源</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/yum.repos.d/kubernetes.repo <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[kubernetes]
-name=Kubernetes
-baseurl=https://mirrors.aliyuncs.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.aliyuncs.com/kubernetes/yum/doc/yum-key.gpg
-       https://mirrors.aliyuncs.com/kubernetes/yum/doc/rpm-package-key.gpg
-repo_gpgcheck=1
-EOF</span>
-
-yum clean all
-yum makecache
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="4-2-安装kubeadm-kubelet和kubectl"><a href="#4-2-安装kubeadm-kubelet和kubectl" class="headerlink" title="4.2 安装kubeadm, kubelet和kubectl"></a>4.2 安装kubeadm, kubelet和kubectl</h4><pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> -y kubelet-1.20.1-0 kubeadm-1.20.1-0 kubectl-1.20.1-0
-systemctl <span class="token function">enable</span> kubelet
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="5-初始化Master节点"><a href="#5-初始化Master节点" class="headerlink" title="5. 初始化Master节点"></a>5. 初始化Master节点</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 初始化集群</span>
-kubeadm init \
-  --kubernetes-version<span class="token operator">=</span>1.20.1 \
-  --image-repository registry.aliyuncs.com/google_containers \
-  --pod-network-cidr<span class="token operator">=</span>192.168.2.0/24 \
-  --service-cidr<span class="token operator">=</span>10.96.0.0/12
-
-<span class="token comment" spellcheck="true"># 配置kubectl</span>
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="6-安装网络插件-Calico"><a href="#6-安装网络插件-Calico" class="headerlink" title="6. 安装网络插件(Calico)"></a>6. 安装网络插件(Calico)</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p ~/k8s/calico
-<span class="token function">cd</span> ~/k8s/calico
-curl -L https://docs.projectcalico.org/v3.18/manifests/calico.yaml -o calico-v3.18.yaml
-<span class="token function">sed</span> -i -e <span class="token string">"s?192.168.0.0/16?192.168.2.0/24?g"</span> calico-v3.18.yaml
-kubectl apply -f calico-v3.18.yaml
+<span class="token comment" spellcheck="true"># 编辑配置文件</span>
+<span class="token function">vi</span> harbor.yml
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="7-加入Worker节点"><a href="#7-加入Worker节点" class="headerlink" title="7. 加入Worker节点"></a>7. 加入Worker节点</h3><p>在master节点获取加入命令：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm token create --print-join-command
+<p>配置示例：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">hostname</span><span class="token punctuation">:</span> 192.168.137.226
+
+<span class="token comment" spellcheck="true"># http 相关配置</span>
+<span class="token key atrule">http</span><span class="token punctuation">:</span>
+  <span class="token comment" spellcheck="true"># HTTP 端口，默认为 80。如果启用了 HTTPS，此端口将重定向到 HTTPS 端口</span>
+  <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">5000</span>
+
+<span class="token comment" spellcheck="true"># https 相关配置（可选）</span>
+<span class="token comment" spellcheck="true">#https:</span>
+<span class="token comment" spellcheck="true">#  # harbor 的 https 端口，默认为 443</span>
+<span class="token comment" spellcheck="true">#  port: 443</span>
+<span class="token comment" spellcheck="true">#  # nginx 的证书和密钥文件路径</span>
+<span class="token comment" spellcheck="true">#  certificate: /your/certificate/path</span>
+<span class="token comment" spellcheck="true">#  private_key: /your/private/key/path</span>
+
+<span class="token comment" spellcheck="true"># 数据卷路径</span>
+<span class="token key atrule">data_volume</span><span class="token punctuation">:</span> /home/jinli/harbor/data
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="2-3-安装-Harbor"><a href="#2-3-安装-Harbor" class="headerlink" title="2.3 安装 Harbor"></a>2.3 安装 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 运行安装脚本</span>
+./install.sh
+
+<span class="token comment" spellcheck="true"># 安装成功后，您将看到以下消息：</span>
+✔ ----Harbor has been installed and started successfully.----
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-访问-Harbor-Web-界面"><a href="#3-访问-Harbor-Web-界面" class="headerlink" title="3. 访问 Harbor Web 界面"></a>3. 访问 Harbor Web 界面</h2><p>在浏览器中打开：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">http://192.168.137.226:5000/
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在node01和node02节点执行：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm reset
-kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token <span class="token operator">&lt;</span>token<span class="token operator">></span> --discovery-token-ca-cert-hash sha256:<span class="token operator">&lt;</span>hash<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="8-配置kube-proxy使用ipvs模式"><a href="#8-配置kube-proxy使用ipvs模式" class="headerlink" title="8. 配置kube-proxy使用ipvs模式"></a>8. 配置kube-proxy使用ipvs模式</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl edit cm kube-proxy -n kube-system
-<span class="token comment" spellcheck="true"># 修改mode为ipvs</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="9-验证集群状态"><a href="#9-验证集群状态" class="headerlink" title="9. 验证集群状态"></a>9. 验证集群状态</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl get nodes
-kubectl get pods -n kube-system
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h4 id="3-1-证书错误"><a href="#3-1-证书错误" class="headerlink" title="3.1 证书错误"></a>3.1 证书错误</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
-<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-2-移除节点"><a href="#3-2-移除节点" class="headerlink" title="3.2 移除节点"></a>3.2 移除节点</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
-kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
-kubectl delete node node01
+<p>默认管理员用户名和密码：</p>
+<ul>
+<li>用户名：admin</li>
+<li>密码：Harbor12345</li>
+</ul>
+<h2 id="4-管理-Harbor-服务"><a href="#4-管理-Harbor-服务" class="headerlink" title="4. 管理 Harbor 服务"></a>4. 管理 Harbor 服务</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 停止 Harbor 服务</span>
+docker-compose down -v
 
-<span class="token comment" spellcheck="true"># 在节点上清理</span>
-kubeadm reset
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了从Kubernetes集群部署的完整流程，包括：</p>
+<span class="token comment" spellcheck="true"># 启动 Harbor 服务</span>
+docker-compose up -d
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-配置-Docker-客户端"><a href="#5-配置-Docker-客户端" class="headerlink" title="5. 配置 Docker 客户端"></a>5. 配置 Docker 客户端</h2><h3 id="5-1-配置-Docker-信任私有仓库"><a href="#5-1-配置-Docker-信任私有仓库" class="headerlink" title="5.1 配置 Docker 信任私有仓库"></a>5.1 配置 Docker 信任私有仓库</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 编辑 Docker 配置文件</span>
+<span class="token function">vi</span> /etc/docker/daemon.json
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>添加以下内容：</p>
+<pre class="line-numbers language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"insecure-registries"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"192.168.137.226:5000"</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>重启 Docker 服务：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">systemctl restart docker
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="5-2-重启-Harbor-服务"><a href="#5-2-重启-Harbor-服务" class="headerlink" title="5.2 重启 Harbor 服务"></a>5.2 重启 Harbor 服务</h3><pre class="line-numbers language-bash"><code class="language-bash">docker-compose down -v
+docker-compose up -d
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="6-使用-Harbor-仓库"><a href="#6-使用-Harbor-仓库" class="headerlink" title="6. 使用 Harbor 仓库"></a>6. 使用 Harbor 仓库</h2><h3 id="6-1-登录-Harbor"><a href="#6-1-登录-Harbor" class="headerlink" title="6.1 登录 Harbor"></a>6.1 登录 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 登录 Harbor</span>
+docker login 192.168.137.226:5000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="6-2-登出-Harbor"><a href="#6-2-登出-Harbor" class="headerlink" title="6.2 登出 Harbor"></a>6.2 登出 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 登出 Harbor</span>
+docker <span class="token function">logout</span> 192.168.137.226:5000
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="6-3-推送镜像到-Harbor"><a href="#6-3-推送镜像到-Harbor" class="headerlink" title="6.3 推送镜像到 Harbor"></a>6.3 推送镜像到 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 登录 Harbor</span>
+docker login 192.168.137.226:5000
+
+<span class="token comment" spellcheck="true"># 2. 为镜像打标签</span>
+docker tag postgres 192.168.137.226:5000/library/postgres
+
+<span class="token comment" spellcheck="true"># 3. 推送镜像到 Harbor</span>
+docker push 192.168.137.226:5000/library/postgres
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h2><p>本教程介绍了如何安装和配置 Harbor 私有 Docker 镜像仓库，包括：</p>
 <ol>
-<li>环境准备和依赖安装</li>
-<li>Kubernetes集群初始化</li>
-<li>网络插件安装</li>
-<li>工作节点加入</li>
-<li>常见问题排查方法</li>
+<li>安装 Docker Compose</li>
+<li>下载和安装 Harbor</li>
+<li>配置 Harbor</li>
+<li>访问 Web 界面</li>
+<li>管理 Harbor 服务</li>
+<li>配置 Docker 客户端</li>
+<li>使用 Harbor 进行镜像推送和拉取</li>
 </ol>
+<p>通过 Harbor，您可以方便地管理私有 Docker 镜像，提高开发和部署效率。</p>
 
                 
             </div>
@@ -591,7 +529,7 @@ kubeadm reset
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/</a>
+                    <a href="https://jinlid.github.io/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">https://jinlid.github.io/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -628,11 +566,7 @@ kubeadm reset
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            
-                                <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                                    <span class="chip bg-color">容器</span>
-                                </a>
-                            
+                            <span class="chip bg-color">无标签</span>
                         </div>
                     
                 </div>
@@ -713,6 +647,43 @@ kubeadm reset
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
+                <a href="/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-deployment/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        
+                        <span class="card-title"></span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-06-15
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            JINLID
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
                 <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
@@ -729,9 +700,9 @@ kubeadm reset
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -749,55 +720,6 @@ kubeadm reset
                     
                     <a href="/tags/postgresql/">
                         <span class="chip bg-color">postgresql</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
-                        
-                        <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
                     </a>
                     
                 </div>

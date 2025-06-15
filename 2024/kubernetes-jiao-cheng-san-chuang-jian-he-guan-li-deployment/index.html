@@ -490,8 +490,8 @@ mynginx-deployment-new-7cfb8ff87f-x9z7q   1/1     Running   app=nginx,track=stab
 <pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod mynginx-deployment-new-7cfb8ff87f-llhx6
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>立即检查 Pod 状态：</p>
-<pre><code>kubectl get pods -w
-</code></pre>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -w
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>你会看到 Kubernetes 自动创建了一个新的 Pod 来替换被删除的 Pod，以维持指定的副本数。</p>
 <h2 id="7-删除-Deployment"><a href="#7-删除-Deployment" class="headerlink" title="7. 删除 Deployment"></a>7. 删除 Deployment</h2><p>当不再需要 Deployment 时，可以删除它：</p>
 <pre class="line-numbers language-bash"><code class="language-bash">kubectl delete deployment mynginx-deployment-new

@@ -4,15 +4,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="jinlid&#39;s blog">
-    <meta name="description" content="title: Kubernetes教程（四）创建和管理Service
-date: 2024-06-07
-categories: 
-- Kubernetes 
-tags: 
-- 容器
-
-typora-root-url: ../../theme">
+    <meta name="keywords" content="Kubernetes教程（四）创建和管理Service, jinlid&#39;s blog">
+    <meta name="description" content="本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
+1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
+touch serv">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -24,7 +19,7 @@ typora-root-url: ../../theme">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>jinlid&#39;s blog</title>
+    <title>Kubernetes教程（四）创建和管理Service | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -344,12 +339,12 @@ typora-root-url: ../../theme">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/17.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
+                    <h1 class="description center-align post-title">Kubernetes教程（四）创建和管理Service</h1>
                 </div>
             </div>
         </div>
@@ -371,12 +366,25 @@ typora-root-url: ../../theme">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                          <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
-                          </div>
+                    <div class="article-tag">
+                        
+                            <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                                <span class="chip bg-color">容器</span>
+                            </a>
+                        
+                    </div>
                     
                 </div>
                 <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                            </a>
+                        
+                    </div>
                     
                 </div>
             </div>
@@ -385,7 +393,7 @@ typora-root-url: ../../theme">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2025-06-07
+                    2024-06-07
                 </div>
                 
 
@@ -406,16 +414,7 @@ typora-root-url: ../../theme">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <pre><code>title: Kubernetes教程（四）创建和管理Service
-date: 2024-06-07
-categories: 
-- Kubernetes 
-tags: 
-- 容器
-
-typora-root-url: ../../themes/hexo-theme-matery/source
-</code></pre>
-<p>本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。</p>
+                <p>本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。</p>
 <h2 id="1-创建-Service-定义文件"><a href="#1-创建-Service-定义文件" class="headerlink" title="1. 创建 Service 定义文件"></a>1. 创建 Service 定义文件</h2><p>首先创建一个 YAML 文件来定义 Service：</p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">touch</span> service.yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
@@ -513,9 +512,9 @@ web-service   192.168.2.145:443,192.168.2.146:443,192.168.2.147:443 + 5 more<spa
 <pre class="line-numbers language-bash"><code class="language-bash">kubectl get svc -o wide
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>输出示例:</p>
-<pre><code>NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE   SELECTOR
-web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:31869/TCP   36s   app=nginx
-</code></pre>
+<pre class="line-numbers language-bash"><code class="language-bash">NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span class="token punctuation">(</span>S<span class="token punctuation">)</span>          AGE   SELECTOR
+web-service-nodeport   NodePort    10.110.194.163   <span class="token operator">&lt;</span>none<span class="token operator">></span>        8000:31869/TCP   36s   app<span class="token operator">=</span>nginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>这里 <code>8000:31869</code> 表示:</p>
 <ul>
 <li>集群内部通过 8000 端口访问</li>
@@ -562,7 +561,7 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">https://jinlid.github.io/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -599,7 +598,11 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
+                            
+                                <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                                    <span class="chip bg-color">容器</span>
+                                </a>
+                            
                         </div>
                     
                 </div>
@@ -676,18 +679,17 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2025/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">
+                <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
                         
-                        <span class="card-title"></span>
+                        <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -697,18 +699,29 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-07
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                        </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-user fa-fw"></i>
-                            JINLID
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                            
                             
                         </span>
                     </div>
                 </div>
-
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
+                    </a>
+                    
+                </div>
                 
             </div>
         </div>
@@ -719,13 +732,13 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2025/docker-mo-kuai-de-shi-yong/">
+                <a href="/2024/kubernetes-jiao-cheng-shi-bu-shu-flask-ying-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
+                        <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="Kubernetes教程（十）部署Flask应用">
                         
-                        <span class="card-title">docker模块的使用</span>
+                        <span class="card-title">Kubernetes教程（十）部署Flask应用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -736,14 +749,14 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                             
                             
@@ -753,8 +766,8 @@ web-service-nodeport   NodePort    10.110.194.163   &lt;none&gt;        8000:318
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
                     </a>
                     
                 </div>
