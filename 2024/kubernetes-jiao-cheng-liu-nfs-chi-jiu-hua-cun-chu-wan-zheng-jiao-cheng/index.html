@@ -4,11 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程（一）集群部署, jinlid&#39;s blog">
-    <meta name="description" content="1. 环境准备1.1 系统配置# 设置主机名
-echo &#39;master&#39; &gt; /etc/hostname  # 在master节点执行
-echo &#39;node01&#39; &gt; /etc/hostname  # 在node01节点执行
-echo &#39;n">
+    <meta name="keywords" content="Kubernetes教程（六）NFS持久化存储完整教程, jinlid&#39;s blog">
+    <meta name="description" content="本教程将详细介绍如何在 Kubernetes 中使用 NFS 作为持久化存储，包括 PV (PersistentVolume)、PVC (PersistentVolumeClaim) 的创建和使用，以及 Deployment 挂载 PVC ">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +17,7 @@ echo &#39;n">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程（一）集群部署 | jinlid&#39;s blog</title>
+    <title>Kubernetes教程（六）NFS持久化存储完整教程 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -340,12 +337,12 @@ echo &#39;n">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/5.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程（一）集群部署</h1>
+                    <h1 class="description center-align post-title">Kubernetes教程（六）NFS持久化存储完整教程</h1>
                 </div>
             </div>
         </div>
@@ -394,7 +391,7 @@ echo &#39;n">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-07
+                    2024-06-17
                 </div>
                 
 
@@ -415,156 +412,178 @@ echo &#39;n">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h3 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h3><h4 id="1-1-系统配置"><a href="#1-1-系统配置" class="headerlink" title="1.1 系统配置"></a>1.1 系统配置</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 设置主机名</span>
-<span class="token keyword">echo</span> <span class="token string">'master'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在master节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node01'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node01节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node02'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node02节点执行</span>
-
-<span class="token comment" spellcheck="true"># 配置hosts文件</span>
-<span class="token function">cat</span> <span class="token operator">>></span> /etc/hosts <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-192.168.137.226 master
-192.168.137.227 node01
-192.168.137.228 node02
-EOF</span>
-
-<span class="token comment" spellcheck="true"># 关闭防火墙</span>
-systemctl stop firewalld
-systemctl disable firewalld
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="1-2-禁用swap"><a href="#1-2-禁用swap" class="headerlink" title="1.2 禁用swap"></a>1.2 禁用swap</h4><pre class="line-numbers language-bash"><code class="language-bash">swapoff -a
-<span class="token function">sed</span> -i <span class="token string">'/\&lt;swap\>/ s/^/#/'</span> /etc/fstab
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="2-安装Docker"><a href="#2-安装Docker" class="headerlink" title="2. 安装Docker"></a>2. 安装Docker</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装指定版本Docker</span>
-yum -y <span class="token function">install</span> docker-ce-19.03.13-3.el8
-
-<span class="token comment" spellcheck="true"># 配置Docker</span>
-<span class="token function">tee</span> <span class="token operator">></span> /etc/docker/daemon.json <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
-  "registry-mirrors": ["https://docker.registry.cyou",
-    "https://docker-cf.registry.cyou",
-    "https://dockercf.jsdelivr.fyi",
-    "https://docker.jsdelivr.fyi",
-    "https://dockertest.jsdelivr.fyi",
-    "https://mirror.aliyuncs.com",
-    "https://dockerproxy.com",
-    "https://mirror.baidubce.com",
-    "https://docker.m.daocloud.io",
-    "https://docker.nju.edu.cn",
-    "https://docker.mirrors.sjtug.sjtu.edu.cn",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://mirror.iscas.ac.cn",
-    "https://docker.rainbond.cc"]
-}
-EOF</span>
-
-<span class="token comment" spellcheck="true"># 启动Docker</span>
-systemctl <span class="token function">enable</span> docker
-systemctl start docker
-
-<span class="token function">useradd</span> -m jinli
-<span class="token comment" spellcheck="true"># 将用户加入docker组</span>
-<span class="token function">usermod</span> -a -G docker jinli
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3-网络初始化配置"><a href="#3-网络初始化配置" class="headerlink" title="3. 网络初始化配置"></a>3. 网络初始化配置</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /usr/bin/k8s-init.sh <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-#!/bin/bash
-iptables -P FORWARD ACCEPT
-EOF</span>
-
-<span class="token function">chmod</span> +x /usr/bin/k8s-init.sh
-
-<span class="token function">cat</span> <span class="token operator">></span> /usr/lib/systemd/system/k8s-init.service <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[Unit]
-Description=Kubernetes Init Task
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/k8s-init.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF</span>
-
-systemctl <span class="token function">enable</span> k8s-init
-systemctl start k8s-init
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-安装Kubernetes组件"><a href="#4-安装Kubernetes组件" class="headerlink" title="4. 安装Kubernetes组件"></a>4. 安装Kubernetes组件</h3><h4 id="4-1-配置yum源"><a href="#4-1-配置yum源" class="headerlink" title="4.1 配置yum源"></a>4.1 配置yum源</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/yum.repos.d/kubernetes.repo <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[kubernetes]
-name=Kubernetes
-baseurl=https://mirrors.aliyuncs.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.aliyuncs.com/kubernetes/yum/doc/yum-key.gpg
-       https://mirrors.aliyuncs.com/kubernetes/yum/doc/rpm-package-key.gpg
-repo_gpgcheck=1
-EOF</span>
-
-yum clean all
-yum makecache
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="4-2-安装kubeadm-kubelet和kubectl"><a href="#4-2-安装kubeadm-kubelet和kubectl" class="headerlink" title="4.2 安装kubeadm, kubelet和kubectl"></a>4.2 安装kubeadm, kubelet和kubectl</h4><pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> -y kubelet-1.20.1-0 kubeadm-1.20.1-0 kubectl-1.20.1-0
-systemctl <span class="token function">enable</span> kubelet
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="5-初始化Master节点"><a href="#5-初始化Master节点" class="headerlink" title="5. 初始化Master节点"></a>5. 初始化Master节点</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 初始化集群</span>
-kubeadm init \
-  --kubernetes-version<span class="token operator">=</span>1.20.1 \
-  --image-repository registry.aliyuncs.com/google_containers \
-  --pod-network-cidr<span class="token operator">=</span>192.168.2.0/24 \
-  --service-cidr<span class="token operator">=</span>10.96.0.0/12
-
-<span class="token comment" spellcheck="true"># 配置kubectl</span>
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="6-安装网络插件-Calico"><a href="#6-安装网络插件-Calico" class="headerlink" title="6. 安装网络插件(Calico)"></a>6. 安装网络插件(Calico)</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p ~/k8s/calico
-<span class="token function">cd</span> ~/k8s/calico
-curl -L https://docs.projectcalico.org/v3.18/manifests/calico.yaml -o calico-v3.18.yaml
-<span class="token function">sed</span> -i -e <span class="token string">"s?192.168.0.0/16?192.168.2.0/24?g"</span> calico-v3.18.yaml
-kubectl apply -f calico-v3.18.yaml
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="7-加入Worker节点"><a href="#7-加入Worker节点" class="headerlink" title="7. 加入Worker节点"></a>7. 加入Worker节点</h3><p>在master节点获取加入命令：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm token create --print-join-command
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在node01和node02节点执行：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm reset
-kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token <span class="token operator">&lt;</span>token<span class="token operator">></span> --discovery-token-ca-cert-hash sha256:<span class="token operator">&lt;</span>hash<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="8-配置kube-proxy使用ipvs模式"><a href="#8-配置kube-proxy使用ipvs模式" class="headerlink" title="8. 配置kube-proxy使用ipvs模式"></a>8. 配置kube-proxy使用ipvs模式</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl edit cm kube-proxy -n kube-system
-<span class="token comment" spellcheck="true"># 修改mode为ipvs</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="9-验证集群状态"><a href="#9-验证集群状态" class="headerlink" title="9. 验证集群状态"></a>9. 验证集群状态</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl get nodes
-kubectl get pods -n kube-system
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h4 id="3-1-证书错误"><a href="#3-1-证书错误" class="headerlink" title="3.1 证书错误"></a>3.1 证书错误</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
-<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-2-移除节点"><a href="#3-2-移除节点" class="headerlink" title="3.2 移除节点"></a>3.2 移除节点</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
-kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
-kubectl delete node node01
-
-<span class="token comment" spellcheck="true"># 在节点上清理</span>
-kubeadm reset
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了从Kubernetes集群部署的完整流程，包括：</p>
+                <p>本教程将详细介绍如何在 Kubernetes 中使用 NFS 作为持久化存储，包括 PV (PersistentVolume)、PVC (PersistentVolumeClaim) 的创建和使用，以及 Deployment 挂载 PVC 的完整流程。</p>
+<h3 id="1-NFS-服务器配置"><a href="#1-NFS-服务器配置" class="headerlink" title="1. NFS 服务器配置"></a><strong>1. NFS 服务器配置</strong></h3><p>NFS（Network File System）是一种分布式文件系统协议，允许客户端通过网络访问服务器上的文件。</p>
+<p><strong>步骤：</strong></p>
 <ol>
-<li>环境准备和依赖安装</li>
-<li>Kubernetes集群初始化</li>
-<li>网络插件安装</li>
-<li>工作节点加入</li>
-<li>常见问题排查方法</li>
+<li><p><strong>安装 NFS 服务</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> nfs-utils -y
+systemctl <span class="token function">enable</span> nfs-server
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>创建共享目录并配置权限</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> /home/jinli/nfs/data -p
+<span class="token function">chown</span> -R jinli: /home/jinli/nfs
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>配置 NFS 导出规则</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/exports <span class="token operator">&lt;&lt;</span><span class="token string">EOF
+/home/jinli/nfs/data 192.168.137.226/24(rw,no_root_squash)
+EOF</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<ul>
+<li><code>rw</code>：允许读写访问</li>
+<li><code>no_root_squash</code>：不将 root 用户映射为匿名用户</li>
+</ul>
+</li>
+<li><p><strong>启动 NFS 服务</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">systemctl start nfs-server
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p><strong>验证共享目录</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">su</span> - jinli
+<span class="token function">touch</span> /home/jinli/nfs/data/a  <span class="token comment" spellcheck="true"># 创建测试文件</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
 </ol>
+<h3 id="2-NFS-客户端挂载测试"><a href="#2-NFS-客户端挂载测试" class="headerlink" title="2. NFS 客户端挂载测试"></a><strong>2. NFS 客户端挂载测试</strong></h3><p>在 Kubernetes 节点上验证 NFS 挂载：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 在节点上执行</span>
+showmount -e 192.168.137.226  <span class="token comment" spellcheck="true"># 查看NFS服务器共享列表</span>
+
+<span class="token function">mkdir</span> /home/jinli/nfs/data -p
+<span class="token function">chown</span> -R jinli:jinli /home/jinli/nfs
+
+<span class="token function">mount</span> -t nfs 192.168.137.226:/home/jinli/nfs/data /home/jinli/nfs/data
+
+<span class="token function">df</span> -h  <span class="token comment" spellcheck="true"># 查看挂载结果</span>
+ll /home/jinli/nfs/data  <span class="token comment" spellcheck="true"># 应看到测试文件a</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-创建-Kubernetes-PersistentVolume-PV"><a href="#3-创建-Kubernetes-PersistentVolume-PV" class="headerlink" title="3. 创建 Kubernetes PersistentVolume (PV)"></a><strong>3. 创建 Kubernetes PersistentVolume (PV)</strong></h3><p>PV 是集群中的存储资源，由管理员预先配置。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pv-nfs.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> PersistentVolume
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> pv001
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">pvname</span><span class="token punctuation">:</span> pv001
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">capacity</span><span class="token punctuation">:</span>
+    <span class="token key atrule">storage</span><span class="token punctuation">:</span> 2Gi
+  <span class="token key atrule">accessModes</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> ReadWriteOnce  <span class="token comment" spellcheck="true"># 单节点读写</span>
+  <span class="token key atrule">persistentVolumeReclaimPolicy</span><span class="token punctuation">:</span> Recycle  <span class="token comment" spellcheck="true"># 删除PVC后自动清理数据</span>
+  <span class="token key atrule">nfs</span><span class="token punctuation">:</span>
+    <span class="token key atrule">path</span><span class="token punctuation">:</span> /home/jinli/nfs/data
+    <span class="token key atrule">server</span><span class="token punctuation">:</span> 192.168.137.226
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pv-nfs.yml
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># 状态应为Available</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="4-创建-PersistentVolumeClaim-PVC"><a href="#4-创建-PersistentVolumeClaim-PVC" class="headerlink" title="4. 创建 PersistentVolumeClaim (PVC)"></a><strong>4. 创建 PersistentVolumeClaim (PVC)</strong></h3><p>PVC 是用户对存储的请求，用于绑定 PV。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pvc-nfs.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> PersistentVolumeClaim
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> myclaim01
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">accessModes</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> ReadWriteOnce
+  <span class="token key atrule">resources</span><span class="token punctuation">:</span>
+    <span class="token key atrule">requests</span><span class="token punctuation">:</span>
+      <span class="token key atrule">storage</span><span class="token punctuation">:</span> 2Gi
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> pvname
+        <span class="token key atrule">operator</span><span class="token punctuation">:</span> In
+        <span class="token key atrule">values</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> pv001  <span class="token comment" spellcheck="true"># 匹配PV的标签</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pvc-nfs.yml
+kubectl get pvc  <span class="token comment" spellcheck="true"># 状态应为Bound</span>
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># PV状态应为Bound</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h3 id="5-在-Pod-中使用-PVC"><a href="#5-在-Pod-中使用-PVC" class="headerlink" title="5. 在 Pod 中使用 PVC"></a><strong>5. 在 Pod 中使用 PVC</strong></h3><p>通过 Deployment 创建 Pod，并挂载 PVC。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pv-deployment.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> pv<span class="token punctuation">-</span>deploy
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">2</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>pod
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>pod
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> myfrontend
+        <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx<span class="token punctuation">:</span>latest
+        <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> <span class="token string">"/var/www/html"</span>  <span class="token comment" spellcheck="true"># 容器内挂载路径</span>
+          <span class="token key atrule">name</span><span class="token punctuation">:</span> mypd
+      <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> mypd
+        <span class="token key atrule">persistentVolumeClaim</span><span class="token punctuation">:</span>
+          <span class="token key atrule">claimName</span><span class="token punctuation">:</span> myclaim01  <span class="token comment" spellcheck="true"># 引用PVC</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pv-deployment.yml
+kubectl get pods  <span class="token comment" spellcheck="true"># 确保Pod状态为Running</span>
+
+<span class="token comment" spellcheck="true"># 验证数据共享</span>
+<span class="token function">cp</span> /etc/profile /home/jinli/nfs/data/  <span class="token comment" spellcheck="true"># 在NFS服务器添加文件</span>
+kubectl <span class="token function">exec</span> <span class="token operator">&lt;</span>pod-name<span class="token operator">></span> -- <span class="token function">ls</span> /var/www/html  <span class="token comment" spellcheck="true"># 应看到a和profile文件</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="6-数据持久化验证"><a href="#6-数据持久化验证" class="headerlink" title="6. 数据持久化验证"></a><strong>6. 数据持久化验证</strong></h3><p>删除 Pod 后重建，数据仍然存在：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>  <span class="token comment" spellcheck="true"># 删除Pod</span>
+kubectl get pods  <span class="token comment" spellcheck="true"># 等待新Pod启动</span>
+
+kubectl <span class="token function">exec</span> <span class="token operator">&lt;</span>new-pod-name<span class="token operator">></span> -- <span class="token function">ls</span> /var/www/html  <span class="token comment" spellcheck="true"># 数据仍然存在</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="7-清理资源"><a href="#7-清理资源" class="headerlink" title="7. 清理资源"></a><strong>7. 清理资源</strong></h3><p>按顺序删除资源：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete -f pv-deployment.yml  <span class="token comment" spellcheck="true"># 删除Deployment</span>
+kubectl delete -f pvc-nfs.yml  <span class="token comment" spellcheck="true"># 删除PVC</span>
+
+<span class="token comment" spellcheck="true"># 检查PV状态变为Released后，自动清理数据（Recycle策略）</span>
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># 最终状态变为Available</span>
+<span class="token function">ls</span> /home/jinli/nfs/data  <span class="token comment" spellcheck="true"># NFS目录应被清空</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="关键点说明"><a href="#关键点说明" class="headerlink" title="关键点说明"></a><strong>关键点说明</strong></h3><ol>
+<li><strong>PV 与 PVC 绑定</strong>：通过标签选择器（<code>selector</code>）匹配 PV 和 PVC。</li>
+<li>访问模式：<ul>
+<li><code>ReadWriteOnce</code>：单节点读写</li>
+<li><code>ReadOnlyMany</code>：多节点只读</li>
+<li><code>ReadWriteMany</code>：多节点读写</li>
+</ul>
+</li>
+<li>回收策略：<ul>
+<li><code>Recycle</code>：删除 PVC 后自动清理数据（NFS 支持）</li>
+<li><code>Retain</code>：保留数据，需手动清理</li>
+<li><code>Delete</code>：删除 PV 时自动删除存储（云存储常用）</li>
+</ul>
+</li>
+<li><strong>NFS 优势</strong>：支持多节点挂载，适合需要共享存储的场景。</li>
+</ol>
+<h3 id="常见问题排查"><a href="#常见问题排查" class="headerlink" title="常见问题排查"></a><strong>常见问题排查</strong></h3><ol>
+<li><strong>PVC 状态为 Pending</strong>：<ul>
+<li>PV 容量不足</li>
+<li>标签选择器不匹配</li>
+<li>NFS 服务器不可达</li>
+</ul>
+</li>
+<li><strong>Pod 无法启动</strong>：<ul>
+<li>检查 NFS 服务器 IP 和路径是否正确</li>
+<li>确认 NFS 服务正常运行</li>
+<li>检查防火墙是否开放 NFS 端口（默认 2049）</li>
+</ul>
+</li>
+</ol>
+<p>通过以上步骤，你已成功实现 NFS 与 Kubernetes 的集成，为 Pod 提供了持久化存储。</p>
 
                 
             </div>
@@ -591,7 +610,7 @@ kubeadm reset
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-liu-nfs-chi-jiu-hua-cun-chu-wan-zheng-jiao-cheng/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-liu-nfs-chi-jiu-hua-cun-chu-wan-zheng-jiao-cheng/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -713,13 +732,13 @@ kubeadm reset
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-liu-nfs-chi-jiu-hua-cun-chu-wan-zheng-jiao-cheng/">
+                <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/5.jpg" class="responsive-img" alt="Kubernetes教程（六）NFS持久化存储完整教程">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
                         
-                        <span class="card-title">Kubernetes教程（六）NFS持久化存储完整教程</span>
+                        <span class="card-title">docker模块的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -730,14 +749,14 @@ kubeadm reset
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-17
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
                                 </a>
                             
                             
@@ -747,8 +766,8 @@ kubeadm reset
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
@@ -762,13 +781,13 @@ kubeadm reset
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">
+                <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（三）创建和管理Deployment">
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
                         
-                        <span class="card-title">Kubernetes教程（三）创建和管理Deployment</span>
+                        <span class="card-title">Kubernetes教程（一）集群部署</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
