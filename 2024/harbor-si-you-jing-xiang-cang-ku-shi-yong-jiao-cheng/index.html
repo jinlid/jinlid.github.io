@@ -4,9 +4,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="jinlid&#39;s blog">
-    <meta name="description" content="Harbor 私有镜像仓库使用教程1. 环境准备1.1 安装 Docker Compose# 下载 Docker Compose
-wget https://github.com/docker/compose/releases/downloa">
+    <meta name="keywords" content="Harbor私有镜像仓库使用教程, jinlid&#39;s blog">
+    <meta name="description" content="[TOC]
+1. 环境准备1.1 安装 Docker Compose# 下载 Docker Compose
+wget https://github.com/docker/compose/releases/download/v2.37.1/d">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +19,7 @@ wget https://github.com/docker/compose/releases/downloa">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>jinlid&#39;s blog</title>
+    <title>Harbor私有镜像仓库使用教程 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +339,12 @@ wget https://github.com/docker/compose/releases/downloa">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/6.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
+                    <h1 class="description center-align post-title">Harbor私有镜像仓库使用教程</h1>
                 </div>
             </div>
         </div>
@@ -365,12 +366,25 @@ wget https://github.com/docker/compose/releases/downloa">
             <div class="row tag-cate">
                 <div class="col s7">
                     
-                          <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
-                          </div>
+                    <div class="article-tag">
+                        
+                            <a href="/tags/Harbor/">
+                                <span class="chip bg-color">Harbor</span>
+                            </a>
+                        
+                    </div>
                     
                 </div>
                 <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                            </a>
+                        
+                    </div>
                     
                 </div>
             </div>
@@ -379,7 +393,7 @@ wget https://github.com/docker/compose/releases/downloa">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2025-06-14
+                    2024-06-07
                 </div>
                 
 
@@ -400,7 +414,8 @@ wget https://github.com/docker/compose/releases/downloa">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="Harbor-私有镜像仓库使用教程"><a href="#Harbor-私有镜像仓库使用教程" class="headerlink" title="Harbor 私有镜像仓库使用教程"></a>Harbor 私有镜像仓库使用教程</h1><h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><h3 id="1-1-安装-Docker-Compose"><a href="#1-1-安装-Docker-Compose" class="headerlink" title="1.1 安装 Docker Compose"></a>1.1 安装 Docker Compose</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Docker Compose</span>
+                <p>[TOC]</p>
+<h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><h3 id="1-1-安装-Docker-Compose"><a href="#1-1-安装-Docker-Compose" class="headerlink" title="1.1 安装 Docker Compose"></a>1.1 安装 Docker Compose</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Docker Compose</span>
 <span class="token function">wget</span> https://github.com/docker/compose/releases/download/v2.37.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 
 <span class="token comment" spellcheck="true"># 添加执行权限</span>
@@ -529,7 +544,7 @@ docker push 192.168.137.226:5000/library/postgres
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">https://jinlid.github.io/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/</a>
+                    <a href="https://jinlid.github.io/2024/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">https://jinlid.github.io/2024/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -566,7 +581,11 @@ docker push 192.168.137.226:5000/library/postgres
                 <div class="post-meta__tag-list" style="display: inline-block;">
                     
                         <div class="article-tag">
-                            <span class="chip bg-color">无标签</span>
+                            
+                                <a href="/tags/Harbor/">
+                                    <span class="chip bg-color">Harbor</span>
+                                </a>
+                            
                         </div>
                     
                 </div>
@@ -643,18 +662,17 @@ docker push 192.168.137.226:5000/library/postgres
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2025/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">
+                <a href="/2024/kubernetes-jiao-cheng-shi-yong-nfs-chi-jiu-hua-cun-chu/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="Kubernetes教程--使用NFS持久化存储">
                         
-                        <span class="card-title"></span>
+                        <span class="card-title">Kubernetes教程--使用NFS持久化存储</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -664,18 +682,29 @@ docker push 192.168.137.226:5000/library/postgres
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-06-14
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-17
+                        </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-user fa-fw"></i>
-                            JINLID
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                            
                             
                         </span>
                     </div>
                 </div>
-
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
+                    </a>
+                    
+                </div>
                 
             </div>
         </div>
@@ -686,13 +715,13 @@ docker push 192.168.137.226:5000/library/postgres
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2025/docker-mo-kuai-de-shi-yong/">
+                <a href="/2024/kubernetes-jiao-cheng-deployment-de-chuang-jian-he-guan-li/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Deployment的创建和管理">
                         
-                        <span class="card-title">docker模块的使用</span>
+                        <span class="card-title">Kubernetes教程--Deployment的创建和管理</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -703,14 +732,14 @@ docker push 192.168.137.226:5000/library/postgres
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
                                 </a>
                             
                             
@@ -720,8 +749,8 @@ docker push 192.168.137.226:5000/library/postgres
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/postgresql/">
-                        <span class="chip bg-color">postgresql</span>
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
                     </a>
                     
                 </div>

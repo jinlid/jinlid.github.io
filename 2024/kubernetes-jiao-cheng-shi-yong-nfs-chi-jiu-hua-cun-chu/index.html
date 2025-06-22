@@ -4,14 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程（十）部署Flask应用, jinlid&#39;s blog">
-    <meta name="description" content="1. 环境准备确保已安装以下工具：
-
-kubectl（Kubernetes 命令行工具）
-Docker（本地构建镜像）
-可用的 Kubernetes 集群（如 Minikube、Kind 或云服务商提供的集群）
-
-2. 创建命名空间创建 p">
+    <meta name="keywords" content="Kubernetes教程--使用NFS持久化存储, jinlid&#39;s blog">
+    <meta name="description" content="本教程将详细介绍如何在 Kubernetes 中使用 NFS 作为持久化存储，包括 PV (PersistentVolume)、PVC (PersistentVolumeClaim) 的创建和使用，以及 Deployment 挂载 PVC ">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -23,7 +17,7 @@ Docker（本地构建镜像）
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程（十）部署Flask应用 | jinlid&#39;s blog</title>
+    <title>Kubernetes教程--使用NFS持久化存储 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -343,12 +337,12 @@ Docker（本地构建镜像）
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/19.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/16.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程（十）部署Flask应用</h1>
+                    <h1 class="description center-align post-title">Kubernetes教程--使用NFS持久化存储</h1>
                 </div>
             </div>
         </div>
@@ -397,7 +391,7 @@ Docker（本地构建镜像）
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-07
+                    2024-06-17
                 </div>
                 
 
@@ -418,251 +412,180 @@ Docker（本地构建镜像）
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h4 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a><strong>1. 环境准备</strong></h4><p>确保已安装以下工具：</p>
+                <p>本教程将详细介绍如何在 Kubernetes 中使用 NFS 作为持久化存储，包括 PV (PersistentVolume)、PVC (PersistentVolumeClaim) 的创建和使用，以及 Deployment 挂载 PVC 的完整流程。</p>
+<p>[TOC]</p>
+<h2 id="1-NFS-服务器配置"><a href="#1-NFS-服务器配置" class="headerlink" title="1. NFS 服务器配置"></a><strong>1. NFS 服务器配置</strong></h2><p>NFS（Network File System）是一种分布式文件系统协议，允许客户端通过网络访问服务器上的文件。</p>
+<p><strong>步骤：</strong></p>
+<ol>
+<li><p><strong>安装 NFS 服务</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> nfs-utils -y
+systemctl <span class="token function">enable</span> nfs-server
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>创建共享目录并配置权限</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> /home/jinli/nfs/data -p
+<span class="token function">chown</span> -R jinli: /home/jinli/nfs
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>配置 NFS 导出规则</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/exports <span class="token operator">&lt;&lt;</span><span class="token string">EOF
+/home/jinli/nfs/data 192.168.137.226/24(rw,no_root_squash)
+EOF</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <ul>
-<li><code>kubectl</code>（Kubernetes 命令行工具）</li>
-<li>Docker（本地构建镜像）</li>
-<li>可用的 Kubernetes 集群（如 Minikube、Kind 或云服务商提供的集群）</li>
+<li><code>rw</code>：允许读写访问</li>
+<li><code>no_root_squash</code>：不将 root 用户映射为匿名用户</li>
 </ul>
-<h4 id="2-创建命名空间"><a href="#2-创建命名空间" class="headerlink" title="2. 创建命名空间"></a><strong>2. 创建命名空间</strong></h4><p>创建 <code>postgres-ns</code> 命名空间用于部署 PostgreSQL 数据库：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># postgres-ns.yaml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Namespace
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
-  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-    <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>执行命令</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f postgres-ns.yaml
+</li>
+<li><p><strong>启动 NFS 服务</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">systemctl start nfs-server
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get namespaces <span class="token operator">|</span> <span class="token function">grep</span> postgres
-<span class="token comment" spellcheck="true"># 输出应包含：postgres-ns       Active</span>
+</li>
+<li><p><strong>验证共享目录</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">su</span> - jinli
+<span class="token function">touch</span> /home/jinli/nfs/data/a  <span class="token comment" spellcheck="true"># 创建测试文件</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h4 id="3-创建数据库凭证"><a href="#3-创建数据库凭证" class="headerlink" title="3. 创建数据库凭证"></a><strong>3. 创建数据库凭证</strong></h4><p>创建 Secret 存储 PostgreSQL 密码、用户名和数据库名：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl create secret generic postgres-secret -n postgres-ns \
-  --from-literal<span class="token operator">=</span>POSTGRES_PASSWORD<span class="token operator">=</span>123456 \
-  --from-literal<span class="token operator">=</span>POSTGRES_USER<span class="token operator">=</span>postgres \
-  --from-literal<span class="token operator">=</span>POSTGRES_DB<span class="token operator">=</span>mydb
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>验证</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get secret -n postgres-ns
-<span class="token comment" spellcheck="true"># 应看到 postgres-secret 已创建</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h4 id="4-部署-PostgreSQL-数据库"><a href="#4-部署-PostgreSQL-数据库" class="headerlink" title="4. 部署 PostgreSQL 数据库"></a><strong>4. 部署 PostgreSQL 数据库</strong></h4><p>创建 StatefulSet 部署 PostgreSQL：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># postgres-statefulset.yaml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> StatefulSet
+</li>
+</ol>
+<h2 id="2-NFS-客户端挂载测试"><a href="#2-NFS-客户端挂载测试" class="headerlink" title="2. NFS 客户端挂载测试"></a><strong>2. NFS 客户端挂载测试</strong></h2><p>在 Kubernetes 节点上验证 NFS 挂载：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 在节点上执行</span>
+showmount -e 192.168.137.226  <span class="token comment" spellcheck="true"># 查看NFS服务器共享列表</span>
+
+<span class="token function">mkdir</span> /home/jinli/nfs/data -p
+<span class="token function">chown</span> -R jinli:jinli /home/jinli/nfs
+
+<span class="token function">mount</span> -t nfs 192.168.137.226:/home/jinli/nfs/data /home/jinli/nfs/data
+
+<span class="token function">df</span> -h  <span class="token comment" spellcheck="true"># 查看挂载结果</span>
+ll /home/jinli/nfs/data  <span class="token comment" spellcheck="true"># 应看到测试文件a</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-创建-Kubernetes-PersistentVolume-PV"><a href="#3-创建-Kubernetes-PersistentVolume-PV" class="headerlink" title="3. 创建 Kubernetes PersistentVolume (PV)"></a><strong>3. 创建 Kubernetes PersistentVolume (PV)</strong></h2><p>PV 是集群中的存储资源，由管理员预先配置。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pv-nfs.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> PersistentVolume
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres
-  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> pv001
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">pvname</span><span class="token punctuation">:</span> pv001
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">serviceName</span><span class="token punctuation">:</span> postgres
+  <span class="token key atrule">capacity</span><span class="token punctuation">:</span>
+    <span class="token key atrule">storage</span><span class="token punctuation">:</span> 2Gi
+  <span class="token key atrule">accessModes</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> ReadWriteOnce  <span class="token comment" spellcheck="true"># 单节点读写</span>
+  <span class="token key atrule">persistentVolumeReclaimPolicy</span><span class="token punctuation">:</span> Recycle  <span class="token comment" spellcheck="true"># 删除PVC后自动清理数据</span>
+  <span class="token key atrule">nfs</span><span class="token punctuation">:</span>
+    <span class="token key atrule">path</span><span class="token punctuation">:</span> /home/jinli/nfs/data
+    <span class="token key atrule">server</span><span class="token punctuation">:</span> 192.168.137.226
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pv-nfs.yml
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># 状态应为Available</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="4-创建-PersistentVolumeClaim-PVC"><a href="#4-创建-PersistentVolumeClaim-PVC" class="headerlink" title="4. 创建 PersistentVolumeClaim (PVC)"></a><strong>4. 创建 PersistentVolumeClaim (PVC)</strong></h2><p>PVC 是用户对存储的请求，用于绑定 PV。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pvc-nfs.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> PersistentVolumeClaim
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> myclaim01
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">accessModes</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> ReadWriteOnce
+  <span class="token key atrule">resources</span><span class="token punctuation">:</span>
+    <span class="token key atrule">requests</span><span class="token punctuation">:</span>
+      <span class="token key atrule">storage</span><span class="token punctuation">:</span> 2Gi
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> pvname
+        <span class="token key atrule">operator</span><span class="token punctuation">:</span> In
+        <span class="token key atrule">values</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> pv001  <span class="token comment" spellcheck="true"># 匹配PV的标签</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pvc-nfs.yml
+kubectl get pvc  <span class="token comment" spellcheck="true"># 状态应为Bound</span>
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># PV状态应为Bound</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-在-Pod-中使用-PVC"><a href="#5-在-Pod-中使用-PVC" class="headerlink" title="5. 在 Pod 中使用 PVC"></a><strong>5. 在 Pod 中使用 PVC</strong></h2><p>通过 Deployment 创建 Pod，并挂载 PVC。</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># pv-deployment.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> pv<span class="token punctuation">-</span>deploy
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">2</span>
   <span class="token key atrule">selector</span><span class="token punctuation">:</span>
     <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
-      <span class="token key atrule">app</span><span class="token punctuation">:</span> postgres
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>pod
   <span class="token key atrule">template</span><span class="token punctuation">:</span>
     <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
       <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-        <span class="token key atrule">app</span><span class="token punctuation">:</span> postgres
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>pod
     <span class="token key atrule">spec</span><span class="token punctuation">:</span>
       <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres
-        <span class="token key atrule">image</span><span class="token punctuation">:</span> postgres<span class="token punctuation">:</span><span class="token number">13</span>
-        <span class="token key atrule">env</span><span class="token punctuation">:</span>
-        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> POSTGRES_PASSWORD
-          <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
-            <span class="token key atrule">secretKeyRef</span><span class="token punctuation">:</span>
-              <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>secret
-              <span class="token key atrule">key</span><span class="token punctuation">:</span> POSTGRES_PASSWORD
-        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> POSTGRES_USER
-          <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
-            <span class="token key atrule">secretKeyRef</span><span class="token punctuation">:</span>
-              <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>secret
-              <span class="token key atrule">key</span><span class="token punctuation">:</span> POSTGRES_USER
-        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> POSTGRES_DB
-          <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
-            <span class="token key atrule">secretKeyRef</span><span class="token punctuation">:</span>
-              <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>secret
-              <span class="token key atrule">key</span><span class="token punctuation">:</span> POSTGRES_DB
-        <span class="token key atrule">ports</span><span class="token punctuation">:</span>
-        <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">5432</span>
-          <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>执行命令</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f postgres-statefulset.yaml -n postgres-ns
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="5-暴露-PostgreSQL-服务"><a href="#5-暴露-PostgreSQL-服务" class="headerlink" title="5. 暴露 PostgreSQL 服务"></a><strong>5. 暴露 PostgreSQL 服务</strong></h4><p>创建 NodePort 类型的 Service 对外暴露数据库：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># postgres-service.yaml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres
-  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
-  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-    <span class="token key atrule">app</span><span class="token punctuation">:</span> postgres
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
-    <span class="token key atrule">app</span><span class="token punctuation">:</span> postgres
-  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
-  <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">5432</span>
-    <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres
-    <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">5432</span>
-  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>执行命令</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f postgres-service.yaml -n postgres-ns
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><strong>验证</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -n postgres-ns --show-labels
-kubectl get svc -n postgres-ns
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> myfrontend
+        <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx<span class="token punctuation">:</span>latest
+        <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> <span class="token string">"/var/www/html"</span>  <span class="token comment" spellcheck="true"># 容器内挂载路径</span>
+          <span class="token key atrule">name</span><span class="token punctuation">:</span> mypd
+      <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> mypd
+        <span class="token key atrule">persistentVolumeClaim</span><span class="token punctuation">:</span>
+          <span class="token key atrule">claimName</span><span class="token punctuation">:</span> myclaim01  <span class="token comment" spellcheck="true"># 引用PVC</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f pv-deployment.yml
+kubectl get pods  <span class="token comment" spellcheck="true"># 确保Pod状态为Running</span>
 
-<span class="token comment" spellcheck="true"># 获取 NodePort</span>
-NODE_PORT<span class="token operator">=</span><span class="token punctuation">$(</span>kubectl get svc postgres -n postgres-ns -o jsonpath<span class="token operator">=</span><span class="token string">'{.spec.ports[0].nodePort}'</span><span class="token punctuation">)</span>
-<span class="token keyword">echo</span> <span class="token string">"PostgreSQL NodePort: <span class="token variable">$NODE_PORT</span>"</span>
+<span class="token comment" spellcheck="true"># 验证数据共享</span>
+<span class="token function">cp</span> /etc/profile /home/jinli/nfs/data/  <span class="token comment" spellcheck="true"># 在NFS服务器添加文件</span>
+kubectl <span class="token function">exec</span> <span class="token operator">&lt;</span>pod-name<span class="token operator">></span> -- <span class="token function">ls</span> /var/www/html  <span class="token comment" spellcheck="true"># 应看到a和profile文件</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="6-数据持久化验证"><a href="#6-数据持久化验证" class="headerlink" title="6. 数据持久化验证"></a><strong>6. 数据持久化验证</strong></h2><p>删除 Pod 后重建，数据仍然存在：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>  <span class="token comment" spellcheck="true"># 删除Pod</span>
+kubectl get pods  <span class="token comment" spellcheck="true"># 等待新Pod启动</span>
 
-<span class="token comment" spellcheck="true"># 测试连接（从集群外部）</span>
-psql -h <span class="token operator">&lt;</span>节点IP<span class="token operator">></span> -p <span class="token variable">$NODE_PORT</span> -U postgres
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="6-构建-Flask-应用镜像"><a href="#6-构建-Flask-应用镜像" class="headerlink" title="6. 构建 Flask 应用镜像"></a><strong>6. 构建 Flask 应用镜像</strong></h4><p>创建 Dockerfile 构建 Flask 应用镜像：</p>
-<pre class="line-numbers language-dockerfile"><code class="language-dockerfile"># 使用官方 Python 运行时作为基础镜像
-FROM python:3.9-slim
+kubectl <span class="token function">exec</span> <span class="token operator">&lt;</span>new-pod-name<span class="token operator">></span> -- <span class="token function">ls</span> /var/www/html  <span class="token comment" spellcheck="true"># 数据仍然存在</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="7-清理资源"><a href="#7-清理资源" class="headerlink" title="7. 清理资源"></a><strong>7. 清理资源</strong></h2><p>按顺序删除资源：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete -f pv-deployment.yml  <span class="token comment" spellcheck="true"># 删除Deployment</span>
+kubectl delete -f pvc-nfs.yml  <span class="token comment" spellcheck="true"># 删除PVC</span>
 
-# 设置工作目录
-WORKDIR /app
-
-# 先复制依赖文件，利用 Docker 缓存加速构建
-COPY requirements.txt .
-
-# 安装依赖
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 复制整个应用目录
-COPY . .
-
-# 暴露 Flask 默认端口
-EXPOSE 5000
- 
-# 关闭 Flask 调试模式（通过环境变量控制）
-ENV FLASK_DEBUG=0
-
-# 使用 Gunicorn 启动（替代 app.run()）
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "flask_movie.app:app"]
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>构建镜像</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">docker build -t flask-movie-app <span class="token keyword">.</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h4 id="7-部署-Flask-应用到-Kubernetes"><a href="#7-部署-Flask-应用到-Kubernetes" class="headerlink" title="7. 部署 Flask 应用到 Kubernetes"></a><strong>7. 部署 Flask 应用到 Kubernetes</strong></h4><p>创建 Deployment 部署 Flask 应用：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
-  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
-  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
-    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
-      <span class="token key atrule">app</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
-  <span class="token key atrule">template</span><span class="token punctuation">:</span>
-    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-        <span class="token key atrule">app</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie
-        <span class="token key atrule">image</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie<span class="token punctuation">-</span>app
-        <span class="token key atrule">imagePullPolicy</span><span class="token punctuation">:</span> Never
-        <span class="token key atrule">ports</span><span class="token punctuation">:</span>
-        <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">5000</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>执行命令</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f flask-movie-deployment.yaml
-kubectl get pods -n postgres-ns -o wide  <span class="token comment" spellcheck="true"># 查看应用 Pod 状态</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h4 id="8-为-Flask-应用创建-NodePort-服务"><a href="#8-为-Flask-应用创建-NodePort-服务" class="headerlink" title="8. 为 Flask 应用创建 NodePort 服务"></a><strong>8. 为 Flask 应用创建 NodePort 服务</strong></h4><p>创建 Service 资源将 Flask 应用暴露到集群外部：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie<span class="token punctuation">-</span>service
-  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>ns
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
-    <span class="token key atrule">app</span><span class="token punctuation">:</span> flask<span class="token punctuation">-</span>movie  <span class="token comment" spellcheck="true"># 匹配 Pod 的 label</span>
-  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
-    <span class="token punctuation">-</span> <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
-      <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">5000      </span><span class="token comment" spellcheck="true"># Service 端口</span>
-      <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">5000 </span><span class="token comment" spellcheck="true"># Pod 端口</span>
-  <span class="token key atrule">type</span><span class="token punctuation">:</span> NodePort      <span class="token comment" spellcheck="true"># 或 LoadBalancer/ClusterIP</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>执行命令</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f flask-movie-service.yaml
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><strong>验证服务</strong>：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get svc -n postgres-ns
-<span class="token comment" spellcheck="true"># 输出示例：</span>
-NAME                  TYPE       CLUSTER-IP      EXTERNAL-IP   PORT<span class="token punctuation">(</span>S<span class="token punctuation">)</span>          AGE
-flask-movie-service   NodePort   10.110.185.40   <span class="token operator">&lt;</span>none<span class="token operator">></span>        5000:30000/TCP   11m
-postgres              NodePort   10.99.247.133   <span class="token operator">&lt;</span>none<span class="token operator">></span>        5432:32039/TCP   23h
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="9-访问-Flask-应用"><a href="#9-访问-Flask-应用" class="headerlink" title="9. 访问 Flask 应用"></a><strong>9. 访问 Flask 应用</strong></h4><p>通过任意节点 IP 和 NodePort 访问应用：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 获取集群节点 IP</span>
-NODE_IP<span class="token operator">=</span><span class="token punctuation">$(</span>kubectl get nodes -o jsonpath<span class="token operator">=</span><span class="token string">'{.items[0].status.addresses[?(@.type=="ExternalIP")].address}'</span><span class="token punctuation">)</span>
-
-<span class="token comment" spellcheck="true"># 若没有 ExternalIP，使用 InternalIP</span>
-<span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token string">"<span class="token variable">$NODE_IP</span>"</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
-  NODE_IP<span class="token operator">=</span><span class="token punctuation">$(</span>kubectl get nodes -o jsonpath<span class="token operator">=</span><span class="token string">'{.items[0].status.addresses[?(@.type=="InternalIP")].address}'</span><span class="token punctuation">)</span>
-<span class="token keyword">fi</span>
-
-<span class="token keyword">echo</span> <span class="token string">"访问地址: http://<span class="token variable">$NODE_IP</span>:30000"</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="10-故障排除"><a href="#10-故障排除" class="headerlink" title="10. 故障排除"></a><strong>10. 故障排除</strong></h4><p>若部署失败，可使用以下命令排查问题：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看 StatefulSet 状态</span>
-kubectl get statefulset -n postgres-ns
-kubectl describe statefulset postgres -n postgres-ns
-
-<span class="token comment" spellcheck="true"># 查看事件日志（按时间排序）</span>
-kubectl get events -n postgres-ns --sort-by<span class="token operator">=</span><span class="token string">'.metadata.creationTimestamp'</span>
-
-<span class="token comment" spellcheck="true"># 查看 Pod 详细信息和日志</span>
-kubectl describe pod <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
-kubectl logs <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="11-注意事项"><a href="#11-注意事项" class="headerlink" title="11. 注意事项"></a><strong>11. 注意事项</strong></h4><ol>
-<li><p><strong>镜像拉取策略</strong>：</p>
-<ul>
-<li><code>imagePullPolicy: Never</code> 仅适用于本地已存在的镜像。</li>
-<li>若使用远程镜像仓库，需改为 <code>IfNotPresent</code> 或 <code>Always</code>，并配置镜像仓库认证。</li>
-</ul>
-</li>
-<li><p><strong>数据库连接</strong>：</p>
-<ul>
-<li><p>Flask 应用需配置正确的数据库连接字符串，格式为：</p>
-<pre class="line-numbers language-python"><code class="language-python">postgresql<span class="token punctuation">:</span><span class="token operator">//</span><span class="token operator">&lt;</span>用户名<span class="token operator">></span><span class="token punctuation">:</span><span class="token operator">&lt;</span>密码<span class="token operator">></span>@<span class="token operator">&lt;</span>服务名<span class="token operator">></span><span class="token punctuation">.</span><span class="token operator">&lt;</span>命名空间<span class="token operator">></span><span class="token punctuation">.</span>svc<span class="token punctuation">.</span>cluster<span class="token punctuation">.</span>local<span class="token punctuation">:</span><span class="token operator">&lt;</span>端口<span class="token operator">></span><span class="token operator">/</span><span class="token operator">&lt;</span>数据库名<span class="token operator">></span>
-<span class="token comment" spellcheck="true"># 示例：</span>
-SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token string">'postgresql://postgres:123456@postgres.postgres-ns.svc.cluster.local:5432/mydb'</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-</li>
-</ul>
-</li>
-<li><p><strong>生产环境优化</strong>：</p>
-<ul>
-<li>添加持久化存储（PV/PVC）给 PostgreSQL。</li>
-<li>使用 ConfigMap 管理应用配置。</li>
-<li>添加 Health Check（存活和就绪探针）。</li>
-<li>使用 Ingress 替代 NodePort 暴露服务。</li>
-</ul>
-</li>
-</ol>
-<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h4><p>通过本教程，你学会了：</p>
+<span class="token comment" spellcheck="true"># 检查PV状态变为Released后，自动清理数据（Recycle策略）</span>
+kubectl get <span class="token function">pv</span>  <span class="token comment" spellcheck="true"># 最终状态变为Available</span>
+<span class="token function">ls</span> /home/jinli/nfs/data  <span class="token comment" spellcheck="true"># NFS目录应被清空</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>关键点说明</strong></p>
 <ol>
-<li>在 Kubernetes 中创建命名空间和 Secret。</li>
-<li>使用 StatefulSet 部署有状态应用（PostgreSQL）。</li>
-<li>构建 Flask 应用 Docker 镜像。</li>
-<li>部署 Flask 应用到 Kubernetes。</li>
-<li>基本的故障排查方法。</li>
+<li><strong>PV 与 PVC 绑定</strong>：通过标签选择器（<code>selector</code>）匹配 PV 和 PVC。</li>
+<li>访问模式：<ul>
+<li><code>ReadWriteOnce</code>：单节点读写</li>
+<li><code>ReadOnlyMany</code>：多节点只读</li>
+<li><code>ReadWriteMany</code>：多节点读写</li>
+</ul>
+</li>
+<li>回收策略：<ul>
+<li><code>Recycle</code>：删除 PVC 后自动清理数据（NFS 支持）</li>
+<li><code>Retain</code>：保留数据，需手动清理</li>
+<li><code>Delete</code>：删除 PV 时自动删除存储（云存储常用）</li>
+</ul>
+</li>
+<li><strong>NFS 优势</strong>：支持多节点挂载，适合需要共享存储的场景。</li>
 </ol>
-<p>后续可扩展内容：添加 Service 暴露 Flask 应用、配置自动扩缩容、集成 CI/CD 流水线。</p>
+<h2 id="8-常见问题排查"><a href="#8-常见问题排查" class="headerlink" title="8. 常见问题排查"></a><strong>8. 常见问题排查</strong></h2><ol>
+<li><strong>PVC 状态为 Pending</strong>：<ul>
+<li>PV 容量不足</li>
+<li>标签选择器不匹配</li>
+<li>NFS 服务器不可达</li>
+</ul>
+</li>
+<li><strong>Pod 无法启动</strong>：<ul>
+<li>检查 NFS 服务器 IP 和路径是否正确</li>
+<li>确认 NFS 服务正常运行</li>
+<li>检查防火墙是否开放 NFS 端口（默认 2049）</li>
+</ul>
+</li>
+</ol>
+<p>通过以上步骤，你已成功实现 NFS 与 Kubernetes 的集成，为 Pod 提供了持久化存储。</p>
 
                 
             </div>
@@ -689,7 +612,7 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-shi-bu-shu-flask-ying-yong/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-shi-bu-shu-flask-ying-yong/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-shi-yong-nfs-chi-jiu-hua-cun-chu/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-shi-yong-nfs-chi-jiu-hua-cun-chu/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -811,13 +734,13 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-wu-chuang-jian-he-guan-li-deployment/">
+                <a href="/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="Kubernetes教程（五）Deployment节点选择">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes教程--Job与CronJob的使用">
                         
-                        <span class="card-title">Kubernetes教程（五）Deployment节点选择</span>
+                        <span class="card-title">Kubernetes教程--Job与CronJob的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -828,7 +751,7 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-22
                         </span>
                         <span class="publish-author">
                             
@@ -860,13 +783,13 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-si-chuang-jian-he-guan-li-service/">
+                <a href="/2024/harbor-si-you-jing-xiang-cang-ku-shi-yong-jiao-cheng/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="Kubernetes教程（四）创建和管理Service">
+                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Harbor私有镜像仓库使用教程">
                         
-                        <span class="card-title">Kubernetes教程（四）创建和管理Service</span>
+                        <span class="card-title">Harbor私有镜像仓库使用教程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -894,8 +817,8 @@ SQLALCHEMY_DATABASE_URI <span class="token operator">=</span> <span class="token
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
+                    <a href="/tags/Harbor/">
+                        <span class="chip bg-color">Harbor</span>
                     </a>
                     
                 </div>

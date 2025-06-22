@@ -4,9 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程（三）创建和管理Deployment, jinlid&#39;s blog">
-    <meta name="description" content="本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。
-1. 准备 Deployment 配置文件首先创建一个 YAML">
+    <meta name="keywords" content="Kubernetes教程--ConfigMap与Secret的使用, jinlid&#39;s blog">
+    <meta name="description" content="[TOC]
+1. configMap 基础ConfigMap 用于存储非敏感的配置数据，如环境变量、配置文件等。
+1. 从字面量创建 ConfigMap
+kubectl create cm info --from-literal=k=v -">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +20,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程（三）创建和管理Deployment | jinlid&#39;s blog</title>
+    <title>Kubernetes教程--ConfigMap与Secret的使用 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -338,12 +340,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程（三）创建和管理Deployment</h1>
+                    <h1 class="description center-align post-title">Kubernetes教程--ConfigMap与Secret的使用</h1>
                 </div>
             </div>
         </div>
@@ -392,7 +394,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-07
+                    2024-06-22
                 </div>
                 
 
@@ -413,105 +415,200 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>本教程以部署Nginx为例，将带你逐步学习如何使用 Kubernetes Deployment 来管理 Pod，包括创建、查看、扩缩容和删除 Deployment 的全过程。</p>
-<h2 id="1-准备-Deployment-配置文件"><a href="#1-准备-Deployment-配置文件" class="headerlink" title="1. 准备 Deployment 配置文件"></a>1. 准备 Deployment 配置文件</h2><p>首先创建一个 YAML 文件来定义我们的 Deployment：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">touch</span> nginx-deployment.yaml
+                <p>[TOC]</p>
+<h2 id="1-configMap-基础"><a href="#1-configMap-基础" class="headerlink" title="1. configMap 基础"></a><strong>1. configMap 基础</strong></h2><p>ConfigMap 用于存储非敏感的配置数据，如环境变量、配置文件等。</p>
+<p><strong>1. 从字面量创建 ConfigMap</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl create cm info --from-literal<span class="token operator">=</span>k<span class="token operator">=</span>v --dry-run<span class="token operator">=</span>client -o yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>将以下内容写入 <code>nginx-deployment.yaml</code> 文件：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<p><strong>2. 从 YAML 文件创建 ConfigMap</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># cm.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> ConfigMap
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> mynginx<span class="token punctuation">-</span>deployment<span class="token punctuation">-</span>new
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> info
+<span class="token key atrule">data</span><span class="token punctuation">:</span>
+  <span class="token key atrule">count</span><span class="token punctuation">:</span> <span class="token number">10</span>
+  <span class="token key atrule">debug</span><span class="token punctuation">:</span> <span class="token string">'on'</span>
+  <span class="token key atrule">path</span><span class="token punctuation">:</span> <span class="token string">'/etc/systemd'</span>
+  <span class="token key atrule">greeting</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+    say hello to kubernetes.</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>3. 应用与查看</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f cm.yml
+kubectl get cm  <span class="token comment" spellcheck="true"># 查看ConfigMap列表</span>
+kubectl describe cm info  <span class="token comment" spellcheck="true"># 查看详情</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="2-Secret-基础"><a href="#2-Secret-基础" class="headerlink" title="2. Secret 基础"></a><strong>2. Secret 基础</strong></h2><p>Secret 用于存储敏感数据，如密码、密钥等，数据会被 Base64 编码。</p>
+<p><strong>1. 从字面量创建 Secret</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl create secret generic user --from-literal<span class="token operator">=</span>name<span class="token operator">=</span>root --dry-run<span class="token operator">=</span>client -o yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>2. 手动编码创建 Secret</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成Base64编码</span>
+<span class="token keyword">echo</span> -n <span class="token string">'123456'</span> <span class="token operator">|</span> base64  <span class="token comment" spellcheck="true"># MTIzNDU2</span>
+<span class="token keyword">echo</span> -n <span class="token string">'postgres'</span> <span class="token operator">|</span> base64  <span class="token comment" spellcheck="true"># cG9zdGdyZXM=</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># secret.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Secret
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> user
+<span class="token key atrule">type</span><span class="token punctuation">:</span> Opaque
+<span class="token key atrule">data</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> cm9vdA==  <span class="token comment" spellcheck="true"># root</span>
+  <span class="token key atrule">pwd</span><span class="token punctuation">:</span> MTIzNDU2   <span class="token comment" spellcheck="true"># 123456</span>
+  <span class="token key atrule">db</span><span class="token punctuation">:</span> cG9zdGdyZXM=  <span class="token comment" spellcheck="true"># postgres</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>3. 应用与查看</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f secret.yml
+kubectl get secrets  <span class="token comment" spellcheck="true"># 查看Secret列表</span>
+kubectl describe secret user  <span class="token comment" spellcheck="true"># 查看详情（值不会明文显示）</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-在-Pod-中使用-ConfigMap-x2F-Secret-作为环境变量"><a href="#3-在-Pod-中使用-ConfigMap-x2F-Secret-作为环境变量" class="headerlink" title="3. 在 Pod 中使用 ConfigMap/Secret 作为环境变量"></a><strong>3. 在 Pod 中使用 ConfigMap/Secret 作为环境变量</strong></h2><p><strong>1. 配置 Pod 环境变量</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># env-pod.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> env<span class="token punctuation">-</span>pod
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">3</span>
-  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
-    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
-      <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
-      <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
-  <span class="token key atrule">template</span><span class="token punctuation">:</span>
-    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-        <span class="token key atrule">app</span><span class="token punctuation">:</span> nginx
-        <span class="token key atrule">track</span><span class="token punctuation">:</span> stable
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>container
-          <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
-          <span class="token key atrule">ports</span><span class="token punctuation">:</span>
-            <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="配置文件解析："><a href="#配置文件解析：" class="headerlink" title="配置文件解析："></a>配置文件解析：</h3><ul>
-<li><code>apiVersion: apps/v1</code>: 指定使用的 Kubernetes API 版本</li>
-<li><code>kind: Deployment</code>: 声明这是一个 Deployment 资源</li>
-<li><code>replicas: 3</code>: 指定需要运行 3 个 Pod 副本</li>
-<li><code>selector</code>: 定义 Deployment 如何找到要管理的 Pod</li>
-<li><code>template</code>: 定义 Pod 的模板，包括元数据和容器规格</li>
+  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> busy
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> busybox
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/sleep"</span><span class="token punctuation">,</span> <span class="token string">"300"</span><span class="token punctuation">]</span>
+    <span class="token key atrule">env</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> COUNT
+        <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
+          <span class="token key atrule">configMapKeyRef</span><span class="token punctuation">:</span>
+            <span class="token key atrule">name</span><span class="token punctuation">:</span> info
+            <span class="token key atrule">key</span><span class="token punctuation">:</span> count
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> GREETING
+        <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
+          <span class="token key atrule">configMapKeyRef</span><span class="token punctuation">:</span>
+            <span class="token key atrule">name</span><span class="token punctuation">:</span> info
+            <span class="token key atrule">key</span><span class="token punctuation">:</span> greeting
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> USERNAME
+        <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
+          <span class="token key atrule">secretKeyRef</span><span class="token punctuation">:</span>
+            <span class="token key atrule">name</span><span class="token punctuation">:</span> user
+            <span class="token key atrule">key</span><span class="token punctuation">:</span> name
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> PASSWORD
+        <span class="token key atrule">valueFrom</span><span class="token punctuation">:</span>
+          <span class="token key atrule">secretKeyRef</span><span class="token punctuation">:</span>
+            <span class="token key atrule">name</span><span class="token punctuation">:</span> user
+            <span class="token key atrule">key</span><span class="token punctuation">:</span> pwd
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>2. 验证环境变量</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f env-pod.yml
+kubectl <span class="token function">exec</span> env-pod -- <span class="token function">env</span> <span class="token operator">|</span> <span class="token function">grep</span> -E <span class="token string">'COUNT|GREETING|USERNAME|PASSWORD'</span>
+<span class="token comment" spellcheck="true"># 输出:</span>
+<span class="token comment" spellcheck="true"># COUNT=10</span>
+<span class="token comment" spellcheck="true"># GREETING=say hello to kubernetes.</span>
+<span class="token comment" spellcheck="true"># USERNAME=root</span>
+<span class="token comment" spellcheck="true"># PASSWORD=123456</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="4-在-Pod-中使用-ConfigMap-x2F-Secret-作为文件挂载"><a href="#4-在-Pod-中使用-ConfigMap-x2F-Secret-作为文件挂载" class="headerlink" title="4. 在 Pod 中使用 ConfigMap/Secret 作为文件挂载"></a><strong>4. 在 Pod 中使用 ConfigMap/Secret 作为文件挂载</strong></h2><p><strong>1. 配置 Volume 挂载</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># vol-pod.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> vol<span class="token punctuation">-</span>pod
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> busy
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> busybox
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/sleep"</span><span class="token punctuation">,</span> <span class="token string">"300"</span><span class="token punctuation">]</span>
+    <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> /tmp/cm<span class="token punctuation">-</span>items  <span class="token comment" spellcheck="true"># ConfigMap挂载路径</span>
+      <span class="token key atrule">name</span><span class="token punctuation">:</span> cm<span class="token punctuation">-</span>vol
+    <span class="token punctuation">-</span> <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> /tmp/sec<span class="token punctuation">-</span>items  <span class="token comment" spellcheck="true"># Secret挂载路径</span>
+      <span class="token key atrule">name</span><span class="token punctuation">:</span> sec<span class="token punctuation">-</span>vol
+  <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> cm<span class="token punctuation">-</span>vol
+    <span class="token key atrule">configMap</span><span class="token punctuation">:</span>
+      <span class="token key atrule">name</span><span class="token punctuation">:</span> info
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> sec<span class="token punctuation">-</span>vol
+    <span class="token key atrule">secret</span><span class="token punctuation">:</span>
+      <span class="token key atrule">secretName</span><span class="token punctuation">:</span> user
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>2. 验证文件挂载</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f vol-pod.yml
+kubectl <span class="token function">exec</span> -it vol-pod -- sh
+
+<span class="token comment" spellcheck="true"># 在容器内执行:</span>
+<span class="token function">ls</span> /tmp/cm-items/  <span class="token comment" spellcheck="true"># 查看ConfigMap文件</span>
+<span class="token function">cat</span> /tmp/cm-items/count  <span class="token comment" spellcheck="true"># 查看ConfigMap值</span>
+
+<span class="token function">ls</span> /tmp/sec-items/  <span class="token comment" spellcheck="true"># 查看Secret文件</span>
+<span class="token function">cat</span> /tmp/sec-items/pwd  <span class="token comment" spellcheck="true"># 查看Secret值</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-最佳实践与注意事项"><a href="#5-最佳实践与注意事项" class="headerlink" title="5. 最佳实践与注意事项"></a><strong>5. 最佳实践与注意事项</strong></h2><ol>
+<li><p><strong>敏感数据处理</strong></p>
+<ul>
+<li>Secret 仅提供基础编码（Base64），非加密</li>
+<li>避免在 YAML 文件中硬编码敏感信息，建议使用工具如<a target="_blank" rel="noopener" href="https://github.com/bitnami-labs/sealed-secrets">kubeseal</a>或外部密钥管理系统</li>
 </ul>
-<h2 id="2-创建-Deployment"><a href="#2-创建-Deployment" class="headerlink" title="2. 创建 Deployment"></a>2. 创建 Deployment</h2><p>应用配置文件创建 Deployment:</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nginx-deployment.yaml
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>预期输出：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">deployment.apps/mynginx-deployment-new created
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h2 id="3-查看-Deployment-状态"><a href="#3-查看-Deployment-状态" class="headerlink" title="3. 查看 Deployment 状态"></a>3. 查看 Deployment 状态</h2><p>检查 Deployment 是否创建成功：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get deployment
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>预期输出类似：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
-mynginx-deployment-new    3/3     3            3           30s
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>查看 Deployment 的详细信息：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl describe deployment mynginx-deployment-new
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>这将显示 Deployment 的详细配置和状态信息。</p>
-<h2 id="4-查看相关资源"><a href="#4-查看相关资源" class="headerlink" title="4. 查看相关资源"></a>4. 查看相关资源</h2><p>检查由 Deployment 创建的 ReplicaSet：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get replicaset
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>预期输出类似：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">NAME                                DESIRED   CURRENT   READY   AGE
-mynginx-deployment-new-7cfb8ff87f   3         3         3       2m
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>查看由 ReplicaSet 创建的 Pod：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -o wide --show-labels
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<pre><code>NAME                                      READY   STATUS    LABELS
-mynginx-deployment-new-7cfb8ff87f-llhx6   1/1     Running   app=nginx,track=stable
-mynginx-deployment-new-7cfb8ff87f-n2p5k   1/1     Running   app=nginx,track=stable
-mynginx-deployment-new-7cfb8ff87f-x9z7q   1/1     Running   app=nginx,track=stable
-</code></pre>
-<h2 id="5-扩缩容-Deployment"><a href="#5-扩缩容-Deployment" class="headerlink" title="5. 扩缩容 Deployment"></a>5. 扩缩容 Deployment</h2><p>将 Pod 副本数从 3 缩减到 2：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl scale deployment mynginx-deployment-new --replicas<span class="token operator">=</span>2
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>验证 Pod 数量：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>现在应该只看到 2 个 Pod 在运行。</p>
-<h2 id="6-测试-Deployment-的自愈能力"><a href="#6-测试-Deployment-的自愈能力" class="headerlink" title="6. 测试 Deployment 的自愈能力"></a>6. 测试 Deployment 的自愈能力</h2><p>手动删除一个 Pod，观察 Deployment 的行为：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete pod mynginx-deployment-new-7cfb8ff87f-llhx6
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>立即检查 Pod 状态：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -w
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>你会看到 Kubernetes 自动创建了一个新的 Pod 来替换被删除的 Pod，以维持指定的副本数。</p>
-<h2 id="7-删除-Deployment"><a href="#7-删除-Deployment" class="headerlink" title="7. 删除 Deployment"></a>7. 删除 Deployment</h2><p>当不再需要 Deployment 时，可以删除它：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete deployment mynginx-deployment-new
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>这将删除 Deployment 及其管理的所有 Pod。</p>
-<h2 id="8-验证删除结果"><a href="#8-验证删除结果" class="headerlink" title="8. 验证删除结果"></a>8. 验证删除结果</h2><p>检查所有资源是否已删除：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl get deployment
-kubectl get pods
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>应该看不到任何相关资源。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过本教程，你学会了：</p>
-<ol>
-<li>如何定义 Kubernetes Deployment</li>
-<li>如何创建和管理 Deployment</li>
-<li>如何查看 Deployment 及其相关资源</li>
-<li>如何进行扩缩容操作</li>
-<li>如何测试 Deployment 的自愈能力</li>
-<li>如何清理 Deployment 资源</li>
+</li>
+<li><p><strong>数据更新机制</strong></p>
+<ul>
+<li>环境变量方式：更新 ConfigMap/Secret 后，Pod 需重启才能获取新值</li>
+<li>挂载文件方式：部分应用支持动态加载配置文件（如 Nginx）</li>
+</ul>
+</li>
+<li><p><strong>挂载权限控制</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> sec<span class="token punctuation">-</span>vol
+  <span class="token key atrule">secret</span><span class="token punctuation">:</span>
+    <span class="token key atrule">secretName</span><span class="token punctuation">:</span> user
+    <span class="token key atrule">defaultMode</span><span class="token punctuation">:</span> <span class="token number">0400  </span><span class="token comment" spellcheck="true"># 限制文件权限为只读（默认0644）</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>常见类型 Secret</strong></p>
+<ul>
+<li><code>Opaque</code>：通用密钥</li>
+<li><code>kubernetes.io/dockerconfigjson</code>：Docker 镜像仓库认证</li>
+<li><code>kubernetes.io/tls</code>：TLS 证书</li>
+</ul>
+</li>
 </ol>
-<p>Deployment 是 Kubernetes 中最常用的工作负载资源之一，它提供了声明式更新、滚动升级和回滚等功能，是管理无状态应用的理想选择。</p>
+<h2 id="6-管理命令速查表"><a href="#6-管理命令速查表" class="headerlink" title="6. 管理命令速查表"></a><strong>6. 管理命令速查表</strong></h2><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>ConfigMap 命令</th>
+<th>Secret 命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>创建</td>
+<td><code>kubectl create cm info --from-literal=k=v</code></td>
+<td><code>kubectl create secret generic user --from-literal=name=root</code></td>
+</tr>
+<tr>
+<td>从文件创建</td>
+<td><code>kubectl create cm info --from-file=app.conf</code></td>
+<td><code>kubectl create secret generic user --from-file=./password</code></td>
+</tr>
+<tr>
+<td>查看列表</td>
+<td><code>kubectl get cm</code></td>
+<td><code>kubectl get secrets</code></td>
+</tr>
+<tr>
+<td>查看详情</td>
+<td><code>kubectl describe cm info</code></td>
+<td><code>kubectl describe secret user</code></td>
+</tr>
+<tr>
+<td>编辑</td>
+<td><code>kubectl edit cm info</code></td>
+<td><code>kubectl edit secret user</code></td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>kubectl delete cm info</code></td>
+<td><code>kubectl delete secret user</code></td>
+</tr>
+</tbody></table>
+<p>通过以上步骤，你可以掌握 ConfigMap 和 Secret 的基本用法，实现应用配置与敏感信息的安全管理。</p>
 
                 
             </div>
@@ -538,7 +635,7 @@ kubectl get pods
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-san-chuang-jian-he-guan-li-deployment/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-configmap-yu-secret-de-shi-yong/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-configmap-yu-secret-de-shi-yong/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -660,13 +757,13 @@ kubectl get pods
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-yi-ji-qun-bu-shu/">
+                <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Kubernetes教程（一）集群部署">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
                         
-                        <span class="card-title">Kubernetes教程（一）集群部署</span>
+                        <span class="card-title">docker模块的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -677,14 +774,14 @@ kubectl get pods
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
                                 </a>
                             
                             
@@ -694,8 +791,8 @@ kubectl get pods
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
@@ -709,13 +806,13 @@ kubectl get pods
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-er-chuang-jian-he-guan-li-pod/">
+                <a href="/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="Kubernetes教程（二） 创建和管理Pod">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes教程--Job与CronJob的使用">
                         
-                        <span class="card-title">Kubernetes教程（二） 创建和管理Pod</span>
+                        <span class="card-title">Kubernetes教程--Job与CronJob的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -726,7 +823,7 @@ kubectl get pods
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-22
                             </span>
                         <span class="publish-author">
                             
