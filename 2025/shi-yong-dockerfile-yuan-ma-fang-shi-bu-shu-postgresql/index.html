@@ -4,13 +4,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="3 查询处理, jinlid&#39;s blog">
-    <meta name="description" content="如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。
-
-
-本章由以下三部分组成:
-
-第3.">
+    <meta name="keywords" content="使用Dockerfile源码方式部署PostgreSQL16, jinlid&#39;s blog">
+    <meta name="description" content="[TOC]
+在容器化环境中，PostgreSQL镜像通常依赖于操作系统镜像来提供运行所需的基础环境。这里，我们将使用openEuler作为基础镜像来构建PostgreSQL容器镜像。
+openEuler是一个开源操作系统，旨在为云计算、大数">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -22,7 +19,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>3 查询处理 | jinlid&#39;s blog</title>
+    <title>使用Dockerfile源码方式部署PostgreSQL16 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -342,12 +339,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/20.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/7.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">3 查询处理</h1>
+                    <h1 class="description center-align post-title">使用Dockerfile源码方式部署PostgreSQL16</h1>
                 </div>
             </div>
         </div>
@@ -396,7 +393,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-08-13
+                    2025-01-14
                 </div>
                 
 
@@ -417,227 +414,132 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>如官方文档所述，PostgreSQL支持2011年SQL标准所需的大量特性。查询处理是PostgreSQL中最复杂的子系统，它能高效地处理所支持的SQL语句。本章概述了这种查询处理，它特别关注查询优化。</p>
-<span id="more"></span>
-
-<p>本章由以下三部分组成:</p>
+                <p>[TOC]</p>
+<p>在容器化环境中，<strong>PostgreSQL镜像</strong>通常依赖于操作系统镜像来提供运行所需的基础环境。这里，我们将使用<strong>openEuler</strong>作为基础镜像来构建PostgreSQL容器镜像。</p>
+<p>openEuler是一个开源操作系统，旨在为云计算、大数据、企业应用等场景提供优化，适用于多种硬件架构，并具有高效、安全、灵活等特点。通过使用openEuler作为基础镜像，PostgreSQL容器将能够在这一平台上获得更好的性能、稳定性和兼容性。</p>
+<p>好处：</p>
 <ol>
-<li>第3.1节<br>本节概述PostgreSQL中的查询处理。</li>
-<li>第3.2 - 3.4节<br>这一部分解释了获得最优单表查询计划的步骤。在3.2节和3.3节中，我们将分别解释估算成本和创建规划树的过程，3.4节将简要描述执行器进程的操作。</li>
-<li>第3.5 - 3.6节<br>这一部分说明了获取多表查询最优方案的过程。在3.5节中，我们会介绍三种关联方法:嵌套循环、合并和散列关联，3.6节将解释创建多表查询规划树的过程。</li>
+<li><strong>优化性能</strong>：openEuler针对云计算和大数据应用进行了优化，能够为PostgreSQL提供更高效的运行环境。</li>
+<li><strong>安全性</strong>：openEuler具备企业级安全特性，保障PostgreSQL数据库的安全运行。</li>
+<li><strong>轻量级和灵活性</strong>：openEuler基础镜像较小，减少容器镜像的体积，提高启动速度和资源效率。</li>
+<li><strong>良好的兼容性</strong>：openEuler对多种硬件平台和云环境具有较好的支持，确保PostgreSQL容器能够在不同的环境中顺利运行。</li>
 </ol>
-<p>PostgreSQL支持3个技术上有趣且实用的特性，即FDW (Foreign Data wrapper)、并行查询和JIT编译(从版本11开始支持)。前两个将在第4章中介绍。JIT编译超出了本文的范围;具体请参见官方文档。</p>
-<p>[TOC]</p>
-<h2 id="3-1-概述"><a href="#3-1-概述" class="headerlink" title="3.1 概述"></a>3.1 概述</h2><p>在PostgreSQL中，虽然在9.6版本中实现的并行查询使用了多个后台worker进程，但基本上是一个后端进程处理连接的客户端发出的所有查询。该后端由5个子系统组成，如下所示:</p>
-<ol>
-<li>解析器Parser<br>解析器从纯文本的SQL语句生成解析树。</li>
-<li>分析器Analyser<br>分析器对解析树进行语义分析并生成查询树。</li>
-<li>重写Rewriter<br>如果存在这样的规则，重写器将使用存储在规则系统中的规则转换查询树。</li>
-<li>规划器Planner<br>规划器生成能够从查询树中最有效地执行的规划树。</li>
-<li>执行器Executor<br>执行器按照计划树创建的顺序访问表和索引来执行查询。</li>
-</ol>
-<p><img src="/medias/image/fig-3-01.png" alt="图 3.1 查询处理"></p>
-<p>本节将概述这些子系统。由于规划器和执行器非常复杂，下面将详细解释这些函数。</p>
-<p>PostgreSQL的查询处理在官方文档中有详细描述。</p>
-<h3 id="3-1-1-解析器"><a href="#3-1-1-解析器" class="headerlink" title="3.1.1 解析器"></a>3.1.1 解析器</h3><p>解析器生成一个解析树，后续子系统可以从纯文本的SQL语句中读取该解析树。下面给出了一个具体的例子，但没有详细描述。</p>
-<p>让我们考虑下面的查询。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT id, data FROM tbl_a WHERE id &lt; 300 ORDER BY data;</span>
+<p>通过使用openEuler基础镜像，能够为部署PostgreSQL数据库提供一个稳定、安全和高效的运行环境。</p>
+<p>接下来，本文将通过一个例子演示如何使用Dockerfile基于openEuler镜像部署特定版本的PostgreSQL数据库。</p>
+<h2 id="1-拉取openEuler镜像"><a href="#1-拉取openEuler镜像" class="headerlink" title="1 拉取openEuler镜像"></a>1 拉取openEuler镜像</h2><p>前提需要安装好docker，如果你还不会使用docker命令，参考：<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzkyMzcyNDcwNw==&amp;mid=2247483843&amp;idx=1&amp;sn=5ebcf08d7f2ed50d02069f368d2b746a&amp;scene=21#wechat_redirect">Docker介绍及常用命令</a>。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker pull hub.oepkgs.net/openeuler/openeuler:latest
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>解析树是一棵树，其根节点是在parsenodes.h中定义的SelectStmt结构，图3.2(b)说明了图3.2(a)所示查询的解析树。</p>
-<p><img src="/medias/image/fig-3-02.png" alt="图 3.2 解析树的示例"></p>
-<p>选择查询的元素和解析树的对应元素编号相同。例如，(1)是第一个目标列表中的一个元素，它是表的’id’列，(4)是WHERE子句，以此类推。</p>
-<p>由于解析器在生成解析树时只检查输入的语法，所以它只在查询中有语法错误时返回错误。解析器不检查输入查询的语义。例如，即使查询包含一个不存在的表名，解析器也不会返回错误。语义检查由分析器完成。</p>
-<h3 id="3-1-2-分析器"><a href="#3-1-2-分析器" class="headerlink" title="3.1.2 分析器"></a>3.1.2 分析器</h3><p>analyzer对解析器生成的解析树进行语义分析，并生成查询树。</p>
-<p>查询树的根是定义在parsenodes.h中的查询结构。该结构包含相应查询的元数据，例如该命令的类型(SELECT、INSERT或其他)和几个叶子，每个叶结点构成一个链表或树，保存着各个子句的数据。</p>
-<p>图3-3展示了前一小节中图3.2(a)所示查询的查询树。</p>
-<p><img src="/medias/image/fig-3-03.png" alt="图 3.3 查询树的示例"></p>
-<p>上面的查询树简要描述如下。</p>
-<p>targetlist是此查询结果的列的列表。在这个例子中，这个列表由两列组成:<code>id</code>和<code>data</code>。如果输入的查询树使用<code>∗</code>(星号)，分析器将显式地将其替换为所有列。范围表是此查询中使用的关系列表。在这个例子中，这个表保存了表<code>tbl_a</code>的信息，例如这个表的oid和这个表的名称。join树存储FROM子句和WHERE子句。sort子句是SortGroupClause的一个列表。查询树的详细信息在官方文档中描述。</p>
-<h3 id="3-1-3-重写器"><a href="#3-1-3-重写器" class="headerlink" title="3.1.3 重写器"></a>3.1.3 重写器</h3><p>重写器是实现规则系统的系统，必要时根据pg_rules系统目录中存储的规则对查询树进行转换。规则系统本身是一个有趣的系统，但为避免本章太长，这里省略了对规则系统和重写器的描述。</p>
-<p><strong>视图</strong><br>PostgreSQL中的视图是使用规则系统实现的。当通过CREATE view命令定义视图时，相应的规则将自动生成并存储在目录中。</p>
-<p>假定已经定义了以下视图，对应的规则存储在pg_rules系统目录中。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">sampledb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE VIEW employees_list </span>
-sampledb-<span class="token comment" spellcheck="true">#      AS SELECT e.id, e.name, d.name AS department </span>
-sampledb-<span class="token comment" spellcheck="true">#            FROM employees AS e, departments AS d WHERE e.department_id = d.id;</span>
+<p>拉取结束后，通过docker images列出当前下载好的镜像。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker images <span class="token operator">|</span> <span class="token function">grep</span> euler
+hub.oepkgs.net/openeuler/openeuler	latest     e79de92f5533   3 weeks ago   173MB
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="2-构建基础镜像"><a href="#2-构建基础镜像" class="headerlink" title="2 构建基础镜像"></a>2 构建基础镜像</h2><p>根据<strong>openEuler</strong>镜像构建一个编译数据库版本所需的基础镜像，我们需要进行以下步骤。这个基础镜像将包含 PostgreSQL 安装所需要的必要工具和库，以便后续构建不同版本的 PostgreSQL 数据库镜像。</p>
+<p>首先创建一个目录，用于存放构建基础镜像的Dockerfile文件</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /opt/Dockerfile/pgopeneulerimg
+<span class="token function">cd</span> /opt/Dockerfile/pgopeneulerimg
+<span class="token function">touch</span> Dockerfile
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>当发出包含如下所示视图的查询时，解析器会创建如图3.4(a)所示的解析树。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">sampledb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM employees_list;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在此阶段，重写器将范围表节点处理为子查询的解析树，这是存储在pg_rules中的相应视图。</p>
-<p><img src="/medias/image/fig-3-04.png" alt="图 3.4重写阶段的一个例子"></p>
-<blockquote>
-<p>由于PostgreSQL使用这种机制实现视图，因此直到9.2版本也不能更新视图。从9.3版本支持更新，尽管如此，更新视图有许多限制。这些细节在官方文档中有描述。</p>
-</blockquote>
-<h3 id="3-1-4-计划器和执行器"><a href="#3-1-4-计划器和执行器" class="headerlink" title="3.1.4 计划器和执行器"></a>3.1.4 计划器和执行器</h3><p>规划器从重写器接收一个查询树，并生成一个执行器可以最有效地处理的(查询)规划树。</p>
-<p>PostgreSQL中的规划器是基于纯代价优化的，它不支持基于规则的优化和提示。规划器是RDBMS中最复杂的子系统，因此本章后续章节将对规划器进行概述。</p>
-<blockquote>
-<p><strong>pg_hint_plan</strong><br>PostgreSQL不支持SQL中的规划器提示，而且永远也不会支持。如果您想在查询中使用提示，则值得考虑pg_hint_plan的扩展。详情请参阅官方网站。</p>
-</blockquote>
-<p>与其他RDBMS一样，PostgreSQL中的EXPLAIN命令显示规划树本身。一个具体的例子如下所示。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN SELECT * FROM tbl_a WHERE id &lt; 300 ORDER BY data;</span>
-                          QUERY PLAN                           
----------------------------------------------------------------
- Sort  <span class="token punctuation">(</span>cost<span class="token operator">=</span>182.34<span class="token punctuation">..</span>183.09 rows<span class="token operator">=</span>300 width<span class="token operator">=</span>8<span class="token punctuation">)</span>
-   Sort Key: data
-   -<span class="token operator">></span>  Seq Scan on tbl_a  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>170.00 rows<span class="token operator">=</span>300 width<span class="token operator">=</span>8<span class="token punctuation">)</span>
-         Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 300<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>4 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>在图3.5所示的平面图树显示了这个结果。</p>
-<p><img src="/medias/image/fig-3-05.png" alt="图 3.5 一个简单的规划树以及规划树和EXPLAIN命令结果之间的关系"></p>
-<p>规划树由称为规划节点的元素组成，它连接到PlannedStmt结构的plantree链表。这些元素定义在plannodes.h中。详情将在3.3.3节(和3.5.4.2节)中解释。</p>
-<p>每个计划节点都有执行器需要处理的信息，并且在单表查询的情况下，执行者从计划树的末尾一直处理到根。</p>
-<p>例如，图3.5所示的规划树是一个排序节点和顺序扫描节点的列表，因此执行器会顺序扫描表 tbl_a，然后对得到的结果排序。</p>
-<p>执行器通过<a target="_blank" rel="noopener" href="https://www.interdb.jp/pg/pgsql08.html">第 8 章</a>描述的缓冲管理器来读写数据库集群中的表和索引。在处理查询时，执行器会使用一些预先分配的内存区，如temp_buffers和work_mem，并在必要时创建临时文件。</p>
-<p>此外，在访问元组时，PostgreSQL使用并发控制机制来维护运行事务的一致性和隔离性。并发控制机制将在<a target="_blank" rel="noopener" href="https://www.interdb.jp/pg/pgsql05.html">第 5 章</a>中描述。</p>
-<p><img src="/medias/image/fig-3-06.png" alt="图 3.6执行器、缓冲区管理器和临时文件之间的关系"></p>
-<h2 id="3-2-单表查询的代价估算"><a href="#3-2-单表查询的代价估算" class="headerlink" title="3.2 单表查询的代价估算"></a>3.2 单表查询的代价估算</h2><p>PostgreSQL的查询优化是基于成本的。成本是无量纲的值，这些不是绝对的性能指标，而是比较操作的相对性能的指标。成本由<a target="_blank" rel="noopener" href="https://github.com/postgres/postgres/blob/master/src/backend/optimizer/path/costsize.c">costsize.c</a>中定义的函数估计。执行器执行的所有操作都有相应的代价函数。例如，顺序扫描和索引扫描的开销分别由cost_seqscan()和cost_index()估计。</p>
-<p>在PostgreSQL中，有三种成本：启动成本、运行成本和总成本。总成本是启动和运行成本的总和。因此只有启动和运行成本是独立估计的。</p>
-<ol>
-<li>启动成本是在获取第一个元组之前花费的成本。例如，索引扫描节点的启动开销就是读取索引页以访问目标表中的第一个元组的开销。</li>
-<li>运行开销是获取所有元组的开销。</li>
-<li>总成本是启动成本和运行成本的总和。</li>
-</ol>
-<p>EXPLAIN命令显示每个操作的启动成本和总成本。最简单的例子如下所示:</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN SELECT * FROM tbl;</span>
-                       QUERY PLAN                        
----------------------------------------------------------
- Seq Scan on tbl  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>145.00 rows<span class="token operator">=</span>10000 width<span class="token operator">=</span>8<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>在第4行，该命令显示顺序扫描的信息。在成本部分，有两个值，0.00和145.00。在本例中，启动和总成本分别为0.00和145.00。在本节中，我们将详细探讨如何估计顺序扫描、索引扫描和排序操作。</p>
-<p>在下面的解释中，我们使用一个特定的表和一个索引，如下所示：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE TABLE tbl (id int PRIMARY KEY, data int);</span>
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># CREATE INDEX tbl_data_idx ON tbl (data);</span>
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># INSERT INTO tbl SELECT generate_series(1,10000),generate_series(1,10000);</span>
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># ANALYZE;</span>
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d tbl</span>
-      Table <span class="token string">"public.tbl"</span>
- Column <span class="token operator">|</span>  Type   <span class="token operator">|</span> Modifiers 
---------+---------+-----------
- <span class="token function">id</span>     <span class="token operator">|</span> integer <span class="token operator">|</span> not null
- data   <span class="token operator">|</span> integer <span class="token operator">|</span> 
-Indexes:
-    <span class="token string">"tbl_pkey"</span> PRIMARY KEY, btree <span class="token punctuation">(</span>id<span class="token punctuation">)</span>
-    <span class="token string">"tbl_data_idx"</span> btree <span class="token punctuation">(</span>data<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-2-1-顺序扫描"><a href="#3-2-1-顺序扫描" class="headerlink" title="3.2.1 顺序扫描"></a>3.2.1 顺序扫描</h3><p>顺序扫描的开销由cost_seqscan()函数估算。在本节中，我们将探讨如何估计以下查询的顺序扫描开销。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM tbl WHERE id &lt; 8000;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在顺序扫描中，启动成本等于0，运行成本由以下等式定义：</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token string">'run cost'</span>	<span class="token operator">=</span>	<span class="token string">'cpu run cost'</span>+<span class="token string">'disk run cost'</span>
-            <span class="token operator">=</span>	<span class="token punctuation">(</span>cpu_tuple_cost+cpu_operator_cost<span class="token punctuation">)</span>×Ntuple+seq_page_cost×Npage
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>其中seq_page_cost、cpu_tuple_cost和cpu_operator_cost在postgresql.conf文件中设置，默认值分别为1.0、0.01和0.0025，<br> Ntuple and Npage 分别是这个表中所有元组的数目和所有页的数目，可以使用以下查询来显示这些编号：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT relpages, reltuples FROM pg_class WHERE relname = 'tbl';</span>
- relpages <span class="token operator">|</span> reltuples 
-----------+-----------
-       45 <span class="token operator">|</span>     10000
-<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<pre class="line-numbers language-bash"><code class="language-bash">Ntuple<span class="token operator">=</span>10000,
-Npage<span class="token operator">=</span>10000,
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>因此</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token string">'run cost'</span><span class="token operator">=</span><span class="token punctuation">(</span>0.01+0.0025<span class="token punctuation">)</span>×10000+1.0×45<span class="token operator">=</span>170.0
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>最终</p>
-<pre class="line-numbers language-bash"><code class="language-bash"><span class="token string">'total cost'</span><span class="token operator">=</span>0.0+170.0<span class="token operator">=</span>170.0
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>为了确认，上面查询的EXPLAIN命令的结果如下所示：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># EXPLAIN SELECT * FROM tbl WHERE id &lt; 8000;</span>
-                       QUERY PLAN                       
---------------------------------------------------------
- Seq Scan on tbl  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>170.00 rows<span class="token operator">=</span>8000 width<span class="token operator">=</span>8<span class="token punctuation">)</span>
-   Filter: <span class="token punctuation">(</span>id <span class="token operator">&lt;</span> 8000<span class="token punctuation">)</span>
-<span class="token punctuation">(</span>2 rows<span class="token punctuation">)</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>在第4行中，我们可以发现启动成本和总成本分别为0.00和170.00，估计通过扫描所有行将选择8000行(元组)。</p>
-<p>在第5行中，显示了顺序扫描的过滤器<code>filter:(id &lt; 8000)</code>。更准确地说，它被称为表级过滤器谓词(table level filter predicate)。注意，这种类型的过滤器在读取表中的所有元组时使用，它不会缩小扫描表页的范围。</p>
-<p>从运行成本估算中可以理解，PostgreSQL假设所有页面都将从存储中读取，也就是说，PostgreSQL不考虑扫描的页面是否在共享缓冲区中。</p>
-<h2 id="3-3-创建单表查询的规划树"><a href="#3-3-创建单表查询的规划树" class="headerlink" title="3.3 创建单表查询的规划树"></a>3.3 创建单表查询的规划树</h2><p>由于规划器的处理非常复杂，本节将描述最简单的过程，即如何创建单表查询的规划树。3.6节将介绍更复杂的处理，即如何创建多表查询的规划树。</p>
-<p>PostgreSQL中的规划器执行如下三个步骤：</p>
-<ol>
-<li><p>进行预处理。</p>
-</li>
-<li><p>通过估计所有可能的访问路径的开销来获得最廉价的访问路径。</p>
-</li>
-<li><p>从最廉价的路径创建规划树。</p>
-</li>
-</ol>
-<p>访问路径是用于估算成本的处理单元，例如，顺序扫描、索引扫描、排序和各种连接操作都有对应的路径。访问路径仅在规划器中用于创建规划树。访问路径最基本的数据结构是在relationship.h中定义的路径结构，它对应于顺序扫描。所有其他访问路径都基于它。细节将在以下解释中描述。</p>
-<p>为了处理上述步骤，规划器在内部创建一个PlannerInfo结构，并保存查询树、查询中包含的关系信息、访问路径等。在本节中，我们将通过具体的例子描述如何从查询树创建规划树。</p>
-<h3 id="3-3-1-预处理"><a href="#3-3-1-预处理" class="headerlink" title="3.3.1 预处理"></a>3.3.1 预处理</h3><p>在创建规划树之前，规划器会对存储在PlannerInfo结构中的查询树进行一些预处理。</p>
-<p>虽然预处理涉及很多步骤，但本节只讨论单表查询的主要预处理。其他预处理操作将在3.6节介绍。</p>
-<ol>
-<li><p>简化目标列表、限制子句等。<br>例如，子句c中定义的eval_const_expressions()函数将<code>2 + 2</code>重写为<code>4</code>。</p>
-</li>
-<li><p>布尔表达式。<br>例如，<code>NOT (NOT a)</code>被重写为<code>a</code>。</p>
-</li>
-<li><p>扁平化AND/OR表达。<br>AND和OR在SQL标准中是二元运算符，然而，在PostgreSQL内部，它们是n元运算符，规划器总是假设所有嵌套的AND和OR表达式都是扁平化的。给一个具体的例子，考虑一个布尔表达式<code>(id = 1) OR (id = 2) OR (id = 3)</code>。图3 - 9(a)展示了使用二元运算符时查询树的一部分。运算符使用三进制运算符将树扁平化。参见图3.9(b)。</p>
-</li>
-</ol>
-<p><img src="/medias/image/fig-3-09.png" alt="图 3.9 一个扁平化和/或表达式的例子"></p>
-<h3 id="3-3-2-获取最廉价的访问路径"><a href="#3-3-2-获取最廉价的访问路径" class="headerlink" title="3.3.2 获取最廉价的访问路径"></a>3.3.2 获取最廉价的访问路径</h3><p>为了得到最廉价的访问路径，规划器估计所有可能的访问路径的开销，并选择最廉价的路径。更具体地说，规划器执行以下操作:</p>
-<ol>
-<li><p>创建一个RelOptInfo结构来存储访问路径和相应的开销。<br>RelOptInfo结构由make_one_rel()函数创建，保存在PlannerInfo结构的simple_rel_array中。参见图3.10。在初始状态下，RelOptInfo保存了baserestrictinfo和indexlist(如果存在相关的索引);baserestrictinfo存储了查询的WHERE子句，indexlist存储了目标表的相关索引。</p>
-</li>
-<li><p>估计所有可能的访问路径的开销，并将访问路径添加到RelOptInfo结构中。处理的细节如下:</p>
-<p>创建路径，估计顺序扫描的开销，并将估计的开销写入路径。然后，该路径被添加到RelOptInfo结构的路径列表中。</p>
-<p>如果存在与目标表相关的索引，则创建索引访问路径，估计所有索引扫描成本，并将估计的成本写入路径。然后，将索引路径添加到路径列表中。</p>
-<p>如果位图扫描可以完成，则创建位图扫描路径，估计所有位图扫描开销，并将估计的开销写入路径中。然后，位图扫描路径被添加到路径列表中。</p>
-</li>
-<li><p>获取RelOptInfo结构的路径列表中最便宜的访问路径。</p>
-</li>
-<li><p>如有必要，预估限制、订购和登记fdd成本。</p>
-</li>
-</ol>
-<h4 id="3-3-2-1-示例1"><a href="#3-3-2-1-示例1" class="headerlink" title="3.3.2.1 示例1"></a>3.3.2.1 示例1</h4><p>首先，我们探索一个简单的无索引单表查询，这个查询包含WHERE和ORDER BY子句。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d tbl_1</span>
-     Table <span class="token string">"public.tbl_1"</span>
- Column <span class="token operator">|</span>  Type   <span class="token operator">|</span> Modifiers 
---------+---------+-----------
- <span class="token function">id</span>     <span class="token operator">|</span> integer <span class="token operator">|</span> 
- data   <span class="token operator">|</span> integer <span class="token operator">|</span> 
+<p>Dockerfile内容如下：</p>
+<pre class="line-numbers language-dockerfile"><code class="language-dockerfile"># 使用 openEuler 作为基础镜像
+FROM hub.oepkgs.net/openeuler/openeuler
+# 镜像的作者
+LABEL org.opencontainers.image.authors="CodeFusion"
 
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM tbl_1 WHERE id &lt; 300 ORDER BY data;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>图 3-10和图 3-11描述了规划器在这个例子中的执行情况。</p>
-<p><img src="/medias/image/fig-3-10.png" alt="图 3.10如何获取示例1中的最便宜路径"></p>
-<p>(1) 创建一个RelOptInfo结构，并将其存储在PlannerInfo的simple_rel_array中。</p>
-<p>(2) 在RelOptInfo的baserestrictinfo中添加WHERE子句。<br>在initsplan.c中定义的distribute_restrictinfo_to_rels()函数将WHERE子句’ id &lt; 300 ‘添加到baserestrictinfo。此外，RelOptInfo的indexlist是NULL，因为目标表没有相关的索引。</p>
-<p>(3) 通过planner.c中定义的standard_qp_callback()函数，将用于排序的pathkey添加到PlannerInfo的sort_pathkeys中。<br>Pathkey是一个表示路径排序顺序的数据结构。在这个例子中，“data”列作为pathkey被添加到sort_pathkeys中，因为这个查询包含一个ORDER BY子句，它的列是’ data ‘。</p>
-<p>(4) 创建一个路径结构，使用cost_seqscan函数估计顺序扫描的开销，并将估计的开销写入路径。然后，通过pathnode.c中定义的add_path()函数将路径添加到RelOptInfo中。如前所述，Path结构包含启动成本和总成本，由cost_seqscan函数估算，依此类推。</p>
-<p>在这个例子中，规划器只估计顺序扫描的开销，因为目标表没有索引;因此，自动确定最便宜的访问路径。</p>
-<p><img src="/medias/image/fig-3-11.png" alt="图 3.11如何得到示例1中的最便宜路径(从图3-10继续)"></p>
-<p>(5) 创建一个新的RelOptInfo结构来按过程处理订单。注意，新的RelOptInfo没有baserestrictinfo，即WHERE子句的信息。</p>
-<p>(6) 创建一个排序路径并将其添加到新的RelOptInfo，然后，将顺序扫描路径链接到排序路径的子路径。SortPath结构由两个路径结构组成:路径和子路径;路径存储了排序操作本身的信息，子路径存储了价格最低的路径。请注意，顺序扫描路径的<code>parent</code>项保存了到旧的RelOptInfo的链接，旧的RelOptInfo将WHERE子句存储在其baserestrictinfo中。因此，在下一阶段，即创建一个规划树，规划器可以创建一个包含WHERE子句的顺序扫描节点作为“过滤器”，即使新的RelOptInfo没有baserestrictinfo。</p>
-<p>根据得到的最便宜访问路径，生成规划树。详情见3.3.3节。</p>
-<h4 id="3-3-2-2-示例2"><a href="#3-3-2-2-示例2" class="headerlink" title="3.3.2.2 示例2"></a>3.3.2.2 示例2</h4><p>接下来，我们探索另一个具有两个索引的单表查询;这个查询包含一个WHERE子句。</p>
-<pre class="line-numbers language-bash"><code class="language-bash">testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># \d tbl_2</span>
-     Table <span class="token string">"public.tbl_2"</span>
- Column <span class="token operator">|</span>  Type   <span class="token operator">|</span> Modifiers 
---------+---------+-----------
- <span class="token function">id</span>     <span class="token operator">|</span> integer <span class="token operator">|</span> not null
- data   <span class="token operator">|</span> integer <span class="token operator">|</span> 
-Indexes:
-    <span class="token string">"tbl_2_pkey"</span> PRIMARY KEY, btree <span class="token punctuation">(</span>id<span class="token punctuation">)</span>
-    <span class="token string">"tbl_2_data_idx"</span> btree <span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+# 设置环境变量
+ENV LANG C.UTF-8
 
-testdb<span class="token operator">=</span><span class="token comment" spellcheck="true"># SELECT * FROM tbl_2 WHERE id &lt; 240;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>图3.12到图3.14描述了规划器在这个例子中的执行情况。</p>
-<p>(1) 创建一个RelOptInfo结构。<br>(2) 在baserestrictinfo中添加WHERE子句，并将目标表的索引添加到indexlist中。<br>在这个例子中，在baserestrictinfo中添加了WHERE子句’ id &lt; 240 ‘，在RelOptInfo的索引列表中添加了两个索引tbl_2_pkey和tbl_2_data_idx。</p>
-<p>(3) 创建一个路径，估计顺序扫描的开销，并将该路径添加到RelOptInfo的路径列表中。</p>
-<p><img src="/medias/image/fig-3-12.png" alt="图 3.12 如何获取示例2中的最廉价的路径。"></p>
-<p><img src="/medias/image/fig-3-13.png" alt="图 3.13如何得到示例2中的最便宜路径(从图3-12继续)。"></p>
-<p>(4) 创建一个IndexPath，估计索引扫描的开销，并使用add_path()函数将IndexPath添加到RelOptInfo的路径列表中。在这个例子中，因为有两个索引，tbl_2_pkey和tbl_2_data_idx，所以这些索引是按顺序处理的。首先处理Tbl_2_pkey。为tbl_2_pkey创建一个IndexPath，并估计启动成本和总成本。在这个例子中，tbl_2_pkey是与列’ id ‘相关的索引，WHERE子句包含列’ id ‘;因此，WHERE子句存储在IndexPath的indexclause中。请注意，当添加访问路径到路径列表时，add_path()函数按总代价的排序顺序添加路径。在这个例子中，索引扫描的总开销小于顺序扫描的总开销;因此，该索引路径插入到顺序扫描路径之前。</p>
-<p>(5) 创建另一个IndexPath，估计其他索引扫描的开销，并将索引路径添加到RelOptInfo的路径列表中。接下来，为tbl_2_data_idx创建一个IndexPath，估算成本并将其添加到路径列表中。在这个例子中，没有与tbl_2_data_idx索引相关的WHERE子句;因此，索引子句为NULL。</p>
-<blockquote>
-<p>注意，add_path()函数并不总是添加路径。由于该操作的复杂性，这里省略了细节。具体请参见add_path()函数的注释。</p>
-</blockquote>
-<p>(6) 创建一个新的RelOptInfo结构。<br>(7) 将最便宜的路径添加到新的RelOptInfo的路径列表中。<br>在这个例子中，最便宜的路径是使用索引tbl_2_pkey的索引路径;因此，它的路径被添加到新的RelOptInfo的路径列表中。</p>
-<p><img src="/medias/image/fig-3-14.png" alt="图 3.14 如何得到示例2中的最便宜路径(从图3-13继续)。"></p>
+# 更新系统并安装 PostgreSQL 编译所需的依赖，并且直接创建好数据库用户和组
+RUN yum install -y gcc make vim zlib-devel readline-devel openssl-devel libicu-devel shadow-utils \
+&& groupadd dbgrp && useradd postgres -G dbgrp -d /home/postgres
+
+# 设置工作目录
+WORKDIR /root
+
+# 暴露端口
+EXPOSE 5432
+
+# 设置默认命令
+CMD ["/bin/bash"]
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>执行如下命令，构建基础镜像</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker build -t postgresqlenv <span class="token keyword">.</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>构建结束后，可以看到新生成的postgresqlenv镜像</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker images <span class="token operator">|</span> <span class="token function">grep</span> postgresqlenv
+postgresqlenv	latest     e9900fb0b467   30 seconds ago   647MB
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="3-制作数据库镜像"><a href="#3-制作数据库镜像" class="headerlink" title="3 制作数据库镜像"></a>3 制作数据库镜像</h2><p>创建目录，用于存放构建不同数据库版本的Dockerfile文件</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /opt/Dockerfile/postgresql_version
+<span class="token function">touch</span> Dockerfile
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>Dockerfile内容如下：</p>
+<pre class="line-numbers language-dylan"><code class="language-dylan"># 使用 postgresqlenv 作为基础镜像
+FROM postgresqlenv
+# 镜像的作者
+LABEL org.opencontainers.image.authors="CodeFusion"
+# 定义构建参数
+ARG URL
+ARG PGVERSION
+
+# 下载并安装 PostgreSQL
+RUN curl -O $URL/v$PGVERSION/postgresql-$PGVERSION.tar.gz \
+&& tar -xf postgresql-$PGVERSION.tar.gz \
+&& cd postgresql-$PGVERSION && ./configure --prefix=/home/postgres/postgresql --with-openssl && make -j 8 && make install \
+&& chown -R postgres:dbgrp /home/postgres
+
+# 设置环境变量
+ENV PGHOME /home/postgres/postgresql
+ENV PATH $PATH:$PGHOME/bin
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:$PGHOME/lib
+ENV PGDATA $PGHOME/data
+
+# 切换到 postgres 用户并初始化数据库
+USER postgres:dbgrp
+RUN initdb -E UTF8 --locale=C
+
+# 默认启动命令
+CMD postgres
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>构建某个版本数据库镜像，以v16.4为例</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker build -t postgresql:16.4 --build-arg URL<span class="token operator">=</span>https://mirrors.aliyun.com/postgresql/source --build-arg PGVERSION<span class="token operator">=</span>16.4 /opt/Dockerfile/postgresql_version
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>参数说明：</p>
+<ol>
+<li><p>**<code>-t postgresql:16.4</code>**：</p>
+<p>这个标志指定了镜像的标签（<code>tag</code>）。在这里，标签为<code>postgresql:16.4</code>，意味着构建后的镜像将使用<code>postgresql</code>作为镜像名，<code>16.4</code>作为版本。</p>
+</li>
+<li><p>**<code>--build-arg URL=https://mirrors.aliyun.com/postgresql/source</code>**：</p>
+<p>这是传递给 Dockerfile 中<code>ARG</code>指令的构建参数。在你的 Dockerfile 中，<code>URL</code>参数用于指定 PostgreSQL 源码的下载地址。在这里，使用阿里云的镜像源<code>https://mirrors.aliyun.com/postgresql/source</code>来加速下载 PostgreSQL 源码。</p>
+</li>
+<li><p>**<code>--build-arg PGVERSION=16.4</code>**：</p>
+<p>这个标志传递了 PostgreSQL 的版本号（<code>PGVERSION</code>）。在这个例子中，你指定了版本<code>16.4</code>。Dockerfile 会根据这个参数下载和安装指定版本的 PostgreSQL。</p>
+</li>
+<li><p>**<code>/opt/Dockerfile/postgresql_version</code>**：</p>
+<p>这是 Dockerfile 所在的目录路径。你需要确保在该路径下有一个名为<code>postgresql_version</code>的 Dockerfile 文件，或者是 Dockerfile 所在的目录路径。</p>
+</li>
+</ol>
+<p>构建结束后，可以看到新生成的postgresql镜像</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker images
+REPOSITORY  TAG        IMAGE ID       CREATED             SIZE
+postgresql  16.4       3a952f192a9d   2 minutes ago       958MB
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="4-创建并启动容器"><a href="#4-创建并启动容器" class="headerlink" title="4 创建并启动容器"></a>4 创建并启动容器</h2><p>创建容器</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker run --init -itd --name postgresql_v16.4 postgresql:16.4
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>进入容器</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker <span class="token function">exec</span> -it postgresql_v16.4 <span class="token function">bash</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>登录数据库</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ psql
+psql <span class="token punctuation">(</span>16.4<span class="token punctuation">)</span>
+Type <span class="token string">"help"</span> <span class="token keyword">for</span> help.
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select version();</span>
+                                                   version
+--------------------------------------------------------------------------------------------------------------
+ PostgreSQL 16.4 on x86_64-pc-linux-gnu, compiled by gcc <span class="token punctuation">(</span>GCC<span class="token punctuation">)</span> 12.3.1 <span class="token punctuation">(</span>openEuler 12.3.1-62.oe2403sp1<span class="token punctuation">)</span>, 64-bit
+<span class="token punctuation">(</span>1 row<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -664,7 +566,7 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2021/3.cha-xun-chu-li/">https://jinlid.github.io/2021/3.cha-xun-chu-li/</a>
+                    <a href="https://jinlid.github.io/2025/shi-yong-dockerfile-yuan-ma-fang-shi-bu-shu-postgresql/">https://jinlid.github.io/2025/shi-yong-dockerfile-yuan-ma-fang-shi-bu-shu-postgresql/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -786,24 +688,24 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                <a href="/2025/docker-mo-kuai-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker模块的使用">
                         
-                        <span class="card-title">10 基础备份和时间点恢复</span>
+                        <span class="card-title">docker模块的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                            
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                         </span>
                         <span class="publish-author">
                             
@@ -835,24 +737,24 @@ testdb<span class="token operator">=</span><span class="token comment" spellchec
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/7.jin-dui-yuan-zu-he-jin-suo-yin-sao-miao/">
+                <a href="/2025/ru-he-jiang-nin-de-postgresql-shu-ju-ku-rong-qi-hua/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="7 仅堆元组和仅索引扫描">
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="如何将您的PostgreSQL数据库容器化">
                         
-                        <span class="card-title">7 仅堆元组和仅索引扫描</span>
+                        <span class="card-title">如何将您的PostgreSQL数据库容器化</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            本章描述了与索引扫描相关的两个特性，它们是仅堆元组和仅索引扫描。
+                            
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                             </span>
                         <span class="publish-author">
                             

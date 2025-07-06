@@ -1,0 +1,2042 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="如何将您的PostgreSQL数据库容器化, jinlid&#39;s blog">
+    <meta name="description" content="[TOC]
+介绍Docker正迅速成为主流，作为一种在主要无状态的Linux容器中打包和部署自给自足的应用程序的方法。然而，对于像数据库这样的有状
+态服务来说，这可能有点令人头疼。如何在容器环境中最好地配置PostgreSQL？什么会出错？">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>如何将您的PostgreSQL数据库容器化 | jinlid&#39;s blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">jinlid&#39;s blog</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">jinlid&#39;s blog</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/21.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">如何将您的PostgreSQL数据库容器化</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/postgresql/">
+                                <span class="chip bg-color">postgresql</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/postgresql/" class="post-category">
+                                postgresql
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2025-01-14
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>[TOC]</p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Docker正迅速成为主流，作为一种在主要无状态的Linux容器中打包和部署自给自足的应用程序的方法。然而，对于像数据库这样的有状</p>
+<p>态服务来说，这可能有点令人头疼。如何在容器环境中最好地配置PostgreSQL？什么会出错？我们甚至应该在容器环境中运行我们的数据库</p>
+<p>吗？性能与在虚拟机或裸机服务器上运行的性能相比如何？在需要创建、升级多个容器并使其高度可用的情况下，我们如何管理复制或集</p>
+<p>群设置？<br>本白皮书涵盖了在Docker容器虚拟化之上运行PostgreSQL服务时需要了解的基础知识。请注意，本白皮书不涉及多台主机上的PostgreSQL容器编排。</p>
+<h1 id="Docker简介"><a href="#Docker简介" class="headerlink" title="Docker简介"></a>Docker简介</h1><p>Docker的主要好处是它允许用户将应用程序及其所有依赖项打包到一个标准化的单元（容器）中。运行多个容器可以让每个容器专注于</p>
+<p>特定的任务；然后，多个容器协同工作以实现分布式系统。</p>
+<h2 id="2-1-概念"><a href="#2-1-概念" class="headerlink" title="2.1 概念"></a>2.1 概念</h2><p>将容器视为“轻量级虚拟机”。然而，与虚拟机不同，容器不需要整个操作系统，也不需要所有必需的库，包括实际的应用程序二进制文</p>
+<p>件。相同的Linux内核和库可以在主机上运行的多个容器之间共享。Docker使将软件打包到自包含的映像中变得容易，其中所有软件依赖</p>
+<p>关系都以可重复的方式捆绑和部署。无论是在笔记本电脑上还是在服务器上运行，映像都将安装完全相同的软件。</p>
+<p>每个容器都有自己的文件系统、进程空间和网络堆栈，每个容器都将被分配至少一个网络接口。由于这种隔离，容器不会影响机器主机进</p>
+<p>程或文件系统。更多信息请参阅<strong>第5章PostgreSQL容器和卷</strong>。</p>
+<h2 id="2-2-部件"><a href="#2-2-部件" class="headerlink" title="2.2 部件"></a>2.2 部件</h2><p>从17.x版本开始，Docker分为两个版本：</p>
+<ul>
+<li>Docker社区版（CE）</li>
+<li>Docker企业版（EE）</li>
+</ul>
+<p>Docker社区版（CE）是一个免费版本，非常适合希望开始使用Docker并尝试基于容器的应用程序的开发人员和小型团队。</p>
+<p>Docker CE有两个更新通道，Stable和Edge：</p>
+<ul>
+<li>Stable-每季度都有新的更新</li>
+<li>Edge-每月都有新功能</li>
+</ul>
+<p>Docker企业版（EE）是一个商业订阅，包括软件、支持和认证。</p>
+<p>无论版本如何，Docker都由以下开箱即用的组件组成：</p>
+<ul>
+<li><p>Docker Client–允许用户与Docker守护进程交互的命令行工具。</p>
+</li>
+<li><p>Docker Engine–在主机上运行的后台服务，管理Docker容器的构建、运行和分发。</p>
+</li>
+<li><p>Docker Image–我们应用程序的文件系统和配置用于创建容器。</p>
+</li>
+<li><p>Docker Container–运行Docker镜像的实例。容器包含一个应用程序及其所有依赖项。它与其他容器共享内核，并在主机操作系统的</p>
+<p>用户空间中作为独立进程运行。</p>
+</li>
+<li><p>Registry–Docker镜像的注册表，您可以在其中找到可信和企业级容器、插件和Docker版本。</p>
+</li>
+</ul>
+<h2 id="2-3-益处"><a href="#2-3-益处" class="headerlink" title="2.3 益处"></a>2.3 益处</h2><p>通常，容器化允许您在物理主机上获得更高的密度。它减少了各种部署环境（如开发、测试、暂存、生产）之间的冲突，并加快了部署速度。<br>以下几点是PostgreSQL作为容器运行的好处：</p>
+<ul>
+<li><p>成本节约–Docker可以通过大幅减少基础设施资源来帮助节省成本。Docker的本质是运行相同的应用程序（在本例中为</p>
+<p>PostgreSQL）所需的资源更少。</p>
+</li>
+<li><p>标准化–Docker提供可重复的开发、构建、测试和生产环境。通过在整个流程中标准化服务基础架构，每个团队成员都可以在生产对</p>
+</li>
+<li><p>等环境中工作。您可以轻松创建一个不可变的PostgreSQL映像来简化数据库配置和设置。</p>
+</li>
+<li><p>兼容性–设置环境、调试特定于环境的问题所花费的时间更少，代码库更易于移植和设置，实现了类似的一致性和功能。在一个Linux</p>
+<p>发行版上构建的映像不需要任何自定义，就可以在任何其他Linux发行版中运行。</p>
+</li>
+<li><p>简单性–Docker可以在各种各样的环境中使用，基础设施的要求不再与PostgreSQL的环境联系在一起。</p>
+</li>
+<li><p>快速部署–Docker为每个进程创建一个容器，不启动操作系统。数据可以被创建、持久化和销毁，而不用担心再次使用它的成本会高</p>
+<p>于人们的承受能力。</p>
+</li>
+<li><p>多云平台–动态使用的云中基础设施更具成本效益。所有主要的云提供商都接受了Docker的可用性，其中一些提供商还支持全自动化</p>
+<p>容器编排平台。</p>
+</li>
+<li><p>隔离–默认情况下，没有Docker容器可以查看在另一个容器中运行的进程。从架构的角度来看，每个容器都有自己的一组资源，从处理到网络堆栈。</p>
+</li>
+<li><p>安全性–容器可以以只读方式运行，从而显著减少攻击向量。Docker和客户端之间的所有通信都使用TLS加密。</p>
+</li>
+</ul>
+<p>在Docker上运行PostgreSQL有真正的好处。一些管理和行政实践与传统的日常运营实践不同。更多信息请参阅<strong>第6章-监控和管理</strong>。</p>
+<h2 id="2-4-安装"><a href="#2-4-安装" class="headerlink" title="2.4 安装"></a>2.4 安装</h2><p>Docker可以在大多数平台上运行，从您的工作站或服务器到云基础设施。对于台式机，它支持Windows和Mac。AWS和Azure在其云基</p>
+<p>础架构上支持Docker。对于服务器，它支持Windows Server和流行的Linux发行版-RedHat、CentOS、Debian、Ubuntu、SUSE、</p>
+<p>Fedora和Oracle Linux。请注意，容器不是虚拟机。它们提供隔离，而不是虚拟化。</p>
+<p>主机和容器操作系统必须相同。您不能在Windows计算机上使用Linux容器，反之亦然。</p>
+<p>在本文中，我们将在Ubuntu 16.04 LTS上使用Docker社区版（CE）。安装步骤非常简单，如下所示：</p>
+<ol>
+<li><p>更新apt包索引：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">sudo</span> <span class="token function">apt-get</span> update
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>安装软件包以允许apt通过HTTPS使用存储库：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  software-properties-common
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p>添加Docker的官方GPG密钥：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg <span class="token operator">|</span>
+<span class="token function">sudo</span> apt-key add -
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p>添加Docker CE稳定仓库：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">sudo</span> add-apt-repository \
+ <span class="token string">"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+ <span class="token variable"><span class="token variable">$(</span>lsb_release -cs<span class="token variable">)</span></span> \
+ stable"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p>更新apt包索引并安装最新版本的Docker CE：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ <span class="token function">sudo</span> <span class="token function">apt-get</span> update
+$ <span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> docker-ce
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+</ol>
+<p>此时，Docker引擎正在作为守护进程运行。您可以使用systemctl status命令进行验证。有关更多详细信息，请参阅<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/install/">documentation</a>。</p>
+<h1 id="PostgreSQL镜像"><a href="#PostgreSQL镜像" class="headerlink" title="PostgreSQL镜像"></a>PostgreSQL镜像</h1><p>为了运行Docker容器，你需要一个镜像作为开始。镜像就像一个模板。它拥有运行容器所需的所有东西。这包括软件，包括代码或二进</p>
+<p>制文件、依赖关系、库、解释器、环境变量和配置文件。有两种方法可以创建镜像：</p>
+<ul>
+<li>Commit容器的所有更改。</li>
+<li>使用在文本文件中定义的更具声明性的方法，称为Dockerfile，与docker build命令一起使用。</li>
+</ul>
+<h2 id="3-1-提交更改并创建Docker镜像"><a href="#3-1-提交更改并创建Docker镜像" class="headerlink" title="3.1 提交更改并创建Docker镜像"></a>3.1 提交更改并创建Docker镜像</h2><p>通过Commit更改来构建镜像类似于在标准主机上部署PostgreSQL。下表比较了在Ubuntu 16.04上安装和运行PostgreSQL服务器所需的</p>
+<p>最简单步骤，包括在标准主机上和Docker的等效步骤：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>Host</th>
+<th>Docker</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>启动容器</td>
+<td></td>
+<td>$ docker run -d –name=abc ubuntu:16.04</td>
+</tr>
+<tr>
+<td>进入容器内</td>
+<td></td>
+<td>$ docker exec -it abc /bin/bash</td>
+</tr>
+<tr>
+<td></td>
+<td>$ apt-get update <br>$ DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server<br>$ vi /etc/mysql/my.cnf</td>
+<td>root@abc:/# apt-get update<br>root@abc:/# DEBIAN_<br>FRONTEND=noninteractive apt-get<br>install -y mysql-server<br>root@abc:/# vi /etc/mysql/<br>my.cnf</td>
+</tr>
+<tr>
+<td>构建镜像</td>
+<td></td>
+<td>$ docker commit abc myimage/<br>mysql:5.7</td>
+</tr>
+<tr>
+<td>运行PostgreSQL</td>
+<td>$ mysqld –socket=/var/lib/<br>mysql/mysqld.sock –pid-file=/<br>var/lib/mysql/mysqld.pid</td>
+<td>$ docker run -d myimage/<br>mysql:5.7 mysqld –socket=/var/<br>lib/mysql/mysqld.sock –pidfile=/<br>var/lib/mysql/mysqld.pid</td>
+</tr>
+</tbody></table>
+<p>首先拉取一个基础镜像，然后基于该镜像启动一个容器。然后，直接在容器中执行所需的更改，如安装PostgreSQL包和编辑PostgreSQL</p>
+<p>配置文件。一旦一切就绪，将容器提交到具有以下格式的单个镜像中：</p>
+<ul>
+<li>用户名：“myimage”</li>
+<li>后面跟着一个“/”</li>
+<li>后面是镜像名称：“PostgreSQL”</li>
+<li>以可选标签“5.7”结束。如果未定义，标签将默认为“最新”。</li>
+</ul>
+<p>当容器被提交时，正在运行的进程将被暂停，以降低数据损坏的风险。</p>
+<p>要基于此映像运行容器，可以使用带有映像名称的docker run命令，后跟执行命令“PostgreSQL”，后跟PostgreSQL的配置变量。</p>
+<h2 id="3-2-使用Dockerfile"><a href="#3-2-使用Dockerfile" class="headerlink" title="3.2 使用Dockerfile"></a>3.2 使用Dockerfile</h2><p>使用Dockerfile创建映像要简单得多，并且具有声明性。Dockerfile是一个文本文件，其中包含构建映像的所有指令。构建过程由Docker</p>
+<p>守护进程执行。</p>
+<p>Dockerfile是维护Docker镜像的首选方式。它可以与Docker Hub等注册表服务集成，以提供持续集成，并且更容易看到镜像提供的内</p>
+<p>容。下表比较了标准部署与Dockerfile方法的等效步骤：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>Host</th>
+<th>Docker</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>安装PostgreSQL</td>
+<td>$ apt-get update<br>$ DEBIAN_FRONTEND=noninteractive aptget install -y mysql-server</td>
+<td># Dockerfile content<br>FROM ubuntu:16.04<br>RUN apt-get update<br>RUN DEBIAN_<br>FRONTEND=noninteractive aptget<br>install -y mysql-server<br>COPY my.cnf /etc/mysql/<br>my.cnf<br>EXPOSE 3306</td>
+</tr>
+<tr>
+<td>配置PostgreSQL</td>
+<td>$ vi /etc/mysql/my.cnf</td>
+<td>$ vi ~/my.cnf</td>
+</tr>
+<tr>
+<td>构建镜像</td>
+<td></td>
+<td>$ docker build -t myimage/<br>mysql:5.7 .</td>
+</tr>
+<tr>
+<td>运行PostgreSQL</td>
+<td>$ mysqld –socket=/var/lib/<br>mysql/mysqld.sock –pidfile=/<br>var/lib/mysql/mysqld.<br>pid</td>
+<td>$ docker run -d myimage/<br>mysql:5.7 mysqld –socket=/<br>var/lib/mysql/mysqld.sock<br>–pid-file=/var/lib/mysql/<br>mysqld.pid</td>
+</tr>
+</tbody></table>
+<p>通过查看我们的Dockerfile的内容，可以很容易地看出Docker镜像在Ubuntu 16.04上运行。它有一个通过Debian OS软件包存储库安装</p>
+<p>的PostgreSQL服务器，其中有一个自定义的my.cnf，它将被复制到/etc/PostgreSQL/my.cnf下的容器中。默认情况下，Docker将在容器</p>
+<p>启动时公开端口3306。要构建镜像，请使用带有正确命名和标签的docker build命令。</p>
+<p>有关Dockerfile参考的更多详细信息，请参阅<a target="_blank" rel="noopener" href="https://docs.docker.com/reference/dockerfile/">Dockerfile documentation</a>页面。</p>
+<h2 id="3-3-构造镜像"><a href="#3-3-构造镜像" class="headerlink" title="3.3 构造镜像"></a>3.3 构造镜像</h2><p>当使用Docker构建自定义镜像时，所采取的每个操作，例如apt-get install PostgreSQL服务器，在上一层的基础上形成了一个新层。镜</p>
+<p>像只是一组堆叠在一起的层的集合，一旦构建，该层将是只读的。然后，这些基础镜像可用于创建新容器。下图说明了如何基于上一节中</p>
+<p>的Dockerfile构建映像：</p>
+<p>红色层与我们的Dockerfile命令相关，而绿色层继承自我们在Dockerfile中定义的Ubuntu 16.04基本映像。您可以使用docker history命</p>
+<p>令查看这些层：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">docker <span class="token function">history</span> myimage/mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>从上面的输出中，我们可以看到第二层的大小更大，其中我们定义了大小为370MB的apt-get install PostgreSQL服务器。该层由</p>
+<p>PostgreSQL组件及其所有依赖项组成。</p>
+<h2 id="3-4-共享镜像"><a href="#3-4-共享镜像" class="headerlink" title="3.4 共享镜像"></a>3.4 共享镜像</h2><p>构建镜像后，您可以使用tarball手动将其分发到其他主机，或将镜像推送到Docker镜像存储库。以下示例显示了如何将名为“myimage/PostgreSQL:5.7”的构建PostgreSQL映像保存到TAR文件中：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker save -o mysql.tar myimage/mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>另一种方法是将镜像直接推送到Docker注册表。注册表是一个无状态、高度可扩展的服务器端应用程序，用于存储和分发Docker映像。</p>
+<p>Docker Hub是最受欢迎的公共注册表。它存储了数千个Docker镜像，并支持持续集成（CI）的自动构建，它可以挂接到Github等代码</p>
+<p>库，并在看到新的提交被推送时触发构建。您可以使用应用程序供应商自己发布和维护的镜像，也可以使用其他用户贡献的镜像，或者您</p>
+<p>可以创建自己的镜像以满足您的需求。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker push myimage/mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>要将映像拉到Docker主机：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker pull myimage/mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>像Docker Hub这样的公共注册表对公共和开源镜像非常有帮助。但是，对于组织的私有映像，您应该选择私有注册表，要么订阅</p>
+<p>quay.io、Amazon EC2 Container Registry（ECR）、Google Cloud Registry（GCR）和Bintray等托管服务，要么如果您有足够的资源</p>
+<p>用于处理、带宽和存储，也可以选择自托管的私有注册表。以下命令可用于启动在Docker主机上的端口5000上运行的Docker Registry服</p>
+<p>务：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker run -d -p 5000:5000 --name registry registry:2
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="3-5-为PostgreSQL构建Docker镜像的最佳实践"><a href="#3-5-为PostgreSQL构建Docker镜像的最佳实践" class="headerlink" title="3.5 为PostgreSQL构建Docker镜像的最佳实践"></a>3.5 为PostgreSQL构建Docker镜像的最佳实践</h2><p>Docker Hub上有数百个PostgreSQL容器映像可供我们重用，并通过更多功能进行增强。继承PostgreSQL镜像允许我们利用维护者所做</p>
+<p>的工作。例如，您可以使用由您选择的应用程序供应商构建和维护的映像；Oracle PostgreSQL（PostgreSQL/PostgreSQL服务器）、</p>
+<p>Percona（Percona/Percona服务器）、MariaDB（MariaDB/MariaDB服务器）或Docker团队本身（PostgreSQL或</p>
+<p>Docker.io/PostgreSQL）。</p>
+<p>尽量避免映像中不必要的包，以提高部署速度。仅安装PostgreSQL服务器和客户端所需的软件包。还有一个名为“alpine”的流行小镜像，</p>
+<p>它有自己的包管理器，还包括PostgreSQL和MariaDB包。你可以使用alpine作为基础镜像，并围绕它构建自己的PostgreSQL服务器。为</p>
+<p>了便于比较，基础镜像的大小只有5MB，而Ubuntu 16.04的基础镜像大小约为190MB。</p>
+<p>当你想构建自己的自定义PostgreSQL映像，并想在容器启动时运行入口点脚本时，请确保脚本的最后一个命令以“exec”开头，后面是容器</p>
+<p>的主进程，在这种情况下是“PostgreSQLd”。</p>
+<p>此过程将在容器运行时保持PID 1，在以后停止容器时至关重要。有关此过程的详细信息，请参阅<strong>第6.1章服务控制</strong>。</p>
+<p>最后，在编写Dockerfile时，尤其是在构建公共映像时，请尝试遵循一般准则。通过这种方式，其他任何人都可以轻松理解镜像的内容并</p>
+<p>为其做出贡献。</p>
+<h1 id="Docker中的网络"><a href="#Docker中的网络" class="headerlink" title="Docker中的网络"></a>Docker中的网络</h1><p>网络在PostgreSQL中至关重要，它是管理从客户端应用程序和其他数据库服务器（例如在主从复制设置中）访问数据库服务器的基础。</p>
+<p>容器化PostgreSQL服务的行为取决于如何使用docker run命令启动PostgreSQL容器。PostgreSQL容器可以在隔离的环境中运行（只能</p>
+<p>由同一网络中的容器访问），也可以在开放的环境中（PostgreSQL服务完全暴露于外部世界）运行，或者实例可以在根本没有网络的情</p>
+<p>况下运行。</p>
+<p>安装Docker引擎后，Docker将默认创建3种类型的网络：</p>
+<ul>
+<li>host</li>
+<li>none</li>
+<li>bridge</li>
+</ul>
+<p>网桥网络也称为docker0，是在不指定任何与网络相关的参数（–net或-n）的情况下创建容器时的默认网络。无网络正在使用“null”驱动</p>
+<p>程序，除了localhost之外，容器内不会配置任何接口。请记住，在Docker中，主机和无网络不能直接配置。</p>
+<p>您可以使用Docker network命令在Docker中获取已创建网络的列表：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker network <span class="token function">ls</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>Docker还通过Docker Swarm覆盖网络支持开箱即用的多主机网络。您还可以使用其他网络插件来扩展Docker网络功能，如后续章节所</p>
+<p>述。</p>
+<h2 id="4-1-主机网络"><a href="#4-1-主机网络" class="headerlink" title="4.1 主机网络"></a>4.1 主机网络</h2><p>主机网络将容器添加到主机的网络堆栈中，这意味着容器将具有与主机接口完全相同的网络特性。每个机器主机只允许有一个主机网络。</p>
+<p>要在此网络中运行容器，请在docker run命令中指定–net=host：</p>
+<p>容器将直接连接到主机的网络堆栈。如果主机有两个网络接口，容器也会有它们。此网络中没有隔离，这意味着在网桥网络内创建的容器</p>
+<p>可以访问在此网络上创建的容器。</p>
+<p>容器不需要使用iptables的任何转发规则，因为它已经与主机连接到同一网络。因此，不支持端口映射和容器链接，Docker不会管理在这</p>
+<p>种网络中运行的容器的防火墙规则。</p>
+<p>这意味着，在这种网络下，每台主机只能运行一个PostgreSQL容器。只有当你想将主机专用为PostgreSQL服务器，并在Docker下管理它</p>
+<p>时，这个网络才有用。</p>
+<h2 id="4-2-桥接网络"><a href="#4-2-桥接网络" class="headerlink" title="4.2 桥接网络"></a>4.2 桥接网络</h2><p>Docker网桥网络创建了一个虚拟以太网桥主机网络接口，一个来自主机网络的单一聚合网络。Docker支持两种类型的网桥网络：</p>
+<ol>
+<li>默认网桥（docker0）</li>
+<li>用户自定义网桥</li>
+</ol>
+<p>每个传出连接似乎都来自主机的IP地址。</p>
+<h2 id="4-2-1-默认网桥"><a href="#4-2-1-默认网桥" class="headerlink" title="4.2.1 默认网桥"></a>4.2.1 默认网桥</h2><p>默认的网桥网络，也称为docker0，将在安装时由Docker自动创建。基本上，如果你不在docker run命令中指定–net参数，docker将在</p>
+<p>这个docker0网络下创建容器：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker run -d \
+  --name mysql-bridge \
+  -p 3308:3306 \
+  -e MYSQL_ROOT_PASSWORD<span class="token operator">=</span>mypassword \
+  mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>在机器主机上，您将看到一个新的虚拟以太网接口“veth”，如下图中的红色框所示，以及容器内的一个以太网接口“eth0”：</p>
+<p>Docker使用iptables来管理数据包通过Docker代理转发到网桥网络。它通过NAT将连接重定向到正确的容器。因此，它支持–publish参</p>
+<p>数，您可以通过不同的端口运行具有相同映像的多个容器。还支持容器链接，您可以通过链接容器内的/etc/hosts文件公开环境变量和自</p>
+<p>动配置的主机映射。</p>
+<p>要访问PostgreSQL服务，只需将PostgreSQL客户端指向Docker主机和容器的指定端口，在本例中为3308。每个Docker主机只允许有一</p>
+<p>个默认网桥网络。</p>
+<h2 id="4-2-2-用户自定义网桥"><a href="#4-2-2-用户自定义网桥" class="headerlink" title="4.2.2 用户自定义网桥"></a>4.2.2 用户自定义网桥</h2><p>为了使用用户定义的网桥，用户必须事先创建网络：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker network create subnet<span class="token operator">=</span>192.168.10.0/24 db_single
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后，使用–net或-n参数传递网络名称，以在该网络下运行容器：</p>
+<pre class="line-numbers language-22"><code class="language-22">$ docker run -d \
+  --name mysql1 \
+  --net db_single \
+  -p 3308:3306 \
+  --ip 192.168.10.10 \
+  --hostname mysql1 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>默认网桥网络和用户定义网络之间的主要区别在于嵌入式DNS服务。您可以将同一网络中的容器名称解析为IP地址，这对于数据库容器之</p>
+<p>间的简单服务发现非常实用。</p>
+<p>该网络还使用–IP和–hostname参数提供粘性IP地址和主机名。</p>
+<p>这是运行单主机PostgreSQL容器的推荐网络，因为PostgreSQL依赖于正确的主机名或IP地址进行身份验证和授权。还有一个性能方面的</p>
+<p>考虑。通过在授予用户时使用IP地址，PostgreSQL在用户进行身份验证时不需要执行反向DNS查找。</p>
+<p>原因是，如果DNS解析器没有及时响应，解析名称可能会导致问题。但这在Docker的网络中很少发生。</p>
+<p>您可以在主机中有多个用户定义的网桥网络，也可以通过为每个网络重复–net参数来运行连接到多个网络的容器：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker run -d \
+  --name mysql1 \
+  --net db_single \
+  --net backend \
+  --net database \
+  -p 3308:3306 \
+  --ip 192.168.10.10 \
+  --hostname mysql1 \
+  -e MYSQL_ROOT_PASSWORD<span class="token operator">=</span>mypassword \
+  mysql:5.7
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>只有同一网络中的容器才能相互通信。</p>
+<h2 id="4-3-多主机网络"><a href="#4-3-多主机网络" class="headerlink" title="4.3 多主机网络"></a>4.3 多主机网络</h2><p>Docker有自己的开箱即用的多主机网络，称为覆盖网络，它与Docker Swarm 1.12版本一起使用。</p>
+<h3 id="4-3-1-默认覆盖"><a href="#4-3-1-默认覆盖" class="headerlink" title="4.3.1 默认覆盖"></a>4.3.1 默认覆盖</h3><p>叠加网络仅在激活Swarm模式时可用。您可以通过运行docker swarm init命令，然后使用docker service命令创建服务来实现。</p>
+<p>在默认的覆盖网络中，每个容器将有两个网络接口，eth0和eth1。一个连接到docker_gwbridge，如黑色所示，而另一个通过另一个网桥</p>
+<p>连接到VXLAN隧道网络，如绿色所示。连接到docker_gwbridge的是面向公共网络的接口。如果你试图ping google.com，容器将通过</p>
+<p>eth0。如果从容器1尝试通过eth0 ping容器2，则不会得到任何回复。另一个接口eth1仅用于容器到容器的通信。您通常会为覆盖网络接</p>
+<p>口获得两个IP地址。一个是容器IP地址或Swarm术语中的“任务IP地址”，另一个是服务VIP或虚拟IP地址。</p>
+<h3 id="4-3-2-用户自定义覆盖"><a href="#4-3-2-用户自定义覆盖" class="headerlink" title="4.3.2 用户自定义覆盖"></a>4.3.2 用户自定义覆盖</h3><p>用户定义的覆盖网络类似于默认覆盖，而且它还附带了嵌入式DNS解析器。</p>
+<p>在多Docker主机环境中部署PostgreSQL容器作为Swarm服务时，由于其隔离性和解析容器名称的能力，这是首选网络。Docker编排不在</p>
+<p>本白皮书的范围内。</p>
+<h2 id="4-4-网络插件"><a href="#4-4-网络插件" class="headerlink" title="4.4 网络插件"></a>4.4 网络插件</h2><p>与Docker卷插件类似，Docker网络可以扩展以支持各种网络技术。该网络可以扩展为在多主机网络模式下运行，支持名称解析器和服务</p>
+<p>发现，甚至支持加密。以下是Docker最流行的网络插件，您可以在集群系统中使用：</p>
+<ul>
+<li>Contiv</li>
+<li>Calico</li>
+<li>Weave</li>
+<li>Flannel</li>
+</ul>
+<p><strong>总结我们的选项：</strong></p>
+<ul>
+<li><strong>Calico</strong> 在性能方面表现最佳，因为它在 OSI 第 3 层（网络层） 运行。</li>
+<li><strong>Weave</strong> 配置简单，并内置 DNS 服务。</li>
+<li><strong>Flannel</strong> 和 <strong>Contiv</strong> 已在市场上存在较长时间，稳定性较高。</li>
+</ul>
+<p>每种方案都有其优缺点，强烈建议根据您的实际工作负载进行测试和比较。</p>
+<h2 id="4-5-访问PostgreSQL容器"><a href="#4-5-访问PostgreSQL容器" class="headerlink" title="4.5 访问PostgreSQL容器"></a>4.5 访问PostgreSQL容器</h2><p>访问已创建的 PostgreSQL容器有以下几种方式：</p>
+<ol>
+<li>通过容器的暴露端口（exposed port）访问</li>
+<li>通过容器的发布端口（published port）访问</li>
+<li>直接附加（attach）到运行中的容器</li>
+</ol>
+<h3 id="4-5-1-通过容器的暴露端口"><a href="#4-5-1-通过容器的暴露端口" class="headerlink" title="4.5.1 通过容器的暴露端口"></a>4.5.1 通过容器的暴露端口</h3><p>从上一节的示例中，我们没有指定任何网络参数，这意味着Docker将根据默认的网桥网络（docker0）创建容器，而不需要主机端口映射</p>
+<p>（–publish或-p）。要验证，请使用docker ps命令：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token variable">$docker</span> <span class="token function">ps</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>在PORTS列下，我们可以知道端口3306是为该容器公开的（如该映像在Dockerfile中定义的，或通过–exposure标志），而没有任何到主</p>
+<p>机网络的映射。公开的端口只能由同一Docker网络（docker0）内的容器访问。</p>
+<h3 id="4-5-2-通过容器的发布端口"><a href="#4-5-2-通过容器的发布端口" class="headerlink" title="4.5.2 通过容器的发布端口"></a>4.5.2 通过容器的发布端口</h3><p>要访问桥接网络内创建的PostgreSQL容器到外部世界，您必须相应地发布暴露的PostgreSQL端口。在Docker的术语中，发布意味着</p>
+<p>Docker将在主机端口和容器端口之间创建一对一的映射。在运行容器时，请运行以下命令：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker run -d \
+2 --name my-test \
+3 --publish 8000:3306 \
+4 --env MYSQL_ROOT_PASSWORD<span class="token operator">=</span>mypassword \
+5 mysql
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>要验证从主机到容器的端口映射，请使用docker ps命令：</p>
+<p>在PORTS列下，我们可以看到为该容器暴露的端口3306（如该映像的Dockerfile中定义的，或通过–exposed标志）映射到主机网络的端</p>
+<p>口8000。该容器中的PostgreSQL实例现在可以在Docker网桥网络的端口3306和端口8000上远程访问到外部网络。</p>
+<p>您还可以使用–publish-all或-P将所有暴露的端口自动发布到随机端口。如果容器在具有–net=host的主机网络上运行，则暴露的端口将自</p>
+<p>动成为已发布的端口。</p>
+<h3 id="4-5-3-连接到活动容器"><a href="#4-5-3-连接到活动容器" class="headerlink" title="4.5.3 连接到活动容器"></a>4.5.3 连接到活动容器</h3><p>您还可以使用docker exec命令直接附加到正在运行的容器。以下命令允许我们作为bash终端连接到容器：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker <span class="token function">exec</span> -it my-test /bin/bash
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后，您可以像正常的终端访问一样执行必要的命令。您还可以传递任何在容器内运行的shell命令。以下命令直接从主机控制台执行容器</p>
+<p>中的PostgreSQL客户端：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">$ docker <span class="token function">exec</span> -it mysql-test mysql -uroot -p -e ‘SELECT @@innodb_buffer_pool_size’
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这种方法类似于将容器视为一个独立的主机，通常由具有Docker主机本地访问权限的管理员使用。您不必知道此容器的公开或已发布端</p>
+<p>口，只需知道容器的名称或ID就足够了。</p>
+<h1 id="PostgreSQL容器和卷"><a href="#PostgreSQL容器和卷" class="headerlink" title="PostgreSQL容器和卷"></a>PostgreSQL容器和卷</h1><p>容器是Docker镜像的运行实例。PostgreSQL是一个基于磁盘的关系数据库管理系统（RDBMS），为了运行PostgreSQL容器，必须了解</p>
+<p>Docker如何存储和管理其数据。</p>
+<h2 id="5-1-运行单个PostgreSQL容器"><a href="#5-1-运行单个PostgreSQL容器" class="headerlink" title="5.1 运行单个PostgreSQL容器"></a>5.1 运行单个PostgreSQL容器</h2><p>让我们来看看运行PostgreSQL容器的最简单命令：</p>
+<pre><code>$ docker run -d \
+  --name my-test \
+  --env MYSQL_ROOT_PASSWORD=mypassword \
+  mysql
+</code></pre>
+<p>docker run命令基本上是三个docker命令的组合：</p>
+<ol>
+<li><p>docker pull用于拉取容器映像。在这个例子中，我们使用的是Docker发布和维护的标准PostgreSQL镜像，可以在Docker Hub上找</p>
+<p>到。映像名称是“PostgreSQL”（“docker.io/PostgreSQL:latest”的缩写别名）。</p>
+</li>
+<li><p>docker create根据定义的变量创建容器。这个PostgreSQL映像是一个通用映像，您可以在其中定义许多环境变量以满足您的需求。</p>
+<p>此镜像至少需要启动时要设置的PostgreSQL ROOT_PASSWORD环境变量（–env PostgreSQL ROOT_PASSWORD）。详细信息请访问Docker Hub的Docker Image文档页面。</p>
+</li>
+<li><p>docker开始启动容器。</p>
+</li>
+</ol>
+<p>在这个例子中，我们没有定义任何卷（–volume或-v）。如果容器在没有卷的情况下运行，则容器中的所有目录或文件修改都将写入容器</p>
+<p>层，即镜像层之上的上层，如下图所示：</p>
+<p>镜像层（显示为绿色）是只读的，而容器层（红色）是可写的。可写层也称为瘦池层。这两层在联合文件系统上运行，具体取决于</p>
+<p>Docker主机操作系统。对于Ubuntu，它默认为AUFS。对于RHEL/CentOS，它默认为overlayfs或overlayfs2。如果你在RHEL、</p>
+<p>CentOS或Oracle Linux上使用Docker EE，你必须使用带有direct-lvm方法的devicemapper存储驱动程序，因为这是Docker在生产系统</p>
+<p>中唯一支持的存储驱动程序。</p>
+<p>容器层启动后只使用大约4字节的磁盘空间，您可以使用docker ps -s命令进行验证：</p>
+<pre><code>$ docker ps -s
+  CONTAINER ID IMAGE NAMES SIZE
+  d51f459239fb mysql my-test 4B (virtual 412MB)
+</code></pre>
+<h2 id="5-2-运行多个PostgreSQL容器"><a href="#5-2-运行多个PostgreSQL容器" class="headerlink" title="5.2 运行多个PostgreSQL容器"></a>5.2 运行多个PostgreSQL容器</h2><p>通过使用相同的镜像，我们可以创建另一个具有不同名称的PostgreSQL容器（容器名称在同一Docker主机中必须不同）：</p>
+<pre><code>$ docker run -d \
+  --name my-test2 \
+  --env MYSQL_ROOT_PASSWORD=mypassword \
+  mysql
+</code></pre>
+<p>当使用相同的映像创建另一个PostgreSQL容器时，您实际上是在创建一个新的可写层来存储容器的数据。每个容器都有自己的可写容器</p>
+<p>层，这意味着多个容器可以共享对同一底层映像的访问，但仍有自己的数据状态。</p>
+<p>在这个例子中，一旦从两个独立的PostgreSQL实例开始，这两个容器就会占用8字节的磁盘空间。一旦我们开始对容器进行更改，容器层</p>
+<p>就会增长，例如，如果我们创建一个新数据库，添加新表并开始插入数据行。</p>
+<p>当你删除一个容器时，你基本上是在删除可写层。因此，容器层内的所有变化也将被删除。这种分层和统一技术非常节省空间，最大限度</p>
+<p>地减少了主机上的IO操作，并支持缓存。</p>
+<h2 id="5-3-容器层更改"><a href="#5-3-容器层更改" class="headerlink" title="5.3 容器层更改"></a>5.3 容器层更改</h2><p>您可以将这些层想象成目录。当您修改现有文件时，例如/etc/PostgreSQL/my.cnf，容器将首先在容器层查找此文件。如果文件不存在，</p>
+<p>它将从顶部开始遍历镜像层并查找此文件。</p>
+<p>然后，它将文件从镜像层复制到可写容器层。然后，Docker会将更改写入容器层中文件的新副本，如下图中的操作1所示。这被称为写时</p>
+<p>复制（CoW）操作。</p>
+<p>在示例操作2中，我们试图创建一个新的模式和表，这意味着容器层中将存在一个新目录和文件。当你在容器中创建一个新文件时，</p>
+<p>Docker会创建一个目录，或AUFS术语中的“分支”，并使用随机的SHA-256哈希名称。然后，它会将文件放置在该目录中，元数据包括指</p>
+<p>向父目录的指针。您可以直接在/var/lib/docker/aufs中看到此文件。</p>
+<p>Docker支持多种CoW文件系统和设备，如overlayfs、btrfs、设备映射器和ZFS。每个存储驱动程序都以不同的方式处理实现，但所有驱</p>
+<p>动程序都使用具有这种写时复制策略的可堆叠映像层。</p>
+<h2 id="5-4-PostgreSQL持久性"><a href="#5-4-PostgreSQL持久性" class="headerlink" title="5.4 PostgreSQL持久性"></a>5.4 PostgreSQL持久性</h2><p>在PostgreSQL中，最重要的路径是datadir，默认情况下它在/var/lib/PostgreSQL下。这是PostgreSQL中的默认数据目录路径，您可以在</p>
+<p>稍后阶段对此进行自定义。在多个容器上运行PostgreSQL时，您会期望它们以更统一和更有组织的方式运行，如果可能的话，通过坚持</p>
+<p>默认选项来最大限度地降低PostgreSQL配置选项的复杂性。</p>
+<p>下表显示了PostgreSQL在容器中持久化数据所需的路径：</p>
+<table>
+<thead>
+<tr>
+<th>Description</th>
+<th>Variable Name</th>
+<th>Default Value (5.7)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MySQL data directory</td>
+<td>datadir</td>
+<td>/var/lib/mysql</td>
+</tr>
+<tr>
+<td>MySQL plugin directory</td>
+<td>plugin_dir</td>
+<td>{basedir}/lib/plugin</td>
+</tr>
+<tr>
+<td>MySQL configuration<br>directory</td>
+<td>config_dir</td>
+<td>/etc/my.cnf.d</td>
+</tr>
+<tr>
+<td>MySQL binary log</td>
+<td>log_bin</td>
+<td>{datadir}/{hostname}-bin</td>
+</tr>
+</tbody></table>
+<p>PostgreSQL生成的大多数文件或目录默认为datadir。除此之外，如果你想使用自定义的my.cnf文件，你应该保留/etc/my.cnf.d，</p>
+<p>PostgreSQL配置目录，并将你的my.cnf-存储在这个目录下。如果你正在使用其他PostgreSQL插件，你可能还想保留</p>
+<p>{basedir}/lib/plugin目录。这个目录可以使用Docker中的–mount标志作为RO挂载。这是防止PostgreSQL插件执行任何任意代码的推荐</p>
+<p>方法。</p>
+<p>正如您在这里看到的，主机名是日志记录的一个重要方面。尽量使用相同的容器主机名，特别是在运行另一个容器时，以避免以后混淆。</p>
+<p>否则，您可以为每个日志记录选项使用自定义文件名。</p>
+<h2 id="5-5-Docker卷"><a href="#5-5-Docker卷" class="headerlink" title="5.5 Docker卷"></a>5.5 Docker卷</h2><p>从Docker 1.9开始，可以使用“本地”卷驱动程序将数据持久存储在命名卷中。在此之前，只支持绑定支架。使用绑定挂载的问题是它非常</p>
+<p>依赖于主机。如果要装载现有数据，则需要确保主机上存在该路径。绑定挂载的一个好处是，您可以挂载文件而不是目录。</p>
+<p>使用命名卷要简单得多，也更独立。Docker在/var/lib/Docker/volumes下创建了一个目录，其他容器可以使用卷的名称引用该卷，因此</p>
+<p>您不必记住静态物理路径。卷内容存在于容器生命周期之外。由于Docker管理命名卷的目录内容，因此可以使用外部卷插件进行扩展，</p>
+<p>而不依赖于本地卷驱动程序。</p>
+<p>这为有状态的应用程序在Docker中高效运行打开了大门。你不必担心容器升级，或者容器被杀死或崩溃。如果您在容器内装载了持久存</p>
+<p>储的情况下运行，则另一个容器可以从上次存储的状态中获取并从那里继续。</p>
+<p>您还可以有另一个卷专门用于在RAM中存储非持久性数据（如果内存不足，则进行交换）。PostgreSQL可以将这种类型的卷用于临时数</p>
+<p>据目录（tmpdir）。</p>
+<h3 id="5-5-1-持久容量"><a href="#5-5-1-持久容量" class="headerlink" title="5.5.1 持久容量"></a>5.5.1 持久容量</h3><p>为了持久存储数据，我们必须配置一些与卷相关的额外选项。您可以先使用docker volume create命令创建卷。您也可以在运行docker </p>
+<p>run命令时直接指定卷标志。如果卷不存在，Docker将创建该卷。</p>
+<p>要运行具有持久命名卷的容器，请执行以下操作：</p>
+<pre><code>$ docker run -d \
+  --name mysql-local \
+  -p 3308:3306 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v local-datadir:/var/lib/mysql \
+  mysql:5.7
+</code></pre>
+<p>命令告诉Docker在主机文件系统上的/var/lib/Docker/volumes目录中创建一个卷（如果该卷还不存在），并将其装入PostgreSQL数据目</p>
+<p>录路径下的容器中，该路径为/var/lib/PostgreSQL。即使容器正在运行，也可以直接从主机访问数据卷。</p>
+<p>卷通常是保存数据的更好选择，而不是使用容器的可写层，因为使用卷不会增加使用它的容器的大小。卷的内容存在于容器的生命周期之</p>
+<p>外。从17.06版本开始，您还可以使用更详细的–mount。以下命令执行相同的操作：</p>
+<pre><code>$ docker run -d \
+  --name mysql-local \
+   -p 3308:3306 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v local-datadir:/var/lib/mysql \
+  mysql:5.7
+</code></pre>
+<p>最初，–mount选项是针对Swarm服务的，而不是针对独立容器的。使用mount，键值对的顺序并不重要，标志的值更容易理解。</p>
+<h3 id="5-5-2-非持久性容量"><a href="#5-5-2-非持久性容量" class="headerlink" title="5.5.2 非持久性容量"></a>5.5.2 非持久性容量</h3><p>PostgreSQL还生成非持久性数据，如带有TMPDIR变量的临时文件。默认情况下，PostgreSQL将使用/tmp、/var/tmp或/usr/tmp。一些</p>
+<p>SELECT语句，特别是使用GROUP BY或ORDER BY排序时，会创建临时表。您将看到在操作过程中创建了一个前缀为“Async”的文件。您</p>
+<p>可以使用tmpfs卷在容器内挂载此目录，该卷仅存储在主机的内存中（如果内存不足，则存储在swap中），类似于挂载ramdisk：</p>
+<pre><code>$ docker run -d \
+  --name mysql-tmp \
+  -p 3308:3306 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v /mysql1/data:/var/lib/mysql \
+  --tmpfs /tmp:rw,size=1g,mode=177 \
+  mysql
+</code></pre>
+<p>当容器停止时，tmpfs挂载将被删除。如果提交了容器，则不会保存tmpfs装载。下图说明了具有持久卷和非持久卷的PostgreSQL容器：</p>
+<p>然而，有一点需要注意。小心可能占用超过限制的大型排序操作，因为当这种情况发生时，主机将开始交换。为了避免这种情况，您还可</p>
+<p>以使用/tmp的标准命名卷。此功能必须谨慎使用，仅适用于Linux容器，不适用于Windows。</p>
+<h3 id="5-5-3-远程挂载"><a href="#5-5-3-远程挂载" class="headerlink" title="5.5.3 远程挂载"></a>5.5.3 远程挂载</h3><p>如果物理主机本身崩溃并以某种方式损坏怎么办？您将丢失容器和持久卷。为了从这种情况中恢复，我们可以使用本地主机之外的卷。最</p>
+<p>简单的设置是使用网络文件系统（NFS），它允许您通过网络将目录导出到另一台服务器。下图说明了使用NFS的远程卷设置：</p>
+<p>远程目录可以在客户端主机上本地挂载，即Docker主机：</p>
+<pre><code>$ mount 192.168.1.100:/storage/docker /nfs -o noatime,nodiratime,hard,intr
+</code></pre>
+<p>然后，您可以使用绑定挂载方法将目录挂载到Docker容器中：</p>
+<pre><code>$ docker run -d \
+  --name mysql-nfs \
+  -p 3308:3306 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v /nfs/mysql-nfs:/var/lib/mysql \
+  mysql
+</code></pre>
+<p>在这个例子中，我们从远程主机192.168.1.100在Docker主机的/NFS目录下挂载了NFS路径。另请注意，在NFS上运行PostgreSQL时有许</p>
+<p>多注意事项。有关详细信息，请参阅使用NFS for PostgreSQL。</p>
+<h2 id="5-6-挂载驱动"><a href="#5-6-挂载驱动" class="headerlink" title="5.6.挂载驱动"></a>5.6.挂载驱动</h2><p>默认情况下，存储驱动程序是本地的，这意味着如果你创建了一个命名卷，该卷将在容器所在的Docker主机上创建。如果你有多个</p>
+<p>Docker主机，并且你希望它们在不久的将来扩展，你应该使用卷驱动程序插件来降低将每个Docker主机配置为存储客户端的复杂性。</p>
+<p>下图显示了Docker卷驱动程序和存储平台：</p>
+<p>外层的橙色框是各种Docker卷插件支持的存储平台或文件系统，后者用绿色表示。还有更多，您可以在Docker文档页面上查看更完整的列表。</p>
+<p>安装您要使用的插件。在这个例子中，我们将使用REX-Ray，一个Docker的开源卷驱动插件。首先，安装EBS的卷插件：</p>
+<pre><code>$ docker plugin install rexray/ebs EBS_ACCESSKEY=XXXX EBS_
+SECRETKEY=YYYY
+</code></pre>
+<p>然后，验证驱动程序是否安装正确。我们在这里使用另一个名为“jq”的工具，一个JSON查询工具来美化输出：</p>
+<pre><code>$ docker info -f ‘{{json .Plugins.Volume}}’ | jq
+  [
+  “local”,
+  “rexray”
+  ]
+</code></pre>
+<p>通过为此驱动程序指定–volume驱动程序标志来运行容器：</p>
+<pre><code>$ docker run -d \
+  --name=mysql-ebs \
+  --volume-driver=rexray/ebs \
+  -v ebs-datadir:/var/lib/mysql \
+  mysql:5.7
+</code></pre>
+<p>验证Docker维护的卷：</p>
+<pre><code>$ docker volume ls
+  DRIVER VOLUME NAME
+  local local-datadir1
+  local local-datadir2
+  rexray ebs-datadir
+</code></pre>
+<p>然后，您可以直接使用docker volume命令管理卷。删除卷时，卷驱动程序本身将为您进行必要的清理。卷驱动程序还允许您扩展Docker</p>
+<p>卷功能。例如，一些存储系统支持静态加密、卷快照和备份。</p>
+<h2 id="5-7-性能权衡"><a href="#5-7-性能权衡" class="headerlink" title="5.7.性能权衡"></a>5.7.性能权衡</h2><p>通过远程存储挂载PostgreSQL数据库的权衡是什么？最主要的是性能。不要指望它能和Docker主机上的本地磁盘或直连存储一样好，特</p>
+<p>别是如果远程存储在多个主机之间共享，这可能会使其成为繁忙的端点。</p>
+<p>这是一个简单的基准测试，将本地磁盘和其他远程存储与使用sysbench的简单创建表作业进行比较。在每个存储驱动程序上重复测试50</p>
+<p>次。您可以看到代表远程NFS存储性能的绿点比本地磁盘慢约40%。通过使用几个NFS挂载选项（如noatime、nodiratime、hard、</p>
+<p>intr）进行进一步调整，我们可以比默认NFS提高约10%，如橙色圆点所示。红点表示没有配置IOPS的亚马逊弹性块存储（EBS）卷，其</p>
+<p>结果非常不一致。</p>
+<p>总之，如果数据库性能不重要，例如在测试和开发环境中，使用远程卷就足够了。不要忘记对存储系统进行基准测试并了解其性能。</p>
+<h1 id="监测和管理"><a href="#监测和管理" class="headerlink" title="监测和管理"></a>监测和管理</h1><h2 id="6-1-服务控制"><a href="#6-1-服务控制" class="headerlink" title="6.1 服务控制"></a>6.1 服务控制</h2><p>如果您查看PostgreSQL镜像的入口点脚本，您应该看到它在最后一行使用exec命令将PostgreSQLd进程作为前台进程执行。以下代码段</p>
+<p>来自PostgreSQL映像中使用的入口点脚本的末尾：</p>
+<pre><code>...
+...
+exec mysqld “$@”
+</code></pre>
+<p>这是为了确保PostgreSQLd进程在容器启动时持有进程ID 1。PID 1在容器中具有特殊含义。</p>
+<p>当停止容器时，只有PID为1的进程会收到信号。看看这个例子：</p>
+<pre><code>$ docker exec -it mysql-test ps -e
+  PID TTY TIME CMD
+  1 ? 00:00:00 mysqld
+  62 pts/0 00:00:00 bash
+  86 pts/0 00:00:00 ps
+</code></pre>
+<p>当我们运行docker stop命令时，docker会向容器发送一个名为SIGTERM的信号，表示进程终止。只有PostgreSQLd进程会收到它，因此</p>
+<p>它将开始终止并以优雅的方式执行关闭所需的任何清理。其他进程，如bash（pid 62）和ps（pid 86），将不会收到此信号。</p>
+<p>然而，使用docker stop是有风险的，因为docker可能不允许PostgreSQLd进程的正确终止。默认情况下，docker stop命令将发送</p>
+<p>SIGTERM并等待10秒，然后再向容器发送SIGKILL，如果容器仍在运行，则强制终止。你可以把宽限期改得更高。</p>
+<p>在某些情况下，PostgreSQL终止过程需要更多时间。PostgreSQL在收到SIGTERM后将：</p>
+<ol>
+<li>停止接收新连接，</li>
+<li>然后完成执行任何仍挂起的查询（这可能需要一段时间，具体取决于您的工作负载和并发客户端的数量）</li>
+<li>然后开始将数据刷新到磁盘（这可能需要几秒钟，同样取决于您的工作负载、配置、可用内存和存储引擎选择）</li>
+<li>在所有数据刷新完成后，PostgreSQL将释放它在初始化阶段分配的任何内存（这也可能需要一段时间，具体取决于PostgreSQL分配的内存量）</li>
+<li>关闭所有仍打开的文件句柄，然后调用“exit（0）”。</li>
+</ol>
+<p>为了确保在执行优雅关机时的安全，请使用带有适当终止信号的docker kill命令。此命令没有宽限期，因此不会中断PostgreSQLd的进程清理操作：</p>
+<pre><code>$ docker kill --signal=TERM mysql-test
+</code></pre>
+<p>然后，您可以通过查看容器的日志来验证终止状态。确保在行尾有“[注意]PostgreSQLd:关机完成”。停止容器不会删除容器，因此您可以</p>
+<p>使用docker start命令重新启动它。</p>
+<h2 id="6-2-资源控制"><a href="#6-2-资源控制" class="headerlink" title="6.2 资源控制"></a>6.2 资源控制</h2><p>默认情况下，运行Docker容器时没有资源限制。Docker在主机内核允许的范围内分配尽可能多的给定资源。</p>
+<p>内存是PostgreSQL中非常重要的资源。这是存储缓冲区和缓存的地方。它是PostgreSQL的关键资源，因为它减少了频繁撞击磁盘的影</p>
+<p>响。另一方面，交换对PostgreSQL的性能不利。如果–memory swap设置为与–memory相同的值，并且–memory设置为正整数，则容</p>
+<p>器将无法访问swap。如果将–memory和–memory swap设置为相同的值，这将阻止容器使用任何swap。这是因为内存交换是可以使用</p>
+<p>的内存和交换的组合量，而内存只是可以使用的物理内存量。如果未设置–memory swap，则容器swap默认为–memory乘以2。</p>
+<p>您还可以将打开的文件描述符或“nofile”的限制增加到更高的值。这是为了满足PostgreSQL服务器可以使用–ulimit参数同时打开的文件数</p>
+<p>量。建议将此数字设置得稍高。docker run命令的示例，其中推荐了内存、交换和打开文件的配置：</p>
+<pre><code>$ docker run -d \
+  --name mysql-staging \
+  --memory 4g \
+  --memory-swap 4g \
+  --ulimit nofile=16824:16824 \
+  mysql:5.7.6
+</code></pre>
+<p>一些容器资源，如内存和cpu，可以通过docker更新动态控制（无需重新启动），如下所示：</p>
+<pre><code>$ docker update \
+  --memory 6g \
+  --memory-swap 6g \
+  mysql-staging
+</code></pre>
+<p>重要的是不要忘记相应地调整PostgreSQL配置参数，这样您就可以利用容器的资源分配。</p>
+<h2 id="6-3-资源监控"><a href="#6-3-资源监控" class="headerlink" title="6.3 资源监控"></a>6.3 资源监控</h2><p>Docker提供了一种通过Docker stats命令总结容器资源消耗的方法。它可以像top命令一样实时报告。以下命令显示了使用带有自定义输</p>
+<p>出格式的docker stats命令的示例：</p>
+<pre><code>$ docker stats --format “table {{.Name}}\t{{.CPUPerc}}\t{{.
+MemUsage}}”
+  NAME CPU % MEM USAGE / LIMIT
+  minio1 0.00% 6.078MiB / 7.78GiB
+  mysql2 0.12% 194.1MiB / 7.78GiB
+  mysql-local 0.14% 220MiB / 7.78GiB
+</code></pre>
+<p>docker stats命令是stats应用程序接口（API）端点的接口。stats API公开stats命令中的所有信息以及更多信息。要亲自查看，请在</p>
+<p>Docker主机上运行以下命令：</p>
+<pre><code>$ curl --unix-socket /var/run/docker.sock http:/containers/{container_name}/stats
+</code></pre>
+<p>上述命令的输出被封装在一个JavaScript对象表示法（JSON）数组中，该数组可供第三方工具使用。</p>
+<p>在容器内部，free和top命令并不准确，因为这些工具依赖于主机上/proc下报告的值。</p>
+<p>要正确监视这些资源，您必须看到cgroup目录。如果您在非特权模式下运行容器，这些路径也会在容器中以只读方式挂载：</p>
+<ul>
+<li>内存–/sys/fs/cgroup/memory/memory.*</li>
+<li>CPU–/sys/fs/cgroup/cpu/cpu.*</li>
+<li>磁盘IO–/sys/fs/cgroup/blkio/blkio.*</li>
+</ul>
+<p>还有外部开源命令行工具，如sysdig和dockviz。Sysdig连接到主机的内核，这意味着它并不完全依赖于从Docker守护进程获取指标。它</p>
+<p>还允许您通过直接挂接到编排器来添加编排上下文，从而允许您通过容器资源（如pod、集群、命名空间和服务）进行故障排除。</p>
+<p>图形用户界面的容器可见性和监控要好得多。您可以使用许多开源工具来监控Docker资源，如cAdvisor、Portainer、Shipyard、</p>
+<p>Rancher和Prometheus。cAdvisor和Portainer可以被认为是最受欢迎的，超轻量且易于安装。它们中的大多数都可以通过单行命令安装和运行。这些工具利用Docker unix套接字文件连接到守护进程并检索监控数据。</p>
+<p>您还可以选择付费解决方案供应商，如New Relic、Dynatrace、Datadog和CoScale。其中大多数提供全栈监控和警报服务，监控从服务</p>
+<p>器和容器资源到应用程序性能的所有内容。</p>
+<h2 id="6-4-配置管理"><a href="#6-4-配置管理" class="headerlink" title="6.4 配置管理"></a>6.4 配置管理</h2><p>PostgreSQL的大多数配置参数都可以在运行时更改，这意味着您不需要重新启动来加载更改。有关详细信息，请查看PostgreSQL文档页</p>
+<p>面。如果参数更改需要重新启动PostgreSQL，请在主机上的/etc/my.cnf.d/my.cnf中设置更改，并将目录映射到一个命名卷，如下例所示：</p>
+<pre><code>$ docker run -d \
+  --name mysql2 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v mysql2-conf:/etc/my.cnf.d \
+  mysql:5.7.6
+</code></pre>
+<p>您还可以使用绑定挂载方法将主机上的文件直接映射到容器中：</p>
+<pre><code>$ docker run -d \
+  --name mysql2 \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -v /root/docker/mysql2/config/my.cnf:/etc/my.cnf \
+  mysql:5.7.6
+</code></pre>
+<p>此外，您可以在映像名称之后附加配置选项，作为标志传递给容器内的PostgreSQLd进程：</p>
+<pre><code>$ docker run -d \
+2 --name mysql3 \
+3 -e MYSQL_ROOT_PASSWORD=mypassword \
+4 mysql:5.7.6 \
+5 --innodb_buffer_pool_size=1G \
+6 --max_connections=100
+</code></pre>
+<p>通常，标准PostgreSQL和InnoDB优化适用于容器，例如InnoDB_buffer_pool_size、InnoDB_log_file_size和max_connections。这在很</p>
+<p>大程度上取决于分配给容器的资源（如第6.2章-资源控制所述），以及底层磁盘子系统（如第5章-PostgreSQL容器和卷所述）。</p>
+<h2 id="6-5-安全"><a href="#6-5-安全" class="headerlink" title="6.5 安全"></a>6.5 安全</h2><p>Docker Secrets在v17.1中引入，用于在容器运行时处理敏感信息。如果您查看前面的示例命令，我们通常必须以明文格式定义一个名为</p>
+<p>PostgreSQL ROOT_PASSWORD的环境变量，该变量等于您的根密码。此方法以明文形式公开密码，可以通过docker inspect或使用</p>
+<p>Linux history命令进行跟踪。要创建secret，请使用docker secret create命令并通过stdin发送敏感数据。然后，在运行容器时，指定要作为文件挂载在/run/secrets目录下的secret名称。要创建一个秘密，只需：</p>
+<pre><code>$ echo ‘MyP2s$w0rD’ | docker secret mysql_root_passwd -
+</code></pre>
+<p>我们在这里使用的镜像支持Docker Secrets ， 因此我们可以通过PostgreSQL ROOT_PASSWORD_FILE环境变量定义它，镜像将在初始化</p>
+<p>容器时读取secret文件并将其作为PostgreSQL根密码传递：</p>
+<pre><code>$ docker service create \
+  --name mysql-container \
+  --publish 4406:3306 \
+  --secret mysql_root_passwd \
+  -e MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_passwd \
+  -v local-datadir:/var/lib/mysql \
+  mysql:5.7
+</code></pre>
+<p>我们必须考虑的另一个安全方面是运行时权限。有两种类型的运行时特权：</p>
+<ul>
+<li>默认情况下，建议使用非特权模式。</li>
+<li>特权模式。</li>
+</ul>
+<h3 id="6-5-1-非特权集装箱"><a href="#6-5-1-非特权集装箱" class="headerlink" title="6.5.1 非特权集装箱"></a>6.5.1 非特权集装箱</h3><p>这是默认和推荐的选项。容器无法访问其他设备，也无法修改内核功能。所有这些设备都是以只读方式装载的，您可以使用以下命令从容</p>
+<p>器中的装载列表中进行验证：</p>
+<pre><code>$ docker exec -it mysql-container mount | grep ro,
+2 sysfs on /sys type sysfs (ro,nosuid,nodev,noexec,relatime)
+3 tmpfs on /sys/fs/cgroup type tmpfs (ro,nosuid,nodev,noexec,
+relatime,mode=755)
+4 ...
+5 ...
+6 cgroup on /sys/fs/cgroup/memory type cgroup (ro,nosuid,
+nodev,noexec,relatime,memory)
+7 cgroup on /sys/fs/cgroup/freezer type cgroup (ro,nosuid,
+nodev,noexec,relatime,freezer)
+8 proc on /proc/bus type proc (ro,relatime)
+9 proc on /proc/fs type proc (ro,relatime)
+10 proc on /proc/irq type proc (ro,relatime)
+11 proc on /proc/sys type proc (ro,relatime)
+12 proc on /proc/sysrq-trigger type proc (ro,relatime)
+13 tmpfs on /proc/scsi type tmpfs (ro,relatime)
+14 tmpfs on /sys/firmware type tmpfs (ro,relatime)
+</code></pre>
+<h3 id="6-5-2-特权集装箱"><a href="#6-5-2-特权集装箱" class="headerlink" title="6.5.2 特权集装箱"></a>6.5.2 特权集装箱</h3><p>在某些情况下，您可能需要修改内核参数，如sysctl.conf或/proc，以适应您的数据库需求和工作负载。在这种情况下，您必须使用–</p>
+<p>privileged标志启动容器。Docker将以读写方式挂载所有设备，因此您可以相应地进行这些更改。使用–privileged模式，容器几乎具有主</p>
+<p>机的所有功能。</p>
+<p>请谨慎使用–privilege，并且仅当您确实需要修改内核参数（sysctl、/proc、/sys）或希望在另一个容器内运行容器时才使用。</p>
+<h2 id="6-6-备份和恢复"><a href="#6-6-备份和恢复" class="headerlink" title="6.6 备份和恢复"></a>6.6 备份和恢复</h2><h3 id="6-6-1-备份"><a href="#6-6-1-备份" class="headerlink" title="6.6.1 备份"></a>6.6.1 备份</h3><p>进行逻辑备份非常简单，因为PostgreSQL映像还包括PostgreSQLdump和PostgreSQLpump（PostgreSQL 5.7.8+）。您只需使用</p>
+<p>docker exec命令运行PostgreSQLdump，并将stdout输出重定向到主机上的路径：</p>
+<pre><code>$ docker exec -it mysql-prod mysqldump -uroot -p --single-transaction &gt; /path/in/physical/host/dump.sql
+</code></pre>
+<p>像Percona Xtrabackup和MariaDB backup这样的二进制备份需要直接访问PostgreSQL数据目录。您必须将这些工具安装在容器内，或</p>
+<p>通过计算机主机安装，或使用专用映像。以下示例显示了如何使用“perconalab/percona-xtrabackup”映像创建备份并将其存储在</p>
+<p>主机上的/tmp/backup中来执行xtrabackup:</p>
+<pre><code>$ docker run --rm -it \
+2 --net db-prod \
+3 -v mysql-datadir:/var/lib/mysql \
+4 -v /tmp/backup:/xtrabackup_backupfiles \
+5 perconalab/percona-xtrabackup \
+6 --backup --host=mysql-prod --user=root --password=mypassword
+</code></pre>
+<p>您还可以应用全局锁或停止容器，然后将数据卷复制到另一个位置，如下例所示：</p>
+<ol>
+<li><p>将所有表刷新到磁盘：</p>
+<pre><code>$ docker exec -it mysql-prod /bin/bash
+2 root@mysql-prod:# mysql -uroot -p
+3 mysql&gt; FLUSH TABLE WITH READ LOCK;
+</code></pre>
+</li>
+<li><p>将卷复制到另一个终端中的另一个位置：</p>
+<pre><code>$ cp /var/lib/docker/volumes/mysql-datadir/_data /destination/
+in/physical/host
+</code></pre>
+</li>
+<li><p>在与步骤1相同的终端中，松开锁：</p>
+<pre><code>mysql&gt; UNLOCK TABLES;
+</code></pre>
+</li>
+</ol>
+<h3 id="6-6-2-恢复"><a href="#6-6-2-恢复" class="headerlink" title="6.6.2 恢复"></a>6.6.2 恢复</h3><p>对于PostgreSQLdump，恢复过程与备份过程非常相似。您可以简单地将stdin从Docker主机重定向到容器中：</p>
+<pre><code>$ docker exec -it mysql-staging mysql -uroot -p &lt; /path/in/physical/host/dump.sql
+</code></pre>
+<p>您还可以使用具有正确主机名和端口值的标准PostgreSQL客户端命令行远程使用，而不是使用此docker exec命令。</p>
+<p>对于Xtrabackup，您必须事先准备备份，然后准备好的备份可以用作另一个容器中的PostgreSQL datadir：</p>
+<pre><code>$ docker run --rm -it \
+2 -v mysql-datadir:/var/lib/mysql \
+3 -v /tmp/backup:/xtrabackup_backupfiles \
+4 perconalab/percona-xtrabackup \
+5 --prepare --target-dir /xtrabackup_backupfiles
+</code></pre>
+<p>如果使用快照进行备份，则很容易复制数据库状态并在多个容器上运行以进行测试。使用绑定挂载，您可以直接将目录挂载为卷。如果要</p>
+<p>使用命名卷，您需要：</p>
+<ol>
+<li>创建卷。</li>
+<li>将内容复制到卷的目录。</li>
+<li>通过装载卷来启动新容器。</li>
+</ol>
+<h2 id="6-7-升级"><a href="#6-7-升级" class="headerlink" title="6.7 升级"></a>6.7 升级</h2><p>您可以使用两种方式执行PostgreSQL升级操作——逻辑升级或就地升级。请记住，PostgreSQL只支持从以前的一个版本升级。如果你使</p>
+<p>用的是5.5版本，想升级到5.7版本，你必须先升级到PostgreSQL 5.6，然后再升级到PostgreSQL 5.7。您可以使用就地升级来轻松实现这</p>
+<p>一点。</p>
+<h3 id="6-7-1-逻辑升级"><a href="#6-7-1-逻辑升级" class="headerlink" title="6.7.1 逻辑升级"></a>6.7.1 逻辑升级</h3><p>逻辑升级是指使用PostgreSQL逻辑备份，如PostgreSQLdump或mydumper，从现有数据库导出数据，并将转储文件加载到新的</p>
+<p>PostgreSQL版本中。您可以从将新的PostgreSQL映像下拉到主机开始。然后用该镜像启动一个新容器。使用PostgreSQLdump从旧容器</p>
+<p>导出数据并将其加载到新容器中。完成后，在新容器中运行PostgreSQL_upgrade脚本。如果一切正常，请删除旧的DB容器，否则，您可</p>
+<p>以通过启动旧容器回滚到以前的版本。</p>
+<p>下表总结了逻辑升级过程：</p>
+<h3 id="6-7-2-现场升级"><a href="#6-7-2-现场升级" class="headerlink" title="6.7.2.现场升级"></a>6.7.2.现场升级</h3><p>就地升级是在不删除现有PostgreSQL数据的情况下升级PostgreSQL服务器，超出了正常的预防措施。<br>最重要的部分是执行innodb_fast_关机，然后运行PostgreSQL_upgrade脚本。<br>下表简化了就地升级程序：</p>
+<h2 id="6-8-管家"><a href="#6-8-管家" class="headerlink" title="6.8.管家"></a>6.8.管家</h2><p>当使用多个PostgreSQL容器时，您可能会发现主机的磁盘空间开始耗尽，特别是当您直接在主机上构建映像时。偶尔，一些中间镜像可</p>
+<p>能仍然存在。使用以下命令删除所有悬挂的镜像是安全的：</p>
+<pre><code>$ docker image prune
+</code></pre>
+<p>要清理未使用的卷，可以使用docker volume prune命令来实现。例如，如果要删除所有未使用的卷（不再与任何正在运行的容器关联的</p>
+<p>卷）：</p>
+<pre><code>$ docker volume prune
+</code></pre>
+<p>通过完全修剪系统可以实现类似的结果：</p>
+<p>这将删除：</p>
+<ul>
+<li>所有停止的容器，</li>
+<li>至少一个容器未使用的所有挂载</li>
+<li>至少一个容器未使用的所有网络，</li>
+<li>所有没有至少一个容器关联的镜像</li>
+</ul>
+<p>必须定期进行内务管理，以确保PostgreSQL有足够的资源运行。建议为Docker主机设置一个资源监控和警报系统，这样你就可以在资源耗尽之前采取主动行动。</p>
+<h1 id="Docker上的集群控制"><a href="#Docker上的集群控制" class="headerlink" title="Docker上的集群控制"></a>Docker上的集群控制</h1><p>ClusterControl是一个用于开源数据库的管理和自动化平台。它可用于部署、管理、监视和扩展高可用集群。它支持所有类型的</p>
+<p>PostgreSQL高可用性设置，包括PostgreSQL复制、PostgreSQL集群、PostgreSQL组复制和Galera集群。它还支持MongoDB </p>
+<p>ReplicaSets和Sharded Clusters，以及PostgreSQL的流式复制。</p>
+<p>正如我们之前讨论的，在跨多个环境运行PostgreSQL时，Docker是一个可靠的替代方案。一组PostgreSQL实例可以通过Docker轻松部</p>
+<p>署。将其与ClusterControl结合起来，可以自动化大多数重复的数据库管理任务，我们为数据库基础设施提供了一个先进的自动化解决方</p>
+<p>案。<br>ClusterControl背后的团队Severalnines专门构建了一个镜像，使ClusterControl在Docker上运行良好。此镜像附带ClusterControl及其</p>
+<p>所有组件和依赖项-ClusterControl 1.5套件，包括通过存储库安装的控制器、REST API接口、web用户界面、通知和web-sh包。</p>
+<p>该映像还预先配置了ClusterControl所需的所有应用程序，如PostgreSQL、Apache、SSL证书以及用于ClusterControl的SSH密钥。</p>
+<h2 id="7-1-将ClusterControl作为Docker容器运行"><a href="#7-1-将ClusterControl作为Docker容器运行" class="headerlink" title="7.1 将ClusterControl作为Docker容器运行"></a>7.1 将ClusterControl作为Docker容器运行</h2><p>ClusterControl的发布周期很短，通常每隔几个月就会发布一个新版本。因此，您必须定期升级映像以跟上最新版本。建议使用数据持久</p>
+<p>性运行，以确保容器的升级过程正常工作。在容器中运行ClusterControl的推荐方法是使用用户定义的网桥网</p>
+<p>络。首先创建网络：</p>
+<pre><code>$ docker network create --subnet=192.168.10.0/24 db-cluster
+</code></pre>
+<p>然后，运行容器并在此网络下指定它，使用静态IP地址和主机名：</p>
+<pre><code>$ docker run -d --name clustercontrol \
+2 --network db-cluster \
+3 --ip 192.168.10.10 \
+4 -h clustercontrol \
+5 -p 5000:80 \
+6 -p 5001:443 \
+7 -v /storage/clustercontrol/cmon.d:/etc/cmon.d \
+8 -v /storage/clustercontrol/datadir:/var/lib/mysql \
+9 -v /storage/clustercontrol/.ssh:/root/.ssh \
+10 -v /storage/clustercontrol/backups:/root/backups \
+11 -e CMON_PASSWORD mysecr3t \
+12 -e MYSQL_ROOT_PASSWORD mys3cret \
+13 severalnines/clustercontrol
+</code></pre>
+<p>我们使用supervisord来管理容器内的守护进程。因此，如果您想在不重新启动容器的情况下执行服务控制，则必须使用supervisorctl命</p>
+<p>令行。容器内的以下服务由supervisord管理：</p>
+<ul>
+<li>sshd</li>
+<li>PostgreSQLd</li>
+<li>httpd</li>
+<li>cmon</li>
+<li>cmon ssh</li>
+<li>cmon-events</li>
+<li>cmon云</li>
+<li>cc-auto-deployment</li>
+</ul>
+<p>以下示例显示了我们应该如何在容器内重新启动ClusterControl Controller服务（cmon）：</p>
+<pre><code>$ docker exec -it clustercontrol supervisorctl restart cmon
+</code></pre>
+<p>默认情况下，ClusterControl UI在Docker主机的端口80和443上公开。您可以在主机网络中运行它，这样您就可以监视和管理Docker网</p>
+<p>络之外的其他DB节点（例如，在连接到同一交换机的物理主机上运行的DB节点，或在云中运行的VM实例）。或者，您可以在用户定义</p>
+<p>的网桥网络下运行ClusterControl，并将数据库集群包放在一个主机中。</p>
+<h2 id="7-2-自动数据库部署"><a href="#7-2-自动数据库部署" class="headerlink" title="7.2 自动数据库部署"></a>7.2 自动数据库部署</h2><p>为了使用ClusterControl自动部署数据库，我们构建了一个在CentOS基础映像上运行的补充映像，并启用了SSH。它是一个通用映像，与</p>
+<p>ClusterControl配合良好，因为它能够从ClusterControl容器到数据库容器设置无密码SSH。更多详情请访问Github页面。</p>
+<p>以下命令启动一个自动部署的三节点Galera集群：</p>
+<pre><code>$ for i in {1..3}; do
+2 docker run -d \
+3 --name galera${i} \
+4 -p 666{$i}:3306 \
+5 --link clustercontrol:clustercontrol \
+6 -e CLUSTER_TYPE=galera \
+7 -e CLUSTER_NAME=mygalera \
+8 -e INITIAL_CLUSTER_SIZE=3 \
+9 severalnines/centos-ssh
+10 done
+</code></pre>
+<p>数据库部署流程描述如下：</p>
+<ol>
+<li>通过docker run命令创建数据库容器。</li>
+<li>cc自动部署脚本获取已注册的容器并创建部署作业。</li>
+<li>一旦达到INITIAL_cluster_SIZE，ClusterControl就会部署集群。</li>
+</ol>
+<p>该映像支持自动数据库群集部署。创建ClusterControl需要一个命令，创建数据库集群需要另一个命令。ClusterControl将在数据库容器</p>
+<p>启动后获取其IP地址和主机名，并在到达INITIAL_CLUSTER_SIZE后启动部署。部署脚本使用“s9s”（ClusterControl CLI）与控制器进行交互。</p>
+<h2 id="7-3-手动数据库部署"><a href="#7-3-手动数据库部署" class="headerlink" title="7.3 手动数据库部署"></a>7.3 手动数据库部署</h2><p>使用此方法，用户通过docker create或docker service命令创建数据库容器。然后将创建的容器的IP地址或主机名输入ClusterControl用</p>
+<p>户界面，以便进行部署。与自动化部署过程相比，这一额外步骤可以更好地控制部署过程。</p>
+<p>基本步骤如下：</p>
+<ol>
+<li>运行ClusterControl容器</li>
+<li>使用AUTO_DEPLOYMENT=0的severalnine/centos ssh映像运行DB容器</li>
+<li>使用ClusterControl UI根据定义的拓扑部署集群</li>
+</ol>
+<p>在部署向导中</p>
+<p>假设我们想在单个Docker主机上部署一个带有ProxySQL的4节点PostgreSQL复制，如下图所示：</p>
+<ol>
+<li><p>为持久IP地址和主机名创建一个Docker网络192.168.10.0/24（db集群）：</p>
+<pre><code>$ docker network create --subnet=192.168.10.0/24
+db-cluster
+</code></pre>
+</li>
+<li><p>运行具有专用IP地址192.168.10.10的ClusterControl容器，发布HTTP端口5000，并创建持久卷以在升级/重启/重新安排期间生存：</p>
+<pre><code>$ docker run -d --name=clustercontrol \
+2 --network db-cluster \
+3 --ip 192.168.10.10 \
+4 -p 5000:80 \
+5 -p 5001:443 \
+6 -h clustercontrol \
+7 -v /storage/clustercontrol/.ssh:/root/.ssh \
+8 -v /storage/clustercontrol/datadir:/var/lib/mysql \
+9 -v /storage/clustercontrol/cmon.d:/etc/cmon.d \
+10 -v /storage/clustercontrol/backups:/backups \
+11 severalnines/clustercontrol
+</code></pre>
+</li>
+<li><p>为PostgreSQL复制实例运行容器。确保ClusterControl容器首先启动，然后在端口6000上启动PostgreSQL主机192.168.10.100：</p>
+<pre><code>$ docker run -d --name master \
+2 --network db-cluster \
+3 --ip 192.168.10.100 \
+4 -v /storage/master/datadir:/var/lib/mysql \
+5 -h master \
+6 -p 6000:3306 \
+7 -e AUTO_DEPLOYMENT=0 \
+8 -e CC_HOST=192.168.10.10 \
+9 severalnines/centos-ssh
+</code></pre>
+</li>
+<li><p>然后，在端口6001上创建3个PostgreSQL从站，192.168.10.101到192.168.10.103 6003:</p>
+<pre><code>$ for i in {1..3}; do
+2 docker run -d --name slave${i} \
+3 -v /storage/slave${i}/datadir:/var/lib/mysql \
+4 -h slave${i} \
+5 -p 600${i}:3306 \
+6 --network db-cluster \
+7 --ip 192.168.10.10${i} \
+8 -e AUTO_DEPLOYMENT=0 \
+9 -e CC_HOST=192.168.10.10 \
+10 severalnines/centos-ssh
+11 done
+</code></pre>
+</li>
+<li><p>登录位于https://{docker_host}:5001/ClusterControl的ClusterControl UI，注册默认管理员用户，然后转到“部署”-&gt;“PostgreSQL复制”开始部署。请注意，AUTO_DEPLOYMENT已关闭，因此我们可以通过ClusterControl UI更好地控制安装。centos ssh映像应该已经预先配置了ssh密钥，该密钥位于/root/.ssh/id_rsa位于ClusterControl容器内。在部署向导中输入以下详细信息：</p>
+<p>填写剩余的输入字段，然后单击部署。</p>
+<pre><code>$ docker run -d \
+2 --name proxysql1 \
+3 -v /storage/proxysql1/datadir:/var/lib/proxysql \
+4 -p 6033:3306 \
+5 --network db-cluster \
+6 --ip 192.168.10.201 \
+7 -e AUTO_DEPLOYMENT=0 \
+8 -e CC_HOST=192.168.10.10 \
+9 severalnines/centos-ssh
+</code></pre>
+</li>
+<li><p>运行ProxySQL的另一个容器，192.168.10.201端口6033：</p>
+<pre><code>$ docker run -d \
+2 --name proxysql1 \
+3 -v /storage/proxysql1/datadir:/var/lib/proxysql \
+4 -p 6033:3306 \
+5 --network db-cluster \
+6 --ip 192.168.10.201 \
+7 -e AUTO_DEPLOYMENT=0 \
+8 -e CC_HOST=192.168.10.10 \
+9 severalnines/centos-ssh
+</code></pre>
+</li>
+<li><p>转到ClusterControl-&gt;集群-&gt;管理-&gt;负载均衡器-&gt;ProxySQL-&gt;部署ProxySQL。指定192.168.10.201作为ProxySQL地址，并填写其余</p>
+<p>输入字段。单击部署以启动部署过程。</p>
+</li>
+</ol>
+<p>部署完成后，您将使用ProxySQL作为负载均衡器进行4节点PostgreSQL复制设置。</p>
+<h2 id="7-4-添加现有数据库容器"><a href="#7-4-添加现有数据库容器" class="headerlink" title="7.4.添加现有数据库容器"></a>7.4.添加现有数据库容器</h2><p>SSH是ClusterControl的主要通信通道，因此必须在受监视的主机或容器上运行它。不过，这可能有点麻烦，因为大多数PostgreSQL映像</p>
+<p>都没有安装SSH包。这是我们提出“severalnine/centos-ssh”映像以简化部署过程的原因之一。</p>
+<p>如果你已经有一个在Docker上运行的数据库集群，并且你想让ClusterControl来管理它，你可以简单地在与数据库容器相同的Docker网</p>
+<p>络中运行ClusterControl容器。唯一的要求是确保目标容器安装了SSH相关的包（openssh服务器、openssh客户端）。然</p>
+<p>后允许从ClusterControl到数据库容器的无密码SSH。完成后，使用“添加现有服务器/集群”功能将数据库设置导入ClusterControl。</p>
+<p>假设我们有一个安装了Docker的物理主机192.168.50.130，并假设在标准Docker网桥网络下运行着一个三节点的Galera集群。</p>
+<p>我们将把集群导入ClusterControl，ClusterControl在同一主机上的另一个容器中运行。</p>
+<p>以下是高级架构图：</p>
+<p>在每个数据库容器上安装OpenSSH相关包，允许root登录，启动并设置root密码：</p>
+<pre><code>$ docker exec -ti [db-container] apt-get update
+2 $ docker exec -ti [db-container] apt-get install -y
+openssh-server openssh-client
+3 $ docker exec -it [db-container] sed -i ‘s|^PermitRootLogin.*|
+PermitRootLogin yes|g’ /etc/ssh/sshd_config
+4 $ docker exec -ti [db-container] service ssh start
+5 $ docker exec -it [db-container] passwd
+</code></pre>
+<p>将ClusterControl容器作为守护进程启动，并将容器上的端口80转发到主机上的端口5000：</p>
+<pre><code>$ docker run -d --name=clustercontrol \
+2 --network db-cluster \
+3 -p 5000:80 \
+4 -p 5001:443 \
+5 -h clustercontrol \
+6 -v /storage/clustercontrol/.ssh:/root/.ssh \
+7 -v /storage/clustercontrol/datadir:/var/lib/mysql \
+8 -v /storage/clustercontrol/cmon.d:/etc/cmon.d \
+9 -v /storage/clustercontrol/backups:/backups \
+10 severalnines/clustercontrol
+</code></pre>
+<p>打开浏览器，转到http://{docker_host}:5000/clustercontrol并创建默认管理员用户和密码。现在，您应该看到ClusterControl登录页面。</p>
+<p>最后一步是为所有数据库容器设置无密码SSH。连接到ClusterControl容器交互式控制台：</p>
+<pre><code>$ docker exec -it clustercontrol /bin/bash
+</code></pre>
+<p>将SSH密钥复制到所有数据库容器：</p>
+<pre><code>$ ssh-copy-id 172.17.0.2
+2 $ ssh-copy-id 172.17.0.3
+3 $ ssh-copy-id 172.17.0.4
+</code></pre>
+<p>开始将集群导入ClusterControl。打开web浏览器，使用映射的端口访问Docker的物理主机IP地址，例如，<a target="_blank" rel="noopener" href="http://192.168.50.130:5000/clustercontrol%EF%BC%8C%E7%82%B9%E5%87%BB%E2%80%9C%E6%B7%BB%E5%8A%A0%E7%8E%B0%E6%9C%89%E9%9B%86%E7%BE%A4/%E6%9C%8D%E5%8A%A1%E5%99%A8%E2%80%9D%EF%BC%8C%E6%8C%87%E5%AE%9A%E5%BF%85%E8%A6%81%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF%EF%BC%8C%E5%A6%82PostgreSQL%E4%BE%9B%E5%BA%94%E5%95%86%E3%80%81%E7%89%88%E6%9C%AC%E3%80%81PostgreSQL%E6%A0%B9%E7%94%A8%E6%88%B7%E5%92%8C%E5%AF%86%E7%A0%81%E7%AD%89%EF%BC%8C%E4%BB%A5%E5%8F%8A">http://192.168.50.130:5000/clustercontrol，点击“添加现有集群/服务器”，指定必要的详细信息，如PostgreSQL供应商、版本、PostgreSQL根用户和密码等，以及</a></p>
+<p>数据库容器的IP地址或主机名。<br>确保在输入主机名或IP地址时得到绿色勾号，表示ClusterControl能够与节点通信。然后，单击导入按钮，等待ClusterControl完成作业。导入数据库集群后，它将列在ClusterControl仪表板下。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Docker可能是过去几年中最受关注的技术。它有着非常有前景的未来，目前正在成为主流应用程序部署标准。尽管在将Docker用于有状</p>
+<p>态数据库服务方面存在挑战，但PostgreSQL以及PostgreSQL和MongoDB通常在不同技术供应商的Docker调查中排名前十。</p>
+<p>Docker和PostgreSQL都有庞大的用户群，每个都有自己充满活力的社区。我们很可能会看到这些技术被更多地采用，尤其是随着Docker</p>
+<p>的数据库工具和实用程序生态系统的扩展。</p>
+<p>尽管Docker可以帮助PostgreSQL的自动化部署，但数据库仍然需要管理和监控。崩溃不会自行修复，必须小心以确保数据完整性。如果</p>
+<p>出现性能问题或故障，需要通知运营团队，需要进行备份，管理员和开发人员需要访问监控指标，以便了解和优化性能。在管理数据库环</p>
+<p>境时需要考虑很多因素，结合ClusterControl之类的东西可以为生产数据库工作负载提供一个完整的操作平台。</p>
+<h1 id="关于ClusterControl"><a href="#关于ClusterControl" class="headerlink" title="关于ClusterControl"></a>关于ClusterControl</h1><p>ClusterControl是一个包罗万象的开源数据库管理系统，适用于混合环境的用户，无需使用多种管理工具。ClusterControl提供高级部</p>
+<p>署、管理、监控和扩展功能，使用您可以依赖的经过验证的方法来启动和运行PostgreSQL、MongoDB和PostgreSQL数据</p>
+<p>库。ClusterControl的核心是其自动化功能，使您能够自动化许多必须定期执行的数据库任务，如部署新数据库、添加和扩展新节点、运</p>
+<p>行备份和升级等。Severalnes为数据库集群提供自动化和管理软件。我们帮助公司在任何环境中部署数据库，并管理所有运营方面，以实</p>
+<p>现高可用性。</p>
+<h1 id="关于Severalnes"><a href="#关于Severalnes" class="headerlink" title="关于Severalnes"></a>关于Severalnes</h1><p>Severalnes为数据库集群提供自动化和管理软件。我们帮助公司在任何环境中部署数据库，并管理所有运营方面，以实现高可用性。</p>
+<p>Severalnes的产品被所有技能水平的开发人员和管理员使用，以提供完整的“部署、管理、监控、扩展”数据库周期，从而将他们从通常与</p>
+<p>高可用数据库集群相关的复杂性和学习曲线中解放出来。Severalnines通常被称为“反创业”，因为它完全由创始人自筹资金。迄今为止，</p>
+<p>该公司已通过其流行的产品ClusterControl实现了12000多次部署。目前，英国电信、Orange、思科、CNRS、Technicolor、AVG、Ping </p>
+<p>Identity和Paytrail均为客户。Severalnines是一家总部位于瑞典斯德哥尔摩的私营公司，在新加坡、日本和美国设有办事处。要查看今天</p>
+<p>谁在使用Severalnes，请访问：<a target="_blank" rel="noopener" href="https://www.severalnines.com/company">https://www.severalnines.com/company</a></p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://jinlid.github.io/2025/ru-he-jiang-nin-de-postgresql-shu-ju-ku-rong-qi-hua/">https://jinlid.github.io/2025/ru-he-jiang-nin-de-postgresql-shu-ju-ku-rong-qi-hua/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">JINLID</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/postgresql/">
+                                    <span class="chip bg-color">postgresql</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2025/shi-yong-dockerfile-yuan-ma-fang-shi-bu-shu-postgresql/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="使用Dockerfile源码方式部署PostgreSQL16">
+                        
+                        <span class="card-title">使用Dockerfile源码方式部署PostgreSQL16</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2024/kubernetes-jiao-cheng-dong-tai-wang-luo-cun-chu-de-shi-yong/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Kubernetes教程--动态网络存储的使用">
+                        
+                        <span class="card-title">Kubernetes教程--动态网络存储的使用</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-25
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
+                        <span class="chip bg-color">容器</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2025</span>
+            
+            <a href="/about" target="_blank">JINLID</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/jinlid" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:845401160@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=845401160" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 845401160" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

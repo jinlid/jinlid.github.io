@@ -4,12 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Kubernetes教程--Job与CronJob的使用, jinlid&#39;s blog">
+    <meta name="keywords" content="Kubernetes教程--动态网络存储的使用, jinlid&#39;s blog">
     <meta name="description" content="[TOC]
-1、Job 基础概念Job 是 Kubernetes 中用于运行一次性任务的资源对象，它会创建一个或多个 Pod，并确保指定数量的 Pod 成功完成。核心参数：
+1. 动态存储基础概念动态存储是 Kubernetes 提供的一种自动化存储管理机制，通过StorageClass和PersistentVolumeClaim实现：
 
-completions：需要成功完成的 Pod 总数
-paral">
+StorageClass：定义存储类型和配置参数（如存储提供">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -21,7 +20,7 @@ paral">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Kubernetes教程--Job与CronJob的使用 | jinlid&#39;s blog</title>
+    <title>Kubernetes教程--动态网络存储的使用 | jinlid&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -341,12 +340,12 @@ paral">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Kubernetes教程--Job与CronJob的使用</h1>
+                    <h1 class="description center-align post-title">Kubernetes教程--动态网络存储的使用</h1>
                 </div>
             </div>
         </div>
@@ -395,7 +394,7 @@ paral">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2024-06-22
+                    2024-06-25
                 </div>
                 
 
@@ -417,190 +416,173 @@ paral">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <p>[TOC]</p>
-<h2 id="1、Job-基础概念"><a href="#1、Job-基础概念" class="headerlink" title="1、Job 基础概念"></a><strong>1、Job 基础概念</strong></h2><p>Job 是 Kubernetes 中用于运行一次性任务的资源对象，它会创建一个或多个 Pod，并确保指定数量的 Pod 成功完成。核心参数：</p>
+<h2 id="1-动态存储基础概念"><a href="#1-动态存储基础概念" class="headerlink" title="1. 动态存储基础概念"></a><strong>1. 动态存储基础概念</strong></h2><p>动态存储是 Kubernetes 提供的一种自动化存储管理机制，通过<code>StorageClass</code>和<code>PersistentVolumeClaim</code>实现：</p>
 <ul>
-<li><code>completions</code>：需要成功完成的 Pod 总数</li>
-<li><code>parallelism</code>：同时运行的 Pod 数量</li>
-<li><code>backoffLimit</code>：任务失败后的重试次数</li>
-<li><code>activeDeadlineSeconds</code>：Job 允许运行的最长时间</li>
+<li><strong>StorageClass</strong>：定义存储类型和配置参数（如存储提供商、性能等级）</li>
+<li>**PersistentVolumeClaim (PVC)**：用户对存储的请求，自动绑定可用存储</li>
+<li><strong>动态供给</strong>：无需手动创建 PV，系统根据 PVC 自动创建</li>
 </ul>
-<h2 id="2、创建简单-Job"><a href="#2、创建简单-Job" class="headerlink" title="2、创建简单 Job"></a><strong>2、创建简单 Job</strong></h2><p><strong>1. 生成 Job 模板</strong></p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl create job busy-job --image<span class="token operator">=</span>busybox --dry-run<span class="token operator">=</span>client -o yaml <span class="token operator">></span> busy-job.yml
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><strong>2. 编辑 Job 配置</strong></p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># busy-job.yml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> batch/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Job
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> busy<span class="token punctuation">-</span>job
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">template</span><span class="token punctuation">:</span>
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">restartPolicy</span><span class="token punctuation">:</span> OnFailure  <span class="token comment" spellcheck="true"># 失败时重启容器</span>
-      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-      <span class="token punctuation">-</span> <span class="token key atrule">image</span><span class="token punctuation">:</span> busybox
-        <span class="token key atrule">name</span><span class="token punctuation">:</span> busybox
-        <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/echo"</span><span class="token punctuation">]</span>
-        <span class="token key atrule">args</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"hello"</span><span class="token punctuation">,</span> <span class="token string">"world"</span><span class="token punctuation">]</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>3. 应用并验证</strong></p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f busy-job.yml
-kubectl get job  <span class="token comment" spellcheck="true"># 查看Job状态</span>
-kubectl get pods  <span class="token comment" spellcheck="true"># 查看Pod状态</span>
-kubectl logs <span class="token operator">&lt;</span>pod-name<span class="token operator">></span>  <span class="token comment" spellcheck="true"># 查看输出日志</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3、并行-Job-配置"><a href="#3、并行-Job-配置" class="headerlink" title="3、并行 Job 配置"></a><strong>3、并行 Job 配置</strong></h2><p><strong>1. 创建并行 Job</strong></p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># busybox-mutil-job.yml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> batch/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> Job
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> busybox
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">activeDeadlineSeconds</span><span class="token punctuation">:</span> <span class="token number">15  </span><span class="token comment" spellcheck="true"># 最长运行时间15秒</span>
-  <span class="token key atrule">backoffLimit</span><span class="token punctuation">:</span> <span class="token number">2            </span><span class="token comment" spellcheck="true"># 最多重试2次</span>
-  <span class="token key atrule">completions</span><span class="token punctuation">:</span> <span class="token number">4             </span><span class="token comment" spellcheck="true"># 需要完成4个任务</span>
-  <span class="token key atrule">parallelism</span><span class="token punctuation">:</span> <span class="token number">2             </span><span class="token comment" spellcheck="true"># 同时运行2个Pod</span>
-  <span class="token key atrule">template</span><span class="token punctuation">:</span>
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">restartPolicy</span><span class="token punctuation">:</span> OnFailure
-      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-      <span class="token punctuation">-</span> <span class="token key atrule">image</span><span class="token punctuation">:</span> busybox
-        <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/sh"</span><span class="token punctuation">,</span> <span class="token string">"-c"</span><span class="token punctuation">]</span>
-        <span class="token key atrule">args</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"sleep 300"</span><span class="token punctuation">]</span>  <span class="token comment" spellcheck="true"># 模拟长时间任务</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>2. 验证超时机制</strong></p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f busybox-mutil-job.yml
-kubectl get job  <span class="token comment" spellcheck="true"># 查看状态（等待15秒后会超时）</span>
-kubectl describe job busybox  <span class="token comment" spellcheck="true"># 查看详细信息</span>
+<h2 id="2-NFS-动态存储配置"><a href="#2-NFS-动态存储配置" class="headerlink" title="2. NFS 动态存储配置"></a><strong>2. NFS 动态存储配置</strong></h2><p><strong>1. 部署 NFS 客户端插件</strong><br>首先需要部署 NFS 客户端插件，用于在 NFS 服务器上动态创建挂载点。这里使用社区维护的<code>nfs-subdir-external-provisioner</code>：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 添加Helm仓库并安装</span>
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+helm <span class="token function">install</span> nfs-client nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+  --set nfs.server<span class="token operator">=</span>192.168.137.226 \
+  --set nfs.path<span class="token operator">=</span>/home/jinli/nfs/data
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>替代 Helm 的手动部署方案</strong></p>
+<ol>
+<li>手动创建 NFS Provisioner 部署</li>
+</ol>
+<p>下载并修改官方 YAML 模板：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">wget</span> https://raw.githubusercontent.com/kubernetes-sigs/nfs-subdir-external-provisioner/master/deploy/rbac.yaml
+<span class="token function">wget</span> https://raw.githubusercontent.com/kubernetes-sigs/nfs-subdir-external-provisioner/master/deploy/deployment.yaml
+<span class="token function">wget</span> https://raw.githubusercontent.com/kubernetes-sigs/nfs-subdir-external-provisioner/master/deploy/class.yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p><strong>3. 关键点说明</strong></p>
-<ul>
-<li><code>activeDeadlineSeconds</code> 超时后，Job 状态变为 <code>Failed</code>，所有 Pod 会被终止</li>
-<li><code>completions</code> 和 <code>parallelism</code> 控制任务的总数量和并行度</li>
-</ul>
-<h2 id="4、CronJob（定时任务）"><a href="#4、CronJob（定时任务）" class="headerlink" title="4、CronJob（定时任务）"></a><strong>4、CronJob（定时任务）</strong></h2><p>CronJob 是 Job 的上层资源，用于按时间调度重复执行的任务。</p>
-<p><strong>1. 生成 CronJob 模板</strong></p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl create cj busy-job --image<span class="token operator">=</span>busybox --schedule<span class="token operator">=</span><span class="token string">""</span> --dry-run<span class="token operator">=</span>client -o yaml <span class="token operator">></span> cronjob.yml
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><strong>2. 配置定时任务</strong></p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># cronjob.yml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> batch/v1beta1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> CronJob
+<p><strong>修改 deployment.yaml</strong>（替换 NFS 服务器地址和路径）：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> echo<span class="token punctuation">-</span>hello
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
+  <span class="token comment" spellcheck="true"># replace with namespace where provisioner is deployed</span>
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> default
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">schedule</span><span class="token punctuation">:</span> <span class="token string">'*/1 * * * *'</span>  <span class="token comment" spellcheck="true"># 每分钟执行一次</span>
-  <span class="token key atrule">jobTemplate</span><span class="token punctuation">:</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">strategy</span><span class="token punctuation">:</span>
+    <span class="token key atrule">type</span><span class="token punctuation">:</span> Recreate
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
     <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">template</span><span class="token punctuation">:</span>
-        <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-          <span class="token key atrule">restartPolicy</span><span class="token punctuation">:</span> OnFailure
-          <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-          <span class="token punctuation">-</span> <span class="token key atrule">image</span><span class="token punctuation">:</span> busybox
-            <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/echo"</span><span class="token punctuation">]</span>
-            <span class="token key atrule">args</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"hello"</span><span class="token punctuation">,</span> <span class="token string">"world"</span><span class="token punctuation">]</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>3. 应用并验证</strong></p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f cronjob.yml
-kubectl get cj  <span class="token comment" spellcheck="true"># 查看CronJob列表</span>
-kubectl get <span class="token function">jobs</span>  <span class="token comment" spellcheck="true"># 查看创建的Job</span>
-kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行任务的Pod</span>
+      <span class="token key atrule">serviceAccountName</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>provisioner
+          <span class="token key atrule">image</span><span class="token punctuation">:</span> registry.k8s.io/sig<span class="token punctuation">-</span>storage/nfs<span class="token punctuation">-</span>subdir<span class="token punctuation">-</span>external<span class="token punctuation">-</span>provisioner<span class="token punctuation">:</span>v4.0.2
+          <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>root
+              <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> /persistentvolumes
+          <span class="token key atrule">env</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> PROVISIONER_NAME
+              <span class="token key atrule">value</span><span class="token punctuation">:</span> k8s<span class="token punctuation">-</span>sigs.io/nfs<span class="token punctuation">-</span>subdir<span class="token punctuation">-</span>external<span class="token punctuation">-</span>provisioner
+            <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> NFS_SERVER
+              <span class="token key atrule">value</span><span class="token punctuation">:</span> 192.168.137.226
+            <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> NFS_PATH
+              <span class="token key atrule">value</span><span class="token punctuation">:</span> /home/jinli/nfs/data
+      <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client<span class="token punctuation">-</span>root
+          <span class="token key atrule">nfs</span><span class="token punctuation">:</span>
+            <span class="token key atrule">server</span><span class="token punctuation">:</span> 192.168.137.226
+            <span class="token key atrule">path</span><span class="token punctuation">:</span> /home/jinli/nfs/data
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>2. 应用资源</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f rbac.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f class.yaml  <span class="token comment" spellcheck="true"># 这是StorageClass配置</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><strong>3. 验证部署</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl get pods -l app<span class="token operator">=</span>nfs-client-provisioner
+<span class="token comment" spellcheck="true"># 应看到类似如下输出：</span>
+<span class="token comment" spellcheck="true"># NAME                                      READY   STATUS    RESTARTS   AGE</span>
+<span class="token comment" spellcheck="true"># nfs-client-provisioner-57f8977c7-475t6   1/1     Running   0          30s</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="5、实战案例：PostgreSQL-备份任务"><a href="#5、实战案例：PostgreSQL-备份任务" class="headerlink" title="5、实战案例：PostgreSQL 备份任务"></a><strong>5、实战案例：PostgreSQL 备份任务</strong></h2><p><strong>1. 配置 CronJob</strong></p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># postgres-backup.yml</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> batch/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> CronJob
+<p><strong>2. 创建 StorageClass</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># nfs-storage.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> storage.k8s.io/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> StorageClass
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>backup
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client
+<span class="token key atrule">provisioner</span><span class="token punctuation">:</span> k8s<span class="token punctuation">-</span>sigs.io/nfs<span class="token punctuation">-</span>subdir<span class="token punctuation">-</span>external<span class="token punctuation">-</span>provisioner
+<span class="token key atrule">parameters</span><span class="token punctuation">:</span>
+  <span class="token key atrule">archiveOnDelete</span><span class="token punctuation">:</span> <span class="token string">"false"</span>  <span class="token comment" spellcheck="true"># 删除PVC时不保留数据</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用配置：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nfs-storage.yml
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="3-使用-PVC-请求动态存储"><a href="#3-使用-PVC-请求动态存储" class="headerlink" title="3. 使用 PVC 请求动态存储"></a>3. 使用 PVC 请求动态存储</h2><p><strong>1. 创建 PersistentVolumeClaim</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># nfs-pvc.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> PersistentVolumeClaim
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>10m<span class="token punctuation">-</span>pvc
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">schedule</span><span class="token punctuation">:</span> <span class="token string">"0 2 * * *"</span>  <span class="token comment" spellcheck="true"># 每天凌晨2点执行</span>
-  <span class="token key atrule">jobTemplate</span><span class="token punctuation">:</span>
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">template</span><span class="token punctuation">:</span>
-        <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-          <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-          <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> backup
-            <span class="token key atrule">image</span><span class="token punctuation">:</span> bitnami/kubectl
-            <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"/bin/sh"</span><span class="token punctuation">,</span> <span class="token string">"-c"</span><span class="token punctuation">]</span>
-            <span class="token key atrule">args</span><span class="token punctuation">:</span>
-              <span class="token punctuation">-</span> kubectl exec postgresql<span class="token punctuation">-</span>0 <span class="token punctuation">-</span><span class="token punctuation">-</span> pg_dump <span class="token punctuation">-</span>U postgres <span class="token punctuation">-</span>d mydb <span class="token punctuation">></span> /backup/mydb_$(date +%Y%m%d).sql
-            <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
-            <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> backup<span class="token punctuation">-</span>storage
-              <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> /backup
-          <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
-          <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> backup<span class="token punctuation">-</span>storage
-            <span class="token key atrule">persistentVolumeClaim</span><span class="token punctuation">:</span>
-              <span class="token key atrule">claimName</span><span class="token punctuation">:</span> postgres<span class="token punctuation">-</span>backup<span class="token punctuation">-</span>pvc  <span class="token comment" spellcheck="true"># 挂载PVC存储备份</span>
-          <span class="token key atrule">restartPolicy</span><span class="token punctuation">:</span> OnFailure
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>2. 关键点说明</strong></p>
-<ul>
-<li>使用 <code>kubectl exec</code> 命令执行数据库备份</li>
-<li>通过 PVC 持久化存储备份文件</li>
-<li>时间表达式 <code>0 2 * * *</code> 表示每天凌晨 2 点执行</li>
-</ul>
-<h2 id="6、Job-x2F-CronJob-管理命令"><a href="#6、Job-x2F-CronJob-管理命令" class="headerlink" title="6、Job/CronJob 管理命令"></a><strong>6、Job/CronJob 管理命令</strong></h2><table>
-<thead>
-<tr>
-<th>操作</th>
-<th>命令示例</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>创建资源</td>
-<td><code>kubectl apply -f job.yml</code></td>
-<td>从 YAML 文件创建 Job/CronJob</td>
-</tr>
-<tr>
-<td>查看 Job 列表</td>
-<td><code>kubectl get jobs</code></td>
-<td>显示所有 Job 及其状态</td>
-</tr>
-<tr>
-<td>查看 CronJob 列表</td>
-<td><code>kubectl get cronjobs</code></td>
-<td>显示所有 CronJob 及其状态</td>
-</tr>
-<tr>
-<td>查看 Job 详情</td>
-<td><code>kubectl describe job &lt;name&gt;</code></td>
-<td>获取 Job 详细信息</td>
-</tr>
-<tr>
-<td>查看 Pod 日志</td>
-<td><code>kubectl logs &lt;pod-name&gt;</code></td>
-<td>获取任务输出日志</td>
-</tr>
-<tr>
-<td>删除资源</td>
-<td><code>kubectl delete -f job.yml</code></td>
-<td>删除 Job/CronJob 及其 Pod</td>
-</tr>
-<tr>
-<td>暂停 CronJob</td>
-<td><code>kubectl patch cj &lt;name&gt; -p '{"spec":{"suspend":true}}'</code></td>
-<td>暂停调度</td>
-</tr>
-</tbody></table>
-<h2 id="7、常见问题排查"><a href="#7、常见问题排查" class="headerlink" title="7、常见问题排查"></a><strong>7、常见问题排查</strong></h2><ol>
-<li><strong>Job 未完成且不超时</strong><ul>
-<li>检查 <code>activeDeadlineSeconds</code> 是否设置过小</li>
-<li>使用 <code>kubectl describe job</code> 查看事件日志</li>
+  <span class="token key atrule">storageClassName</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>client  <span class="token comment" spellcheck="true"># 指定StorageClass</span>
+  <span class="token key atrule">accessModes</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> ReadWriteMany  <span class="token comment" spellcheck="true"># 多节点读写</span>
+  <span class="token key atrule">resources</span><span class="token punctuation">:</span>
+    <span class="token key atrule">requests</span><span class="token punctuation">:</span>
+      <span class="token key atrule">storage</span><span class="token punctuation">:</span> 10Mi  <span class="token comment" spellcheck="true"># 请求10MB存储空间</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nfs-pvc.yml
+kubectl get pvc nfs-dyn-10m-pvc  <span class="token comment" spellcheck="true"># 状态应为Bound</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h2 id="4-在-Pod-中使用动态存储"><a href="#4-在-Pod-中使用动态存储" class="headerlink" title="4. 在 Pod 中使用动态存储"></a><strong>4. 在 Pod 中使用动态存储</strong></h2><p><strong>1. 创建 Pod 并挂载 PVC</strong></p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># nfs-pod.yml</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>pod
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>10m<span class="token punctuation">-</span>vol
+    <span class="token key atrule">persistentVolumeClaim</span><span class="token punctuation">:</span>
+      <span class="token key atrule">claimName</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>10m<span class="token punctuation">-</span>pvc  <span class="token comment" spellcheck="true"># 引用PVC</span>
+  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>test
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx
+    <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
+    <span class="token key atrule">volumeMounts</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> nfs<span class="token punctuation">-</span>dyn<span class="token punctuation">-</span>10m<span class="token punctuation">-</span>vol
+      <span class="token key atrule">mountPath</span><span class="token punctuation">:</span> /tmp  <span class="token comment" spellcheck="true"># 挂载到容器的/tmp目录</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>应用并验证：</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl apply -f nfs-pod.yml
+
+<span class="token comment" spellcheck="true"># 检查Pod状态</span>
+kubectl get pod nfs-dyn-pod
+
+<span class="token comment" spellcheck="true"># 进入容器验证挂载</span>
+kubectl <span class="token function">exec</span> -it nfs-dyn-pod -- sh
+<span class="token function">cd</span> /tmp
+<span class="token function">touch</span> test.txt  <span class="token comment" spellcheck="true"># 创建测试文件</span>
+<span class="token keyword">exit</span>
+
+<span class="token comment" spellcheck="true"># 在NFS服务器上查看</span>
+<span class="token function">ls</span> /home/jinli/nfs/data/default-nfs-dyn-10m-pvc/
+<span class="token comment" spellcheck="true"># 应看到 test.txt 文件</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-动态存储的优势"><a href="#5-动态存储的优势" class="headerlink" title="5. 动态存储的优势"></a><strong>5. 动态存储的优势</strong></h2><ol>
+<li><strong>自动化管理</strong>：无需手动创建 PV，系统根据 PVC 自动分配存储</li>
+<li><strong>按需扩展</strong>：可通过修改 PVC 的<code>storage</code>请求调整容量</li>
+<li><strong>统一配置</strong>：StorageClass 可预定义存储参数，用户只需引用名称</li>
+<li><strong>支持多种存储类型</strong>：NFS、Ceph、AWS EBS、GCP PD 等</li>
+</ol>
+<h2 id="6-清理资源"><a href="#6-清理资源" class="headerlink" title="6. 清理资源"></a><strong>6. 清理资源</strong></h2><p>按顺序删除资源：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubectl delete -f nfs-pod.yml  <span class="token comment" spellcheck="true"># 删除Pod</span>
+kubectl delete -f nfs-pvc.yml   <span class="token comment" spellcheck="true"># 删除PVC（自动释放PV）</span>
+kubectl delete -f nfs-storage.yml  <span class="token comment" spellcheck="true"># 删除StorageClass</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="7-注意事项"><a href="#7-注意事项" class="headerlink" title="7. 注意事项"></a><strong>7. 注意事项</strong></h2><ol>
+<li><strong>NFS 服务器权限</strong>：确保 NFS 服务器目录对 Kubernetes 节点可读写</li>
+<li>访问模式选择<ul>
+<li><code>ReadWriteOnce</code>：单节点读写</li>
+<li><code>ReadOnlyMany</code>：多节点只读</li>
+<li><code>ReadWriteMany</code>：多节点读写（NFS 支持此模式）</li>
 </ul>
 </li>
-<li><strong>CronJob 未按计划执行</strong><ul>
-<li>验证 <code>schedule</code> 表达式格式（可使用工具如 <a target="_blank" rel="noopener" href="https://crontab.guru/">crontab.guru</a> 检查）</li>
-<li>检查 CronJob 状态：<code>kubectl get cj &lt;name&gt; -o yaml</code></li>
-</ul>
-</li>
-<li><strong>Pod 一直重启</strong><ul>
-<li>检查 <code>restartPolicy</code> 设置（Job 中推荐使用 <code>OnFailure</code> 或 <code>Never</code>）</li>
-<li>查看 Pod 日志定位错误原因</li>
+<li>数据持久性<ul>
+<li><code>archiveOnDelete: "true"</code>：删除 PVC 时保留数据</li>
+<li><code>archiveOnDelete: "false"</code>：删除 PVC 时自动清理数据</li>
 </ul>
 </li>
 </ol>
-<p>通过以上步骤，你可以掌握 Kubernetes 中 Job 和 CronJob 的基本使用方法，实现一次性任务和定时任务的自动化执行。</p>
+<p>通过以上步骤，你已成功配置并使用 Kubernetes 的动态网络存储功能，实现了基于 NFS 的自动化存储分配。</p>
 
                 
             </div>
@@ -627,7 +609,7 @@ kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行�
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/</a>
+                    <a href="https://jinlid.github.io/2024/kubernetes-jiao-cheng-dong-tai-wang-luo-cun-chu-de-shi-yong/">https://jinlid.github.io/2024/kubernetes-jiao-cheng-dong-tai-wang-luo-cun-chu-de-shi-yong/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -749,13 +731,13 @@ kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行�
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-dong-tai-wang-luo-cun-chu-de-shi-yong/">
+                <a href="/2025/ru-he-jiang-nin-de-postgresql-shu-ju-ku-rong-qi-hua/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Kubernetes教程--动态网络存储的使用">
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="如何将您的PostgreSQL数据库容器化">
                         
-                        <span class="card-title">Kubernetes教程--动态网络存储的使用</span>
+                        <span class="card-title">如何将您的PostgreSQL数据库容器化</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -766,14 +748,14 @@ kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行�
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2024-06-25
+                            <i class="far fa-clock fa-fw icon-date"></i>2025-01-14
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
                                 </a>
                             
                             
@@ -783,8 +765,8 @@ kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行�
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
@@ -798,13 +780,13 @@ kubectl get pods  <span class="token comment" spellcheck="true"># 查看执行�
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-configmap-yu-secret-de-shi-yong/">
+                <a href="/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="Kubernetes教程--ConfigMap与Secret的使用">
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes教程--Job与CronJob的使用">
                         
-                        <span class="card-title">Kubernetes教程--ConfigMap与Secret的使用</span>
+                        <span class="card-title">Kubernetes教程--Job与CronJob的使用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
