@@ -754,23 +754,22 @@ StorageClass：定义存储类型和配置参数（如存储提供
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">
+                        <a href="/2024/kubernetes-jiao-cheng-configmap-yu-secret-de-shi-yong/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes教程--Job与CronJob的使用">
+                                <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="Kubernetes教程--ConfigMap与Secret的使用">
                                 
-                                <span class="card-title">Kubernetes教程--Job与CronJob的使用</span>
+                                <span class="card-title">Kubernetes教程--ConfigMap与Secret的使用</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
                                     [TOC]
-1、Job 基础概念Job 是 Kubernetes 中用于运行一次性任务的资源对象，它会创建一个或多个 Pod，并确保指定数量的 Pod 成功完成。核心参数：
-
-completions：需要成功完成的 Pod 总数
-paral
+1. configMap 基础ConfigMap 用于存储非敏感的配置数据，如环境变量、配置文件等。
+1. 从字面量创建 ConfigMap
+kubectl create cm info --from-literal=k=v -
                                 
                             </div>
                             <div class="publish-info">
@@ -817,22 +816,23 @@ paral
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-configmap-yu-secret-de-shi-yong/">
+                        <a href="/2024/kubernetes-jiao-cheng-job-yu-cronjob-de-shi-yong/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="Kubernetes教程--ConfigMap与Secret的使用">
+                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes教程--Job与CronJob的使用">
                                 
-                                <span class="card-title">Kubernetes教程--ConfigMap与Secret的使用</span>
+                                <span class="card-title">Kubernetes教程--Job与CronJob的使用</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
                                     [TOC]
-1. configMap 基础ConfigMap 用于存储非敏感的配置数据，如环境变量、配置文件等。
-1. 从字面量创建 ConfigMap
-kubectl create cm info --from-literal=k=v -
+1、Job 基础概念Job 是 Kubernetes 中用于运行一次性任务的资源对象，它会创建一个或多个 Pod，并确保指定数量的 Pod 成功完成。核心参数：
+
+completions：需要成功完成的 Pod 总数
+paral
                                 
                             </div>
                             <div class="publish-info">
