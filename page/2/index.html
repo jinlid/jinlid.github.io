@@ -392,27 +392,23 @@
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
+                    <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
+                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
                             
-                            <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
+                            <span class="card-title">Kubernetes教程--Service的创建和管理</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                [TOC]
-1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
-kubectl run mynginx --image=nginx
-
-# 查看Pod状态
-kubectl get pods
-
-1.2 使用YAM
+                                本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
+[TOC]
+1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
+touc
                             
                         </div>
                         <div class="publish-info">
@@ -448,23 +444,27 @@ kubectl get pods
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
+                    <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
+                            <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
                             
-                            <span class="card-title">Kubernetes教程--Service的创建和管理</span>
+                            <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
-[TOC]
-1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
-touc
+                                [TOC]
+1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
+kubectl run mynginx --image=nginx
+
+# 查看Pod状态
+kubectl get pods
+
+1.2 使用YAM
                             
                         </div>
                         <div class="publish-info">
@@ -609,20 +609,20 @@ e
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                    <a href="/2021/1.shu-ju-ku-ji-qun-shu-ju-ku-he-biao/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="1 数据库集群、数据库和表">
                             
-                            <span class="card-title">10 基础备份和时间点恢复</span>
+                            <span class="card-title">1 数据库集群、数据库和表</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
+                                本章和下一章总结了PostgreSQL的基础知识，以帮助阅读后续章节。
                             
                         </div>
                         <div class="publish-info">
@@ -658,20 +658,69 @@ e
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/1.shu-ju-ku-ji-qun-shu-ju-ku-he-biao/">
+                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="1 数据库集群、数据库和表">
+                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
                             
-                            <span class="card-title">1 数据库集群、数据库和表</span>
+                            <span class="card-title">2 进程和内存架构</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本章和下一章总结了PostgreSQL的基础知识，以帮助阅读后续章节。
+                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
+                            
+                        </div>
+                        <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                            </span>
+                            <span class="publish-author">
+                                
+                                <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                
+                                <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                </a>
+                                
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card-action article-tags">
+                        
+                        <a href="/tags/postgresql/">
+                            <span class="chip bg-color">postgresql</span>
+                        </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+              <!-- 隐藏某个文章 -->
+            
+             <!-- 隐藏某个文章 -->
+            <div class="article col s12 m6 l4" data-aos="zoom-in">
+                <div class="card">
+                    <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
+                        <div class="card-image">
+                            
+                            
+                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="10 基础备份和时间点恢复">
+                            
+                            <span class="card-title">10 基础备份和时间点恢复</span>
+                        </div>
+                    </a>
+
+                    <div class="card-content article-content">
+                        <div class="summary block-with-text">
+                            
+                                在线数据库备份大致可以分为两类：逻辑备份和物理备份。这两种方法各有优缺点，但逻辑备份的一个缺点是非常耗时，特别是对大型数据库进行备份需要很长时间，而从备份数据恢复到数据库需要更多的时间。相反，可以更快地创建和恢复物理备份，使其成为实际系统中
                             
                         </div>
                         <div class="publish-info">
@@ -805,69 +854,20 @@ e
              <!-- 隐藏某个文章 -->
             <div class="article col s12 m6 l4" data-aos="zoom-in">
                 <div class="card">
-                    <a href="/2021/2.jin-cheng-he-nei-cun-jia-gou/">
+                    <a href="/2021/5.bing-fa-kong-zhi/">
                         <div class="card-image">
                             
                             
-                            <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="2 进程和内存架构">
+                            <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
                             
-                            <span class="card-title">2 进程和内存架构</span>
+                            <span class="card-title">5 并发控制</span>
                         </div>
                     </a>
 
                     <div class="card-content article-content">
                         <div class="summary block-with-text">
                             
-                                本章总结了PostgreSQL中的进程架构和内存架构，以帮助阅读后续章节。如果您已经熟悉它们，您可以跳过本章。
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/postgresql/">
-                            <span class="chip bg-color">postgresql</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-              <!-- 隐藏某个文章 -->
-            
-             <!-- 隐藏某个文章 -->
-            <div class="article col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2021/6.vacuum-jin-cheng/">
-                        <div class="card-image">
-                            
-                            
-                            <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="6 vacuum进程">
-                            
-                            <span class="card-title">6 vacuum进程</span>
-                        </div>
-                    </a>
-
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                vacuum进程是一种便于PostgreSQL持久运行的维护过程。它的两个主要任务是删除死元组和冻结事务id。
+                                并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
                             
                         </div>
                         <div class="publish-info">
