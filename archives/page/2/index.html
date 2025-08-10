@@ -559,22 +559,26 @@
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
+                        <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
+                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
                                 
-                                <span class="card-title">Kubernetes教程--Service的创建和管理</span>
+                                <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
-[TOC]
-1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
-touc
+                                    [TOC]
+1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
+kubectl run mynginx --image=nginx
+
+# 查看Pod状态
+kubectl get pods
+
+1.2 使用YAM
                                 
                             </div>
                             <div class="publish-info">
@@ -621,26 +625,22 @@ touc
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
+                        <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
+                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
                                 
-                                <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
+                                <span class="card-title">Kubernetes教程--Service的创建和管理</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    [TOC]
-1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
-kubectl run mynginx --image=nginx
-
-# 查看Pod状态
-kubectl get pods
-
-1.2 使用YAM
+                                    本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
+[TOC]
+1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
+touc
                                 
                             </div>
                             <div class="publish-info">
@@ -896,6 +896,70 @@ e
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
+                        <a href="/2021/11-liu-fu-zhi/">
+                            <div class="card-image">
+                                
+                                
+                                <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="11 流复制">
+                                
+                                <span class="card-title">11 流复制</span>
+                            </div>
+                        </a>
+                        <div class="card-content article-content">
+                            <div class="summary block-with-text">
+                                
+                                    同步流复制是在9.1版本中实现的。这是一个单主-多从类型的复制，通常主和从这两个术语分别在PostgreSQL中被称为主和备。
+
+
+在流复制中，有三种类型的进程协同工作:
+
+主服务器上的walsender进程向备服务器发送WAL (Writ
+                                
+                            </div>
+                            <div class="publish-info">
+                                <span class="publish-date">
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
+                                </span>
+                                <span class="publish-author">
+                                    
+                                    <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                    
+                                    <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
+                                    </a>
+                                    
+                                    
+                                </span>
+                            </div>
+                        </div>
+
+                        
+                        <div class="card-action article-tags">
+                            
+                            <a href="/tags/postgresql/"><span class="chip bg-color">postgresql</span></a>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </article>
+        </div>
+        
+        <div class="cd-timeline-block">
+
+            
+            
+
+            
+            
+
+            
+            <div class="cd-timeline-img day" data-aos="zoom-in-up">
+                <span>13</span>
+            </div>
+            <article class="cd-timeline-content" data-aos="fade-up">
+                <div class="article col s12 m6">
+                    <div class="card">
                         <a href="/2021/10-ji-chu-bei-fen-he-shi-jian-dian-hui-fu/">
                             <div class="card-image">
                                 
@@ -973,70 +1037,6 @@ e
 [TOC]
 2.1 流程架构PostgreSQL 是一个多进程架构的客户端/服务器型关系数据库管理系统，运行在单台主机上。
 
-                                
-                            </div>
-                            <div class="publish-info">
-                                <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
-                                </span>
-                                <span class="publish-author">
-                                    
-                                    <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                    
-                                    <a href="/categories/postgresql/" class="post-category">
-                                    postgresql
-                                    </a>
-                                    
-                                    
-                                </span>
-                            </div>
-                        </div>
-
-                        
-                        <div class="card-action article-tags">
-                            
-                            <a href="/tags/postgresql/"><span class="chip bg-color">postgresql</span></a>
-                            
-                        </div>
-                        
-                    </div>
-                </div>
-            </article>
-        </div>
-        
-        <div class="cd-timeline-block">
-
-            
-            
-
-            
-            
-
-            
-            <div class="cd-timeline-img day" data-aos="zoom-in-up">
-                <span>13</span>
-            </div>
-            <article class="cd-timeline-content" data-aos="fade-up">
-                <div class="article col s12 m6">
-                    <div class="card">
-                        <a href="/2021/5.bing-fa-kong-zhi/">
-                            <div class="card-image">
-                                
-                                
-                                <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="5 并发控制">
-                                
-                                <span class="card-title">5 并发控制</span>
-                            </div>
-                        </a>
-                        <div class="card-content article-content">
-                            <div class="summary block-with-text">
-                                
-                                    并发控制是一种机制，当多个事务在数据库中并发运行时，它保持原子性和隔离性，这是ACID的两个属性。
-
-
-[TOC]
-
-共有三种广泛的并发控制技术，即多版本并发控制(MVCC)、严格两阶段锁定(S2PL) 和乐观并发控制(OCC)，每种技术都
                                 
                             </div>
                             <div class="publish-info">

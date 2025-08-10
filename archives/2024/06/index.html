@@ -927,22 +927,26 @@ wget https://github.com/docker/compose/releases/download/v2.37.1/d
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
+                        <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
+                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
                                 
-                                <span class="card-title">Kubernetes教程--Service的创建和管理</span>
+                                <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
-[TOC]
-1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
-touc
+                                    [TOC]
+1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
+kubectl run mynginx --image=nginx
+
+# 查看Pod状态
+kubectl get pods
+
+1.2 使用YAM
                                 
                             </div>
                             <div class="publish-info">
@@ -989,26 +993,22 @@ touc
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
+                        <a href="/2024/kubernetes-jiao-cheng-service-de-chuang-jian-he-guan-li/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
+                                <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Service的创建和管理">
                                 
-                                <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
+                                <span class="card-title">Kubernetes教程--Service的创建和管理</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    [TOC]
-1. 创建Pod的几种方式1.1 使用kubectl run命令# 创建简单Pod
-kubectl run mynginx --image=nginx
-
-# 查看Pod状态
-kubectl get pods
-
-1.2 使用YAM
+                                    本教程将指导您如何创建和管理 Kubernetes Service，包括 ClusterIP 和 NodePort 类型的服务。
+[TOC]
+1. 创建 Service 定义文件首先创建一个 YAML 文件来定义 Service：
+touc
                                 
                             </div>
                             <div class="publish-info">
