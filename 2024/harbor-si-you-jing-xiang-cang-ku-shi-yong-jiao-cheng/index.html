@@ -6,8 +6,8 @@
     <meta charset="utf-8">
     <meta name="keywords" content="Harbor私有镜像仓库使用教程, jinlid&#39;s blog">
     <meta name="description" content="[TOC]
-1. 环境准备1.1 安装 Docker Compose# 下载 Docker Compose
-wget https://github.com/docker/compose/releases/download/v2.37.1/d">
+1. 环境准备Harbor 依赖 Docker 和 Docker Compose 运行，需先完成基础工具安装，确保后续部署顺利。
+1.1 安装 Docker ComposeDocker Compose 用于编排 Harbor 依">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -415,109 +415,228 @@ wget https://github.com/docker/compose/releases/download/v2.37.1/d">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <p>[TOC]</p>
-<h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><h3 id="1-1-安装-Docker-Compose"><a href="#1-1-安装-Docker-Compose" class="headerlink" title="1.1 安装 Docker Compose"></a>1.1 安装 Docker Compose</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Docker Compose</span>
-<span class="token function">wget</span> https://github.com/docker/compose/releases/download/v2.37.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+<h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><p>Harbor 依赖 Docker 和 Docker Compose 运行，需先完成基础工具安装，确保后续部署顺利。</p>
+<h3 id="1-1-安装-Docker-Compose"><a href="#1-1-安装-Docker-Compose" class="headerlink" title="1.1 安装 Docker Compose"></a>1.1 安装 Docker Compose</h3><p>Docker Compose 用于编排 Harbor 依赖的多个容器（如 Nginx、PostgreSQL、Redis 等），执行以下命令完成安装：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Docker Compose 二进制文件（v2.37.1 版本，可根据需求替换为最新版）</span>
+<span class="token function">wget</span> https://github.com/docker/compose/releases/download/v2.37.1/docker-compose-linux-x86_64 -O /usr/local/bin/docker-compose
 
-<span class="token comment" spellcheck="true"># 添加执行权限</span>
+<span class="token comment" spellcheck="true"># 为二进制文件添加执行权限</span>
 <span class="token function">chmod</span> +x /usr/local/bin/docker-compose
 
-<span class="token comment" spellcheck="true"># 验证安装</span>
+<span class="token comment" spellcheck="true"># 验证安装结果，若输出版本信息则说明安装成功</span>
 docker-compose version
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="2-安装-Harbor"><a href="#2-安装-Harbor" class="headerlink" title="2. 安装 Harbor"></a>2. 安装 Harbor</h2><h3 id="2-1-下载并解压-Harbor"><a href="#2-1-下载并解压-Harbor" class="headerlink" title="2.1 下载并解压 Harbor"></a>2.1 下载并解压 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Harbor 离线安装包</span>
+<h2 id="2-安装-Harbor"><a href="#2-安装-Harbor" class="headerlink" title="2. 安装 Harbor"></a>2. 安装 Harbor</h2><p>Harbor 提供离线安装包，包含所有依赖组件，无需在线拉取，适合内网环境部署。本节将完成 Harbor 下载、证书配置（HTTPS 必需）、配置文件修改及安装操作。</p>
+<h3 id="2-1-下载并解压-Harbor-安装包"><a href="#2-1-下载并解压-Harbor-安装包" class="headerlink" title="2.1 下载并解压 Harbor 安装包"></a>2.1 下载并解压 Harbor 安装包</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 下载 Harbor v2.6.1 离线安装包（可从 GitHub 官网获取最新版链接）</span>
 <span class="token function">wget</span> https://github.com/goharbor/harbor/releases/download/v2.6.1/harbor-offline-installer-v2.6.1.tgz
 
-<span class="token comment" spellcheck="true"># 解压安装包</span>
-<span class="token function">tar</span> xf harbor-offline-installer-v2.6.1.tgz
+<span class="token comment" spellcheck="true"># 解压安装包到指定目录（此处以 /opt 为例，可自定义路径）</span>
+<span class="token function">tar</span> xf harbor-offline-installer-v2.6.1.tgz -C /opt/
 
-<span class="token comment" spellcheck="true"># 进入 Harbor 目录</span>
-<span class="token function">cd</span> harbor
+<span class="token comment" spellcheck="true"># 进入 Harbor 安装目录，后续操作均在此目录执行</span>
+<span class="token function">cd</span> /opt/harbor/
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="2-2-配置-Harbor"><a href="#2-2-配置-Harbor" class="headerlink" title="2.2 配置 Harbor"></a>2.2 配置 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 复制配置文件模板</span>
-<span class="token function">cp</span> harbor.yml.tmpl harbor.yml
-
-<span class="token comment" spellcheck="true"># 编辑配置文件</span>
-<span class="token function">vi</span> harbor.yml
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>配置示例：</p>
-<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">hostname</span><span class="token punctuation">:</span> 192.168.137.226
-
-<span class="token comment" spellcheck="true"># http 相关配置</span>
-<span class="token key atrule">http</span><span class="token punctuation">:</span>
-  <span class="token comment" spellcheck="true"># HTTP 端口，默认为 80。如果启用了 HTTPS，此端口将重定向到 HTTPS 端口</span>
-  <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">5000</span>
-
-<span class="token comment" spellcheck="true"># https 相关配置（可选）</span>
-<span class="token comment" spellcheck="true">#https:</span>
-<span class="token comment" spellcheck="true">#  # harbor 的 https 端口，默认为 443</span>
-<span class="token comment" spellcheck="true">#  port: 443</span>
-<span class="token comment" spellcheck="true">#  # nginx 的证书和密钥文件路径</span>
-<span class="token comment" spellcheck="true">#  certificate: /your/certificate/path</span>
-<span class="token comment" spellcheck="true">#  private_key: /your/private/key/path</span>
-
-<span class="token comment" spellcheck="true"># 数据卷路径</span>
-<span class="token key atrule">data_volume</span><span class="token punctuation">:</span> /home/jinli/harbor/data
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="2-3-安装-Harbor"><a href="#2-3-安装-Harbor" class="headerlink" title="2.3 安装 Harbor"></a>2.3 安装 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 运行安装脚本</span>
-./install.sh
-
-<span class="token comment" spellcheck="true"># 安装成功后，您将看到以下消息：</span>
-✔ ----Harbor has been installed and started successfully.----
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3-访问-Harbor-Web-界面"><a href="#3-访问-Harbor-Web-界面" class="headerlink" title="3. 访问 Harbor Web 界面"></a>3. 访问 Harbor Web 界面</h2><p>在浏览器中打开：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">http://192.168.137.226:5000/
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>默认管理员用户名和密码：</p>
-<ul>
-<li>用户名：admin</li>
-<li>密码：Harbor12345</li>
-</ul>
-<h2 id="4-管理-Harbor-服务"><a href="#4-管理-Harbor-服务" class="headerlink" title="4. 管理 Harbor 服务"></a>4. 管理 Harbor 服务</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 停止 Harbor 服务</span>
-docker-compose down -v
-
-<span class="token comment" spellcheck="true"># 启动 Harbor 服务</span>
-docker-compose up -d
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="5-配置-Docker-客户端"><a href="#5-配置-Docker-客户端" class="headerlink" title="5. 配置 Docker 客户端"></a>5. 配置 Docker 客户端</h2><h3 id="5-1-配置-Docker-信任私有仓库"><a href="#5-1-配置-Docker-信任私有仓库" class="headerlink" title="5.1 配置 Docker 信任私有仓库"></a>5.1 配置 Docker 信任私有仓库</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 编辑 Docker 配置文件</span>
-<span class="token function">vi</span> /etc/docker/daemon.json
+<h3 id="2-2-配置-HTTPS-证书"><a href="#2-2-配置-HTTPS-证书" class="headerlink" title="2.2 配置 HTTPS 证书"></a>2.2 配置 HTTPS 证书</h3><p>Harbor 支持 HTTP 和 HTTPS 访问，若用于生产环境或 Kubernetes 集群，建议启用 HTTPS（Kubernetes 默认要求镜像仓库使用安全连接）。以下步骤将生成自签 CA 根证书和服务器证书（包含 IP SANs，避免证书验证失败）。</p>
+<h4 id="2-2-1-创建证书存储目录"><a href="#2-2-1-创建证书存储目录" class="headerlink" title="2.2.1 创建证书存储目录"></a>2.2.1 创建证书存储目录</h4><p>先创建统一的证书目录，便于管理：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p /data/ssl/
+<span class="token function">cd</span> /data/ssl/
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>添加以下内容：</p>
-<pre class="line-numbers language-json"><code class="language-json"><span class="token punctuation">{</span>
-  <span class="token property">"insecure-registries"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"192.168.137.226:5000"</span><span class="token punctuation">]</span>
-<span class="token punctuation">}</span>
+<h4 id="2-2-2-生成-CA-根证书"><a href="#2-2-2-生成-CA-根证书" class="headerlink" title="2.2.2 生成 CA 根证书"></a>2.2.2 生成 CA 根证书</h4><p>CA 根证书用于签署服务器证书，客户端需信任此 CA 才能通过证书验证：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 生成 CA 私钥（无密码，避免 Harbor 启动时需手动输入密码）</span>
+openssl genrsa -out ca.key 4096
+
+<span class="token comment" spellcheck="true"># 2. 生成 CA 根证书（有效期 10 年，subj 字段可根据实际情况修改）</span>
+openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.pem \
+  -subj <span class="token string">"/C=CN/ST=shanxi/L=xian/O=test/OU=test/CN=Harbor CA"</span>
+<span class="token comment" spellcheck="true"># 说明：subj 字段含义：C（国家）、ST（省份）、L（城市）、O（公司）、OU（部门）、CN（CA 名称）</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="2-2-3-生成服务器证书（包含-IP-SANs）"><a href="#2-2-3-生成服务器证书（包含-IP-SANs）" class="headerlink" title="2.2.3 生成服务器证书（包含 IP SANs）"></a>2.2.3 生成服务器证书（包含 IP SANs）</h4><p>服务器证书用于 Harbor 的 Nginx 服务，需包含 Harbor 服务器的 IP（或域名）作为「主题备用名称（SANs）」，否则客户端通过 IP 访问时会提示证书验证失败。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 生成服务器私钥</span>
+openssl genrsa -out server.key 4096
+
+<span class="token comment" spellcheck="true"># 2. 创建 openssl 配置文件，指定 SANs 信息（关键：解决 x509: cannot validate certificate 错误）</span>
+<span class="token function">cat</span> <span class="token operator">></span> openssl.cnf <span class="token operator">&lt;&lt;</span> <span class="token string">EOF
+[req]
+default_bits = 4096
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+prompt = no  # 关闭交互式输入，直接使用配置文件中的默认值
+
+[req_distinguished_name]
+C = CN                    # 国家（默认值）
+ST = shanxi               # 省份（可自定义）
+L = xian                  # 城市（可自定义）
+O = test                  # 公司（可自定义）
+OU = test                 # 部门（可自定义）
+CN = 192.168.137.220      # 通用名称（必须为 Harbor 服务器的 IP 或域名）
+
+[req_ext]
+subjectAltName = @alt_names  # 启用 SANs 扩展
+
+[alt_names]
+IP.1 = 192.168.137.220    # Harbor 服务器的 IP（必须包含，可添加多个 IP/域名）
+EOF</span>
+
+<span class="token comment" spellcheck="true"># 3. 生成证书请求文件（CSR）</span>
+openssl req -new -key server.key -out server.csr -config openssl.cnf
+
+<span class="token comment" spellcheck="true"># 4. 用 CA 根证书签署服务器证书（有效期 10 年）</span>
+openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+  -out server.crt -days 3650 -sha256 -extensions req_ext -extfile openssl.cnf
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="2-2-4-验证证书有效性"><a href="#2-2-4-验证证书有效性" class="headerlink" title="2.2.4 验证证书有效性"></a>2.2.4 验证证书有效性</h4><p>执行以下命令，确认服务器证书包含 IP SANs：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看服务器证书详情，搜索「Subject Alternative Name」字段</span>
+openssl x509 -in /data/ssl/server.crt -noout -text <span class="token operator">|</span> <span class="token function">grep</span> -A 5 <span class="token string">"Subject Alternative Name"</span>
+<span class="token comment" spellcheck="true"># 正常输出应包含：X509v3 Subject Alternative Name: IP Address:192.168.137.220</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>重启 Docker 服务：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">systemctl restart docker
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<h3 id="5-2-重启-Harbor-服务"><a href="#5-2-重启-Harbor-服务" class="headerlink" title="5.2 重启 Harbor 服务"></a>5.2 重启 Harbor 服务</h3><pre class="line-numbers language-bash"><code class="language-bash">docker-compose down -v
+<h3 id="2-3-修改-Harbor-配置文件"><a href="#2-3-修改-Harbor-配置文件" class="headerlink" title="2.3 修改 Harbor 配置文件"></a>2.3 修改 Harbor 配置文件</h3><p>Harbor 提供配置模板 <code>harbor.yml.tmpl</code>，需复制为正式配置文件并修改关键参数（如主机名、端口、证书路径、数据存储路径等）。</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 复制配置模板为正式配置文件</span>
+<span class="token function">cp</span> /opt/harbor/harbor.yml.tmpl /opt/harbor/harbor.yml
+
+<span class="token comment" spellcheck="true"># 2. 编辑配置文件</span>
+<span class="token function">vi</span> /opt/harbor/harbor.yml
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>修改以下关键配置项（其他默认配置可根据需求调整）：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token comment" spellcheck="true"># 1. 配置 Harbor 服务器的主机名（必须与证书中的 CN 或 SANs 一致）</span>
+<span class="token key atrule">hostname</span><span class="token punctuation">:</span> 192.168.137.220
+
+<span class="token comment" spellcheck="true"># 2. 关闭 HTTP（若需保留 HTTP，可跳过此步，但建议生产环境禁用）</span>
+<span class="token comment" spellcheck="true"># http:</span>
+<span class="token comment" spellcheck="true">#   port: 80</span>
+
+<span class="token comment" spellcheck="true"># 3. 启用 HTTPS 并配置证书路径（指向之前生成的服务器证书和私钥）</span>
+<span class="token key atrule">https</span><span class="token punctuation">:</span>
+  <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443  </span><span class="token comment" spellcheck="true"># HTTPS 默认端口</span>
+  <span class="token key atrule">certificate</span><span class="token punctuation">:</span> /data/ssl/server.crt  <span class="token comment" spellcheck="true"># 服务器证书路径</span>
+  <span class="token key atrule">private_key</span><span class="token punctuation">:</span> /data/ssl/server.key  <span class="token comment" spellcheck="true"># 服务器私钥路径</span>
+
+<span class="token comment" spellcheck="true"># 4. 配置 Harbor 数据存储路径（默认 /data，可自定义）</span>
+<span class="token key atrule">data_volume</span><span class="token punctuation">:</span> /data
+
+<span class="token comment" spellcheck="true"># 5. 配置管理员初始密码（默认 Harbor12345，建议修改为复杂密码）</span>
+<span class="token key atrule">harbor_admin_password</span><span class="token punctuation">:</span> Harbor12345
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="2-4-安装并启动-Harbor"><a href="#2-4-安装并启动-Harbor" class="headerlink" title="2.4 安装并启动 Harbor"></a>2.4 安装并启动 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 进入 Harbor 安装目录</span>
+<span class="token function">cd</span> /opt/harbor/
+
+<span class="token comment" spellcheck="true"># 2. 运行准备脚本，生成 Docker Compose 配置文件（docker-compose.yml）</span>
+./prepare
+
+<span class="token comment" spellcheck="true"># 3. 启动 Harbor 服务（-d 表示后台运行）</span>
 docker-compose up -d
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h2 id="6-使用-Harbor-仓库"><a href="#6-使用-Harbor-仓库" class="headerlink" title="6. 使用 Harbor 仓库"></a>6. 使用 Harbor 仓库</h2><h3 id="6-1-登录-Harbor"><a href="#6-1-登录-Harbor" class="headerlink" title="6.1 登录 Harbor"></a>6.1 登录 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 登录 Harbor</span>
-docker login 192.168.137.226:5000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="6-2-登出-Harbor"><a href="#6-2-登出-Harbor" class="headerlink" title="6.2 登出 Harbor"></a>6.2 登出 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 登出 Harbor</span>
-docker <span class="token function">logout</span> 192.168.137.226:5000
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="6-3-推送镜像到-Harbor"><a href="#6-3-推送镜像到-Harbor" class="headerlink" title="6.3 推送镜像到 Harbor"></a>6.3 推送镜像到 Harbor</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 登录 Harbor</span>
-docker login 192.168.137.226:5000
 
-<span class="token comment" spellcheck="true"># 2. 为镜像打标签</span>
-docker tag postgres 192.168.137.226:5000/library/postgres
-
-<span class="token comment" spellcheck="true"># 3. 推送镜像到 Harbor</span>
-docker push 192.168.137.226:5000/library/postgres
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h2><p>本教程介绍了如何安装和配置 Harbor 私有 Docker 镜像仓库，包括：</p>
-<ol>
-<li>安装 Docker Compose</li>
-<li>下载和安装 Harbor</li>
-<li>配置 Harbor</li>
-<li>访问 Web 界面</li>
-<li>管理 Harbor 服务</li>
-<li>配置 Docker 客户端</li>
-<li>使用 Harbor 进行镜像推送和拉取</li>
+<span class="token comment" spellcheck="true"># 4. 验证启动结果，若所有容器状态为 Up，则说明启动成功</span>
+docker-compose <span class="token function">ps</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>安装成功后，终端会输出：<code>✔ ----Harbor has been installed and started successfully.----</code></p>
+<h2 id="3-访问-Harbor-Web-界面"><a href="#3-访问-Harbor-Web-界面" class="headerlink" title="3. 访问 Harbor Web 界面"></a>3. 访问 Harbor Web 界面</h2><p>Harbor 提供 Web 管理界面，可通过浏览器进行仓库创建、用户管理、镜像上传 / 下载等操作。</p>
+<h3 id="3-1-登录-Web-界面"><a href="#3-1-登录-Web-界面" class="headerlink" title="3.1 登录 Web 界面"></a>3.1 登录 Web 界面</h3><ol>
+<li>打开浏览器，输入 Harbor 地址：<code>https://192.168.137.220</code>（HTTPS 默认端口 443，无需额外指定）。</li>
+<li>首次访问可能提示「证书不安全」（自签证书默认不被浏览器信任），选择「高级」→「继续访问」即可。</li>
+<li>输入默认管理员账号和密码：<ul>
+<li>用户名：<code>admin</code></li>
+<li>密码：<code>Harbor12345</code>（若修改过配置文件，使用自定义密码）。</li>
+</ul>
+</li>
 </ol>
-<p>通过 Harbor，您可以方便地管理私有 Docker 镜像，提高开发和部署效率。</p>
+<h3 id="3-2-创建测试项目"><a href="#3-2-创建测试项目" class="headerlink" title="3.2 创建测试项目"></a>3.2 创建测试项目</h3><p>登录后，点击左侧「项目」→「新建项目」，创建一个名为 <code>test-images</code> 的项目（用于后续测试镜像推送）：</p>
+<ul>
+<li>项目名称：<code>test-images</code></li>
+<li>访问级别：选择「私有」（仅授权用户可访问）或「公开」（无需登录即可拉取镜像）。</li>
+</ul>
+<h2 id="4-管理-Harbor-服务"><a href="#4-管理-Harbor-服务" class="headerlink" title="4. 管理 Harbor 服务"></a>4. 管理 Harbor 服务</h2><p>日常运维中，可能需要停止、重启或查看 Harbor 服务状态，可通过以下命令操作：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 进入 Harbor 安装目录（必需，否则无法找到 docker-compose.yml 文件）</span>
+<span class="token function">cd</span> /opt/harbor/
+
+<span class="token comment" spellcheck="true"># 2. 停止 Harbor 服务（-v 表示同时删除数据卷，谨慎使用！）</span>
+docker-compose down
+
+<span class="token comment" spellcheck="true"># 3. 启动 Harbor 服务</span>
+docker-compose up -d
+
+<span class="token comment" spellcheck="true"># 4. 重启 Harbor 服务（先停止再启动）</span>
+docker-compose down <span class="token operator">&amp;&amp;</span> docker-compose up -d
+
+<span class="token comment" spellcheck="true"># 5. 查看 Harbor 服务日志（可指定容器名，如 nginx、postgres）</span>
+docker-compose logs -f  <span class="token comment" spellcheck="true"># 查看所有容器日志</span>
+docker-compose logs -f nginx  <span class="token comment" spellcheck="true"># 仅查看 Nginx 容器日志</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-配置-Kubernetes-节点信任-Harbor"><a href="#5-配置-Kubernetes-节点信任-Harbor" class="headerlink" title="5. 配置 Kubernetes 节点信任 Harbor"></a>5. 配置 Kubernetes 节点信任 Harbor</h2><p>Kubernetes 节点（如 Worker 节点）通过 <code>containerd</code> 或 <code>docker</code> 拉取 Harbor 镜像时，需信任 Harbor 的 CA 根证书（否则会提示证书验证失败）。以下步骤以 <code>containerd</code> 为例（Kubernetes 1.24+ 默认容器运行时）。</p>
+<h3 id="5-1-在所有-Kubernetes-节点配置-CA-信任"><a href="#5-1-在所有-Kubernetes-节点配置-CA-信任" class="headerlink" title="5.1 在所有 Kubernetes 节点配置 CA 信任"></a>5.1 在所有 Kubernetes 节点配置 CA 信任</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 将 Harbor 的 CA 根证书复制到系统信任目录</span>
+<span class="token function">sudo</span> <span class="token function">cp</span> /data/ssl/ca.pem /etc/pki/ca-trust/source/anchors/harbor-ca.pem
+
+<span class="token comment" spellcheck="true"># 2. 更新系统证书信任库</span>
+<span class="token function">sudo</span> update-ca-trust extract
+
+<span class="token comment" spellcheck="true"># 3. 重启 containerd，使信任配置生效</span>
+<span class="token function">sudo</span> systemctl restart containerd
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="5-2-若使用-Docker-作为容器运行时，配置-Docker-信任-Harbor（可选）"><a href="#5-2-若使用-Docker-作为容器运行时，配置-Docker-信任-Harbor（可选）" class="headerlink" title="5.2 若使用 Docker 作为容器运行时，配置 Docker 信任 Harbor（可选）"></a>5.2 若使用 Docker 作为容器运行时，配置 Docker 信任 Harbor（可选）</h3><p>若节点仍使用 Docker，需修改 Docker 配置文件，添加 Harbor 为「不安全仓库」（仅适用于 HTTP 或自签证书 HTTPS）：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 编辑 Docker 守护进程配置文件</span>
+<span class="token function">sudo</span> <span class="token function">vi</span> /etc/docker/daemon.json
+
+<span class="token comment" spellcheck="true"># 2. 添加以下内容（IP 替换为 Harbor 服务器 IP）</span>
+<span class="token punctuation">{</span>
+  <span class="token string">"insecure-registries"</span><span class="token keyword">:</span> <span class="token punctuation">[</span><span class="token string">"192.168.137.220"</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment" spellcheck="true"># 3. 重启 Docker 服务</span>
+<span class="token function">sudo</span> systemctl restart docker
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="6-使用-Harbor-仓库"><a href="#6-使用-Harbor-仓库" class="headerlink" title="6. 使用 Harbor 仓库"></a>6. 使用 Harbor 仓库</h2><p>本节将演示如何通过 Docker 客户端登录 Harbor、推送镜像，以及如何在 Kubernetes 中拉取 Harbor 镜像。</p>
+<h3 id="6-1-Docker-客户端操作（推送镜像）"><a href="#6-1-Docker-客户端操作（推送镜像）" class="headerlink" title="6.1 Docker 客户端操作（推送镜像）"></a>6.1 Docker 客户端操作（推送镜像）</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 登录 Harbor（输入管理员账号或项目授权用户账号）</span>
+docker login 192.168.137.220
+
+<span class="token comment" spellcheck="true"># 2. 拉取一个测试镜像（以 busybox 为例）</span>
+docker pull busybox:1.29-4
+
+<span class="token comment" spellcheck="true"># 3. 为镜像打标签（格式：Harbor地址/项目名/镜像名:标签）</span>
+docker tag busybox:1.29-4 192.168.137.220/test-images/busybox:1.29-4
+
+<span class="token comment" spellcheck="true"># 4. 推送镜像到 Harbor 的 test-images 项目</span>
+docker push 192.168.137.220/test-images/busybox:1.29-4
+
+<span class="token comment" spellcheck="true"># 5. （可选）登出 Harbor</span>
+docker <span class="token function">logout</span> 192.168.137.220
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>推送成功后，可在 Harbor Web 界面的「test-images」项目中看到该镜像。</p>
+<h3 id="6-2-Kubernetes-拉取-Harbor-镜像"><a href="#6-2-Kubernetes-拉取-Harbor-镜像" class="headerlink" title="6.2 Kubernetes 拉取 Harbor 镜像"></a>6.2 Kubernetes 拉取 Harbor 镜像</h3><p>若 Harbor 项目为「私有」，Kubernetes 需通过「镜像拉取密钥（imagePullSecrets）」登录 Harbor；若为「公开」，可直接拉取。</p>
+<h4 id="6-2-1-创建镜像拉取密钥"><a href="#6-2-1-创建镜像拉取密钥" class="headerlink" title="6.2.1 创建镜像拉取密钥"></a>6.2.1 创建镜像拉取密钥</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 在 Kubernetes 集群中创建密钥（替换为实际的 Harbor 账号和密码）</span>
+kubectl create secret docker-registry harbor-secret \
+  --docker-server<span class="token operator">=</span>192.168.137.220 \
+  --docker-username<span class="token operator">=</span>admin \
+  --docker-password<span class="token operator">=</span>Harbor12345
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="6-2-2-部署-Pod-拉取-Harbor-镜像"><a href="#6-2-2-部署-Pod-拉取-Harbor-镜像" class="headerlink" title="6.2.2 部署 Pod 拉取 Harbor 镜像"></a>6.2.2 部署 Pod 拉取 Harbor 镜像</h4><p>创建 <code>busybox-pod.yaml</code> 文件，指定 Harbor 镜像和拉取密钥：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Pod
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> busybox
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> busybox
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> 192.168.137.220/test<span class="token punctuation">-</span>images/busybox<span class="token punctuation">:</span>1.29<span class="token punctuation">-</span><span class="token number">4  </span><span class="token comment" spellcheck="true"># Harbor 镜像地址</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"sh"</span><span class="token punctuation">,</span> <span class="token string">"-c"</span><span class="token punctuation">,</span> <span class="token string">"sleep 3600"</span><span class="token punctuation">]</span>  <span class="token comment" spellcheck="true"># 让 Pod 持续运行</span>
+  <span class="token key atrule">imagePullSecrets</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> harbor<span class="token punctuation">-</span>secret  <span class="token comment" spellcheck="true"># 引用之前创建的镜像拉取密钥</span>
+  <span class="token key atrule">restartPolicy</span><span class="token punctuation">:</span> Never
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>部署 Pod 并验证：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 创建 Pod</span>
+kubectl apply -f busybox-pod.yaml
+
+<span class="token comment" spellcheck="true"># 2. 查看 Pod 状态，若 STATUS 为 Running 则说明拉取成功</span>
+kubectl get pods busybox
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h2><p>本教程从环境准备到实际使用，完整覆盖了 Harbor 私有镜像仓库的部署流程，核心要点包括：</p>
+<ol>
+<li>基础依赖（Docker Compose）的安装；</li>
+<li>HTTPS 证书的生成与配置（解决证书验证失败问题）；</li>
+<li>Harbor 的安装、启动与 Web 管理；</li>
+<li>Kubernetes 节点的 CA 信任配置；</li>
+<li>镜像的推送与 Kubernetes 拉取操作。</li>
+</ol>
+<p>通过 Harbor，可实现私有镜像的统一管理，避免依赖公网仓库，同时提高镜像拉取速度和集群安全性。后续可根据需求扩展 Harbor 功能，如配置镜像同步、启用漏洞扫描等。</p>
 
                 
             </div>
@@ -715,13 +834,13 @@ docker push 192.168.137.226:5000/library/postgres
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-deployment-de-chuang-jian-he-guan-li/">
+                <a href="/2024/kubernetes-jiao-cheng-deployment-jie-dian-xuan-ze/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--Deployment的创建和管理">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="Kubernetes教程--Deployment节点选择">
                         
-                        <span class="card-title">Kubernetes教程--Deployment的创建和管理</span>
+                        <span class="card-title">Kubernetes教程--Deployment节点选择</span>
                     </div>
                 </a>
                 <div class="card-content article-content">

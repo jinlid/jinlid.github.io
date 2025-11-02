@@ -6,10 +6,8 @@
     <meta charset="utf-8">
     <meta name="keywords" content="Kubernetes教程--集群部署, jinlid&#39;s blog">
     <meta name="description" content="[TOC]
-1. 环境准备1.1 系统配置# 设置主机名
-echo &#39;master&#39; &gt; /etc/hostname  # 在master节点执行
-echo &#39;node01&#39; &gt; /etc/hostname  # 在node01节点执行
-e">
+1. 环境准备（所有节点执行）集群部署前需统一节点基础配置，避免因环境差异导致部署失败。以下操作需在 master、node01、node02 三个节点 分别执行。
+1.1 系统基础配置1.1.1 设置主机名为每个节点配置唯一主">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -417,156 +415,244 @@ e">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <p>[TOC]</p>
-<h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><h3 id="1-1-系统配置"><a href="#1-1-系统配置" class="headerlink" title="1.1 系统配置"></a>1.1 系统配置</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 设置主机名</span>
-<span class="token keyword">echo</span> <span class="token string">'master'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在master节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node01'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node01节点执行</span>
-<span class="token keyword">echo</span> <span class="token string">'node02'</span> <span class="token operator">></span> /etc/hostname  <span class="token comment" spellcheck="true"># 在node02节点执行</span>
+<h2 id="1-环境准备（所有节点执行）"><a href="#1-环境准备（所有节点执行）" class="headerlink" title="1. 环境准备（所有节点执行）"></a>1. 环境准备（所有节点执行）</h2><p>集群部署前需统一节点基础配置，避免因环境差异导致部署失败。以下操作需在 <strong>master、node01、node02 三个节点</strong> 分别执行。</p>
+<h3 id="1-1-系统基础配置"><a href="#1-1-系统基础配置" class="headerlink" title="1.1 系统基础配置"></a>1.1 系统基础配置</h3><h4 id="1-1-1-设置主机名"><a href="#1-1-1-设置主机名" class="headerlink" title="1.1.1 设置主机名"></a>1.1.1 设置主机名</h4><p>为每个节点配置唯一主机名，便于后续识别和管理：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># master 节点执行</span>
+<span class="token keyword">echo</span> <span class="token string">'master'</span> <span class="token operator">></span> /etc/hostname
 
-<span class="token comment" spellcheck="true"># 配置hosts文件</span>
-<span class="token function">cat</span> <span class="token operator">>></span> /etc/hosts <span class="token operator">&lt;&lt;</span><span class="token string">EOF
+<span class="token comment" spellcheck="true"># node01 节点执行</span>
+<span class="token keyword">echo</span> <span class="token string">'node01'</span> <span class="token operator">></span> /etc/hostname
+
+<span class="token comment" spellcheck="true"># node02 节点执行</span>
+<span class="token keyword">echo</span> <span class="token string">'node02'</span> <span class="token operator">></span> /etc/hostname
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="1-1-2-配置-hosts-文件"><a href="#1-1-2-配置-hosts-文件" class="headerlink" title="1.1.2 配置 hosts 文件"></a>1.1.2 配置 hosts 文件</h4><p>手动绑定节点 IP 与主机名，避免依赖外部 DNS，确保节点间通信稳定：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">>></span> /etc/hosts <span class="token operator">&lt;&lt;</span><span class="token string">EOF
 192.168.137.226 master
 192.168.137.227 node01
 192.168.137.228 node02
 EOF</span>
-
-<span class="token comment" spellcheck="true"># 关闭防火墙</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="1-1-3-关闭防火墙"><a href="#1-1-3-关闭防火墙" class="headerlink" title="1.1.3 关闭防火墙"></a>1.1.3 关闭防火墙</h4><p>Kubernetes 组件间通信需开放多个端口，简化配置直接关闭防火墙（生产环境可按需配置规则）：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 停止防火墙服务</span>
 systemctl stop firewalld
+<span class="token comment" spellcheck="true"># 禁止防火墙开机自启</span>
 systemctl disable firewalld
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="1-2-禁用swap"><a href="#1-2-禁用swap" class="headerlink" title="1.2 禁用swap"></a>1.2 禁用swap</h3><pre class="line-numbers language-bash"><code class="language-bash">swapoff -a
-<span class="token function">sed</span> -i <span class="token string">'/\&lt;swap\>/ s/^/#/'</span> /etc/fstab
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h2 id="2-安装Docker"><a href="#2-安装Docker" class="headerlink" title="2. 安装Docker"></a>2. 安装Docker</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装指定版本Docker</span>
-yum -y <span class="token function">install</span> docker-ce-19.03.13-3.el8
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="1-2-禁用-Swap-分区"><a href="#1-2-禁用-Swap-分区" class="headerlink" title="1.2 禁用 Swap 分区"></a>1.2 禁用 Swap 分区</h3><p>Kubernetes 要求禁用 Swap，避免内存交换影响集群性能和稳定性：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 临时禁用 Swap（立即生效，重启后失效）</span>
+swapoff -a
 
-<span class="token comment" spellcheck="true"># 配置Docker</span>
+<span class="token comment" spellcheck="true"># 永久禁用 Swap（注释 /etc/fstab 中的 Swap 配置）</span>
+<span class="token function">sed</span> -i <span class="token string">'/\&lt;swap\>/ s/^/#/'</span> /etc/fstab
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="2-安装容器运行时（所有节点执行）"><a href="#2-安装容器运行时（所有节点执行）" class="headerlink" title="2. 安装容器运行时（所有节点执行）"></a>2. 安装容器运行时（所有节点执行）</h2><p>Kubernetes 1.24+ 推荐使用 containerd 作为容器运行时，需先安装 Docker（依赖其基础环境），再配置 containerd。</p>
+<h3 id="2-1-安装-Docker-并配置镜像加速"><a href="#2-1-安装-Docker-并配置镜像加速" class="headerlink" title="2.1 安装 Docker 并配置镜像加速"></a>2.1 安装 Docker 并配置镜像加速</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装 Docker（默认安装最新稳定版，如需指定版本可加版本号，如 docker-ce-24.0.6）</span>
+yum <span class="token function">install</span> docker-ce -y
+
+<span class="token comment" spellcheck="true"># 配置 Docker 镜像加速（解决公网镜像拉取慢问题）</span>
 <span class="token function">tee</span> <span class="token operator">></span> /etc/docker/daemon.json <span class="token operator">&lt;&lt;</span><span class="token string">EOF
 {
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
-  "registry-mirrors": ["https://docker.registry.cyou",
-    "https://docker-cf.registry.cyou",
-    "https://dockercf.jsdelivr.fyi",
-    "https://docker.jsdelivr.fyi",
-    "https://dockertest.jsdelivr.fyi",
+  "registry-mirrors": [
+    "https://docker.registry.cyou",
     "https://mirror.aliyuncs.com",
     "https://dockerproxy.com",
     "https://mirror.baidubce.com",
-    "https://docker.m.daocloud.io",
-    "https://docker.nju.edu.cn",
-    "https://docker.mirrors.sjtug.sjtu.edu.cn",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://mirror.iscas.ac.cn",
-    "https://docker.rainbond.cc"]
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
 }
 EOF</span>
 
-<span class="token comment" spellcheck="true"># 启动Docker</span>
-systemctl <span class="token function">enable</span> docker
-systemctl start docker
+<span class="token comment" spellcheck="true"># 启动 Docker 并设置开机自启</span>
+systemctl <span class="token function">enable</span> docker --now
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="2-2-安装并配置-containerd"><a href="#2-2-安装并配置-containerd" class="headerlink" title="2.2 安装并配置 containerd"></a>2.2 安装并配置 containerd</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装指定版本 containerd（1.6.6 版本兼容性较好）</span>
+yum <span class="token function">install</span> containerd.io-1.6.6 -y
 
-<span class="token function">useradd</span> -m jinli
-<span class="token comment" spellcheck="true"># 将用户加入docker组</span>
-<span class="token function">usermod</span> -a -G docker jinli
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="3-网络初始化配置"><a href="#3-网络初始化配置" class="headerlink" title="3. 网络初始化配置"></a>3. 网络初始化配置</h2><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /usr/bin/k8s-init.sh <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-#!/bin/bash
-iptables -P FORWARD ACCEPT
+<span class="token comment" spellcheck="true"># 生成 containerd 默认配置文件</span>
+<span class="token function">mkdir</span> -p /etc/containerd
+containerd config default <span class="token operator">></span> /etc/containerd/config.toml
+
+<span class="token comment" spellcheck="true"># 修改配置：启用 SystemdCgroup（适配 Kubernetes 服务管理）</span>
+<span class="token function">sed</span> -i <span class="token string">'s/SystemdCgroup = false/SystemdCgroup = true/g'</span> /etc/containerd/config.toml
+
+<span class="token comment" spellcheck="true"># 配置 crictl（Kubernetes 官方工具，用于操作 containerd）</span>
+<span class="token function">cat</span> <span class="token operator">></span> /etc/crictl.yaml <span class="token operator">&lt;&lt;</span> <span class="token string">EOF
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
 EOF</span>
 
-<span class="token function">chmod</span> +x /usr/bin/k8s-init.sh
+<span class="token comment" spellcheck="true"># 重启 containerd 并设置开机自启</span>
+systemctl <span class="token function">enable</span> containerd --now
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-配置-Kubernetes-依赖内核参数（所有节点执行）"><a href="#3-配置-Kubernetes-依赖内核参数（所有节点执行）" class="headerlink" title="3. 配置 Kubernetes 依赖内核参数（所有节点执行）"></a>3. 配置 Kubernetes 依赖内核参数（所有节点执行）</h2><p>加载网络相关内核模块，启用 IPv4 转发等关键参数，确保 Kubernetes 网络正常工作。</p>
+<h3 id="3-1-加载-br-netfilter-模块"><a href="#3-1-加载-br-netfilter-模块" class="headerlink" title="3.1 加载 br_netfilter 模块"></a>3.1 加载 br_netfilter 模块</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 临时加载模块（立即生效）</span>
+modprobe br_netfilter
 
-<span class="token function">cat</span> <span class="token operator">></span> /usr/lib/systemd/system/k8s-init.service <span class="token operator">&lt;&lt;</span><span class="token string">EOF
-[Unit]
-Description=Kubernetes Init Task
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/k8s-init.sh
-
-[Install]
-WantedBy=multi-user.target
+<span class="token comment" spellcheck="true"># 永久加载模块（重启后仍生效）</span>
+<span class="token keyword">echo</span> <span class="token string">"br_netfilter"</span> <span class="token operator">></span> /etc/modules-load.d/k8s.conf
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-2-配置内核参数"><a href="#3-2-配置内核参数" class="headerlink" title="3.2 配置内核参数"></a>3.2 配置内核参数</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 写入内核参数配置文件</span>
+<span class="token function">cat</span> <span class="token operator">></span> /etc/sysctl.d/k8s.conf <span class="token operator">&lt;&lt;</span> <span class="token string">EOF
+net.bridge.bridge-nf-call-ip6tables=1  # 让 iptables 处理 IPv6 流量
+net.bridge.bridge-nf-call-iptables=1   # 让 iptables 处理 IPv4 流量
+net.ipv4.ip_forward=1                  # 启用 IPv4 转发（容器网络依赖）
 EOF</span>
 
-systemctl <span class="token function">enable</span> k8s-init
-systemctl start k8s-init
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="4-安装Kubernetes组件"><a href="#4-安装Kubernetes组件" class="headerlink" title="4. 安装Kubernetes组件"></a>4. 安装Kubernetes组件</h2><h3 id="4-1-配置yum源"><a href="#4-1-配置yum源" class="headerlink" title="4.1 配置yum源"></a>4.1 配置yum源</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/yum.repos.d/kubernetes.repo <span class="token operator">&lt;&lt;</span><span class="token string">EOF
+<span class="token comment" spellcheck="true"># 应用配置（立即生效）</span>
+sysctl -p /etc/sysctl.d/k8s.conf
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="4-安装-Kubernetes-组件（所有节点执行）"><a href="#4-安装-Kubernetes-组件（所有节点执行）" class="headerlink" title="4. 安装 Kubernetes 组件（所有节点执行）"></a>4. 安装 Kubernetes 组件（所有节点执行）</h2><p>通过 YUM 源安装 kubeadm（集群初始化工具）、kubelet（节点管理组件）、kubectl（集群命令行工具）。</p>
+<h3 id="4-1-配置-Kubernetes-YUM-源（阿里云源，国内访问快）"><a href="#4-1-配置-Kubernetes-YUM-源（阿里云源，国内访问快）" class="headerlink" title="4.1 配置 Kubernetes YUM 源（阿里云源，国内访问快）"></a>4.1 配置 Kubernetes YUM 源（阿里云源，国内访问快）</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">cat</span> <span class="token operator">></span> /etc/yum.repos.d/kubernetes.repo <span class="token operator">&lt;&lt;</span><span class="token string">EOF
 [kubernetes]
 name=Kubernetes
-baseurl=https://mirrors.aliyuncs.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
 enabled=1
 gpgcheck=1
-gpgkey=https://mirrors.aliyuncs.com/kubernetes/yum/doc/yum-key.gpg
-       https://mirrors.aliyuncs.com/kubernetes/yum/doc/rpm-package-key.gpg
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+       https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 repo_gpgcheck=1
 EOF</span>
 
+<span class="token comment" spellcheck="true"># 清理 YUM 缓存并生成新缓存</span>
 yum clean all
 yum makecache
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-2-安装kubeadm-kubelet和kubectl"><a href="#4-2-安装kubeadm-kubelet和kubectl" class="headerlink" title="4.2 安装kubeadm, kubelet和kubectl"></a>4.2 安装kubeadm, kubelet和kubectl</h3><pre class="line-numbers language-bash"><code class="language-bash">yum <span class="token function">install</span> -y kubelet-1.20.1-0 kubeadm-1.20.1-0 kubectl-1.20.1-0
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="4-2-安装指定版本的-Kubernetes-组件"><a href="#4-2-安装指定版本的-Kubernetes-组件" class="headerlink" title="4.2 安装指定版本的 Kubernetes 组件"></a>4.2 安装指定版本的 Kubernetes 组件</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 安装 1.27.0 版本</span>
+yum <span class="token function">install</span> -y kubelet-1.27.0 kubeadm-1.27.0 kubectl-1.27.0
+
+<span class="token comment" spellcheck="true"># 设置 kubelet 开机自启（暂不启动，初始化后自动启动）</span>
 systemctl <span class="token function">enable</span> kubelet
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="4-3-初始化Master节点"><a href="#4-3-初始化Master节点" class="headerlink" title="4.3. 初始化Master节点"></a>4.3. 初始化Master节点</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 初始化集群</span>
-kubeadm init \
-  --kubernetes-version<span class="token operator">=</span>1.20.1 \
-  --image-repository registry.aliyuncs.com/google_containers \
-  --pod-network-cidr<span class="token operator">=</span>192.168.2.0/24 \
-  --service-cidr<span class="token operator">=</span>10.96.0.0/12
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-初始化-Master-节点（仅-master-节点执行）"><a href="#5-初始化-Master-节点（仅-master-节点执行）" class="headerlink" title="5. 初始化 Master 节点（仅 master 节点执行）"></a>5. 初始化 Master 节点（仅 master 节点执行）</h2><p>Master 节点是集群控制平面核心，需通过 kubeadm 初始化，生成集群配置和节点加入令牌。</p>
+<h3 id="5-1-准备初始化配置文件"><a href="#5-1-准备初始化配置文件" class="headerlink" title="5.1 准备初始化配置文件"></a>5.1 准备初始化配置文件</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成默认初始化配置模板</span>
+kubeadm config print init-defaults <span class="token operator">></span> kubeadm.yaml
 
-<span class="token comment" spellcheck="true"># 配置kubectl</span>
+<span class="token comment" spellcheck="true"># 编辑配置文件（关键参数已标注，按实际环境修改）</span>
+<span class="token function">vi</span> kubeadm.yaml
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>最终配置文件内容如下（重点关注 <code>advertiseAddress</code>、<code>podSubnet</code>、<code>serviceSubnet</code>）：</p>
+<pre class="line-numbers language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> kubeadm.k8s.io/v1beta3
+<span class="token key atrule">bootstrapTokens</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token key atrule">groups</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> system<span class="token punctuation">:</span>bootstrappers<span class="token punctuation">:</span>kubeadm<span class="token punctuation">:</span>default<span class="token punctuation">-</span>node<span class="token punctuation">-</span>token
+  <span class="token key atrule">token</span><span class="token punctuation">:</span> abcdef.0123456789abcdef  <span class="token comment" spellcheck="true"># 默认令牌，可自定义</span>
+  <span class="token key atrule">ttl</span><span class="token punctuation">:</span> 24h0m0s
+  <span class="token key atrule">usages</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> signing
+  <span class="token punctuation">-</span> authentication
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> InitConfiguration
+<span class="token key atrule">localAPIEndpoint</span><span class="token punctuation">:</span>
+  <span class="token key atrule">advertiseAddress</span><span class="token punctuation">:</span> 192.168.137.226  <span class="token comment" spellcheck="true"># Master 节点 IP，需修改为实际 IP</span>
+  <span class="token key atrule">bindPort</span><span class="token punctuation">:</span> <span class="token number">6443  </span><span class="token comment" spellcheck="true"># API Server 默认端口</span>
+<span class="token key atrule">nodeRegistration</span><span class="token punctuation">:</span>
+  <span class="token key atrule">criSocket</span><span class="token punctuation">:</span> unix<span class="token punctuation">:</span>///var/run/containerd/containerd.sock  <span class="token comment" spellcheck="true"># containerd 连接地址</span>
+  <span class="token key atrule">imagePullPolicy</span><span class="token punctuation">:</span> Never  <span class="token comment" spellcheck="true"># 不自动拉取镜像（后续手动拉取国内源镜像）</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> master  <span class="token comment" spellcheck="true"># Master 节点主机名，需与实际一致</span>
+  <span class="token key atrule">taints</span><span class="token punctuation">:</span> <span class="token null important">null  </span><span class="token comment" spellcheck="true"># 初始不设置污点，如需禁止调度可后续添加</span>
+<span class="token punctuation">---</span>
+<span class="token key atrule">apiServer</span><span class="token punctuation">:</span>
+  <span class="token key atrule">timeoutForControlPlane</span><span class="token punctuation">:</span> 4m0s
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> kubeadm.k8s.io/v1beta3
+<span class="token key atrule">certificatesDir</span><span class="token punctuation">:</span> /etc/kubernetes/pki  <span class="token comment" spellcheck="true"># 证书存储目录</span>
+<span class="token key atrule">clusterName</span><span class="token punctuation">:</span> kubernetes  <span class="token comment" spellcheck="true"># 集群名称</span>
+<span class="token key atrule">controllerManager</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token key atrule">dns</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token key atrule">etcd</span><span class="token punctuation">:</span>
+  <span class="token key atrule">local</span><span class="token punctuation">:</span>
+    <span class="token key atrule">dataDir</span><span class="token punctuation">:</span> /var/lib/etcd  <span class="token comment" spellcheck="true"># etcd 数据存储目录</span>
+<span class="token key atrule">imageRepository</span><span class="token punctuation">:</span> registry.k8s.io  <span class="token comment" spellcheck="true"># 镜像仓库（后续手动替换为国内源）</span>
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> ClusterConfiguration
+<span class="token key atrule">kubernetesVersion</span><span class="token punctuation">:</span> 1.27.0  <span class="token comment" spellcheck="true"># Kubernetes 版本，需与安装版本一致</span>
+<span class="token key atrule">networking</span><span class="token punctuation">:</span>
+  <span class="token key atrule">dnsDomain</span><span class="token punctuation">:</span> cluster.local  <span class="token comment" spellcheck="true"># DNS 域名</span>
+  <span class="token key atrule">podSubnet</span><span class="token punctuation">:</span> 10.244.0.0/16  <span class="token comment" spellcheck="true"># Pod 网段（需与 Calico 配置一致）</span>
+  <span class="token key atrule">serviceSubnet</span><span class="token punctuation">:</span> 10.96.0.0/12  <span class="token comment" spellcheck="true"># Service 网段</span>
+<span class="token key atrule">scheduler</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="5-2-手动拉取-Kubernetes-镜像（国内源）"><a href="#5-2-手动拉取-Kubernetes-镜像（国内源）" class="headerlink" title="5.2 手动拉取 Kubernetes 镜像（国内源）"></a>5.2 手动拉取 Kubernetes 镜像（国内源）</h3><p>默认 <code>registry.k8s.io</code> 镜像仓库国内访问慢，通过华为云源拉取镜像并重新打标签：</p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 1. 拉取控制平面组件镜像（仅 Master 节点需执行）</span>
+<span class="token comment" spellcheck="true"># kube-apiserver</span>
+ctr images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-apiserver:v1.27.0
+ctr images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-apiserver:v1.27.0 registry.k8s.io/kube-apiserver:v1.27.0
+
+<span class="token comment" spellcheck="true"># kube-controller-manager</span>
+ctr images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-controller-manager:v1.27.0
+ctr images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-controller-manager:v1.27.0 registry.k8s.io/kube-controller-manager:v1.27.0
+
+<span class="token comment" spellcheck="true"># kube-scheduler</span>
+ctr images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-scheduler:v1.27.0
+ctr images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-scheduler:v1.27.0 registry.k8s.io/kube-scheduler:v1.27.0
+
+<span class="token comment" spellcheck="true"># etcd</span>
+ctr images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/etcd:3.5.7-0
+ctr images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/etcd:3.5.7-0 registry.k8s.io/etcd:3.5.7-0
+
+<span class="token comment" spellcheck="true"># 2. 拉取所有节点都需要的镜像（Master + Worker 节点均需执行）</span>
+<span class="token comment" spellcheck="true"># kube-proxy（需在 k8s.io 命名空间下）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-proxy:v1.27.0
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/kube-proxy:v1.27.0 registry.k8s.io/kube-proxy:v1.27.0
+
+<span class="token comment" spellcheck="true"># pause（基础沙箱镜像，需在 k8s.io 命名空间下）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/pause:3.6
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/pause:3.6 registry.k8s.io/pause:3.6
+
+<span class="token comment" spellcheck="true"># coredns（DNS 组件，需在 k8s.io 命名空间下）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/coredns/coredns:v1.10.1
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/registry.k8s.io/coredns/coredns:v1.10.1 registry.k8s.io/coredns/coredns:v1.10.1
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="5-3-执行-Master-节点初始化"><a href="#5-3-执行-Master-节点初始化" class="headerlink" title="5.3 执行 Master 节点初始化"></a>5.3 执行 Master 节点初始化</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 基于配置文件初始化集群</span>
+kubeadm init --config kubeadm.yaml
+
+<span class="token comment" spellcheck="true"># 配置 kubectl 命令行工具（让当前用户拥有集群操作权限）</span>
 <span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
 <span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
 <span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-4-安装网络插件-Calico"><a href="#4-4-安装网络插件-Calico" class="headerlink" title="4.4. 安装网络插件(Calico)"></a>4.4. 安装网络插件(Calico)</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p ~/k8s/calico
-<span class="token function">cd</span> ~/k8s/calico
-curl -L https://docs.projectcalico.org/v3.18/manifests/calico.yaml -o calico-v3.18.yaml
-<span class="token function">sed</span> -i -e <span class="token string">"s?192.168.0.0/16?192.168.2.0/24?g"</span> calico-v3.18.yaml
-kubectl apply -f calico-v3.18.yaml
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="4-5-加入Worker节点"><a href="#4-5-加入Worker节点" class="headerlink" title="4.5. 加入Worker节点"></a>4.5. 加入Worker节点</h3><p>在master节点获取加入命令：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm token create --print-join-command
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在node01和node02节点执行：</p>
-<pre class="line-numbers language-bash"><code class="language-bash">kubeadm reset
-kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token <span class="token operator">&lt;</span>token<span class="token operator">></span> --discovery-token-ca-cert-hash sha256:<span class="token operator">&lt;</span>hash<span class="token operator">></span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="4-6-配置kube-proxy使用ipvs模式"><a href="#4-6-配置kube-proxy使用ipvs模式" class="headerlink" title="4.6. 配置kube-proxy使用ipvs模式"></a>4.6. 配置kube-proxy使用ipvs模式</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl edit cm kube-proxy -n kube-system
-<span class="token comment" spellcheck="true"># 修改mode为ipvs</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="4-7-验证集群状态"><a href="#4-7-验证集群状态" class="headerlink" title="4.7. 验证集群状态"></a>4.7. 验证集群状态</h3><pre class="line-numbers language-bash"><code class="language-bash">kubectl get nodes
-kubectl get pods -n kube-system
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="3-常见问题排查"><a href="#3-常见问题排查" class="headerlink" title="3. 常见问题排查"></a>3. 常见问题排查</h3><h3 id="3-1-证书错误"><a href="#3-1-证书错误" class="headerlink" title="3.1 证书错误"></a>3.1 证书错误</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 如果出现x509证书错误</span>
-<span class="token function">rm</span> -rf <span class="token variable">$HOME</span>/.kube
-<span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
-<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
-<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-2-移除节点"><a href="#3-2-移除节点" class="headerlink" title="3.2 移除节点"></a>3.2 移除节点</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 优雅移除节点</span>
-kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
-kubectl delete node node01
 
-<span class="token comment" spellcheck="true"># 在节点上清理</span>
-kubeadm reset
+<span class="token comment" spellcheck="true"># 验证 kubectl 配置（输出 Master 节点信息即成功）</span>
+kubectl get node
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="6-安装网络插件-Calico（仅-master-节点执行）"><a href="#6-安装网络插件-Calico（仅-master-节点执行）" class="headerlink" title="6. 安装网络插件 Calico（仅 master 节点执行）"></a>6. 安装网络插件 Calico（仅 master 节点执行）</h2><p>Kubernetes 需网络插件实现 Pod 间通信，Calico 是常用的高性能网络插件，需确保其网段与 <code>kubeadm.yaml</code> 中的 <code>podSubnet</code> 一致。</p>
+<h3 id="6-1-下载并修改-Calico-配置文件"><a href="#6-1-下载并修改-Calico-配置文件" class="headerlink" title="6.1 下载并修改 Calico 配置文件"></a>6.1 下载并修改 Calico 配置文件</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 创建目录并下载配置文件</span>
+<span class="token function">mkdir</span> -p ~/k8s/calico <span class="token operator">&amp;&amp;</span> <span class="token function">cd</span> ~/k8s/calico
+curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/calico.yaml
+
+<span class="token comment" spellcheck="true"># 修改 Pod 网段（与 kubeadm.yaml 中的 podSubnet 保持一致，默认是 192.168.0.0，需改为 10.244.0.0）</span>
+<span class="token function">sed</span> -i -e <span class="token string">"s/192.168.0.0/10.244.0.0/g"</span> calico.yaml
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本教程涵盖了从Kubernetes集群部署的完整流程，包括：</p>
-<ol>
-<li>环境准备和依赖安装</li>
-<li>Kubernetes集群初始化</li>
-<li>网络插件安装</li>
-<li>工作节点加入</li>
-<li>常见问题排查方法</li>
-</ol>
+<h3 id="6-2-拉取-Calico-镜像（所有节点执行）"><a href="#6-2-拉取-Calico-镜像（所有节点执行）" class="headerlink" title="6.2 拉取 Calico 镜像（所有节点执行）"></a>6.2 拉取 Calico 镜像（所有节点执行）</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># calico-cni（网络接口插件）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/calico-cni:v3.26.3-rancher1
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/calico-cni:v3.26.3-rancher1 docker.io/calico/cni:v3.26.3
+
+<span class="token comment" spellcheck="true"># calico-node（节点网络代理）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/mirrored-calico-node:v3.26.3
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/mirrored-calico-node:v3.26.3 docker.io/calico/node:v3.26.3
+
+<span class="token comment" spellcheck="true"># calico-kube-controllers（Calico 控制器）</span>
+ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/mirrored-calico-kube-controllers:v3.26.3
+ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/mirrored-calico-kube-controllers:v3.26.3 docker.io/calico/kube-controllers:v3.26.3
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="6-3-部署-Calico-网络插件"><a href="#6-3-部署-Calico-网络插件" class="headerlink" title="6.3 部署 Calico 网络插件"></a>6.3 部署 Calico 网络插件</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 应用 Calico 配置</span>
+kubectl apply -f calico.yaml
+
+<span class="token comment" spellcheck="true"># 验证 Calico 部署状态（所有 Pod 状态为 Running 即成功）</span>
+kubectl get pods -n calico-system
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="7-加入-Worker-节点"><a href="#7-加入-Worker-节点" class="headerlink" title="7. 加入 Worker 节点"></a>7. 加入 Worker 节点</h2><p>Worker 节点需通过 Master 生成的 “加入命令” 加入集群，实现统一管理。</p>
+<h3 id="7-1-获取节点加入命令（仅-master-节点执行）"><a href="#7-1-获取节点加入命令（仅-master-节点执行）" class="headerlink" title="7.1 获取节点加入命令（仅 master 节点执行）"></a>7.1 获取节点加入命令（仅 master 节点执行）</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 生成加入命令（包含令牌和 CA 证书哈希，有效期 24 小时）</span>
+kubeadm token create --print-join-command
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>执行后会输出类似如下命令（需复制到 Worker 节点执行）：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token abcdef.0123456789abcdef --discovery-token-ca-cert-hash sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="7-2-执行加入命令（仅-node01、node02-执行）"><a href="#7-2-执行加入命令（仅-node01、node02-执行）" class="headerlink" title="7.2 执行加入命令（仅 node01、node02 执行）"></a>7.2 执行加入命令（仅 node01、node02 执行）</h3><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 先重置节点（避免之前操作残留配置影响）</span>
+kubeadm reset
+
+<span class="token comment" spellcheck="true"># 执行从 Master 节点复制的加入命令（替换为实际输出的命令）</span>
+kubeadm <span class="token function">join</span> 192.168.137.226:6443 --token abcdef.
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -715,13 +801,13 @@ kubeadm reset
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-pod-de-chuang-jian-he-guan-li/">
+                <a href="/2024/kubernetes-jiao-cheng-bu-shu-flask-ying-yong/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Kubernetes教程--Pod的创建和管理">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--部署Flask应用">
                         
-                        <span class="card-title">Kubernetes教程--Pod的创建和管理</span>
+                        <span class="card-title">Kubernetes教程--部署Flask应用</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -764,31 +850,31 @@ kubeadm reset
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2024/kubernetes-jiao-cheng-bu-shu-flask-ying-yong/">
+                <a href="/2021/1.shu-ju-ku-ji-qun-shu-ju-ku-he-biao/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="Kubernetes教程--部署Flask应用">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="1 数据库集群、数据库和表">
                         
-                        <span class="card-title">Kubernetes教程--部署Flask应用</span>
+                        <span class="card-title">1 数据库集群、数据库和表</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            
+                            本章和下一章总结了PostgreSQL的基础知识，以帮助阅读后续章节。
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2024-06-07
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-13
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
+                            <a href="/categories/postgresql/" class="post-category">
+                                    postgresql
                                 </a>
                             
                             
@@ -798,8 +884,8 @@ kubeadm reset
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AE%B9%E5%99%A8/">
-                        <span class="chip bg-color">容器</span>
+                    <a href="/tags/postgresql/">
+                        <span class="chip bg-color">postgresql</span>
                     </a>
                     
                 </div>
