@@ -437,8 +437,7 @@
 <p>上述内容详细介绍了 Panweidb支持的常见索引结构。接下来，将重点阐述索引的核心特性，这些特性可用于进一步调整和优化索引性能，满足不同业务场景的查询需求。</p>
 <h4 id="多列索引"><a href="#多列索引" class="headerlink" title="多列索引"></a>多列索引</h4><p>Panweidb 支持在多个列上创建联合索引（即多列索引），但最多支持 32 个列的组合，且仅 Btree、Gist、Gin索引类型支持多列索引。多列索引的查询效率与列的排序顺序密切相关，通常应将查询频率最高、选择性最强的列置于索引列的最前面。以下为多列索引的创建示例：</p>
 <p> <img src="/medias/image/image-20260129095148633.png" alt="image-20260129095148633"></p>
-<h4 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h4><p>唯一索引的核心作用是强制索引列（或列组合）中的值具有唯一性，避免出现重复数据。在 Panweidb 中，可在单个列或多个列上创建唯一索引；若为多列创建唯一索引，则通过列值的组合来确保唯一性。需注意的是，仅B树索引支持声明为唯一索引。</p>
-<p> <img src="/medias/image/image-20260129095457006.png" alt="image-20260129095457006"></p>
+<h4 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h4><p>唯一索引的核心作用是强制索引列（或列组合）中的值具有唯一性，避免出现重复数据。在 Panweidb 中，可在单个列或多个列上创建唯一索引；若为多列创建唯一索引，则通过列值的组合来确保唯一性。需注意的是，仅B树索引支持声明为唯一索引。 <img src="/medias/image/image-20260129095457006.png" alt="image-20260129095457006"></p>
 <p>多列唯一索引的创建示例如下：</p>
 <p> <img src="/medias/image/image-20260129095525701.png" alt="image-20260129095525701"></p>
 <p>需特别说明的是，NULL 值不被视为相等值，因此在唯一索引列中可插入多个 NULL 值，不会触发索引唯一性违规。</p>
@@ -550,8 +549,100 @@
 <p>硬件压缩ZFS/软件压缩有很多种<br>LZ4、ZSTD、punch hole打洞反还</p>
 <p>优劣势对比</p>
 <p>注意事项</p>
-<h2 id="4-4-批量处理术"><a href="#4-4-批量处理术" class="headerlink" title="4.4 批量处理术"></a>4.4 批量处理术</h2><h3 id="4-4-1-业务批量插入最佳实践-insert"><a href="#4-4-1-业务批量插入最佳实践-insert" class="headerlink" title="4.4.1 业务批量插入最佳实践(insert)"></a>4.4.1 业务批量插入最佳实践(insert)</h3><p>批量插入介绍<br>最佳实践介绍<br>注意事项</p>
-<h3 id="4-4-2-日志批量落盘最佳实践-checkpoint"><a href="#4-4-2-日志批量落盘最佳实践-checkpoint" class="headerlink" title="4.4.2 日志批量落盘最佳实践(checkpoint)"></a>4.4.2 日志批量落盘最佳实践(checkpoint)</h3><p>checkpoint机制介绍<br>最佳实践介绍<br>注意事项</p>
+<h2 id="4-4-批量处理术"><a href="#4-4-批量处理术" class="headerlink" title="4.4 批量处理术"></a>4.4 批量处理术</h2><h3 id="4-4-1-业务批量插入最佳实践-insert"><a href="#4-4-1-业务批量插入最佳实践-insert" class="headerlink" title="4.4.1 业务批量插入最佳实践(insert)"></a>4.4.1 业务批量插入最佳实践(insert)</h3><h4 id="批量插入介绍"><a href="#批量插入介绍" class="headerlink" title="批量插入介绍"></a><strong>批量插入介绍</strong></h4><p>在 PanWeDB 数据库运维中，常需通过单个或最少步骤完成海量数据的导入操作，即批量数据导入，其数据源多为单个或多个大文件。若未采用针对性优化方案，该过程会因各类性能瓶颈导致加载速度极慢，难以满足业务需求。</p>
+<p>造成 PanWeDB 批量插入性能低下的核心原因包括：索引的实时更新开销、触发器的逐行触发执行、外键约束的有效性校验、GUID 主键的生成成本，以及预写日志（WAL）的写入机制等，这些因素会单独或叠加成为数据加载的关键阻碍。</p>
+<h4 id="最佳实践介绍"><a href="#最佳实践介绍" class="headerlink" title="最佳实践介绍"></a><strong>最佳实践介绍</strong></h4><p><strong>1. 创建目标表为 UNLOGGED 模式</strong></p>
+<p>利用 PanWeDB 兼容的 UNLOGGED 特性，创建 UNLOGGED 表以提升数据导入速度，加载完成后将数据迁移回原表，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> UNLOGGED <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>new_table<span class="token operator">></span> <span class="token keyword">AS</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">WITH</span> <span class="token keyword">NO</span> <span class="token keyword">DATA</span><span class="token punctuation">;</span>
+<span class="token operator">&lt;</span>bulk_data_insert_operations<span class="token operator">></span><span class="token punctuation">;</span>
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> <span class="token operator">&lt;</span>new_table<span class="token operator">></span><span class="token punctuation">;</span>
+<span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>new_table<span class="token operator">></span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>请根据实际情况替换 <code>&lt;target_table&gt;</code>、<code>&lt;new_table&gt;</code> 和 <code>&lt;bulk_data_insert_operations&gt;</code>。需要注意的是 <strong>UNLOGGED 表不支持流复制功能</strong>，需考虑这一限制。</p>
+<p><strong>2. 删除索引后重新创建</strong></p>
+<p>批量导入前删除目标表非主键索引，避免逐行更新索引的巨大开销，加载完成后重建，可临时提高 <code>maintenance_work_mem</code> 加速索引创建，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">DROP</span> <span class="token keyword">INDEX</span> <span class="token operator">&lt;</span>index_name1<span class="token operator">></span><span class="token punctuation">,</span> <span class="token operator">&lt;</span>index_name2<span class="token operator">></span>…<span class="token punctuation">;</span>
+<span class="token operator">&lt;</span>bulk_data_insert_operations<span class="token operator">></span><span class="token punctuation">;</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> <span class="token operator">&lt;</span>index_name<span class="token operator">></span> <span class="token keyword">ON</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span><span class="token punctuation">(</span>column1<span class="token punctuation">,</span>…<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<ol start="3">
+<li><strong>临时删除外键约束再重建</strong></li>
+</ol>
+<p>删除目标表外键约束，在单个事务中完成数据导入，提交后重新创建约束，减少逐行外键校验的触发器开销，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">DROP</span> <span class="token keyword">CONSTRAINT</span> <span class="token operator">&lt;</span>fk_constraint<span class="token operator">></span><span class="token punctuation">;</span>
+<span class="token keyword">BEGIN</span> <span class="token keyword">TRANSACTION</span><span class="token punctuation">;</span> <span class="token operator">&lt;</span>bulk_data_insert_operations<span class="token operator">></span><span class="token punctuation">;</span> <span class="token keyword">COMMIT</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">ADD</span> <span class="token keyword">CONSTRAINT</span> <span class="token operator">&lt;</span>fk_constraint<span class="token operator">></span> <span class="token keyword">FOREIGN</span> <span class="token keyword">KEY</span> <span class="token punctuation">(</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span> <span class="token keyword">REFERENCES</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<ol start="4">
+<li><strong>禁用所有触发器后启用</strong></li>
+</ol>
+<p>导入前禁用目标表所有触发器，避免业务触发器和外键校验触发器的逐行执行，加载完成后恢复，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">DISABLE</span> <span class="token keyword">TRIGGER</span> <span class="token keyword">ALL</span><span class="token punctuation">;</span>
+<span class="token operator">&lt;</span>bulk_data_insert_operations<span class="token operator">></span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token keyword">ENABLE</span> <span class="token keyword">TRIGGER</span> <span class="token keyword">ALL</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<ol start="5">
+<li><strong>优先使用 COPY 命令导入</strong></li>
+</ol>
+<p>采用 PanWeDB 官方推荐的<code>COPY</code>命令，专为文件批量导入优化，性能远优于 INSERT 语句，支持多格式、条件加载，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql">COPY <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token punctuation">[</span><span class="token punctuation">(</span>column1<span class="token punctuation">,</span>…<span class="token punctuation">)</span><span class="token punctuation">]</span> <span class="token keyword">FROM</span> <span class="token string">'&lt;file_path>'</span> <span class="token keyword">WITH</span> <span class="token punctuation">(</span><span class="token operator">&lt;</span>option1<span class="token operator">></span><span class="token punctuation">,</span>…<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<ol start="6">
+<li><strong>采用多值 INSERT 语句</strong></li>
+</ol>
+<p>数据源为动态生成时，用多值 INSERT 替代大量单条 INSERT，减少解析、事务提交开销，建议单语句控制 1000 行左右，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span> <span class="token punctuation">(</span>column1<span class="token punctuation">,</span>…<span class="token punctuation">)</span> <span class="token keyword">VALUES</span> <span class="token punctuation">(</span>val1<span class="token punctuation">,</span>…<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span>val2<span class="token punctuation">,</span>…<span class="token punctuation">)</span><span class="token punctuation">,</span>…<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<ol start="7">
+<li><strong>导入后执行 ANALYZE 更新统计</strong></li>
+</ol>
+<p>批量数据会导致表统计信息过时，影响查询优化器决策，导入后立即执行<code>ANALYZE</code>更新统计，核心语句：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">ANALYZE</span> <span class="token operator">&lt;</span>target_table<span class="token operator">></span><span class="token punctuation">;</span> 
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h4><ol>
+<li><strong>UNLOGGED 模式专属风险</strong></li>
+</ol>
+<ul>
+<li>未记录 WAL 日志，若加载中数据库崩溃 / 服务器异常，表数据无法恢复，重启后 PanWeDB 会自动截断该表；</li>
+<li>UNLOGGED 表数据不复制到备节点，主备集群需先删除复制关系，加载后重新创建，可能暂时丧失高可用。</li>
+</ul>
+<ol start="2">
+<li><strong>结构修改类操作前置要求</strong></li>
+</ol>
+<ul>
+<li>执行删除索引、外键，禁用触发器，切换 UNLOGGED 模式前，<strong>必须对目标表及原有结构做全量备份</strong>，防止数据丢失或结构损坏；</li>
+<li>所有表结构修改操作完成后，需及时恢复原有配置（如 LOGGED 模式、索引、约束、触发器），避免影响正常业务。</li>
+</ul>
+<ol start="3">
+<li><strong>内存配置与执行规范</strong></li>
+</ol>
+<ul>
+<li>重建索引、外键时，可临时提高<code>maintenance_work_mem</code>，多值 INSERT 需合理设置<code>effective_cache_size</code>（总 RAM50%）、<code>shared_buffers</code>（总 RAM25%）；</li>
+<li>多值 INSERT 需分批执行，单语句行数不宜过多，避免内存不足导致执行失败；</li>
+<li>批量导入建议在业务低峰期执行，减少对正常业务的资源占用。</li>
+</ul>
+<ol start="4">
+<li><strong>集群与数据完整性要求</strong></li>
+</ol>
+<ul>
+<li>主备集群环境下，使用 UNLOGGED 模式后，需重新创建主备复制关系，恢复集群同步；</li>
+<li>重新创建外键约束后，需校验外键关联性，确保数据完整性；</li>
+<li>所有批量导入操作完成后，需做全量数据校验（行计数、主键唯一性、非空约束等）。</li>
+</ul>
+<ol start="5">
+<li><strong>方案选择与测试原则</strong></li>
+</ol>
+<ul>
+<li>无通用最优方案，需根据实际场景（数据量、表结构、集群架构）<strong>组合使用多种优化技巧</strong>（如 UNLOGGED + 删除索引 + COPY 为经典高效组合）；</li>
+<li>所有优化方案需先在与生产环境规格、配置一致的测试 / 预发环境验证，测试性能与兼容性后，再应用于生产环境；</li>
+<li>制定完善的回滚预案，若批量导入过程中出现异常，可快速恢复数据库原有状态。</li>
+</ul>
+<p><strong>6. 后续性能保障</strong></p>
+<ul>
+<li>批量导入后除执行 ANALYZE 外，若表数据量变化极大，可根据实际情况做索引碎片整理，提升后续查询性能；</li>
+<li>记录本次批量导入的优化方案、执行耗时、资源占用等信息，为后续同类操作积累经验。</li>
+</ul>
+<h3 id="4-4-2-日志批量落盘最佳实践-checkpoint"><a href="#4-4-2-日志批量落盘最佳实践-checkpoint" class="headerlink" title="4.4.2 日志批量落盘最佳实践(checkpoint)"></a>4.4.2 日志批量落盘最佳实践(checkpoint)</h3><p><strong>checkpoint机制介绍</strong><br><strong>最佳实践介绍</strong><br><strong>注意事项</strong></p>
 <p>4.5拆分术（恩墨）</p>
 <p>4.6扩展术（恩墨）</p>
 <p>4.7连接收敛术（恩墨）</p>
