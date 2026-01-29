@@ -437,9 +437,10 @@
 <p>上述内容详细介绍了 Panweidb支持的常见索引结构。接下来，将重点阐述索引的核心特性，这些特性可用于进一步调整和优化索引性能，满足不同业务场景的查询需求。</p>
 <h4 id="多列索引"><a href="#多列索引" class="headerlink" title="多列索引"></a>多列索引</h4><p>Panweidb 支持在多个列上创建联合索引（即多列索引），但最多支持 32 个列的组合，且仅 Btree、Gist、Gin索引类型支持多列索引。多列索引的查询效率与列的排序顺序密切相关，通常应将查询频率最高、选择性最强的列置于索引列的最前面。以下为多列索引的创建示例：</p>
 <p> <img src="/medias/image/image-20260129095148633.png" alt="image-20260129095148633"></p>
-<h4 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h4><p>唯一索引的核心作用是强制索引列（或列组合）中的值具有唯一性，避免出现重复数据。在 Panweidb 中，可在单个列或多个列上创建唯一索引；若为多列创建唯一索引，则通过列值的组合来确保唯一性。需注意的是，仅B树索引支持声明为唯一索引。 <img src="/medias/image/image-20260129095457006.png" alt="image-20260129095457006"></p>
+<h4 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h4><p>唯一索引的核心作用是强制索引列（或列组合）中的值具有唯一性，避免出现重复数据。在 Panweidb 中，可在单个列或多个列上创建唯一索引；若为多列创建唯一索引，则通过列值的组合来确保唯一性。需注意的是，仅B树索引支持声明为唯一索引。</p>
+<p> <img src="/medias/image/image-20260129152014673.png" alt="image-20260129152014673"></p>
 <p>多列唯一索引的创建示例如下：</p>
-<p> <img src="/medias/image/image-20260129095525701.png" alt="image-20260129095525701"></p>
+<p> <img src="/medias/image/image-20260129152035292.png" alt="image-20260129152035292"></p>
 <p>需特别说明的是，NULL 值不被视为相等值，因此在唯一索引列中可插入多个 NULL 值，不会触发索引唯一性违规。</p>
 <p>当为表列声明唯一约束（UNIQUE CONSTRAINT）或主键约束（PRIMARY KEY）时，Panweidb 会自动为该列（或列组合）创建唯一索引，无需手动创建。相关示例如下：</p>
 <p> <img src="/medias/image/image-20260129095621897.png" alt="image-20260129095621897"></p>
@@ -450,9 +451,9 @@
 <p> <img src="/medias/image/image-20260129095856315.png" alt="image-20260129095856315"></p>
 <h4 id="部分索引"><a href="#部分索引" class="headerlink" title="部分索引"></a><strong>部分索引</strong></h4><p>部分索引（Partial Index）是指仅对表中满足特定条件的行建立索引，而非对整个表的数据建立索引。此类索引通过 WHERE 子句指定过滤条件，仅包含符合条件的行数据，因此索引体积远小于全表索引，数据访问速度更快，同时可节省存储空间。</p>
 <p>部分索引适用于查询仅针对表中部分数据的场景，例如仅对“状态为有效”的订单数据建立索引、仅对“金额大于 1000”的交易数据建立索引等。以下为部分索引的示例：</p>
-<p> <img src="/medias/image/image-20260129100018216.png" alt="image-20260129100018216"></p>
+<p> <img src="/medias/image/image-20260129152049547.png" alt="image-20260129152049547"></p>
 <p>部分索引的创建示例如下：</p>
-<p> <img src="/medias/image/image-20260129100058098.png" alt="image-20260129100058098"></p>
+<p> <img src="/medias/image/image-20260129152105888.png" alt="image-20260129152105888"></p>
 <h4 id="仅索引扫描"><a href="#仅索引扫描" class="headerlink" title="仅索引扫描"></a><strong>仅索引扫描</strong></h4><p>通常情况下，索引与表数据分开存储，查询时需先通过索引定位数据行的位置，再从表文件中读取具体数据，该过程称为“索引扫描”。而仅索引扫描（Index-Only Scan）是一种优化的扫描方式：若查询语句所需的所有字段均为索引列（即查询字段完全包含在索引中），则无需访问表文件，可直接从索引中读取所需数据，从而进一步提升查询性能。</p>
 <p> <img src="/medias/image/image-20260129100309341.png" alt="image-20260129100309341"></p>
 <p>需注意的是，若查询语句中包含不属于索引列的字段，则无法使用仅索引扫描，系统将自动切换为普通索引扫描或全表扫描。示例如下：</p>
@@ -642,10 +643,6 @@ COPY <span class="token operator">&lt;</span>target_table<span class="token oper
 </li>
 </ul>
 <h3 id="4-4-2-日志批量落盘最佳实践-checkpoint"><a href="#4-4-2-日志批量落盘最佳实践-checkpoint" class="headerlink" title="4.4.2 日志批量落盘最佳实践(checkpoint)"></a>4.4.2 日志批量落盘最佳实践(checkpoint)</h3><p><strong>checkpoint机制介绍</strong><br><strong>最佳实践介绍</strong><br><strong>注意事项</strong></p>
-<p>4.5拆分术（恩墨）</p>
-<p>4.6扩展术（恩墨）</p>
-<p>4.7连接收敛术（恩墨）</p>
-<p>4.8削峰填谷术（恩墨）</p>
 
                 
             </div>
