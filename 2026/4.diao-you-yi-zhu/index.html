@@ -540,9 +540,88 @@
 <li>只读/读写比例极高的场景（如报表查询、数据统计）：可适当增加索引数量，优化查询效率；对于频繁查询的复杂语句，可创建覆盖索引、表达式索引，进一步提升性能。</li>
 </ol>
 <h4 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h4><p>索引的选择与使用需紧密结合业务场景，核心是“适配查询需求、平衡检索与写入性能”。不同类型的索引对应不同的查询场景，需根据字段特性、查询方式、数据量大小，选择合适的索引类型和结构；同时，需规避过度创建索引、索引列选择不当、索引失效等问题，定期进行索引维护与优化，确保索引持续发挥高效作用，提升 Panweidb 数据库的整体性能。</p>
-<h2 id="4-2-缓存术"><a href="#4-2-缓存术" class="headerlink" title="4.2 缓存术"></a>4.2 缓存术</h2><p>4.2.1 双缓存介绍</p>
-<p>最佳实践介绍</p>
-<p>注意事项</p>
+<h2 id="4-2-缓存术"><a href="#4-2-缓存术" class="headerlink" title="4.2 缓存术"></a>4.2 缓存术</h2><h3 id="4-2-1-双缓存最佳实践"><a href="#4-2-1-双缓存最佳实践" class="headerlink" title="4.2.1 双缓存最佳实践"></a>4.2.1 双缓存最佳实践</h3><p>磐维数据库采用“数据库共享缓存+操作系统缓存”的双层缓存机制，是性能优化的核心环节。本节重点围绕双缓存核心概念、落地最佳实践及关键注意事项展开，为生产环境缓存配置提供可直接参考的实操指南。</p>
+<h4 id="4-2-1-1-双缓存介绍"><a href="#4-2-1-1-双缓存介绍" class="headerlink" title="4.2.1.1 双缓存介绍"></a><strong>4.2.1.1 双缓存介绍</strong></h4><p>磐维数据库的双缓存，指数据库共享缓存（由shared_buffers参数控制）<em>与</em>操作系统缓存协同工作、共同承载数据读写的缓存模式，二者分工互补，本质是通过内存复用降低物理I/O，提升系统吞吐与响应速度。</p>
+<ol>
+<li>双缓存核心架构</li>
+</ol>
+<p>数据读取核心流程：磁盘 → 操作系统缓存 → 磐维数据库共享缓存（shared_buffers）。同一块数据会短暂在两个缓存中同时存在副本，该现象称为“双重缓存（Double Buffering）”，是PG架构天然特性，并非无效开销。</p>
+<ol start="2">
+<li>两层缓存分工差异</li>
+</ol>
+<ul>
+<li><p><strong>数据库共享缓存</strong>：采用时钟扫描算法，通过0～5的活跃度评分控制缓存淘汰，评分越高的热点数据，被换出的概率越低，可优先保留高频访问、频繁修改的核心业务数据，减少重复刷盘开销。</p>
+</li>
+<li><p><strong>操作系统缓存</strong>：多采用LRU算法，缓存回收机会较少，热数据保护能力弱于数据库共享缓存，但无需承担检查点压力，适合承载非热点、大容量扫描类数据（如全表扫描、VACUUM操作涉及的数据）。</p>
+</li>
+</ul>
+<ol start="3">
+<li>双缓存设计理念</li>
+</ol>
+<p>与传统数据库“独占大量内存、绕过系统缓存”的思路不同，磐维数据库不建议独占系统大量内存，也不推荐通过强制同步、直接I/O等方式绕过操作系统缓存：</p>
+<ul>
+<li><p>绝大多数读写通过标准操作系统调用完成，充分利用OS缓存的默认优化机制；</p>
+</li>
+<li><p>WAL写入在典型部署中会绕过操作系统缓存，保证日志落盘可靠性；</p>
+</li>
+<li><p>强行禁用OS缓存会破坏数据库元数据的访问优化，引发预期外的性能衰退。</p>
+</li>
+</ul>
+<h4 id="4-2-1-2-最佳实践介绍"><a href="#4-2-1-2-最佳实践介绍" class="headerlink" title="4.2.1.2 最佳实践介绍"></a>4.2.1.2 最佳实践介绍</h4><p>双缓存优化的核心的是“平衡”——平衡共享缓存大小与双缓存冗余、平衡热数据缓存能力与检查点I/O压力，以下为适配磐维数据库的可落地最佳实践，重点围绕shared_buffers参数配置、缓存分工及观测优化展开。</p>
+<ol>
+<li><strong>shared_buffers参数配置最佳实践</strong></li>
+</ol>
+<p>shared_buffers作为数据库共享缓存的大小控制参数，直接决定双缓存协同效果，推荐按场景分层配置：</p>
+<p>（1）通用基线配置（专用数据库服务器）</p>
+<p>优先分配系统总内存的25%作为shared_buffers初始值，该配置具备三大优势：</p>
+<ul>
+<li><p>安全可靠：在绝大多数生产场景下适配性强，不会因双缓存冗余造成严重内存浪费；</p>
+</li>
+<li><p>性能达标：远优于默认小配置（通常≤128MB），可直接提升复杂查询、高并发读写性能；</p>
+</li>
+<li><p>便于微调：以25%为基线，结合业务压测可灵活调整，适配不同负载场景。</p>
+</li>
+</ul>
+<p>（2）分场景精细化配置</p>
+<ul>
+<li><p>大容量内存系统（内存≥8GB）：受缓存内部分区机制影响，不建议盲目设置超过8GB；初始建议2GB，观测性能后再谨慎上调，避免适得其反。</p>
+</li>
+<li><p>写密集型业务（高频更新、高写入）：检查点压力突出，初始值控制在128MB～256MB，优先保证I/O平稳，再逐步提升缓存大小。</p>
+</li>
+<li><p>非专用数据库服务器（与应用、中间件共用主机）：适当降低shared_buffers，依靠OS缓存实现协同复用，避免内存争抢。</p>
+</li>
+</ul>
+<p>（3）最小可用配置底线</p>
+<p>生产环境通用下限建议不低于128MB～256MB，默认安装的偏小配置仅适用于极低负载场景，多数业务在此下限以上可获得明显性能收益。</p>
+<p><strong>2. 双缓存分工最佳策略</strong></p>
+<ul>
+<li><p>高频访问、频繁修改的热点块（如核心业务表、索引块）：优先放入数据库共享缓存，利用时钟扫描算法的热数据保护机制，减少缓存淘汰与重复I/O。</p>
+</li>
+<li><p>非热点、大容量扫描数据（如历史数据表全表扫描、VACUUM操作涉及数据）：交给操作系统缓存承载，避免占用数据库共享缓存空间，减少检查点压力。</p>
+</li>
+</ul>
+<h4 id="4-2-1-3-注意事项"><a href="#4-2-1-3-注意事项" class="headerlink" title="4.2.1.3 注意事项"></a>4.2.1.3 注意事项</h4><p>双缓存配置的核心风险的是“配置失衡”，需重点关注以下注意事项，避免性能衰退或系统不稳定：</p>
+<ol>
+<li>禁止盲目调大shared_buffers</li>
+</ol>
+<p>shared_buffers并非越大越好：调大过高会加剧双缓存冗余，挤占操作系统缓存空间，导致整体缓存效率下降；同时会增加检查点脏页刷盘压力，引发I/O峰值，甚至影响业务正常运行。</p>
+<ol start="2">
+<li>禁止强行绕过操作系统缓存</li>
+</ol>
+<p>不得通过强制同步、直接I/O等方式禁用或绕过操作系统缓存，否则会破坏数据库元数据的访问优化，导致元数据读写效率下降，引发预期外的性能衰退，甚至出现数据访问异常。</p>
+<ol start="3">
+<li>需结合业务负载动态微调</li>
+</ol>
+<p>本文给出的配置建议为“初始基线”，实际生产中需结合业务负载（读/写比例、数据量、并发量）动态微调：读密集型业务可适当提高shared_buffers比例，写密集型业务需控制shared_buffers大小，优先保证I/O平稳。</p>
+<ol start="5">
+<li>非专用服务器需预留足够内存</li>
+</ol>
+<p>若数据库服务器与应用、中间件共用，需为其他应用预留足够内存，不可将过多内存分配给shared_buffers，避免内存争抢，导致数据库与应用同时出现性能下降。</p>
+<ol start="6">
+<li>定期观测缓存利用效率</li>
+</ol>
+<p>需定期通过pg_buffercache、pg_stat_bgwriter及OS缓存工具观测双缓存利用效率，识别热点数据与缓存瓶颈，及时调整配置，避免缓存资源浪费或热数据未被有效缓存。</p>
+<h4 id="4-2-1-4-总结"><a href="#4-2-1-4-总结" class="headerlink" title="4.2.1.4 总结"></a>4.2.1.4 总结</h4><p>磐维数据库双缓存的核心是“双层协同、平衡优化”：双缓存是架构天然特性，通过数据库共享缓存与操作系统缓存分工互补，降低物理I/O；最佳实践以shared_buffers基线配置为核心，结合场景精细化调整、工具观测优化；注意事项重点规避配置失衡、平台适配不当等风险，确保双缓存发挥最优性能，为数据库整体性能提升提供支撑。</p>
 <p>4.2.2 线程池最佳实践</p>
 <p>线程池介绍<br>最佳实践介绍<br>注意事项</p>
 <p>4.2.3 MOT内存表介绍</p>
@@ -642,7 +721,97 @@ COPY <span class="token operator">&lt;</span>target_table<span class="token oper
 <li><p>后续性能保障：批量导入后除执行 ANALYZE 外，若表数据量变化极大（超过 50%），可根据实际情况做索引碎片整理（如 REINDEX 命令），提升后续查询性能；记录本次批量导入的优化方案、执行耗时、资源占用等信息，为后续同类操作积累经验。</p>
 </li>
 </ul>
-<h3 id="4-4-2-日志批量落盘最佳实践-checkpoint"><a href="#4-4-2-日志批量落盘最佳实践-checkpoint" class="headerlink" title="4.4.2 日志批量落盘最佳实践(checkpoint)"></a>4.4.2 日志批量落盘最佳实践(checkpoint)</h3><p><strong>checkpoint机制介绍</strong><br><strong>最佳实践介绍</strong><br><strong>注意事项</strong></p>
+<h3 id="4-4-2-日志批量落盘最佳实践-checkpoint"><a href="#4-4-2-日志批量落盘最佳实践-checkpoint" class="headerlink" title="4.4.2 日志批量落盘最佳实践(checkpoint)"></a>4.4.2 日志批量落盘最佳实践(checkpoint)</h3><h4 id="1-checkpoint机制介绍"><a href="#1-checkpoint机制介绍" class="headerlink" title="1 checkpoint机制介绍"></a><strong>1 checkpoint机制介绍</strong></h4><p>在高写入量的 PostgreSQL 系统中，检查点调优是实现高性能的核心环节，也是实际配置中易出现混淆和问题的关键点。本文将从<strong>checkpoint 机制介绍</strong>、<strong>最佳实践介绍</strong>、<strong>注意事项</strong>三个核心维度，详解检查点的工作原理、调优方法及实操要点。</p>
+<p><strong>1. 检查点的核心背景</strong></p>
+<p>PanweiDB 基于<strong>预写日志（WAL）</strong> 实现数据持久性，所有数据修改会先写入顺序的 WAL 日志，再在内存中修改数据文件，后续由后台进程异步刷新到磁盘。该机制虽看似增加写入量，却能提升性能：用户仅需等待 WAL 刷盘，而数据文件的写操作被后置，且顺序写的 WAL 远快于随机写的数据文件。</p>
+<p>若没有检查点，数据库崩溃恢复时需重放<strong>全部 WAL 日志</strong>，但生产库每日会产生数TB WAL，长期运行会导致日志存储量剧增、恢复时间极长，无法满足实际业务需求。</p>
+<p><strong>2. 检查点的核心作用</strong></p>
+<p>检查点的本质是<strong>确认某一 WAL 位置前的所有数据修改，均已从内存刷写到数据文件</strong>，并记录该检查点位置。</p>
+<ul>
+<li>恢复层面：崩溃后仅需重放检查点后的 WAL 日志，大幅缩短恢复时间；</li>
+<li>存储层面：可安全清理检查点前的 WAL 日志，减少磁盘空间占用。</li>
+</ul>
+<ol start="3">
+<li><strong>检查点的核心权衡</strong></li>
+</ol>
+<p>检查点的执行频率直接影响系统性能，存在明显的利弊权衡：</p>
+<ul>
+<li><strong>过于频繁</strong>（如每秒 1 次）：仅需保留少量 WAL，恢复速度极快，但会将数据文件的<strong>异步写转为同步写</strong>，大幅增加 COMMIT 延迟、降低系统吞吐量，严重影响业务性能；</li>
+<li><strong>过于稀疏</strong>：减少对业务写入的影响，但会导致 WAL 日志堆积，恢复时间变长、磁盘占用增加。</li>
+</ul>
+<blockquote>
+<p><strong>核心原则</strong>：让检查点的执行频率足够低，避免影响业务；同时足够高，合理限制恢复时间和磁盘空间消耗。</p>
+</blockquote>
+<p><strong>4. 检查点的触发方式</strong></p>
+<p>PanweiDB 中检查点分为<strong>手动触发</strong>和<strong>自动触发</strong>，实际调优聚焦<strong>自动触发</strong>场景，具体触发条件如下：</p>
+<ol>
+<li><p>手动触发：</p>
+<p>执行<code>CHECKPOINT</code>命令；</p>
+<p>执行<code>pg_start_backup</code>/<code>CREATE DATABASE</code>/<code>pg_ctl stop|restart</code>等强制检查点的命令；</p>
+</li>
+<li><p>自动触发：</p>
+<p>距离上一个检查点达到配置的<strong>时间阈值</strong>；</p>
+<p>从上一个检查点开始，生成的 WAL 日志量达到配置的<strong>大小阈值</strong>。</p>
+</li>
+</ol>
+<p><strong>5. 自动触发的核心配置参数</strong></p>
+<p>自动触发的时间 / 大小阈值由两个基础参数控制，是调优的起点：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token comment" spellcheck="true"># 时间阈值：默认15分钟</span>
+<span class="token attr-name">checkpoint_timeout</span> <span class="token punctuation">=</span> <span class="token attr-value">15min</span>
+<span class="token comment" spellcheck="true"># 大小阈值：默认64</span>
+<span class="token attr-name">checkpoint_segments</span> <span class="token punctuation">=</span> <span class="token attr-value">64</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>Panweidb 会在<strong>时间阈值到达</strong>或<strong>WAL 大小接近阈值</strong>时，触发自动检查点，二者满足其一即可。</p>
+<ol start="6">
+<li><strong>扩展检查点（Extended Checkpoint）</strong></li>
+</ol>
+<p>将检查点的脏数据刷盘操作<strong>分摊到整个检查点周期</strong>，而非一次性执行，让操作系统有时间在后台异步清理脏数据，最终的<code>fsync()</code>操作会更轻量，避免 I/O 阻塞。</p>
+<p>核心步骤不变，仅执行方式优化：</p>
+<ol>
+<li>识别共享缓冲区中的所有脏数据块；</li>
+<li>分批次将脏数据块写入磁盘（文件系统缓存）；</li>
+<li>检查点周期结束时，执行<code>fsync()</code>将文件系统缓存中的数据刷到物理磁盘。</li>
+</ol>
+<p>扩展检查点的核心参数</p>
+<pre><code># 核心参数：默认0.5，表示脏数据刷盘需在检查点周期的50%前完成
+checkpoint_completion_target = 0.5
+</code></pre>
+<p>该参数定义<strong>脏数据刷盘完成的时间占检查点周期的比例</strong>，例如<code>checkpoint_timeout=5min</code>、<code>checkpoint_completion_target=0.5</code>时，脏数据需在 2.5 分钟内刷完，剩余 2.5 分钟留给操作系统将缓存中的数据刷到物理磁盘，让最终的<code>fsync()</code>更高效。</p>
+<h4 id="2-最佳实践介绍"><a href="#2-最佳实践介绍" class="headerlink" title="2 最佳实践介绍"></a>2 最佳实践介绍</h4><p>检查点调优的核心目标是<strong>让自动检查点以时间阈值触发为主，大小阈值触发为辅</strong>，核心分为<strong>4 个步骤</strong>，同时需结合系统实际 WAL 生成量做个性化配置。</p>
+<p><strong>1 合理设置 checkpoint_timeout（时间阈值）</strong></p>
+<p>该参数的取值取决于业务的<strong>恢复时间目标（RTO）</strong>（即系统崩溃后可接受的最大恢复时间），需注意：</p>
+<ul>
+<li>该参数是<strong>WAL 生成的时间限制</strong>，并非直接的恢复时间限制（恢复由单进程执行，WAL 生成由多进程执行，恢复速度慢于 WAL 生成速度）；</li>
+<li>生产中<strong>15~30 分钟</strong>是最常见取值，部分高写入量系统可设为 1 小时；</li>
+<li>过低的取值还会因<strong>整页写入</strong>导致<strong>写入放大</strong>，进一步影响性能。</li>
+</ul>
+<p><strong>实操建议</strong>：先基于 RTO 初步设定，例如业务允许 30 分钟内恢复，可设：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">checkpoint_timeout</span> <span class="token punctuation">=</span> <span class="token attr-value">30min</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>2 优化 checkpoint_completion_target 参数</strong></p>
+<p>让脏数据刷盘完成后，留给操作系统<strong>足够的时间</strong>将缓存中的数据刷到物理磁盘（Linux 系统中，页面缓存的脏数据过期时间由<code>vm.dirty_expire_centisecs</code>控制，默认 30 秒）。</p>
+<p>（1）推荐计算公式</p>
+<p>为避免留给操作系统的时间不足，推荐基于 checkpoint_timeout 计算，预留至少 2 分钟的刷盘时间：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">checkpoint_completion_target <span class="token operator">=</span> <span class="token punctuation">(</span>checkpoint_timeout - 2min<span class="token punctuation">)</span> / checkpoint_timeout
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>示例</strong>：<code>checkpoint_timeout=30min</code>时，<code>checkpoint_completion_target=(30-2)/30≈0.93</code>，生产中建议不超过 0.9，差异可忽略。</p>
+<p>（2）不同配置的取值建议</p>
+<ul>
+<li>低超时（5~10 分钟）：保持默认 0.5，避免因 WAL 大小阈值触发检查点时，留给 OS 的时间不足 30 秒；</li>
+<li>高超时（15<del>60 分钟）：调至 0.85</del>0.93，避免数据库在前半周期高速率刷盘，后半周期无操作，充分利用检查点周期。</li>
+</ul>
+<p><strong>3 调优操作系统内核参数</strong></p>
+<p>Linux 内核的脏数据缓存参数会直接影响扩展检查点的效果，核心调优<strong>vm.dirty_background_bytes</strong>（默认值过高，易导致内核一次性刷新大量脏数据，抵消扩展检查点的优势）。</p>
+<ul>
+<li>作用：定义内核开始异步刷新脏数据到磁盘的<strong>缓存大小阈值</strong>；</li>
+<li>调优原则：根据服务器内存大小合理设置，避免内核积累大量脏数据，建议结合实际业务的写入速率调整，让内核持续、低速地刷新脏数据。</li>
+</ul>
+<h4 id="3-注意事项"><a href="#3-注意事项" class="headerlink" title="3 注意事项"></a>3 注意事项</h4><ol>
+<li><strong>整页写入的影响</strong>：checkpoint_timeout 过短时，会增加整页写入的频率，导致写入放大，即使是低写入量系统，也不建议将该参数设为 5 分钟以下。</li>
+<li><strong>流复制的一致性</strong>：主库的检查点配置会影响备库的恢复效率，备库的 WAL 重放速度慢于主库的 WAL 生成速度，主库的 checkpoint_timeout 不宜设置过大，避免备库重放滞后。</li>
+<li><strong>监控检查点的触发方式</strong>：生产中需持续监控检查点的触发原因（时间阈值 / 大小阈值），若频繁因大小阈值触发，说明<code>checkpoint_segments</code>设置过小，需重新估算 WAL 生成量并调大。</li>
+<li><strong>配置修改后的验证</strong>：修改检查点参数后，需通过<code>pg_stat_bgwriter</code>和服务器日志验证效果，观察检查点的执行频率、WAL 生成量、刷盘耗时等指标，确保符合预期。</li>
+</ol>
 
                 
             </div>
@@ -787,18 +956,17 @@ COPY <span class="token operator">&lt;</span>target_table<span class="token oper
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2026/4.diao-you-yi-zhu/">
+                <a href="/2026/3.sql-diao-you/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="第四章--调优艺术">
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="第三章--SQL调优">
                         
-                        <span class="card-title">第四章--调优艺术</span>
+                        <span class="card-title">第三章--SQL调优</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -808,9 +976,9 @@ COPY <span class="token operator">&lt;</span>target_table<span class="token oper
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-29
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-29
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -823,7 +991,6 @@ COPY <span class="token operator">&lt;</span>target_table<span class="token oper
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     

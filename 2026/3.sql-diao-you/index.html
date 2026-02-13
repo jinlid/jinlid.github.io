@@ -1,0 +1,1933 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="第三章--SQL调优, jinlid&#39;s blog">
+    <meta name="description" content="[TOC]
+3.1 调优的思想磐维数据库提供了多种手段，用于定位查询执行缓慢的根本原因。
+数据库后台会自动分析表结构、收集统计信息，并通过自动清理（Auto Vacuum）构建数据直方图。自动清理机制主要用于回收磁盘空间、更新表统计信息，以">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>第三章--SQL调优 | jinlid&#39;s blog</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 6.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">jinlid&#39;s blog</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">jinlid&#39;s blog</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/16.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">第三章--SQL调优</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/%E7%BC%93%E5%AD%98%EF%BC%8C%E7%B4%A2%E5%BC%95-%E5%88%86%E5%8C%BA/">
+                                <span class="chip bg-color">缓存，索引,分区</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/linux/" class="post-category">
+                                linux
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2026-01-29
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>[TOC]</p>
+<h2 id="3-1-调优的思想"><a href="#3-1-调优的思想" class="headerlink" title="3.1 调优的思想"></a>3.1 调优的思想</h2><p>磐维数据库提供了多种手段，用于定位查询执行缓慢的根本原因。</p>
+<p>数据库后台会自动分析表结构、收集统计信息，并通过自动清理（Auto Vacuum）构建数据直方图。自动清理机制主要用于回收磁盘空间、更新表统计信息，以及执行其他维护任务（如防止事务 ID 回卷）。表统计信息是磐维数据库选择最优执行计划的核心依据，它会综合评估 IO 开销与 CPU 成本，从而生成成本最低的执行策略。</p>
+<p>同时，磐维数据库支持通过 <code>EXPLAIN</code> 命令，直观地查看查询的执行计划，帮助开发者理解数据库的执行逻辑。</p>
+<p>对于初学者而言，非常有效的调优思路是：<strong>用多种方式编写同一查询，并对比执行结果</strong>。例如，<code>NOT IN</code> 结构在某些场景下可以改写为 <code>LEFT JOIN</code> 或 <code>NOT EXISTS</code>；<code>IN</code> 结构也可以重写为 <code>INNER JOIN</code> 或 <code>EXISTS</code>。通过多种写法的实践，开发者可以更清晰地理解不同语法结构的适用场景，以及在何种条件下某种结构会更具优势。</p>
+<h2 id="3-2-了解SQL生命周期"><a href="#3-2-了解SQL生命周期" class="headerlink" title="3.2 了解SQL生命周期"></a>3.2 了解SQL生命周期</h2><p>SQL 语句从输入到执行完成，需经过多个核心数据库模块的协同处理，其中最关键的三大模块的是：</p>
+<ul>
+<li><strong>解析器（Parser）</strong></li>
+<li><strong>优化器（Optimizer）</strong></li>
+<li><strong>执行器（Executor）</strong></li>
+</ul>
+<p>SQL 语句的完整执行流程，可通过下图清晰理解：</p>
+<p> <img src="/medias/image/image-20260212113724380.png" alt="image-20260212113724380"></p>
+<h3 id="解析器（Parser）"><a href="#解析器（Parser）" class="headerlink" title="解析器（Parser）"></a>解析器（Parser）</h3><p>解析器的核心职责是校验 SQL 语句的有效性，确保其符合数据库的执行标准，具体会从两个维度进行严格验证：</p>
+<p>一是<strong>语法验证</strong>，检查 SQL 关键字拼写、语句结构是否遵循 SQL 语言规范，避免出现语法错误；二是<strong>语义验证</strong>，确认语句中引用的表、列、函数等数据库对象真实存在，且用户具备相应的访问权限。</p>
+<p>校验通过后，解析器会将人类易读的 SQL 语句，转换为数据库可识别、可处理的内部表示形式——<strong>语法树</strong>（又称解析树、查询树）。简单来说，SQL 语句是面向人类的“高级表达”，而语法树则是面向数据库的“逻辑蓝图”，清晰呈现了语句所需操作的数据库对象及逻辑关系。</p>
+<h3 id="优化器（Optimizer）"><a href="#优化器（Optimizer）" class="headerlink" title="优化器（Optimizer）"></a>优化器（Optimizer）</h3><p>语法树仅定义了“要做什么”，而优化器的核心作用，是决定“怎么做最高效”——即针对给定的语法树，筛选出最优的数据获取算法，生成执行效率最高的方案。</p>
+<p>数据的获取依赖具体的访问路径，优化器会全面评估多种遍历和操作选项，核心决策点包括：</p>
+<ul>
+<li>访问方法选择：为每个引用的表，确定采用表扫描（全表遍历）还是索引扫描（基于索引快速定位）；</li>
+<li>索引选择：若采用索引扫描，需筛选出最适配当前查询、能最快获取结果集的索引；</li>
+<li>连接策略选择：对于多表连接（含表、视图、公共表表达式等），选择最优连接类型（如嵌套循环连接、哈希连接、合并连接）；</li>
+<li>连接顺序决策：尤其是嵌套循环连接，表的连接顺序会直接影响执行效率，需优先确定高效顺序。</li>
+</ul>
+<p>优化器最终筛选出的访问路径组合，会被组装成一份详细的“执行指南”——<strong>执行计划</strong>。值得注意的是，可能的执行计划组合数量极为庞大，找到最优方案需要消耗一定的系统资源，因此优化器会有固定的时间预算，避免因过度优化导致事务响应延迟。</p>
+<p>目前主流数据库采用的优化决策算法，是<strong>基于成本的优化器（Cost-Based Optimizer, CBO）</strong>。每种数据库物理操作（如表扫描、索引查询）都对应可估算的资源成本，数据库会预先存储表大小、数据基数（列值唯一性程度）等统计信息，以此计算每个操作所需的 CPU 周期和 I/O 次数，最终选择总成本最低、执行时间最短的执行计划。</p>
+<p>由于生成最优执行计划是资源密集型操作，为提升重复 SQL 的执行效率，多数数据库提供了<strong>执行计划缓存</strong>——将已生成的优质执行计划缓存起来，后续相同 SQL 可直接复用，无需重复优化。</p>
+<p>但执行计划缓存也存在一定挑战：一是需确保缓存的计划在数据分布、表结构变化后仍保持最优；二是每个计划会占用一定内存，数据库通常采用固定大小缓存，通过“最少使用淘汰”策略为新计划腾出空间；三是 DDL 语句（如建表、改列）可能导致缓存计划过时，需单独进程验证计划有效性；四是需筛选优质计划缓存，避免劣质计划被反复使用，进而影响应用整体性能。</p>
+<h3 id="执行器（Executor）"><a href="#执行器（Executor）" class="headerlink" title="执行器（Executor）"></a>执行器（Executor）</h3><p>优化器生成的执行计划，最终会传递给执行器，由执行器负责落地执行——按照执行计划的步骤，获取目标数据并构建最终结果集，返回给客户端。</p>
+<p>执行过程中，执行器会协同两个核心引擎：一是<strong>存储引擎</strong>，根据执行计划的要求，从磁盘或内存中加载所需数据；二是<strong>事务引擎</strong>，保障当前事务的数据完整性（如原子性、一致性），避免执行过程中出现数据异常。</p>
+<p>简单来说，执行计划就像一份动态生成的“运行脚本”，明确告知执行器每一步该读取哪些数据、如何处理数据，而执行器的核心职责，就是严格执行这份脚本，确保高效、准确地返回查询结果。</p>
+<h2 id="3-3-如何编写优质SQL"><a href="#3-3-如何编写优质SQL" class="headerlink" title="3.3 如何编写优质SQL"></a>3.3 如何编写优质SQL</h2><p>在数据库性能优化实践中，<strong>编写高效 SQL 语句</strong>是最基础也最有效的调优手段。在多数客户项目中，我们发现大量 SQL 未能充分发挥数据库的性能潜力，其核心问题常见如下。</p>
+<h3 id="3-3-1-避免在-SELECT-语句中滥用子查询"><a href="#3-3-1-避免在-SELECT-语句中滥用子查询" class="headerlink" title="3.3.1 避免在 SELECT 语句中滥用子查询"></a>3.3.1 避免在 SELECT 语句中滥用子查询</h3><p>新手常犯的典型错误是将子查询视为独立的 “黑盒” 数据块，割裂了子查询内部逻辑与外部处理逻辑的联系，导致查询效率低下。</p>
+<p>反例：滥用子查询</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> tract_id<span class="token punctuation">,</span>
+       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
+       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
+        <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_fact_types <span class="token keyword">AS</span> Y
+        <span class="token keyword">WHERE</span> Y<span class="token punctuation">.</span>fact_type_id <span class="token operator">IN</span> <span class="token punctuation">(</span>
+            <span class="token keyword">SELECT</span> fact_type_id
+            <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts F
+            <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id
+        <span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
+<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这种写法将子查询当作独立黑盒，多次扫描关联表，在大数据量场景下性能极差。</p>
+<p>正例：合并子查询，使用关联查询</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">,</span>
+       <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token number">f</span><span class="token punctuation">.</span>fact_type_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
+       <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> fact_type_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
+<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">ON</span> T<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> F<span class="token punctuation">.</span>tract_id
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>通过关联查询与聚合操作，将多次子查询合并为单次扫描，显著提升执行效率。</p>
+<blockquote>
+<p><strong>建议</strong>：子查询并非绝对禁止，但应与主语句通盘考虑，优先通过关联查询、聚合操作等方式替代不必要的子查询，避免 “黑盒式” 子查询滥用。</p>
+</blockquote>
+<hr>
+<h3 id="3-3-2-尽量避免使用-SELECT-语法"><a href="#3-3-2-尽量避免使用-SELECT-语法" class="headerlink" title="3.3.2 尽量避免使用 SELECT * 语法"></a>3.3.2 尽量避免使用 SELECT * 语法</h3><p><code>SELECT *</code> 会导致不必要的数据读取和网络传输，尤其在磐维数据库中，还会触发以下隐藏问题：</p>
+<ol>
+<li><strong>TOAST 机制开销</strong>：磐维数据库使用 TOAST（The Oversized-Attribute Storage Technique）存储超大字段（如文本、二进制对象），这些数据存储在辅助表中。<code>SELECT *</code> 会强制读取所有字段，导致多次关联操作，显著拖慢查询速度。</li>
+<li><strong>视图性能陷阱</strong>：当视图定义包含复杂运算或多表关联时，<code>SELECT * FROM 视图</code> 会触发视图中所有关联和计算，即使查询仅需少数字段，也会导致全量运算。</li>
+</ol>
+<p><strong>性能对比示例</strong></p>
+<p>假设基于反例子查询创建视图：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> REPLACE <span class="token keyword">VIEW</span> vw_stats <span class="token keyword">AS</span>
+<span class="token keyword">SELECT</span> tract_id<span class="token punctuation">,</span>
+       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
+       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
+        <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_fact_types <span class="token keyword">AS</span> Y
+        <span class="token keyword">WHERE</span> Y<span class="token punctuation">.</span>fact_type_id <span class="token operator">IN</span> <span class="token punctuation">(</span>
+            <span class="token keyword">SELECT</span> fact_type_id
+            <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts F
+            <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id
+        <span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
+<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<ul>
+<li><code>SELECT tract_id FROM vw_stats;</code>：仅需 21 毫秒，因为优化器可判断无需访问复杂计算字段。</li>
+<li><code>SELECT * FROM vw_stats;</code>：耗时飙升至 681 毫秒，触发了所有子查询和关联运算。</li>
+</ul>
+<blockquote>
+<p><strong>建议</strong>：始终明确列出所需字段，避免 <code>SELECT *</code>。这不仅能减少 IO 和网络开销，还能让磐维优化器更精准地生成执行计划，尤其在处理大表和复杂视图时，性能差异会被无限放大。</p>
+</blockquote>
+<h2 id="3-4-如何捕获劣质SQL"><a href="#3-4-如何捕获劣质SQL" class="headerlink" title="3.4 如何捕获劣质SQL"></a>3.4 如何捕获劣质SQL</h2><p>PanWeiDB提供了丰富的性能诊断体系，涵盖性能视图、等待事件、活跃会话分析、历史会话回溯及操作系统级监控等能力。本指南将系统化讲解各类诊断手段的使用方法、适用场景及实操案例，帮助 DBA 快速定位性能瓶颈、优化 SQL 执行效率。</p>
+<h3 id="3-4-1-性能视图：性能诊断的核心数据源"><a href="#3-4-1-性能视图：性能诊断的核心数据源" class="headerlink" title="3.4.1 性能视图：性能诊断的核心数据源"></a>3.4.1 性能视图：性能诊断的核心数据源</h3><p>数据库内置丰富的系统性能视图，是获取数据库运行状态、定位性能问题的基础。这些视图涵盖资源使用、SQL 执行、锁等待、会话状态等全维度数据，适用于实时监控、问题排查、性能基线分析等场景。</p>
+<h4 id="3-4-1-1-核心性能视图分类及用途"><a href="#3-4-1-1-核心性能视图分类及用途" class="headerlink" title="3.4.1.1 核心性能视图分类及用途"></a>3.4.1.1 核心性能视图分类及用途</h4><table>
+<thead>
+<tr>
+<th align="center">视图名称</th>
+<th align="center">核心用途</th>
+<th align="center">典型使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><code>pg_stat_activity</code></td>
+<td align="center">实时展示所有活跃 / 非活跃会话的状态、执行的 SQL、资源消耗等</td>
+<td align="center">定位阻塞会话、查看当前运行的慢 SQL、识别空闲会话占用资源</td>
+</tr>
+<tr>
+<td align="center"><code>pg_thread_wait_status</code></td>
+<td align="center">展示会话等待事件详情，包括等待类型、阻塞会话 ID、等待时长等</td>
+<td align="center">分析会话阻塞关系、定位锁等待 / IO 等待等性能瓶颈</td>
+</tr>
+<tr>
+<td align="center"><code>dbe_perf.local_active_session</code></td>
+<td align="center">采样存储活跃会话的统计信息（内存级实时数据）</td>
+<td align="center">分析近期资源消耗高的会话、SQL 及等待事件</td>
+</tr>
+<tr>
+<td align="center"><code>dbe_perf.statement</code></td>
+<td align="center">记录所有执行过的 SQL 语句的统计信息（执行次数、耗时、IO 等）</td>
+<td align="center">识别高频 / 高耗时 SQL、分析 SQL 执行效率</td>
+</tr>
+<tr>
+<td align="center"><code>dbe_perf.get_global_full_sql_by_timestamp</code></td>
+<td align="center">按时间范围查询慢 SQL 详细信息（脱敏）</td>
+<td align="center">离线诊断历史慢 SQL、回溯 SQL 执行计划和资源消耗</td>
+</tr>
+<tr>
+<td align="center"><code>snapshot.snapshot</code></td>
+<td align="center">存储 WDR 快照元数据（ID、采集时间、类型）</td>
+<td align="center">生成 WDR 报告、确认快照有效性</td>
+</tr>
+</tbody></table>
+<h4 id="3-4-1-2-常用查询示例"><a href="#3-4-1-2-常用查询示例" class="headerlink" title="3.4.1.2 常用查询示例"></a>3.4.1.2 常用查询示例</h4><p><strong>（1）查看当前所有活跃会话</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
+    pid <span class="token keyword">AS</span> session_id<span class="token punctuation">,</span>
+    usename <span class="token keyword">AS</span> user_name<span class="token punctuation">,</span>
+    datname <span class="token keyword">AS</span> db_name<span class="token punctuation">,</span>
+    client_addr <span class="token keyword">AS</span> client_ip<span class="token punctuation">,</span>
+    state<span class="token punctuation">,</span>
+    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
+    <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start <span class="token keyword">AS</span> execute_duration  <span class="token comment" spellcheck="true">-- 执行时长</span>
+<span class="token keyword">FROM</span> pg_stat_activity
+<span class="token keyword">WHERE</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span>  <span class="token comment" spellcheck="true">-- 排除空闲会话</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_duration <span class="token keyword">DESC</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）统计各数据库的会话数</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
+    datname <span class="token keyword">AS</span> db_name<span class="token punctuation">,</span>
+    <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> session_count<span class="token punctuation">,</span>
+    <span class="token function">sum</span><span class="token punctuation">(</span><span class="token keyword">CASE</span> <span class="token keyword">WHEN</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span> <span class="token keyword">THEN</span> <span class="token number">1</span> <span class="token keyword">ELSE</span> <span class="token number">0</span> <span class="token keyword">END</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> active_session_count
+<span class="token keyword">FROM</span> pg_stat_activity
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> datname<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-4-2-等待事件：定位资源竞争的关键"><a href="#3-4-2-等待事件：定位资源竞争的关键" class="headerlink" title="3.4.2 等待事件：定位资源竞争的关键"></a>3.4.2 等待事件：定位资源竞争的关键</h3><p>等待事件是数据库会话在获取资源（锁、IO、CPU、内存）时的等待状态，是分析性能瓶颈的核心维度。通过等待事件可精准定位锁阻塞、IO 瓶颈、CPU 争用等问题。</p>
+<h4 id="3-4-2-1-常用等待事件分类"><a href="#3-4-2-1-常用等待事件分类" class="headerlink" title="3.4.2.1 常用等待事件分类"></a>3.4.2.1 常用等待事件分类</h4><table>
+<thead>
+<tr>
+<th align="center">等待事件类型</th>
+<th align="center">典型事件名称</th>
+<th align="center">含义及常见原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">LOCK_EVENT</td>
+<td align="center">relation_lock、tuple_lock</td>
+<td align="center">表 / 行锁等待，通常由长事务、未提交事务、高并发写入导致</td>
+</tr>
+<tr>
+<td align="center">IO_EVENT</td>
+<td align="center">data_file_read、data_file_write</td>
+<td align="center">数据文件读写等待，通常由磁盘 IO 性能差、表扫描过多、索引缺失导致</td>
+</tr>
+<tr>
+<td align="center">LWLOCK_EVENT</td>
+<td align="center">buffer_content_lock</td>
+<td align="center">轻量级锁等待，通常由高并发访问同一数据块、内存不足导致</td>
+</tr>
+<tr>
+<td align="center">STATUS</td>
+<td align="center">idle_in_transaction</td>
+<td align="center">事务内空闲等待，通常由应用未及时提交 / 回滚事务导致</td>
+</tr>
+</tbody></table>
+<h4 id="3-4-2-2-捕获等待事件的实操方法"><a href="#3-4-2-2-捕获等待事件的实操方法" class="headerlink" title="3.4.2.2 捕获等待事件的实操方法"></a>3.4.2.2 捕获等待事件的实操方法</h4><p><strong>（1）查看当前会话的等待事件</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
+    sessionid<span class="token punctuation">,</span>
+    wait_status <span class="token keyword">AS</span> wait_status<span class="token punctuation">,</span>
+    wait_event <span class="token keyword">AS</span> wait_event<span class="token punctuation">,</span>
+    block_sessionid <span class="token keyword">AS</span> blocked_by<span class="token punctuation">,</span>
+    lockmode <span class="token keyword">AS</span> lockmode
+<span class="token keyword">FROM</span> pg_thread_wait_status
+<span class="token keyword">WHERE</span> block_sessionid <span class="token operator">&lt;></span> <span class="token number">0</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">-- 仅查看被阻塞的会话</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）统计最近 5 分钟最耗资源的等待事件</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql">
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>（3）定位锁阻塞的根源 SQL</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">WITH</span> t_lock <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> 
+        <span class="token number">a</span><span class="token punctuation">.</span>relation::regclass <span class="token keyword">AS</span> table_name<span class="token punctuation">,</span>
+        <span class="token number">a</span><span class="token punctuation">.</span>mode <span class="token keyword">AS</span> lock_mode<span class="token punctuation">,</span>
+        <span class="token number">a</span><span class="token punctuation">.</span>pid <span class="token keyword">AS</span> hold_pid<span class="token punctuation">,</span>
+        <span class="token number">b</span><span class="token punctuation">.</span>query <span class="token keyword">AS</span> hold_sql<span class="token punctuation">,</span>
+        <span class="token number">c</span><span class="token punctuation">.</span>pid <span class="token keyword">AS</span> wait_pid<span class="token punctuation">,</span>
+        <span class="token number">d</span><span class="token punctuation">.</span>query <span class="token keyword">AS</span> wait_sql
+    <span class="token keyword">FROM</span> pg_locks <span class="token number">a</span>
+    <span class="token keyword">JOIN</span> pg_stat_activity <span class="token number">b</span> <span class="token keyword">ON</span> <span class="token number">a</span><span class="token punctuation">.</span>pid <span class="token operator">=</span> <span class="token number">b</span><span class="token punctuation">.</span>pid <span class="token operator">AND</span> <span class="token number">a</span><span class="token punctuation">.</span>granted <span class="token operator">=</span> <span class="token boolean">true</span>
+    <span class="token keyword">JOIN</span> pg_locks <span class="token number">c</span> <span class="token keyword">ON</span> <span class="token number">a</span><span class="token punctuation">.</span>relation <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>relation <span class="token operator">AND</span> <span class="token number">c</span><span class="token punctuation">.</span>granted <span class="token operator">=</span> <span class="token boolean">false</span>
+    <span class="token keyword">JOIN</span> pg_stat_activity <span class="token number">d</span> <span class="token keyword">ON</span> <span class="token number">c</span><span class="token punctuation">.</span>pid <span class="token operator">=</span> <span class="token number">d</span><span class="token punctuation">.</span>pid
+<span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> t_lock<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-4-3-活跃会话：实时捕获劣质-SQL"><a href="#3-4-3-活跃会话：实时捕获劣质-SQL" class="headerlink" title="3.4.3 活跃会话：实时捕获劣质 SQL"></a>3.4.3 活跃会话：实时捕获劣质 SQL</h3><p>活跃会话分析聚焦<strong>当前正在运行</strong>的会话，可实时捕获耗时高、资源消耗大的劣质 SQL，适用于解决突发性能问题（如 CPU 100%、查询卡顿）。</p>
+<h4 id="3-4-3-1-捕获当前-TOP-耗时-SQL"><a href="#3-4-3-1-捕获当前-TOP-耗时-SQL" class="headerlink" title="3.4.3.1 捕获当前 TOP 耗时 SQL"></a>3.4.3.1 捕获当前 TOP 耗时 SQL</h4><pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
+    application_name <span class="token keyword">as</span> app<span class="token punctuation">,</span>
+    pid <span class="token keyword">AS</span> session_id<span class="token punctuation">,</span>
+    usename <span class="token keyword">AS</span> user_name<span class="token punctuation">,</span>
+    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
+    <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start <span class="token keyword">AS</span> execute_time<span class="token punctuation">,</span>
+    state
+<span class="token keyword">FROM</span> pg_stat_activity
+<span class="token keyword">WHERE</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_time <span class="token keyword">DESC</span>
+<span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">-- 取TOP 10 最长执行SQL</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="3-4-3-2-分析活跃会话的资源消耗分布"><a href="#3-4-3-2-分析活跃会话的资源消耗分布" class="headerlink" title="3.4.3.2 分析活跃会话的资源消耗分布"></a>3.4.3.2 分析活跃会话的资源消耗分布</h4><pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 最近5分钟耗资源的会话及对应的等待事件</span>
+<span class="token keyword">SELECT</span> 
+    sessionid<span class="token punctuation">,</span>
+    start_time<span class="token punctuation">,</span>
+    event<span class="token punctuation">,</span>
+    <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> event_count<span class="token punctuation">,</span>
+    <span class="token function">SUM</span><span class="token punctuation">(</span><span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">OVER</span> <span class="token punctuation">(</span><span class="token keyword">PARTITION</span> <span class="token keyword">BY</span> sessionid<span class="token punctuation">)</span> <span class="token keyword">AS</span> total_event_count  <span class="token comment" spellcheck="true">-- 会话总等待次数</span>
+<span class="token keyword">FROM</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> 
+        sessionid<span class="token punctuation">,</span>
+        start_time<span class="token punctuation">,</span>
+        event<span class="token punctuation">,</span>
+        <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
+    <span class="token keyword">FROM</span> dbe_perf<span class="token punctuation">.</span>local_active_session
+    <span class="token keyword">WHERE</span> sample_time <span class="token operator">></span> <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> interval <span class="token string">'5 minutes'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> sessionid<span class="token punctuation">,</span> start_time<span class="token punctuation">,</span> event
+<span class="token punctuation">)</span> t
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> total_event_count <span class="token keyword">DESC</span><span class="token punctuation">,</span> event_count <span class="token keyword">DESC</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="3-4-3-3-紧急处理：终止异常会话"><a href="#3-4-3-3-紧急处理：终止异常会话" class="headerlink" title="3.4.3.3 紧急处理：终止异常会话"></a>3.4.3.3 紧急处理：终止异常会话</h4><p>若发现长时间运行的异常会话（如死循环 SQL、大表全表扫描），可通过以下命令终止：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 终止指定会话（替换为实际session_id）</span>
+<span class="token keyword">SELECT</span> pg_terminate_backend<span class="token punctuation">(</span><span class="token number">12345</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h3 id="3-4-4-会话历史：回溯历史劣质-SQL"><a href="#3-4-4-会话历史：回溯历史劣质-SQL" class="headerlink" title="3.4.4 会话历史：回溯历史劣质 SQL"></a>3.4.4 会话历史：回溯历史劣质 SQL</h3><p>活跃会话仅能分析实时状态，而会话历史可回溯<strong>已完成</strong>的 SQL 执行情况，从 CPU、IO、耗时等多维度识别历史劣质 SQL，适用于分析周期性性能问题、优化历史慢查询。</p>
+<h4 id="3-4-4-1-基于-WDR-报告分析历史-SQL"><a href="#3-4-4-1-基于-WDR-报告分析历史-SQL" class="headerlink" title="3.4.4.1 基于 WDR 报告分析历史 SQL"></a>3.4.4.1 基于 WDR 报告分析历史 SQL</h4><p>WDR（Workload Diagnosis Report）是分析历史会话 / SQL 的核心工具，基于两次快照的对比数据，生成 SUMMARY（摘要）和 DETAIL（详情）级报告，覆盖 SQL 执行统计、资源消耗、等待事件等维度。</p>
+<p><strong>（1）WDR 报告生成完整流程</strong></p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 步骤1：检查快照是否开启</span>
+<span class="token keyword">SELECT</span> current_setting<span class="token punctuation">(</span><span class="token string">'enable_wdr_snapshot'</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> wdr_snapshot_status<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 步骤2：查看已有快照（获取snapshot_id）</span>
+<span class="token keyword">SELECT</span> snapshot_id<span class="token punctuation">,</span> start_ts<span class="token punctuation">,</span> end_ts <span class="token keyword">FROM</span> <span class="token keyword">snapshot</span><span class="token punctuation">.</span><span class="token keyword">snapshot</span> <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> start_ts <span class="token keyword">DESC</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 步骤3：手动创建快照（可选，需SYSADMIN权限）</span>
+<span class="token keyword">SELECT</span> create_wdr_snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 步骤4：生成集群级全量WDR报告（替换为实际快照ID）</span>
+<span class="token keyword">SELECT</span> generate_wdr_report<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'all'</span><span class="token punctuation">,</span> <span class="token string">'cluster'</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 步骤5：将报告导出为HTML文件（gsql终端执行）</span>
+\<span class="token number">a</span> \t \o <span class="token operator">/</span>home<span class="token operator">/</span>om<span class="token operator">/</span>panweidb_wdr_report<span class="token punctuation">.</span>html  <span class="token comment" spellcheck="true">-- 输出到文件</span>
+<span class="token keyword">SELECT</span> generate_wdr_report<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'all'</span><span class="token punctuation">,</span> <span class="token string">'cluster'</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+\o \<span class="token number">a</span> \t  <span class="token comment" spellcheck="true">-- 恢复输出</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）WDR 报告核心维度解读</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">报告模块</th>
+<th align="center">核心指标</th>
+<th align="center">分析重点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">SQL Statistics</td>
+<td align="center">Elapsed Time、CPU Time、Executions</td>
+<td align="center">总耗时 TOP SQL、单次执行耗时 TOP SQL、高频执行 SQL</td>
+</tr>
+<tr>
+<td align="center">IO Profile</td>
+<td align="center">Physical Reads、Logical Reads</td>
+<td align="center">物理读 / 逻辑读高的 SQL（通常为全表扫描、索引缺失）</td>
+</tr>
+<tr>
+<td align="center">Time Model</td>
+<td align="center">CPU Time、IO Time、Network Time</td>
+<td align="center">SQL 耗时分布（CPU 瓶颈 / IO 瓶颈 / 网络瓶颈）</td>
+</tr>
+</tbody></table>
+<h4 id="3-4-4-2-基于慢-SQL-接口回溯历史-SQL"><a href="#3-4-4-2-基于慢-SQL-接口回溯历史-SQL" class="headerlink" title="3.4.4.2 基于慢 SQL 接口回溯历史 SQL"></a>3.4.4.2 基于慢 SQL 接口回溯历史 SQL</h4><p>数据库支持按时间范围查询慢 SQL 详情（含执行计划、资源消耗），无需复现即可离线诊断。</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 查询指定时间范围内的慢SQL（脱敏）</span>
+<span class="token keyword">SELECT</span> 
+    node_name<span class="token punctuation">,</span>
+    db_name<span class="token punctuation">,</span>
+    user_name<span class="token punctuation">,</span>
+    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
+    start_time<span class="token punctuation">,</span>
+    finish_time<span class="token punctuation">,</span>
+    finish_time <span class="token operator">-</span> start_time <span class="token keyword">AS</span> execute_duration<span class="token punctuation">,</span>
+    query_plan <span class="token keyword">AS</span> execution_plan  <span class="token comment" spellcheck="true">-- 执行计划</span>
+<span class="token keyword">FROM</span> DBE_PERF<span class="token punctuation">.</span>get_global_full_sql_by_timestamp<span class="token punctuation">(</span>
+    <span class="token string">'2026-02-01 00:00:00'</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true">-- 开始时间</span>
+    <span class="token string">'2026-02-01 23:59:59'</span>   <span class="token comment" spellcheck="true">-- 结束时间</span>
+<span class="token punctuation">)</span>
+<span class="token keyword">WHERE</span> finish_time <span class="token operator">-</span> start_time <span class="token operator">></span> interval <span class="token string">'10 seconds'</span>  <span class="token comment" spellcheck="true">-- 筛选执行超10秒的SQL</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_duration <span class="token keyword">DESC</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-4-5-操作系统级性能监控"><a href="#3-4-5-操作系统级性能监控" class="headerlink" title="3.4.5 操作系统级性能监控"></a>3.4.5 操作系统级性能监控</h3><p>数据库性能问题常与操作系统资源（CPU、内存、IO、网络）相关，需结合 OS 级命令定位底层瓶颈。更多参见第六章监控命令。</p>
+<h3 id="3-4-5-1-CPU-监控"><a href="#3-4-5-1-CPU-监控" class="headerlink" title="3.4.5.1 CPU 监控"></a>3.4.5.1 CPU 监控</h3><p><strong>（1）查看 PanWeiDB 进程 CPU 占用</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看PanWeiDB进程</span>
+<span class="token function">ps</span> -ef <span class="token operator">|</span> <span class="token function">grep</span> panweidb <span class="token operator">|</span> <span class="token function">grep</span> -v <span class="token function">grep</span>
+
+<span class="token comment" spellcheck="true"># 实时监控CPU占用</span>
+<span class="token function">top</span> -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span> -d 1  <span class="token comment" spellcheck="true"># 每秒刷新</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）按线程维度监控 CPU</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看PanWeiDB线程的CPU占用</span>
+<span class="token function">top</span> -H -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span>
+
+<span class="token comment" spellcheck="true"># 统计各进程CPU占比</span>
+pidstat -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span> 1 5  <span class="token comment" spellcheck="true"># 每1秒采样，共5次</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="3-4-5-2-IO-监控"><a href="#3-4-5-2-IO-监控" class="headerlink" title="3.4.5.2 IO 监控"></a>3.4.5.2 IO 监控</h4><p><strong>（1）监控数据库IO使用</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 监控PanWeiDB进程的IO使用率</span>
+iotop -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span>
+
+<span class="token comment" spellcheck="true"># 查看磁盘IO统计</span>
+iostat -x 2
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）定位高 IO 文件</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看PanWeiDB数据目录下的文件读写情况</span>
+pidstat -d -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span> 1 5
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h4 id="3-4-5-3-内存监控"><a href="#3-4-5-3-内存监控" class="headerlink" title="3.4.5.3 内存监控"></a>3.4.5.3 内存监控</h4><p><strong>（1）查看 PanWeiDB 进程内存占用</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看进程内存（RES为实际物理内存）</span>
+<span class="token function">ps</span> aux <span class="token operator">|</span> <span class="token function">grep</span> panweidb <span class="token operator">|</span> <span class="token function">grep</span> -v <span class="token function">grep</span> <span class="token operator">|</span> <span class="token function">awk</span> <span class="token string">'{print <span class="token variable">$2</span>, <span class="token variable">$4</span>, <span class="token variable">$6</span>, <span class="token variable">$11</span>}'</span>
+
+<span class="token comment" spellcheck="true"># 实时监控内存使用</span>
+<span class="token function">free</span> -h -s 1  <span class="token comment" spellcheck="true"># 每秒刷新，展示总内存、已用、可用</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>（2）检查交换分区使用（内存不足会触发 swap）</strong></p>
+<pre class="line-numbers language-bash"><code class="language-bash">swapon --show  <span class="token comment" spellcheck="true"># 查看swap分区</span>
+<span class="token function">vmstat</span> 1 5     <span class="token comment" spellcheck="true"># 查看si/so列（swap读/写），非0表示内存不足</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h4 id="3-4-5-4-网络监控"><a href="#3-4-5-4-网络监控" class="headerlink" title="3.4.5.4 网络监控"></a>3.4.5.4 网络监控</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看网络连接（PanWeiDB默认端口5432）</span>
+<span class="token function">netstat</span> -anp <span class="token operator">|</span> <span class="token function">grep</span> 5432 <span class="token operator">|</span> <span class="token function">wc</span> -l  <span class="token comment" spellcheck="true"># 统计连接数</span>
+
+<span class="token comment" spellcheck="true"># 监控网络流量</span>
+iftop -i eth0  <span class="token comment" spellcheck="true"># 监控eth0网卡流量</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li><strong>性能视图</strong>是 PanWeiDB 性能诊断的基础，可实时获取会话、SQL、锁等状态，适用于快速定位实时问题；</li>
+<li><strong>等待事件</strong>聚焦资源竞争，是区分锁阻塞、IO 瓶颈、CPU 争用的核心手段；</li>
+<li><strong>活跃会话</strong>分析实时劣质 SQL，<strong>会话历史（WDR / 慢 SQL）</strong> 回溯历史性能问题，两者结合可覆盖全场景 SQL 优化；</li>
+<li><strong>OS 级监控命令</strong>是定位底层资源瓶颈的关键，需结合数据库层面分析才能完整定位性能问题。</li>
+</ol>
+<p>通过以上诊断手段的组合使用，可系统化定位数据库的性能瓶颈，从 SQL 优化、索引调整、参数配置、硬件资源等维度实现性能提升。</p>
+<h2 id="3-5-统计信息"><a href="#3-5-统计信息" class="headerlink" title="3.5 统计信息"></a>3.5 统计信息</h2><p>查询优化器的核心能力高度依赖<strong>统计信息</strong>的准确性。本文将系统讲解 PanWeiDB 统计信息的核心概念、收集机制、配置要点，以及如何通过优化统计信息大幅提升查询性能。</p>
+<hr>
+<h3 id="3-5-1-统计信息核心概念"><a href="#3-5-1-统计信息核心概念" class="headerlink" title="3.5.1 统计信息核心概念"></a>3.5.1 统计信息核心概念</h3><p>统计信息是数据库优化器判断「如何执行查询」的关键依据 —— 它描述了表、列的数据分布特征，优化器基于这些数据估算执行成本，选择最优执行计划（如索引扫描 vs 全表扫描）。</p>
+<p><strong>核心术语定义</strong></p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基数（Cardinality）</td>
+<td>列 / 表中唯一值的数量（<code>stadistinct</code>），或查询返回的预估行数。</td>
+</tr>
+<tr>
+<td>选择率（Selectivity）</td>
+<td>查询条件筛选出的行数占总行数的比例（0~1），是优化器决策的核心指标。</td>
+</tr>
+<tr>
+<td>直方图（Histogram）</td>
+<td>对非高频值的数据分布进行分桶统计，每个桶包含近似相等比例的行，用于估算范围查询（&gt;、&lt;、BETWEEN）的选择率。</td>
+</tr>
+<tr>
+<td>MCV（Most Common Values）</td>
+<td>列中出现频率最高的数值及其占比，覆盖大部分高频值的分布特征。</td>
+</tr>
+</tbody></table>
+<p><strong>数据库收集的核心统计信息</strong></p>
+<p>执行 <code>ANALYZE</code> 时，数据库会为每列收集以下关键统计信息，这些信息主要存储在 <code>pg_statistic</code> 系统表中：</p>
+<ul>
+<li><strong>唯一值数量</strong>：列中不同值的估算值（<code>stadistinct</code>）；</li>
+<li><strong>平均数据宽度</strong>：列值的平均字节大小（<code>stawidth</code>），用于估算内存 / 磁盘占用；</li>
+<li><strong>NULL 值占比</strong>：列中 NULL 值的比例（<code>stanullfrac</code>）；</li>
+<li><strong>MCV 及频率</strong>：高频值列表 + 各自占比（覆盖大部分数据的分布）；</li>
+<li><strong>直方图边界</strong>：非 MCV 数据的分桶边界（<code>histogram_bounds</code>），描述长尾数据分布。</li>
+</ul>
+<hr>
+<h3 id="3-5-2-统计信息收集机制"><a href="#3-5-2-统计信息收集机制" class="headerlink" title="3.5.2 统计信息收集机制"></a>3.5.2 统计信息收集机制</h3><p>数据库统计信息的收集与更新，核心依赖 <code>ANALYZE</code> 语句，其触发时机和操作方式如下：</p>
+<p><strong>何时收集统计信息</strong></p>
+<ul>
+<li>建议在执行了大批量插入 / 删除操作后，例行对表或全库执行 <code>ANALYZE</code> 语句更新统计信息。</li>
+<li>对于在批处理脚本或者存储过程中生成的中间表，也需要在完成数据生成之后显式地调用 <code>ANALYZE</code>。</li>
+<li>对于表中多个列有相关性，且查询中有同时基于这些列的条件或分组操作的情况，可尝试收集多列统计信息，以便查询优化器可以更准确地估算行数，并生成更有效的执行计划。</li>
+</ul>
+<p><strong>如何收集统计信息</strong></p>
+<p><code>ANALYZE</code> 语句可收集与数据库中表内容相关的统计信息，统计结果存储在系统表 <code>PG_STATISTIC</code> 中。查询优化器会使用这些统计数据，以生成最有效的执行计划。</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 更新单张表的统计信息</span>
+<span class="token keyword">ANALYZE</span> tablename<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 更新全库统计信息</span>
+<span class="token keyword">ANALYZE</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 收集 tablename 表的 col_1、col_2 列的多列统计信息</span>
+<span class="token keyword">ANALYZE</span> tablename <span class="token punctuation">(</span>col_1<span class="token punctuation">,</span> col_2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 添加 tablename 表的 col_1、col_2 列的多列统计信息声明</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> tablename <span class="token keyword">ADD</span> <span class="token keyword">STATISTICS</span> <span class="token punctuation">(</span>col_1<span class="token punctuation">,</span> col_2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>统计信息对应视图</strong></p>
+<p><code>PG_STATISTIC</code> 系统表存储有关该数据库中表和索引列的统计数据，需要有系统管理员权限才可以访问此系统表。该视图需要授权访问，核心字段如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>starelid</td>
+<td>oid</td>
+<td>所描述的字段所属的表或者索引</td>
+</tr>
+<tr>
+<td>starelkind</td>
+<td>char</td>
+<td>所属对象的类型</td>
+</tr>
+<tr>
+<td>staattnum</td>
+<td>smallint</td>
+<td>所描述的字段在表中的编号，从 1 开始</td>
+</tr>
+<tr>
+<td>stainherit</td>
+<td>Boolean</td>
+<td>是否统计有继承关系的对象</td>
+</tr>
+<tr>
+<td>stanullfrac</td>
+<td>real</td>
+<td>该字段中为 NULL 的记录的比率</td>
+</tr>
+<tr>
+<td>stawidth</td>
+<td>integer</td>
+<td>非 NULL 记录的平均存储宽度，以字节计</td>
+</tr>
+<tr>
+<td>stadistinct</td>
+<td>real</td>
+<td>标识全局统计信息中所有 DN 上字段里唯一的非 NULL 数据值的数目</td>
+</tr>
+<tr>
+<td>stakindN</td>
+<td>smallint</td>
+<td>一个编码，表示这种类型的统计存储在 <code>pg_statistic</code> 行的第 n 个 “槽位”</td>
+</tr>
+<tr>
+<td>staopN</td>
+<td>oid</td>
+<td>一个用于生成这些存储在第 n 个 “槽位” 的统计信息的操作符</td>
+</tr>
+<tr>
+<td>stanumbers</td>
+<td>real[]</td>
+<td>第 n 个 “槽位” 类型的字段数据值，如果该槽位类型不存储任何数据值，则就是 NULL</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="3-5-3-统计信息进阶优化"><a href="#3-5-3-统计信息进阶优化" class="headerlink" title="3.5.3 统计信息进阶优化"></a>3.5.3 统计信息进阶优化</h3><p><strong>调整统计目标</strong></p>
+<p>统计目标控制 <code>ANALYZE</code> 采样的精细度，默认 <code>default_statistics_target = 100</code>（1~10000）：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 全局调整</span>
+<span class="token keyword">ALTER</span> SYSTEM <span class="token keyword">SET</span> default_statistics_target <span class="token operator">=</span> <span class="token number">200</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">-- 单列精细调整（针对低频但重要的列）</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> facilities <span class="token keyword">ALTER</span> <span class="token keyword">COLUMN</span> city <span class="token keyword">SET</span> <span class="token keyword">STATISTICS</span> <span class="token number">500</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>注意</strong>：不建议直接设为最大值（10000），会导致 <code>ANALYZE</code> 耗时增加、磁盘占用上升，建议仅对核心列调优。</p>
+<p><strong>多列统计信息</strong></p>
+<p>当表中多个列存在相关性，且查询中同时基于这些列进行过滤或分组时，单列统计信息可能导致优化器估算偏差。此时可通过收集多列统计信息，让优化器更准确地判断选择率：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 收集多列统计信息</span>
+<span class="token keyword">ANALYZE</span> tablename <span class="token punctuation">(</span>col1<span class="token punctuation">,</span> col2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p><strong>总结</strong></p>
+<ol>
+<li>统计信息是优化器的「决策依据」，核心包含基数、选择率、MCV、直方图四大维度，主要存储在 <code>pg_statistic</code> 系统表中；</li>
+<li>统计信息通过 <code>ANALYZE</code> 语句收集，在大批量数据变更、中间表生成后应及时更新；</li>
+<li>多列统计信息可解决列相关性导致的估算偏差，大幅提升查询性能；</li>
+<li>调优统计信息需结合 <code>EXPLAIN ANALYZE</code> 验证效果，避免盲目调高统计目标。</li>
+</ol>
+<p>通过合理配置统计信息、创建多列统计，仅需几行 SQL 即可让数据库优化器做出更智能的决策，显著降低查询执行时间，充分发挥数据库性能潜力。</p>
+<h2 id="3-6-解读执行计划"><a href="#3-6-解读执行计划" class="headerlink" title="3.6 解读执行计划"></a>3.6 解读执行计划</h2><h3 id="初识EXPLAIN的困惑"><a href="#初识EXPLAIN的困惑" class="headerlink" title="初识EXPLAIN的困惑"></a>初识EXPLAIN的困惑</h3><p>每个新晋DBA接触数据库时学到的第一个命令就是”EXPLAIN”。但第一次尝试理解它的输出时，往往会遇到令人困惑的情况：</p>
+<pre class="line-numbers language-sql"><code class="language-sql">Sort  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">238.32</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">240.39</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">826</span> width<span class="token operator">=</span><span class="token number">961</span><span class="token punctuation">)</span>
+   Sort <span class="token keyword">Key</span>: n<span class="token punctuation">.</span>nspname<span class="token punctuation">,</span> p<span class="token punctuation">.</span>proname<span class="token punctuation">,</span> <span class="token punctuation">(</span>pg_get_function_arguments<span class="token punctuation">(</span>p<span class="token punctuation">.</span>oid<span class="token punctuation">)</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span> <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.25</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">198.30</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">826</span> width<span class="token operator">=</span><span class="token number">961</span><span class="token punctuation">)</span>
+         <span class="token keyword">Hash</span> Cond: <span class="token punctuation">(</span>p<span class="token punctuation">.</span>pronamespace <span class="token operator">=</span> n<span class="token punctuation">.</span>oid<span class="token punctuation">)</span>
+         <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_proc p  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">182.94</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1009</span> width<span class="token operator">=</span><span class="token number">692</span><span class="token punctuation">)</span>
+               Filter: pg_function_is_visible<span class="token punctuation">(</span>oid<span class="token punctuation">)</span>
+         <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.14</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.14</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">9</span> width<span class="token operator">=</span><span class="token number">117</span><span class="token punctuation">)</span>
+               <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_namespace n  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.14</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">9</span> width<span class="token operator">=</span><span class="token number">117</span><span class="token punctuation">)</span>
+                     Filter: <span class="token punctuation">(</span>nspname <span class="token operator">&lt;></span> <span class="token keyword">ALL</span> <span class="token punctuation">(</span><span class="token string">'{pg_catalog,information_schema}'</span>::name<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">9</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这个复杂的执行计划输出对初学者来说简直像天书一般。让我们从基础开始，逐步揭开EXPLAIN的神秘面纱。</p>
+<h3 id="PanweiDB的智能之处"><a href="#PanweiDB的智能之处" class="headerlink" title="PanweiDB的智能之处"></a>PanweiDB的智能之处</h3><p>首先需要理解一个关键概念：PanweiDB”知道”你的数据。它会维护详尽的元信息：</p>
+<ul>
+<li>表行数统计</li>
+<li>不同值的分布</li>
+<li>最常见值</li>
+<li>数据分布直方图</li>
+</ul>
+<p>对于大型表，这些统计基于随机抽样，但总体而言，PanweiDB对数据特性的把握相当准确。正是基于这些统计信息，查询规划器才能做出明智的执行计划决策。</p>
+<h3 id="从简单案例开始"><a href="#从简单案例开始" class="headerlink" title="从简单案例开始"></a>从简单案例开始</h3><p>让我们从一个最简单的查询开始：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test <span class="token keyword">WHERE</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql">                      QUERY <span class="token keyword">PLAN</span>                      
+<span class="token comment" spellcheck="true">------------------------------------------------------</span>
+ Seq Scan <span class="token keyword">ON</span> test  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">40.00</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">12</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span>
+   FILTER: <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这个执行计划包含几个关键元素：</p>
+<ol>
+<li><strong>操作类型</strong>：这里是顺序扫描(Seq Scan)</li>
+<li><strong>成本估算</strong>：0.00..40.00</li>
+<li><strong>行数估算</strong>：12行</li>
+<li><strong>行宽估算</strong>：4字节</li>
+</ol>
+<h3 id="理解执行计划的结构"><a href="#理解执行计划的结构" class="headerlink" title="理解执行计划的结构"></a>理解执行计划的结构</h3><p>执行计划是一个树形结构，每个节点代表一个操作：</p>
+<ul>
+<li>上层节点依赖下层节点的数据</li>
+<li>每个节点显示其特有的信息</li>
+<li>缩进表示操作间的层级关系</li>
+</ul>
+<p>在我们的简单例子中，只有一个操作节点（顺序扫描）及其过滤条件。</p>
+<h3 id="成本估算的奥秘"><a href="#成本估算的奥秘" class="headerlink" title="成本估算的奥秘"></a>成本估算的奥秘</h3><p>成本估算值(cost)可能是最令人困惑的部分。需要明确几点：</p>
+<ol>
+<li><p>成本不是时间单位，而是一个抽象的相对值</p>
+</li>
+<li><p>基于<code>postgresql.conf</code>中的成本参数计算：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">seq_page_cost</span> <span class="token punctuation">=</span> <span class="token attr-value">1.0      # 顺序页读取成本</span>
+<span class="token attr-name">random_page_cost</span> <span class="token punctuation">=</span> <span class="token attr-value">4.0   # 随机页读取成本 </span>
+<span class="token attr-name">cpu_tuple_cost</span> <span class="token punctuation">=</span> <span class="token attr-value">0.01    # 处理每行的CPU成本</span>
+<span class="token attr-name">cpu_index_tuple_cost</span> <span class="token punctuation">=</span> <span class="token attr-value">0.005  # 索引扫描的CPU成本</span>
+<span class="token attr-name">cpu_operator_cost</span> <span class="token punctuation">=</span> <span class="token attr-value">0.0025   # 操作符执行的CPU成本</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+</ol>
+<p>成本值以<code>启动成本..总成本</code>的形式呈现。启动成本是该操作返回第一行前需要的工作量，总成本是返回所有行的总工作量。</p>
+<h3 id="索引使用的决策逻辑"><a href="#索引使用的决策逻辑" class="headerlink" title="索引使用的决策逻辑"></a>索引使用的决策逻辑</h3><p>考虑这个表和查询：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> t <span class="token punctuation">(</span>
+    id <span class="token keyword">serial</span> <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span><span class="token punctuation">,</span>
+    some_column <span class="token keyword">integer</span><span class="token punctuation">,</span>
+    something <span class="token keyword">text</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> q <span class="token keyword">ON</span> t<span class="token punctuation">(</span>some_column<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">EXPLAIN</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> t <span class="token keyword">WHERE</span> some_column <span class="token operator">=</span> <span class="token number">123</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>PanweiDB会根据统计信息决定是否使用索引：</p>
+<ul>
+<li>对于小表（如只有几行），顺序扫描通常更快</li>
+<li>对于大表且匹配行很少的情况，索引扫描更优</li>
+<li>对于大表且匹配行很多的情况，索引扫描反而更慢</li>
+</ul>
+<h3 id="执行计划的三种形态"><a href="#执行计划的三种形态" class="headerlink" title="执行计划的三种形态"></a>执行计划的三种形态</h3><p>让我们观察同一个查询在不同设置下的执行计划变化：</p>
+<p><strong>1.默认情况（使用索引扫描）</strong>：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test <span class="token keyword">WHERE</span> id <span class="token operator">=</span> <span class="token number">50</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql">                              QUERY <span class="token keyword">PLAN</span>                               
+<span class="token comment" spellcheck="true">-----------------------------------------------------------------------</span>
+ <span class="token keyword">INDEX</span> Scan <span class="token keyword">USING</span> test_pkey <span class="token keyword">ON</span> test  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.28</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.29</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> width<span class="token operator">=</span><span class="token number">36</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><strong>2.禁用索引扫描（使用位图扫描）</strong>：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SET</span> enable_indexscan <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token keyword">EXPLAIN</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test <span class="token keyword">WHERE</span> id <span class="token operator">=</span> <span class="token number">50</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql">                               QUERY <span class="token keyword">PLAN</span>                               
+<span class="token comment" spellcheck="true">------------------------------------------------------------------------</span>
+ Bitmap Heap Scan <span class="token keyword">ON</span> test  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">4.28</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.30</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> width<span class="token operator">=</span><span class="token number">13</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Bitmap <span class="token keyword">INDEX</span> Scan <span class="token keyword">ON</span> test_pkey  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">4.28</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> width<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>3. 禁用所有索引相关扫描（退化为顺序扫描）</strong>：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SET</span> enable_bitmapscan <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token keyword">EXPLAIN</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test <span class="token keyword">WHERE</span> id <span class="token operator">=</span> <span class="token number">50</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql">                      QUERY <span class="token keyword">PLAN</span>                      
+<span class="token comment" spellcheck="true">------------------------------------------------------</span>
+ Seq Scan <span class="token keyword">ON</span> test  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">18.50</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> width<span class="token operator">=</span><span class="token number">13</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>比较这三种情况的成本估算，可以清楚地看到为什么PanweiDB默认选择索引扫描——它的总成本最低(8.29)。</p>
+<h3 id="实际执行分析"><a href="#实际执行分析" class="headerlink" title="实际执行分析"></a>实际执行分析</h3><p><code>EXPLAIN ANALYZE</code>会实际执行查询并提供真实数据：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> t <span class="token keyword">LIMIT</span> <span class="token number">100</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql">                                                  QUERY <span class="token keyword">PLAN</span>                                                  
+<span class="token comment" spellcheck="true">--------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">LIMIT</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">9.33</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">100</span> width<span class="token operator">=</span><span class="token number">608</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.008</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.152</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">100</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">ON</span> t  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">93333.86</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">999986</span> width<span class="token operator">=</span><span class="token number">608</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.007</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.133</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">100</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.181</span> ms
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里新增了四组实际数据：</p>
+<ol>
+<li><code>actual time</code>：实际执行时间(启动..完成)</li>
+<li><code>rows</code>：实际返回行数</li>
+<li><code>loops</code>：该操作被执行次数</li>
+<li><code>Total runtime</code>：查询总耗时</li>
+</ol>
+<h3 id="执行计划中的关键陷阱"><a href="#执行计划中的关键陷阱" class="headerlink" title="执行计划中的关键陷阱"></a>执行计划中的关键陷阱</h3><ol>
+<li><strong>多次循环执行</strong>：某些操作可能被执行多次，导致总时间远超单次执行时间。</li>
+<li><strong>行数估算错误</strong>：统计信息不准确会导致糟糕的计划选择。</li>
+<li><strong>函数执行特性</strong>：某些函数(如PL/pgSQL函数)必须完全执行才能返回结果。</li>
+</ol>
+<h2 id="3-7-扫描方式"><a href="#3-7-扫描方式" class="headerlink" title="3.7 扫描方式"></a>3.7 扫描方式</h2><h3 id="3-7-1-顺序扫描-Seq-Scan"><a href="#3-7-1-顺序扫描-Seq-Scan" class="headerlink" title="3.7.1 顺序扫描(Seq Scan)"></a>3.7.1 顺序扫描(Seq Scan)</h3><p><strong>基本工作原理</strong></p>
+<p>顺序扫描是PanweiDB中最基础的表访问方法，其执行方式简单直接：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class<span class="token punctuation">;</span>
+                                               QUERY <span class="token keyword">PLAN</span>                                                
+<span class="token comment" spellcheck="true">---------------------------------------------------------------------------------------------------------</span>
+ Seq Scan <span class="token keyword">ON</span> pg_class  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">10.92</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">292</span> width<span class="token operator">=</span><span class="token number">202</span><span class="token punctuation">)</span> 
+       <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.009</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.049</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">295</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.249</span> ms
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>顺序扫描会逐页读取表数据文件，不加筛选地返回所有行（除非有WHERE条件过滤）。它的特点包括：</p>
+<ul>
+<li><strong>无顺序保证</strong>：返回行的顺序不具有任何特定性，既非插入顺序也非更新顺序</li>
+<li><strong>全表遍历</strong>：会读取表中所有数据页</li>
+<li><strong>过滤能力</strong>：可以通过WHERE条件进行行过滤</li>
+</ul>
+<p><strong>带LIMIT的顺序扫描</strong></p>
+<p>当与LIMIT结合时，顺序扫描可以在获取足够行数后提前终止：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">LIMIT</span> <span class="token number">2</span><span class="token punctuation">;</span>
+                                                 QUERY <span class="token keyword">PLAN</span>                                                  
+<span class="token comment" spellcheck="true">-------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">LIMIT</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.07</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">2</span> width<span class="token operator">=</span><span class="token number">202</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.014</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.014</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">2</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">ON</span> pg_class  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">10.92</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">292</span> width<span class="token operator">=</span><span class="token number">202</span><span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.009</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.009</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">2</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.132</span> ms
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>带WHERE条件的顺序扫描</strong></p>
+<p>当添加WHERE条件时，顺序扫描会进行行过滤：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">WHERE</span> relname <span class="token operator">~</span> <span class="token string">'a'</span><span class="token punctuation">;</span>
+                                               QUERY <span class="token keyword">PLAN</span>                                                
+<span class="token comment" spellcheck="true">---------------------------------------------------------------------------------------------------------</span>
+ Seq Scan <span class="token keyword">ON</span> pg_class  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">11.65</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">227</span> width<span class="token operator">=</span><span class="token number">202</span><span class="token punctuation">)</span> 
+       <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.030</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.294</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">229</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   FILTER: <span class="token punctuation">(</span>relname <span class="token operator">~</span> <span class="token string">'a'</span>::<span class="token keyword">text</span><span class="token punctuation">)</span>
+   <span class="token keyword">ROWS</span> Removed <span class="token keyword">BY</span> FILTER: <span class="token number">66</span>
+ Total runtime: <span class="token number">0.379</span> ms
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>PostgreSQL 9.2+版本会额外显示被过滤掉的行数，这对性能分析很有帮助。</p>
+<h3 id="3-7-2-索引扫描-Index-Scan"><a href="#3-7-2-索引扫描-Index-Scan" class="headerlink" title="3.7.2 索引扫描(Index Scan)"></a>3.7.2 索引扫描(Index Scan)</h3><p><strong>基本索引扫描</strong></p>
+<p>当查询条件能够利用索引时，PanweiDB会优先考虑使用索引扫描：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">WHERE</span> oid <span class="token operator">=</span> <span class="token number">1247</span><span class="token punctuation">;</span>
+                                                          QUERY <span class="token keyword">PLAN</span>                                                           
+<span class="token comment" spellcheck="true">-------------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">INDEX</span> Scan <span class="token keyword">USING</span> pg_class_oid_index <span class="token keyword">ON</span> pg_class  
+       <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.15</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.17</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> width<span class="token operator">=</span><span class="token number">202</span><span class="token punctuation">)</span> 
+       <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.007</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.007</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">1</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token keyword">INDEX</span> Cond: <span class="token punctuation">(</span>oid <span class="token operator">=</span> <span class="token number">1247</span>::oid<span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.077</span> ms
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>索引扫描的工作流程：</strong></p>
+<ol>
+<li>打开相关索引</li>
+<li>在索引中定位符合条件的键值</li>
+<li>通过索引指针访问表数据页</li>
+<li>检查行可见性（考虑MVCC机制）</li>
+<li>返回可见行</li>
+</ol>
+<p><strong>排序优化：利用索引顺序</strong></p>
+<p>索引扫描的一个关键优势是可以避免显式排序：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> oid <span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>
+                                                               QUERY <span class="token keyword">PLAN</span>                                                                
+<span class="token comment" spellcheck="true">-----------------------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">LIMIT</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.15</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.67</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> width<span class="token operator">=</span><span class="token number">206</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.017</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.029</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">INDEX</span> Scan <span class="token keyword">USING</span> pg_class_oid_index <span class="token keyword">ON</span> pg_class  
+         <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.15</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">44.53</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">292</span> width<span class="token operator">=</span><span class="token number">206</span><span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.014</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.026</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.145</span> ms
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>反向索引扫描(Index Scan Backward)</strong></p>
+<p>对于DESC排序，PanweiDB会使用反向索引扫描：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">WHERE</span> oid <span class="token operator">&lt;</span> <span class="token number">1247</span> <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> oid <span class="token keyword">DESC</span> <span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>
+                                                                   QUERY <span class="token keyword">PLAN</span>                                                                    
+<span class="token comment" spellcheck="true">-------------------------------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">LIMIT</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.15</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">4.03</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> width<span class="token operator">=</span><span class="token number">206</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.012</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.026</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">INDEX</span> Scan Backward <span class="token keyword">USING</span> pg_class_oid_index <span class="token keyword">ON</span> pg_class  
+         <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.15</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">37.84</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">97</span> width<span class="token operator">=</span><span class="token number">206</span><span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.009</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.022</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         <span class="token keyword">INDEX</span> Cond: <span class="token punctuation">(</span>oid <span class="token operator">&lt;</span> <span class="token number">1247</span>::oid<span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.119</span> ms
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-7-3-仅索引扫描-Index-Only-Scan"><a href="#3-7-3-仅索引扫描-Index-Only-Scan" class="headerlink" title="3.7.3. 仅索引扫描(Index Only Scan)"></a>3.7.3. 仅索引扫描(Index Only Scan)</h3><p><strong>工作原理</strong></p>
+<p>当查询只需返回索引列数据时，可以完全避免访问表数据页：</p>
+<pre><code>-- 创建测试表
+CREATE TABLE test (id serial PRIMARY KEY, i int4);
+INSERT INTO test (i) SELECT random() * 1000000000 FROM generate_series(1,100000);
+VACUUM ANALYZE test;
+</code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> id <span class="token keyword">FROM</span> test <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> id <span class="token keyword">ASC</span> <span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>
+                                                             QUERY <span class="token keyword">PLAN</span>                                                             
+<span class="token comment" spellcheck="true">------------------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">LIMIT</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.29</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.55</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.039</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.042</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">INDEX</span> ONLY Scan <span class="token keyword">USING</span> test_pkey <span class="token keyword">ON</span> test  
+         <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.29</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">2604.29</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">100000</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.036</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.038</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         Heap Fetches: <span class="token number">0</span>
+ Total runtime: <span class="token number">0.092</span> ms
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>关键点：</p>
+<ul>
+<li>仅当查询所需数据全部包含在索引中时可用</li>
+<li>需要确保索引的可见性映射(visibility map)是最新的（通过VACUUM维护）</li>
+<li>“Heap Fetches”显示实际需要访问表数据页的次数（理想情况下为0）</li>
+</ul>
+<h3 id="3-7-4-位图扫描-Bitmap-Scan"><a href="#3-7-4-位图扫描-Bitmap-Scan" class="headerlink" title="3.7.4 位图扫描(Bitmap Scan)"></a>3.7.4 位图扫描(Bitmap Scan)</h3><p><strong>基本位图扫描</strong></p>
+<p>位图扫描结合了顺序扫描和索引扫描的优点，分两个阶段执行：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> i1 <span class="token keyword">ON</span> test <span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test <span class="token keyword">WHERE</span> i <span class="token operator">&lt;</span> <span class="token number">100000</span><span class="token punctuation">;</span>
+                                                 QUERY <span class="token keyword">PLAN</span>                                                  
+<span class="token comment" spellcheck="true">-------------------------------------------------------------------------------------------------------------</span>
+ Bitmap Heap Scan <span class="token keyword">ON</span> test  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">4.37</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">39.99</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> width<span class="token operator">=</span><span class="token number">8</span><span class="token punctuation">)</span> 
+       <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.025</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.110</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">13</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   Recheck Cond: <span class="token punctuation">(</span>i <span class="token operator">&lt;</span> <span class="token number">100000</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Bitmap <span class="token keyword">INDEX</span> Scan <span class="token keyword">ON</span> i1  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">4.37</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">10</span> width<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span><span class="token number">0.013</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.013</span> <span class="token keyword">ROWS</span><span class="token operator">=</span><span class="token number">13</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         <span class="token keyword">INDEX</span> Cond: <span class="token punctuation">(</span>i <span class="token operator">&lt;</span> <span class="token number">100000</span><span class="token punctuation">)</span>
+ Total runtime: <span class="token number">0.154</span> ms
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">ROWS</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>工作流程：</p>
+<ol>
+<li><strong>位图索引扫描</strong>：创建表示可能包含匹配行的数据页的位图</li>
+<li><strong>位图堆扫描</strong>：按物理顺序访问标记的数据页，减少随机I/O</li>
+</ol>
+<p><strong>多条件位图组合</strong></p>
+<p>位图扫描的强大之处在于能够组合多个索引条件：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 添加更多列和索引</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> test <span class="token keyword">ADD</span> <span class="token keyword">COLUMN</span> j int4 <span class="token keyword">DEFAULT</span> random<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1000000000</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> test <span class="token keyword">ADD</span> <span class="token keyword">COLUMN</span> h int4 <span class="token keyword">DEFAULT</span> random<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1000000000</span><span class="token punctuation">;</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> i2 <span class="token keyword">ON</span> test <span class="token punctuation">(</span>j<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> i3 <span class="token keyword">ON</span> test <span class="token punctuation">(</span>h<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-bash"><code class="language-bash">EXPLAIN ANALYZE SELECT * FROM <span class="token function">test</span> WHERE j <span class="token operator">&lt;</span> 50000000 AND i <span class="token operator">&lt;</span> 50000000 AND h <span class="token operator">></span> 950000000<span class="token punctuation">;</span>
+                                                       QUERY PLAN                                                       
+------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan ON <span class="token function">test</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span>280.76<span class="token punctuation">..</span>323.61 ROWS<span class="token operator">=</span>12 width<span class="token operator">=</span>16<span class="token punctuation">)</span> 
+       <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span>2.295<span class="token punctuation">..</span>2.352 ROWS<span class="token operator">=</span>11 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+   Recheck Cond: <span class="token variable"><span class="token punctuation">((</span>h <span class="token operator">></span> <span class="token number">950000000</span><span class="token punctuation">)</span> AND <span class="token punctuation">(</span>j <span class="token operator">&lt;</span> <span class="token number">50000000</span><span class="token punctuation">)</span> AND <span class="token punctuation">(</span>i <span class="token operator">&lt;</span> <span class="token number">50000000</span><span class="token punctuation">))</span></span>
+   -<span class="token operator">></span>  BitmapAnd  <span class="token punctuation">(</span>cost<span class="token operator">=</span>280.76<span class="token punctuation">..</span>280.76 ROWS<span class="token operator">=</span>12 width<span class="token operator">=</span>0<span class="token punctuation">)</span> 
+         <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span>2.278<span class="token punctuation">..</span>2.278 ROWS<span class="token operator">=</span>0 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+         -<span class="token operator">></span>  Bitmap INDEX Scan ON i3  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>92.53 ROWS<span class="token operator">=</span>4832 width<span class="token operator">=</span>0<span class="token punctuation">)</span> 
+               <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span>0.546<span class="token punctuation">..</span>0.546 ROWS<span class="token operator">=</span>4938 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+               INDEX Cond: <span class="token punctuation">(</span>h <span class="token operator">></span> 950000000<span class="token punctuation">)</span>
+         -<span class="token operator">></span>  Bitmap INDEX Scan ON i2  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>93.76 ROWS<span class="token operator">=</span>4996 width<span class="token operator">=</span>0<span class="token punctuation">)</span> 
+               <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span>0.783<span class="token punctuation">..</span>0.783 ROWS<span class="token operator">=</span>5021 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+               INDEX Cond: <span class="token punctuation">(</span>j <span class="token operator">&lt;</span> 50000000<span class="token punctuation">)</span>
+         -<span class="token operator">></span>  Bitmap INDEX Scan ON i1  <span class="token punctuation">(</span>cost<span class="token operator">=</span>0.00<span class="token punctuation">..</span>93.96 ROWS<span class="token operator">=</span>5022 width<span class="token operator">=</span>0<span class="token punctuation">)</span> 
+               <span class="token punctuation">(</span>actual TIME<span class="token operator">=</span>0.798<span class="token punctuation">..</span>0.798 ROWS<span class="token operator">=</span>4998 loops<span class="token operator">=</span>1<span class="token punctuation">)</span>
+               INDEX Cond: <span class="token punctuation">(</span>i <span class="token operator">&lt;</span> 50000000<span class="token punctuation">)</span>
+ Total runtime: 2.428 ms
+<span class="token punctuation">(</span>10 ROWS<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>位图扫描支持三种逻辑组合操作：</p>
+<ul>
+<li><strong>BitmapOr</strong>：用于OR条件</li>
+<li><strong>BitmapAnd</strong>：用于AND条件</li>
+<li><strong>BitmapAnd+BitmapOr</strong>：用于复杂条件组合</li>
+</ul>
+<h3 id="3-7-5-扫描类型选择策略"><a href="#3-7-5-扫描类型选择策略" class="headerlink" title="3.7.5 扫描类型选择策略"></a>3.7.5 扫描类型选择策略</h3><p><strong>选择依据</strong></p>
+<p>PanweiDB基于成本模型选择扫描类型，考虑因素包括：</p>
+<ol>
+<li>预计需要读取的数据比例</li>
+<li>索引的选择性</li>
+<li>随机I/O与顺序I/O的成本差异</li>
+<li>内存缓冲区命中率</li>
+</ol>
+<p><strong>一般指导原则</strong></p>
+<ul>
+<li><strong>小表</strong>：优先顺序扫描</li>
+<li><strong>高选择性查询</strong>：优先索引扫描</li>
+<li><strong>中等选择性查询</strong>：考虑位图扫描</li>
+<li><strong>仅索引列查询</strong>：尽可能使用仅索引扫描</li>
+</ul>
+<h2 id="3-8-连接方式"><a href="#3-8-连接方式" class="headerlink" title="3.8 连接方式"></a>3.8 连接方式</h2><h3 id="3-8-1-哈希连接（Hash-Join）"><a href="#3-8-1-哈希连接（Hash-Join）" class="headerlink" title="3.8.1 哈希连接（Hash Join）"></a>3.8.1 <strong>哈希连接（Hash Join）</strong></h3><p>哈希连接用于连接两个数据集，包含两个子操作：一个总是”Hash”操作，另一个是任意操作。</p>
+<p>示例：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token number">c</span> <span class="token keyword">JOIN</span> pg_namespace n <span class="token keyword">ON</span> <span class="token number">c</span><span class="token punctuation">.</span>relnamespace <span class="token operator">=</span> n<span class="token punctuation">.</span>oid<span class="token punctuation">;</span>
+                                                       QUERY <span class="token keyword">PLAN</span>
+<span class="token comment" spellcheck="true">------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token keyword">Hash</span> <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.25</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">20.61</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">352</span> width<span class="token operator">=</span><span class="token number">339</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.028</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.217</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">357</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token keyword">Hash</span> Cond: <span class="token punctuation">(</span><span class="token number">c</span><span class="token punctuation">.</span>relnamespace <span class="token operator">=</span> n<span class="token punctuation">.</span>oid<span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_class <span class="token number">c</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">14.52</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">352</span> width<span class="token operator">=</span><span class="token number">226</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.006</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.037</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">357</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Hash</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">1.11</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.11</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> width<span class="token operator">=</span><span class="token number">117</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.015</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.015</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         Buckets: <span class="token number">1024</span>  Batches: <span class="token number">1</span>  Memory <span class="token keyword">Usage</span>: 10kB
+         <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_namespace n  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.11</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> width<span class="token operator">=</span><span class="token number">117</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.009</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.011</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>工作流程：</p>
+<ol>
+<li>先执行Hash子操作构建哈希表</li>
+<li>然后执行另一侧操作，对每行在哈希表中查找匹配</li>
+<li>找到匹配则输出连接结果</li>
+</ol>
+<h3 id="3-8-2-嵌套循环连接（Nested-Loop）"><a href="#3-8-2-嵌套循环连接（Nested-Loop）" class="headerlink" title="3.8.2 嵌套循环连接（Nested Loop）"></a>3.8.2 <strong>嵌套循环连接（Nested Loop）</strong></h3><p>嵌套循环连接有两个子操作，对左侧结果的每一行执行右侧操作。</p>
+<p>示例：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token number">a</span><span class="token punctuation">.</span><span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token number">c</span> <span class="token keyword">JOIN</span> pg_attribute <span class="token number">a</span> <span class="token keyword">ON</span> <span class="token number">c</span><span class="token punctuation">.</span>oid <span class="token operator">=</span> <span class="token number">a</span><span class="token punctuation">.</span>attrelid
+<span class="token keyword">WHERE</span> <span class="token number">c</span><span class="token punctuation">.</span>relname <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'pg_class'</span><span class="token punctuation">,</span> <span class="token string">'pg_namespace'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                                                        QUERY <span class="token keyword">PLAN</span>
+<span class="token comment" spellcheck="true">----------------------------------------------------------------------------------------------------------------------------------------------------------</span>
+ Nested Loop  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">8.84</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">55.73</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">15</span> width<span class="token operator">=</span><span class="token number">203</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.018</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.043</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">48</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Bitmap Heap Scan <span class="token keyword">on</span> pg_class <span class="token number">c</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">8.56</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">14.03</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2</span> width<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.011</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.012</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         Recheck Cond: <span class="token punctuation">(</span>relname <span class="token operator">=</span> <span class="token keyword">ANY</span> <span class="token punctuation">(</span><span class="token string">'{pg_class,pg_namespace}'</span>::name<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+         Heap Blocks: exact<span class="token operator">=</span><span class="token number">2</span>
+         <span class="token operator">-</span><span class="token operator">></span>  Bitmap <span class="token keyword">Index</span> Scan <span class="token keyword">on</span> pg_class_relname_nsp_index  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.56</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2</span> width<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.009</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.009</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+               <span class="token keyword">Index</span> Cond: <span class="token punctuation">(</span>relname <span class="token operator">=</span> <span class="token keyword">ANY</span> <span class="token punctuation">(</span><span class="token string">'{pg_class,pg_namespace}'</span>::name<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Index</span> Scan <span class="token keyword">using</span> pg_attribute_relid_attnum_index <span class="token keyword">on</span> pg_attribute <span class="token number">a</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.28</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">20.77</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">8</span> width<span class="token operator">=</span><span class="token number">203</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.004</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.007</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">24</span> loops<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span>
+         <span class="token keyword">Index</span> Cond: <span class="token punctuation">(</span>attrelid <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>oid<span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>注意Index Scan的<code>loops=2</code>表示该操作执行了两次。</p>
+<h3 id="3-8-3-合并连接（Merge-Join）"><a href="#3-8-3-合并连接（Merge-Join）" class="headerlink" title="3.8.3 合并连接（Merge Join）"></a>3.8.3 <strong>合并连接（Merge Join）</strong></h3><p>当连接的数据集已按连接键排序时使用此方法。</p>
+<p>示例（强制使用排序）：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span>
+    <span class="token punctuation">(</span><span class="token keyword">SELECT</span> oid<span class="token punctuation">,</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> oid<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token number">c</span>
+    <span class="token keyword">JOIN</span>
+    <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_attribute <span class="token number">a</span> <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> attrelid<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token number">a</span>
+    <span class="token keyword">ON</span> <span class="token number">c</span><span class="token punctuation">.</span>oid <span class="token operator">=</span> <span class="token number">a</span><span class="token punctuation">.</span>attrelid<span class="token punctuation">;</span>
+ QUERY <span class="token keyword">PLAN</span>
+
+<span class="token comment" spellcheck="true">---------------------------------------------------------------------------------------------------------------------------------------------------------------</span>
+<span class="token comment" spellcheck="true">-------</span>
+ <span class="token keyword">Merge</span> <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">29.69</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">352.26</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2716</span> width<span class="token operator">=</span><span class="token number">433</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.347</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">10.218</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2749</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token keyword">Merge</span> Cond: <span class="token punctuation">(</span>pg_class<span class="token punctuation">.</span>oid <span class="token operator">=</span> <span class="token number">a</span><span class="token punctuation">.</span>attrelid<span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Sort  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">29.41</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">30.29</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">352</span> width<span class="token operator">=</span><span class="token number">230</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.299</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.363</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">357</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         Sort <span class="token keyword">Key</span>: pg_class<span class="token punctuation">.</span>oid
+         Sort Method: quicksort  Memory: 119kB
+         <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_class  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">14.52</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">352</span> width<span class="token operator">=</span><span class="token number">230</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.014</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.147</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">357</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">></span>  Materialize  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.28</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">283.62</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2716</span> width<span class="token operator">=</span><span class="token number">203</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.017</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.655</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2749</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         <span class="token operator">-</span><span class="token operator">></span>  <span class="token keyword">Index</span> Scan <span class="token keyword">using</span> pg_attribute_relid_attnum_index <span class="token keyword">on</span> pg_attribute <span class="token number">a</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.28</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">249.67</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2716</span> width<span class="token operator">=</span><span class="token number">203</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.016</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">8.222</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">2749</span> lo
+ops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>工作流程：</p>
+<ol>
+<li>同时扫描两个已排序的输入集</li>
+<li>比较当前行的连接键</li>
+<li>根据比较结果决定从哪一侧获取下一行</li>
+</ol>
+<h3 id="3-8-4-物化操作（Materialize）"><a href="#3-8-4-物化操作（Materialize）" class="headerlink" title="3.8.4 物化操作（Materialize）"></a>3.8.4 <strong>物化操作（Materialize）</strong></h3><p>物化操作将底层操作的结果存储在内存中，供多次使用。</p>
+<p>示例：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> \dTS
+ Materialize  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.17</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> width<span class="token operator">=</span><span class="token number">68</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.000</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.001</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> loops<span class="token operator">=</span><span class="token number">95</span><span class="token punctuation">)</span>
+               <span class="token operator">-</span><span class="token operator">></span>  Seq Scan <span class="token keyword">on</span> pg_namespace n  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">0.00</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.11</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> width<span class="token operator">=</span><span class="token number">68</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.004</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.006</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">11</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>在这个例子中，物化避免了95次表扫描，只需扫描一次并将结果存储在内存中。</p>
+<h3 id="3-8-5-连接操作的变体"><a href="#3-8-5-连接操作的变体" class="headerlink" title="3.8.5 连接操作的变体"></a>3.8.5 <strong>连接操作的变体</strong></h3><p>连接操作有以下变体：</p>
+<ul>
+<li>左/右连接：Hash Left Join, Merge Left Join等</li>
+<li>全连接：Hash Full Join, Merge Full Join</li>
+<li>反连接：Hash Anti Join（用于NOT EXISTS子查询）</li>
+</ul>
+<p>示例（反连接）：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_class <span class="token number">c</span> 
+<span class="token keyword">WHERE</span> <span class="token operator">NOT</span> <span class="token keyword">EXISTS</span> <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_attribute <span class="token number">a</span> <span class="token keyword">WHERE</span> <span class="token number">a</span><span class="token punctuation">.</span>attrelid <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>oid <span class="token operator">AND</span> <span class="token number">a</span><span class="token punctuation">.</span>attnum <span class="token operator">=</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ <span class="token keyword">Hash</span> Anti <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">93.62</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">115.69</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">298</span> width<span class="token operator">=</span><span class="token number">226</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.642</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.851</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">303</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>反连接只返回在另一侧找不到匹配的行。</p>
+<h2 id="3-9-定制执行计划"><a href="#3-9-定制执行计划" class="headerlink" title="3.9 定制执行计划"></a>3.9 定制执行计划</h2>
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">JINLID</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://jinlid.github.io/2026/3.sql-diao-you/">https://jinlid.github.io/2026/3.sql-diao-you/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">JINLID</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/%E7%BC%93%E5%AD%98%EF%BC%8C%E7%B4%A2%E5%BC%95-%E5%88%86%E5%8C%BA/">
+                                    <span class="chip bg-color">缓存，索引,分区</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2026/3.sql-diao-you/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="第三章--SQL调优">
+                        
+                        <span class="card-title">第三章--SQL调优</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-29
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E7%BC%93%E5%AD%98%EF%BC%8C%E7%B4%A2%E5%BC%95-%E5%88%86%E5%8C%BA/">
+                        <span class="chip bg-color">缓存，索引,分区</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2026/4.diao-you-yi-zhu/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="第四章--调优艺术">
+                        
+                        <span class="card-title">第四章--调优艺术</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-29
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E7%BC%93%E5%AD%98%EF%BC%8C%E7%B4%A2%E5%BC%95-%E5%88%86%E5%8C%BA/">
+                        <span class="chip bg-color">缓存，索引,分区</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2026</span>
+            
+            <a href="/about" target="_blank">JINLID</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/jinlid" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:845401160@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=845401160" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 845401160" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
