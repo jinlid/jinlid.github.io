@@ -625,10 +625,51 @@
 <p>4.2.2 线程池最佳实践</p>
 <p>线程池介绍<br>最佳实践介绍<br>注意事项</p>
 <p>4.2.3 MOT内存表介绍</p>
-<h2 id="4-3-压缩术"><a href="#4-3-压缩术" class="headerlink" title="4.3 压缩术"></a>4.3 压缩术</h2><p>常见压缩方法</p>
-<p>硬件压缩ZFS/软件压缩有很多种<br>LZ4、ZSTD、punch hole打洞反还</p>
-<p>优劣势对比</p>
-<p>注意事项</p>
+<p>磐维V2.0不支持？</p>
+<h2 id="4-3-压缩术"><a href="#4-3-压缩术" class="headerlink" title="4.3 压缩术"></a>4.3 压缩术</h2><p>当前主流数据库通常都会采用数据压缩技术。数据类型不同，适用于它的压缩算法不同。对于相同类型的数据，其数据特征不同，采用不同的压缩算法达到的效果也不相同。自适用压缩正是从数据类型和数据特征出发，采用相应的压缩算法，实现了良好的压缩比、快速的入库性能以及良好的查询性能。</p>
+<p>数据入库和频繁的海量数据查询是用户的主要应用场景。 在数据入库场景中，自适应压缩可以大幅度地减少数据量，成倍提高IO操作效率，将数据簇集存储，从而获得快速的入库性能。当用户进行数据查询时，少量的IO操作和快速的数据解压可以加快数据获取的速率，从而在更短的时间内得到查询结果。</p>
+<p>目前，数据库已实现了RLE、DELTA、BYTEPACK/BITPACK、LZ4、ZLIB、LOCAL DICTIONARY等多种压缩算法。数据库支持的数据类型与压缩算法的映射关系如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>-</th>
+<th>RLE</th>
+<th>DELTA</th>
+<th>BITPACK/BYTEPACK</th>
+<th>LZ4</th>
+<th>ZLIB</th>
+<th>LOCAL DICTIONARY</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Smallint/int/bigint/OidDecimal/real/doubleMoney/time/date/timestamp</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Tinterval/interval/Time with time zone/</td>
+<td></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>√</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Numeric/char/varchar/text/nvarchar2以及其他支持数据类型</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+<td>√</td>
+</tr>
+</tbody></table>
+<p>具体场景如：支持类手机号字符串的大整数压缩、支持numeric类型的大整数压缩、支持对压缩算法进行不同压缩水平的调整。</p>
 <h2 id="4-4-批量处理术"><a href="#4-4-批量处理术" class="headerlink" title="4.4 批量处理术"></a>4.4 批量处理术</h2><h3 id="4-4-1-业务批量插入最佳实践"><a href="#4-4-1-业务批量插入最佳实践" class="headerlink" title="4.4.1 业务批量插入最佳实践"></a>4.4.1 业务批量插入最佳实践</h3><p>在 PanWeDB 数据库运维中，常需通过单个或最少步骤完成海量数据的导入操作，即批量数据导入，其数据源多为单个或多个大文件。若未采用针对性优化方案，该过程会因各类性能瓶颈导致加载速度极慢，难以满足业务需求。</p>
 <p>造成 PanWeDB 批量插入性能低下的核心原因包括：索引的实时更新开销、触发器的逐行触发执行、外键约束的有效性校验、GUID 主键的生成成本，以及预写日志（WAL）的写入机制等，这些因素会单独或叠加成为数据加载的关键阻碍。</p>
 <p>常规插入过程中，典型的非批量插入操作遵循“准备语句-绑定参数-发送请求-确认插入”的重复模式，每行数据都需要单独循环执行，网络通信和数据库处理的开销会随数据量急剧增加。而批量插入通过整合多组插入操作，可大幅降低这类冗余开销，是海量数据导入的最优选择。</p>
@@ -1013,16 +1054,16 @@ checkpoint_completion_target = 0.5
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="第六章--监控命令">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="第六章--Linux系统资源监控实战">
                         
-                        <span class="card-title">第六章--监控命令</span>
+                        <span class="card-title">第六章--Linux系统资源监控实战</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
                             [TOC]
-本章介绍Linux环境下系统资源监控的核心命令，重点讲解sar、uptime、mpstat、iostat、ipcs五大高频命令的应用。这些命令分别针对CPU、磁盘I/O、共享内存等关键系统资源，实现快速巡检、性能统计与瓶颈定位，
+本章旨在系统化地解析Linux性能监控的核心工具，将围绕CPU、内存、磁盘I/O、网络四大资源维度，对sar、uptime、mpstat、iostat、ipcs等高频命令进行深入讲解。通过建立分维度的监控体系，帮助读者在面对性能
                         
                     </div>
                     <div class="publish-info">
