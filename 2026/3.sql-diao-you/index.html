@@ -446,281 +446,219 @@
 <p>执行过程中，执行器会协同两个核心引擎：一是<strong>存储引擎</strong>，根据执行计划的要求，从磁盘或内存中加载所需数据；二是<strong>事务引擎</strong>，保障当前事务的数据完整性（如原子性、一致性），避免执行过程中出现数据异常。</p>
 <p>简单来说，执行计划就像一份动态生成的“运行脚本”，明确告知执行器每一步该读取哪些数据、如何处理数据，而执行器的核心职责，就是严格执行这份脚本，确保高效、准确地返回查询结果。</p>
 <h2 id="3-3-如何编写优质SQL"><a href="#3-3-如何编写优质SQL" class="headerlink" title="3.3 如何编写优质SQL"></a>3.3 如何编写优质SQL</h2><p>在数据库性能优化实践中，<strong>编写高效 SQL 语句</strong>是最基础也最有效的调优手段。在多数客户项目中，我们发现大量 SQL 未能充分发挥数据库的性能潜力，其核心问题常见如下。</p>
-<h3 id="3-3-1-避免在-SELECT-语句中滥用子查询"><a href="#3-3-1-避免在-SELECT-语句中滥用子查询" class="headerlink" title="3.3.1 避免在 SELECT 语句中滥用子查询"></a>3.3.1 避免在 SELECT 语句中滥用子查询</h3><p>新手常犯的典型错误是将子查询视为独立的 “黑盒” 数据块，割裂了子查询内部逻辑与外部处理逻辑的联系，导致查询效率低下。</p>
+<h3 id="3-3-1-避免滥用标量子查询导致性能损耗"><a href="#3-3-1-避免滥用标量子查询导致性能损耗" class="headerlink" title="3.3.1 避免滥用标量子查询导致性能损耗"></a>3.3.1 避免滥用标量子查询导致性能损耗</h3><p>新手在编写 SQL 时，常忽略子查询内部逻辑与外部查询的联动关系，尤其对标量子查询的执行逻辑认知不足，极易造成查询效率大幅下降。</p>
 <p>反例：滥用子查询</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> tract_id<span class="token punctuation">,</span>
-       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
-       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
-        <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_fact_types <span class="token keyword">AS</span> Y
-        <span class="token keyword">WHERE</span> Y<span class="token punctuation">.</span>fact_type_id <span class="token operator">IN</span> <span class="token punctuation">(</span>
-            <span class="token keyword">SELECT</span> fact_type_id
-            <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts F
-            <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id
-        <span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
-<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>这种写法将子查询当作独立黑盒，多次扫描关联表，在大数据量场景下性能极差。</p>
-<p>正例：合并子查询，使用关联查询</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">,</span>
-       <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token number">f</span><span class="token punctuation">.</span>fact_type_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
-       <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> fact_type_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
-<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T
-<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">ON</span> T<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> F<span class="token punctuation">.</span>tract_id
-<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>通过关联查询与聚合操作，将多次子查询合并为单次扫描，显著提升执行效率。</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> t1<span class="token punctuation">.</span>id<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">select</span> t2<span class="token punctuation">.</span>num <span class="token keyword">from</span> t2 <span class="token keyword">where</span> t2<span class="token punctuation">.</span>id <span class="token operator">=</span> t1<span class="token punctuation">.</span>id<span class="token punctuation">)</span> <span class="token keyword">as</span> num <span class="token keyword">from</span> t1<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>优化前的执行计划和耗时（128286.385 ms）：</p>
+<p> <img src="/medias/image/MTY4ODg1MjU3NDM3MTYxMw_572133_n7gq0j3z7_EWXO2-_1750227761.png" alt="img"></p>
+<p>标量子查询的执行逻辑等同于「天然的嵌套循环」，且驱动表固定为外部主表 t1：t1 表每输出一行数据，数据库就会针对这一行的<code>id</code>值，去 t2 表执行一次独立的查询（若无索引则为全表扫描）。即便为 t2 表的<code>id</code>列建立索引，当 t1 表返回大量数据时，t2 表仍会被反复遍历（遍历次数等于 t1 的返回行数），最终导致 SQL 性能呈数量级下降。</p>
+<h4 id="优化解析"><a href="#优化解析" class="headerlink" title="优化解析"></a><strong>优化解析</strong></h4><p><strong>场景描述：</strong>标量子查询本质是「行级嵌套查询」，外部主表每一行都会触发一次子查询执行，属于典型的 “逐行处理” 低效模式。即便为子查询的连接列（如 t2.id）建立索引，仅能降低单次子查询的耗时，无法解决 “多次遍历子表” 的核心问题，当主表数据量较大时，性能损耗会被急剧放大。</p>
+<p><strong>优化操作步骤</strong>：将标量子查询改写为表连接（左连接），把「多次逐行查询」合并为「单次批量关联扫描」：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> t1<span class="token punctuation">.</span>id<span class="token punctuation">,</span> t2<span class="token punctuation">.</span>num <span class="token keyword">from</span> t1 <span class="token operator">*</span><span class="token operator">*</span><span class="token keyword">left</span> <span class="token keyword">join</span><span class="token operator">*</span><span class="token operator">*</span> t2 <span class="token keyword">on</span> <span class="token punctuation">(</span>t2<span class="token punctuation">.</span>id <span class="token operator">=</span> t1<span class="token punctuation">.</span>id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>优化后的执行计划和耗时（753.455 ms）：</p>
+<p> <img src="/medias/image/MTY4ODg1MjU3NDM3MTYxMw_575250_P9BAwmilVw2gnYhc_1750227761.png" alt="img"></p>
+<p>改写后，数据库会通过一次扫描完成 t1 与 t2 的关联匹配，无需反复遍历 t2 表，执行效率可得到显著提升。</p>
 <blockquote>
-<p><strong>建议</strong>：子查询并非绝对禁止，但应与主语句通盘考虑，优先通过关联查询、聚合操作等方式替代不必要的子查询，避免 “黑盒式” 子查询滥用。</p>
+<p><strong>建议</strong>：标量子查询并非绝对不可用（如主表返回行数极少的场景），但需全面考量子查询与主查询的整体执行逻辑，优先通过 JOIN 关联、聚合函数等方式替代不必要的标量子查询，从根本上避免 “逐行触发子查询” 的低效执行模式。</p>
 </blockquote>
 <hr>
-<h3 id="3-3-2-尽量避免使用-SELECT-语法"><a href="#3-3-2-尽量避免使用-SELECT-语法" class="headerlink" title="3.3.2 尽量避免使用 SELECT * 语法"></a>3.3.2 尽量避免使用 SELECT * 语法</h3><p><code>SELECT *</code> 会导致不必要的数据读取和网络传输，尤其在磐维数据库中，还会触发以下隐藏问题：</p>
+<h3 id="3-3-2-避免滥用不等于查询导致索引失效"><a href="#3-3-2-避免滥用不等于查询导致索引失效" class="headerlink" title="3.3.2 避免滥用不等于查询导致索引失效"></a>3.3.2 避免滥用不等于查询导致索引失效</h3><p><strong>反例 SQL（低效写法）</strong>：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> wfh_task 
+    <span class="token keyword">where</span> appid <span class="token operator">=</span> <span class="token string">'com.awspaas.user.apps.glyhdocument'</span> 
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ios <span class="token operator">=</span> <span class="token string">'76b414cb-8c82-4446-9826-070e5e81817b'</span>
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ext7 <span class="token operator">&lt;></span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>优化前的执行计划和耗时（170485 ms）：</p>
+<p><img src="/medias/image/MTY4ODg1MjU3NDM3MTYxMw_316869_kpUwo46D7w7X7wFi_1750227761.png" alt="img"></p>
+<p><strong>优化后 SQL（推荐写法）</strong>：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> wfh_task <span class="token keyword">where</span> appid <span class="token operator">=</span> <span class="token string">'com.awspaas.user.apps.glyhdocument'</span>
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ios <span class="token operator">=</span> <span class="token string">'76b414cb-8c82-4446-9826-070e5e81817b'</span>
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ext7 <span class="token operator">&lt;</span> <span class="token number">0</span> 
+<span class="token keyword">union</span> <span class="token keyword">all</span>
+<span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> wfh_task <span class="token keyword">where</span> appid <span class="token operator">=</span> <span class="token string">'com.awspaas.user.apps.glyhdocument'</span>
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ios <span class="token operator">=</span> <span class="token string">'76b414cb-8c82-4446-9826-070e5e81817b'</span>
+        <span class="token operator">and</span> wfh_task<span class="token punctuation">.</span>ext7 <span class="token operator">></span> <span class="token number">0</span> <span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>优化后的执行计划和耗时（6969 ms）：</p>
+<p><img src="/medias/image/MTY4ODg1MjU3NDM3MTYxMw_309720_zh8ygWdmAUtYqwGk_1750227761.png" alt="img"></p>
+<h4 id="3-5-1-2-反例解析与优化思路"><a href="#3-5-1-2-反例解析与优化思路" class="headerlink" title="3.5.1.2 反例解析与优化思路"></a>3.5.1.2 反例解析与优化思路</h4><p><strong>反例核心问题</strong>：</p>
+<p><code>ext7 &lt;&gt; 0</code> 这类「不等于」条件是索引失效的典型场景 —— 数据库优化器对 “不等于” 条件的处理逻辑是 “排除单一值，匹配剩余所有值”，无法通过索引快速定位符合条件的数据，只能触发全表扫描，尤其在大表场景下性能极差（本案例耗时超 170 秒）。</p>
+<p><strong>优质 SQL 编写原则（针对此类场景）</strong>：</p>
 <ol>
-<li><strong>TOAST 机制开销</strong>：磐维数据库使用 TOAST（The Oversized-Attribute Storage Technique）存储超大字段（如文本、二进制对象），这些数据存储在辅助表中。<code>SELECT *</code> 会强制读取所有字段，导致多次关联操作，显著拖慢查询速度。</li>
-<li><strong>视图性能陷阱</strong>：当视图定义包含复杂运算或多表关联时，<code>SELECT * FROM 视图</code> 会触发视图中所有关联和计算，即使查询仅需少数字段，也会导致全量运算。</li>
+<li>摒弃 “不等于”（<code>&lt;&gt;</code>/<code>!=</code>）过滤逻辑，优先拆解为 “大于 + 小于” 的正向范围条件；</li>
+<li>对拆解后的范围条件，进一步用<code>UNION ALL</code>拆分为独立的索引友好型查询（<code>ext7 &lt; 0</code>和<code>ext7 &gt; 0</code>），让每个子查询都能精准走索引扫描；</li>
+<li>优先使用<code>UNION ALL</code>而非<code>UNION</code>（无需去重，性能更高），最大化索引利用效率。</li>
 </ol>
-<p><strong>性能对比示例</strong></p>
-<p>假设基于反例子查询创建视图：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> REPLACE <span class="token keyword">VIEW</span> vw_stats <span class="token keyword">AS</span>
-<span class="token keyword">SELECT</span> tract_id<span class="token punctuation">,</span>
-       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts <span class="token keyword">AS</span> F <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> num_facts<span class="token punctuation">,</span>
-       <span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
-        <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_fact_types <span class="token keyword">AS</span> Y
-        <span class="token keyword">WHERE</span> Y<span class="token punctuation">.</span>fact_type_id <span class="token operator">IN</span> <span class="token punctuation">(</span>
-            <span class="token keyword">SELECT</span> fact_type_id
-            <span class="token keyword">FROM</span> census<span class="token punctuation">.</span>facts F
-            <span class="token keyword">WHERE</span> F<span class="token punctuation">.</span>tract_id <span class="token operator">=</span> T<span class="token punctuation">.</span>tract_id
-        <span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> num_fact_types
-<span class="token keyword">FROM</span> census<span class="token punctuation">.</span>lu_tracts <span class="token keyword">AS</span> T<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<ul>
-<li><code>SELECT tract_id FROM vw_stats;</code>：仅需 21 毫秒，因为优化器可判断无需访问复杂计算字段。</li>
-<li><code>SELECT * FROM vw_stats;</code>：耗时飙升至 681 毫秒，触发了所有子查询和关联运算。</li>
-</ul>
-<blockquote>
-<p><strong>建议</strong>：始终明确列出所需字段，避免 <code>SELECT *</code>。这不仅能减少 IO 和网络开销，还能让磐维优化器更精准地生成执行计划，尤其在处理大表和复杂视图时，性能差异会被无限放大。</p>
-</blockquote>
-<h2 id="3-4-如何捕获劣质SQL"><a href="#3-4-如何捕获劣质SQL" class="headerlink" title="3.4 如何捕获劣质SQL"></a>3.4 如何捕获劣质SQL</h2><p>PanWeiDB提供了丰富的性能诊断体系，涵盖性能视图、等待事件、活跃会话分析、历史会话回溯及操作系统级监控等能力。本指南将系统化讲解各类诊断手段的使用方法、适用场景及实操案例，帮助 DBA 快速定位性能瓶颈、优化 SQL 执行效率。</p>
-<h3 id="3-4-1-性能视图：性能诊断的核心数据源"><a href="#3-4-1-性能视图：性能诊断的核心数据源" class="headerlink" title="3.4.1 性能视图：性能诊断的核心数据源"></a>3.4.1 性能视图：性能诊断的核心数据源</h3><p>数据库内置丰富的系统性能视图，是获取数据库运行状态、定位性能问题的基础。这些视图涵盖资源使用、SQL 执行、锁等待、会话状态等全维度数据，适用于实时监控、问题排查、性能基线分析等场景。</p>
-<h4 id="3-4-1-1-核心性能视图分类及用途"><a href="#3-4-1-1-核心性能视图分类及用途" class="headerlink" title="3.4.1.1 核心性能视图分类及用途"></a>3.4.1.1 核心性能视图分类及用途</h4><table>
-<thead>
-<tr>
-<th align="center">视图名称</th>
-<th align="center">核心用途</th>
-<th align="center">典型使用场景</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center"><code>pg_stat_activity</code></td>
-<td align="center">实时展示所有活跃 / 非活跃会话的状态、执行的 SQL、资源消耗等</td>
-<td align="center">定位阻塞会话、查看当前运行的慢 SQL、识别空闲会话占用资源</td>
-</tr>
-<tr>
-<td align="center"><code>pg_thread_wait_status</code></td>
-<td align="center">展示会话等待事件详情，包括等待类型、阻塞会话 ID、等待时长等</td>
-<td align="center">分析会话阻塞关系、定位锁等待 / IO 等待等性能瓶颈</td>
-</tr>
-<tr>
-<td align="center"><code>dbe_perf.local_active_session</code></td>
-<td align="center">采样存储活跃会话的统计信息（内存级实时数据）</td>
-<td align="center">分析近期资源消耗高的会话、SQL 及等待事件</td>
-</tr>
-<tr>
-<td align="center"><code>dbe_perf.statement</code></td>
-<td align="center">记录所有执行过的 SQL 语句的统计信息（执行次数、耗时、IO 等）</td>
-<td align="center">识别高频 / 高耗时 SQL、分析 SQL 执行效率</td>
-</tr>
-<tr>
-<td align="center"><code>dbe_perf.get_global_full_sql_by_timestamp</code></td>
-<td align="center">按时间范围查询慢 SQL 详细信息（脱敏）</td>
-<td align="center">离线诊断历史慢 SQL、回溯 SQL 执行计划和资源消耗</td>
-</tr>
-<tr>
-<td align="center"><code>snapshot.snapshot</code></td>
-<td align="center">存储 WDR 快照元数据（ID、采集时间、类型）</td>
-<td align="center">生成 WDR 报告、确认快照有效性</td>
-</tr>
-</tbody></table>
-<h4 id="3-4-1-2-常用查询示例"><a href="#3-4-1-2-常用查询示例" class="headerlink" title="3.4.1.2 常用查询示例"></a>3.4.1.2 常用查询示例</h4><p><strong>（1）查看当前所有活跃会话</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
-    pid <span class="token keyword">AS</span> session_id<span class="token punctuation">,</span>
-    usename <span class="token keyword">AS</span> user_name<span class="token punctuation">,</span>
-    datname <span class="token keyword">AS</span> db_name<span class="token punctuation">,</span>
-    client_addr <span class="token keyword">AS</span> client_ip<span class="token punctuation">,</span>
-    state<span class="token punctuation">,</span>
-    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
-    <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start <span class="token keyword">AS</span> execute_duration  <span class="token comment" spellcheck="true">-- 执行时长</span>
-<span class="token keyword">FROM</span> pg_stat_activity
-<span class="token keyword">WHERE</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span>  <span class="token comment" spellcheck="true">-- 排除空闲会话</span>
-<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_duration <span class="token keyword">DESC</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>（2）统计各数据库的会话数</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
-    datname <span class="token keyword">AS</span> db_name<span class="token punctuation">,</span>
-    <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> session_count<span class="token punctuation">,</span>
-    <span class="token function">sum</span><span class="token punctuation">(</span><span class="token keyword">CASE</span> <span class="token keyword">WHEN</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span> <span class="token keyword">THEN</span> <span class="token number">1</span> <span class="token keyword">ELSE</span> <span class="token number">0</span> <span class="token keyword">END</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> active_session_count
-<span class="token keyword">FROM</span> pg_stat_activity
-<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> datname<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-4-2-等待事件：定位资源竞争的关键"><a href="#3-4-2-等待事件：定位资源竞争的关键" class="headerlink" title="3.4.2 等待事件：定位资源竞争的关键"></a>3.4.2 等待事件：定位资源竞争的关键</h3><p>等待事件是数据库会话在获取资源（锁、IO、CPU、内存）时的等待状态，是分析性能瓶颈的核心维度。通过等待事件可精准定位锁阻塞、IO 瓶颈、CPU 争用等问题。</p>
-<h4 id="3-4-2-1-常用等待事件分类"><a href="#3-4-2-1-常用等待事件分类" class="headerlink" title="3.4.2.1 常用等待事件分类"></a>3.4.2.1 常用等待事件分类</h4><table>
-<thead>
-<tr>
-<th align="center">等待事件类型</th>
-<th align="center">典型事件名称</th>
-<th align="center">含义及常见原因</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">LOCK_EVENT</td>
-<td align="center">relation_lock、tuple_lock</td>
-<td align="center">表 / 行锁等待，通常由长事务、未提交事务、高并发写入导致</td>
-</tr>
-<tr>
-<td align="center">IO_EVENT</td>
-<td align="center">data_file_read、data_file_write</td>
-<td align="center">数据文件读写等待，通常由磁盘 IO 性能差、表扫描过多、索引缺失导致</td>
-</tr>
-<tr>
-<td align="center">LWLOCK_EVENT</td>
-<td align="center">buffer_content_lock</td>
-<td align="center">轻量级锁等待，通常由高并发访问同一数据块、内存不足导致</td>
-</tr>
-<tr>
-<td align="center">STATUS</td>
-<td align="center">idle_in_transaction</td>
-<td align="center">事务内空闲等待，通常由应用未及时提交 / 回滚事务导致</td>
-</tr>
-</tbody></table>
-<h4 id="3-4-2-2-捕获等待事件的实操方法"><a href="#3-4-2-2-捕获等待事件的实操方法" class="headerlink" title="3.4.2.2 捕获等待事件的实操方法"></a>3.4.2.2 捕获等待事件的实操方法</h4><p><strong>（1）查看当前会话的等待事件</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
-    sessionid<span class="token punctuation">,</span>
-    wait_status <span class="token keyword">AS</span> wait_status<span class="token punctuation">,</span>
-    wait_event <span class="token keyword">AS</span> wait_event<span class="token punctuation">,</span>
-    block_sessionid <span class="token keyword">AS</span> blocked_by<span class="token punctuation">,</span>
-    lockmode <span class="token keyword">AS</span> lockmode
-<span class="token keyword">FROM</span> pg_thread_wait_status
-<span class="token keyword">WHERE</span> block_sessionid <span class="token operator">&lt;></span> <span class="token number">0</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">-- 仅查看被阻塞的会话</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>（2）统计最近 5 分钟最耗资源的等待事件</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql">
-<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p><strong>（3）定位锁阻塞的根源 SQL</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">WITH</span> t_lock <span class="token keyword">AS</span> <span class="token punctuation">(</span>
-    <span class="token keyword">SELECT</span> 
-        <span class="token number">a</span><span class="token punctuation">.</span>relation::regclass <span class="token keyword">AS</span> table_name<span class="token punctuation">,</span>
-        <span class="token number">a</span><span class="token punctuation">.</span>mode <span class="token keyword">AS</span> lock_mode<span class="token punctuation">,</span>
-        <span class="token number">a</span><span class="token punctuation">.</span>pid <span class="token keyword">AS</span> hold_pid<span class="token punctuation">,</span>
-        <span class="token number">b</span><span class="token punctuation">.</span>query <span class="token keyword">AS</span> hold_sql<span class="token punctuation">,</span>
-        <span class="token number">c</span><span class="token punctuation">.</span>pid <span class="token keyword">AS</span> wait_pid<span class="token punctuation">,</span>
-        <span class="token number">d</span><span class="token punctuation">.</span>query <span class="token keyword">AS</span> wait_sql
-    <span class="token keyword">FROM</span> pg_locks <span class="token number">a</span>
-    <span class="token keyword">JOIN</span> pg_stat_activity <span class="token number">b</span> <span class="token keyword">ON</span> <span class="token number">a</span><span class="token punctuation">.</span>pid <span class="token operator">=</span> <span class="token number">b</span><span class="token punctuation">.</span>pid <span class="token operator">AND</span> <span class="token number">a</span><span class="token punctuation">.</span>granted <span class="token operator">=</span> <span class="token boolean">true</span>
-    <span class="token keyword">JOIN</span> pg_locks <span class="token number">c</span> <span class="token keyword">ON</span> <span class="token number">a</span><span class="token punctuation">.</span>relation <span class="token operator">=</span> <span class="token number">c</span><span class="token punctuation">.</span>relation <span class="token operator">AND</span> <span class="token number">c</span><span class="token punctuation">.</span>granted <span class="token operator">=</span> <span class="token boolean">false</span>
-    <span class="token keyword">JOIN</span> pg_stat_activity <span class="token number">d</span> <span class="token keyword">ON</span> <span class="token number">c</span><span class="token punctuation">.</span>pid <span class="token operator">=</span> <span class="token number">d</span><span class="token punctuation">.</span>pid
-<span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> t_lock<span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-4-3-活跃会话：实时捕获劣质-SQL"><a href="#3-4-3-活跃会话：实时捕获劣质-SQL" class="headerlink" title="3.4.3 活跃会话：实时捕获劣质 SQL"></a>3.4.3 活跃会话：实时捕获劣质 SQL</h3><p>活跃会话分析聚焦<strong>当前正在运行</strong>的会话，可实时捕获耗时高、资源消耗大的劣质 SQL，适用于解决突发性能问题（如 CPU 100%、查询卡顿）。</p>
-<h4 id="3-4-3-1-捕获当前-TOP-耗时-SQL"><a href="#3-4-3-1-捕获当前-TOP-耗时-SQL" class="headerlink" title="3.4.3.1 捕获当前 TOP 耗时 SQL"></a>3.4.3.1 捕获当前 TOP 耗时 SQL</h4><pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> 
-    application_name <span class="token keyword">as</span> app<span class="token punctuation">,</span>
-    pid <span class="token keyword">AS</span> session_id<span class="token punctuation">,</span>
-    usename <span class="token keyword">AS</span> user_name<span class="token punctuation">,</span>
-    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
-    <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start <span class="token keyword">AS</span> execute_time<span class="token punctuation">,</span>
-    state
-<span class="token keyword">FROM</span> pg_stat_activity
-<span class="token keyword">WHERE</span> state <span class="token operator">&lt;></span> <span class="token string">'idle'</span>
-<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_time <span class="token keyword">DESC</span>
-<span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">-- 取TOP 10 最长执行SQL</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-4-3-2-分析活跃会话的资源消耗分布"><a href="#3-4-3-2-分析活跃会话的资源消耗分布" class="headerlink" title="3.4.3.2 分析活跃会话的资源消耗分布"></a>3.4.3.2 分析活跃会话的资源消耗分布</h4><pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 最近5分钟耗资源的会话及对应的等待事件</span>
-<span class="token keyword">SELECT</span> 
-    sessionid<span class="token punctuation">,</span>
-    start_time<span class="token punctuation">,</span>
-    event<span class="token punctuation">,</span>
-    <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> event_count<span class="token punctuation">,</span>
-    <span class="token function">SUM</span><span class="token punctuation">(</span><span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">OVER</span> <span class="token punctuation">(</span><span class="token keyword">PARTITION</span> <span class="token keyword">BY</span> sessionid<span class="token punctuation">)</span> <span class="token keyword">AS</span> total_event_count  <span class="token comment" spellcheck="true">-- 会话总等待次数</span>
-<span class="token keyword">FROM</span> <span class="token punctuation">(</span>
-    <span class="token keyword">SELECT</span> 
-        sessionid<span class="token punctuation">,</span>
-        start_time<span class="token punctuation">,</span>
-        event<span class="token punctuation">,</span>
-        <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
-    <span class="token keyword">FROM</span> dbe_perf<span class="token punctuation">.</span>local_active_session
-    <span class="token keyword">WHERE</span> sample_time <span class="token operator">></span> <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> interval <span class="token string">'5 minutes'</span>
-    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> sessionid<span class="token punctuation">,</span> start_time<span class="token punctuation">,</span> event
-<span class="token punctuation">)</span> t
-<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> total_event_count <span class="token keyword">DESC</span><span class="token punctuation">,</span> event_count <span class="token keyword">DESC</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-4-3-3-紧急处理：终止异常会话"><a href="#3-4-3-3-紧急处理：终止异常会话" class="headerlink" title="3.4.3.3 紧急处理：终止异常会话"></a>3.4.3.3 紧急处理：终止异常会话</h4><p>若发现长时间运行的异常会话（如死循环 SQL、大表全表扫描），可通过以下命令终止：</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 终止指定会话（替换为实际session_id）</span>
-<span class="token keyword">SELECT</span> pg_terminate_backend<span class="token punctuation">(</span><span class="token number">12345</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h3 id="3-4-4-会话历史：回溯历史劣质-SQL"><a href="#3-4-4-会话历史：回溯历史劣质-SQL" class="headerlink" title="3.4.4 会话历史：回溯历史劣质 SQL"></a>3.4.4 会话历史：回溯历史劣质 SQL</h3><p>活跃会话仅能分析实时状态，而会话历史可回溯<strong>已完成</strong>的 SQL 执行情况，从 CPU、IO、耗时等多维度识别历史劣质 SQL，适用于分析周期性性能问题、优化历史慢查询。</p>
-<h4 id="3-4-4-1-基于-WDR-报告分析历史-SQL"><a href="#3-4-4-1-基于-WDR-报告分析历史-SQL" class="headerlink" title="3.4.4.1 基于 WDR 报告分析历史 SQL"></a>3.4.4.1 基于 WDR 报告分析历史 SQL</h4><p>WDR（Workload Diagnosis Report）是分析历史会话 / SQL 的核心工具，基于两次快照的对比数据，生成 SUMMARY（摘要）和 DETAIL（详情）级报告，覆盖 SQL 执行统计、资源消耗、等待事件等维度。</p>
-<p><strong>（1）WDR 报告生成完整流程</strong></p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 步骤1：检查快照是否开启</span>
-<span class="token keyword">SELECT</span> current_setting<span class="token punctuation">(</span><span class="token string">'enable_wdr_snapshot'</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> wdr_snapshot_status<span class="token punctuation">;</span>
-
-<span class="token comment" spellcheck="true">-- 步骤2：查看已有快照（获取snapshot_id）</span>
-<span class="token keyword">SELECT</span> snapshot_id<span class="token punctuation">,</span> start_ts<span class="token punctuation">,</span> end_ts <span class="token keyword">FROM</span> <span class="token keyword">snapshot</span><span class="token punctuation">.</span><span class="token keyword">snapshot</span> <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> start_ts <span class="token keyword">DESC</span><span class="token punctuation">;</span>
-
-<span class="token comment" spellcheck="true">-- 步骤3：手动创建快照（可选，需SYSADMIN权限）</span>
-<span class="token keyword">SELECT</span> create_wdr_snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-<span class="token comment" spellcheck="true">-- 步骤4：生成集群级全量WDR报告（替换为实际快照ID）</span>
-<span class="token keyword">SELECT</span> generate_wdr_report<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'all'</span><span class="token punctuation">,</span> <span class="token string">'cluster'</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-<span class="token comment" spellcheck="true">-- 步骤5：将报告导出为HTML文件（gsql终端执行）</span>
-\<span class="token number">a</span> \t \o <span class="token operator">/</span>home<span class="token operator">/</span>om<span class="token operator">/</span>panweidb_wdr_report<span class="token punctuation">.</span>html  <span class="token comment" spellcheck="true">-- 输出到文件</span>
-<span class="token keyword">SELECT</span> generate_wdr_report<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'all'</span><span class="token punctuation">,</span> <span class="token string">'cluster'</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-\o \<span class="token number">a</span> \t  <span class="token comment" spellcheck="true">-- 恢复输出</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><strong>（2）WDR 报告核心维度解读</strong></p>
+<h2 id="3-4-如何捕获劣质SQL"><a href="#3-4-如何捕获劣质SQL" class="headerlink" title="3.4 如何捕获劣质SQL"></a>3.4 如何捕获劣质SQL</h2><p>可以通过下面的几种方式可以用来收集和监控慢SQL。</p>
+<h3 id="3-4-1-日志监控"><a href="#3-4-1-日志监控" class="headerlink" title="3.4.1 日志监控"></a>3.4.1 <strong>日志监控</strong></h3><p>首先我们要打开日志搜集的开关，我们会在日志里面查找到相关的sql执行时间。相关参数如下：</p>
 <table>
 <thead>
 <tr>
-<th align="center">报告模块</th>
-<th align="center">核心指标</th>
-<th align="center">分析重点</th>
+<th><strong>参数名</strong></th>
+<th><strong>参数值</strong></th>
+<th><strong>功能描述</strong></th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">SQL Statistics</td>
-<td align="center">Elapsed Time、CPU Time、Executions</td>
-<td align="center">总耗时 TOP SQL、单次执行耗时 TOP SQL、高频执行 SQL</td>
+<td>logging_collector</td>
+<td>on</td>
+<td>开启日志记录</td>
 </tr>
 <tr>
-<td align="center">IO Profile</td>
-<td align="center">Physical Reads、Logical Reads</td>
-<td align="center">物理读 / 逻辑读高的 SQL（通常为全表扫描、索引缺失）</td>
+<td>log_min_duration_statement</td>
+<td>1s</td>
+<td>慢SQL记录，记录执行时间超过 1s 的SQL语句</td>
 </tr>
 <tr>
-<td align="center">Time Model</td>
-<td align="center">CPU Time、IO Time、Network Time</td>
-<td align="center">SQL 耗时分布（CPU 瓶颈 / IO 瓶颈 / 网络瓶颈）</td>
+<td>log_statement</td>
+<td>ddl</td>
+<td>记录执行过的SQL语句类型，一般记录ddl语句</td>
+</tr>
+<tr>
+<td>log_duration</td>
+<td>on</td>
+<td>记录每个已完成SQL语句的执行时间</td>
 </tr>
 </tbody></table>
-<h4 id="3-4-4-2-基于慢-SQL-接口回溯历史-SQL"><a href="#3-4-4-2-基于慢-SQL-接口回溯历史-SQL" class="headerlink" title="3.4.4.2 基于慢 SQL 接口回溯历史 SQL"></a>3.4.4.2 基于慢 SQL 接口回溯历史 SQL</h4><p>数据库支持按时间范围查询慢 SQL 详情（含执行计划、资源消耗），无需复现即可离线诊断。</p>
-<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 查询指定时间范围内的慢SQL（脱敏）</span>
-<span class="token keyword">SELECT</span> 
-    node_name<span class="token punctuation">,</span>
-    db_name<span class="token punctuation">,</span>
-    user_name<span class="token punctuation">,</span>
-    query <span class="token keyword">AS</span> sql_text<span class="token punctuation">,</span>
-    start_time<span class="token punctuation">,</span>
-    finish_time<span class="token punctuation">,</span>
-    finish_time <span class="token operator">-</span> start_time <span class="token keyword">AS</span> execute_duration<span class="token punctuation">,</span>
-    query_plan <span class="token keyword">AS</span> execution_plan  <span class="token comment" spellcheck="true">-- 执行计划</span>
-<span class="token keyword">FROM</span> DBE_PERF<span class="token punctuation">.</span>get_global_full_sql_by_timestamp<span class="token punctuation">(</span>
-    <span class="token string">'2026-02-01 00:00:00'</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true">-- 开始时间</span>
-    <span class="token string">'2026-02-01 23:59:59'</span>   <span class="token comment" spellcheck="true">-- 结束时间</span>
-<span class="token punctuation">)</span>
-<span class="token keyword">WHERE</span> finish_time <span class="token operator">-</span> start_time <span class="token operator">></span> interval <span class="token string">'10 seconds'</span>  <span class="token comment" spellcheck="true">-- 筛选执行超10秒的SQL</span>
-<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> execute_duration <span class="token keyword">DESC</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="3-4-5-操作系统级性能监控"><a href="#3-4-5-操作系统级性能监控" class="headerlink" title="3.4.5 操作系统级性能监控"></a>3.4.5 操作系统级性能监控</h3><p>数据库性能问题常与操作系统资源（CPU、内存、IO、网络）相关，需结合 OS 级命令定位底层瓶颈。更多参见第六章监控命令。</p>
-<h3 id="3-4-5-1-CPU-监控"><a href="#3-4-5-1-CPU-监控" class="headerlink" title="3.4.5.1 CPU 监控"></a>3.4.5.1 CPU 监控</h3><p><strong>（1）查看 PanWeiDB 进程 CPU 占用</strong></p>
+<p>(1) logging_collector表示是否开启日志收集，一般情况下应设置为on。</p>
+<p>(2) log_min_duration_statement设置记录执行时间超过多少时间的SQL语句，单位是ms， 默认为-1表示关闭，我们可以根据业务的实际需求设置一定的数值。</p>
+<p>(3) log_duration表示记录每个已完成SQL语句的执行时间。默认是off。当为on并且log_min_duration_statement大于零，记录所有持续时间，但是仅记录超过阈值的语句。这可用于在高负载情况下搜集统计信息。</p>
+<p>(4) log_statement设置记录执行过的SQL语句类型，None表示不记录语句。 ddl表示记录所有的数据定义语句，比如CREATE、ALTER和DROP语句。 mod表示记录所有DDL语句，还包括数据修改语句INSERT、UPDATE、DELETE、TRUNCATE和COPY FROM 。 all表示记录所有语句，PREPARE、EXECUTE和EXPLAIN ANALYZE语句也同样被记录。为了记录全面的慢SQL，我们可以临时设置成ALL，并在完成调优后设为ddl，避免日志写入大量SQL，占用过多空间。</p>
+<p>日志监控的结果如下例：</p>
+<blockquote>
+<p>2025-02-12 16:15:18.474 omm postgres [local] 47617140733696 0[0:0#0]  0 [BACKEND] LOG:  statement: select count(*) from test5;</p>
+<p>2025-02-12 16:15:19.899 omm postgres [local] 47617140733696 0[0:0#0]  3377699720628633 [BACKEND] LOG:  duration: 1425.264 ms, queryid 3377699720628633, unique id 3460081276</p>
+</blockquote>
+<h3 id="3-4-2-dbe-perf-statement-视图监控"><a href="#3-4-2-dbe-perf-statement-视图监控" class="headerlink" title="3.4.2 dbe_perf.statement 视图监控"></a><strong>3.4.2</strong> <strong>dbe_perf.statement</strong> <strong>视图监控</strong></h3><p>该视图记录了当前节点的历史执行语句（归一化后的SQL，即同一SQL多次执行将汇总为一条SQL记录）的信息。</p>
+<p>该视图主要受以下参数的控制：</p>
+<p>(1) enable_resource_track=on，打开资源监控功能，未开启时不监控SQL执行情况，dbe_perf.statement、dbe_perf.summary_statement视图无数据，生成的wdr报告中SQL统计指标均为空。</p>
+<p>(2) instr_unique_sql_count=200000，允许记录在内存中的SQL总数量，记录达到上限后不再记录新的SQL执行信息。调小该参数会触发清空所有已记录的SQL信息（即清空dbe_perf.statement、dbe_perf.summary_statement视图）。</p>
+<p>(3) enable_auto_clean_unique_sql=on，开启SQL自动淘汰功能，记录的SQL总数量达到instr_unique_sql_count时，自动随机清理其中10%的记录。</p>
+<p>(4) instr_unique_sql_track_type：归一化SQL追踪的方式，参数取值为top、all，为top时只支持记录最外层调用的语句，为all时则可记录函数及存储过程内的语句。 我们可以选择默认为top. </p>
+<p>配置相关参数：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">pw_guc reload -c <span class="token string">"enable_resource_track=on"</span> -c <span class="token string">"enable_auto_clean_unique_sql=on"</span> -c <span class="token string">"instr_unique_sql_count=200000"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>获取历史执行的慢SQL（归并后的SQL）：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> unique_sql_id <span class="token keyword">as</span> sqlid<span class="token punctuation">,</span>user_name <span class="token keyword">as</span> <span class="token string">"用户名称"</span><span class="token punctuation">,</span>query <span class="token keyword">as</span> <span class="token string">"SQL文本"</span><span class="token punctuation">,</span>n_calls <span class="token keyword">as</span> 执行次数<span class="token punctuation">,</span>decode<span class="token punctuation">(</span>n_calls<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span>total_elapse_time<span class="token punctuation">,</span>total_elapse_time<span class="token operator">/</span><span class="token punctuation">(</span>n_calls<span class="token operator">*</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">as</span> <span class="token string">"平均执行时间"</span><span class="token punctuation">,</span> last_updated <span class="token keyword">as</span> <span class="token string">"最近一次执行时间"</span><span class="token punctuation">,</span>min_elapse_time<span class="token operator">/</span><span class="token number">1000</span> <span class="token keyword">as</span> <span class="token string">"最快执行耗时ms"</span><span class="token punctuation">,</span>max_elapse_time<span class="token operator">/</span><span class="token number">1000</span> <span class="token keyword">as</span> <span class="token string">"最慢执行耗时ms"</span><span class="token punctuation">,</span>n_returned_rows <span class="token keyword">as</span> <span class="token string">"结果集行数"</span><span class="token punctuation">,</span>n_tuples_fetched <span class="token keyword">as</span> <span class="token string">"读取行数"</span><span class="token punctuation">,</span>n_tuples_inserted <span class="token keyword">as</span> <span class="token string">"写入行数"</span><span class="token punctuation">,</span>n_tuples_updated <span class="token keyword">as</span> <span class="token string">"更新行数"</span><span class="token punctuation">,</span>n_tuples_deleted <span class="token keyword">as</span> <span class="token string">"删除行数"</span><span class="token punctuation">,</span>n_blocks_fetched <span class="token keyword">as</span> <span class="token string">"读取块数"</span><span class="token punctuation">,</span>n_blocks_hit <span class="token keyword">as</span> <span class="token string">"缓存命中块数"</span><span class="token punctuation">,</span>data_io_time <span class="token keyword">as</span> <span class="token string">"硬盘IO时间"</span><span class="token punctuation">,</span>sort_time <span class="token keyword">as</span> <span class="token string">"排序耗时"</span>
+<span class="token keyword">from</span> dbe_perf<span class="token punctuation">.</span>statement 
+<span class="token keyword">where</span>  query ilike <span class="token string">'%t_sjd%'</span>  <span class="token comment" spellcheck="true">--按SQL语句关键字搜索</span>
+<span class="token operator">and</span> last_updated <span class="token operator">></span> <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span>interval <span class="token string">'1 month'</span>  <span class="token comment" spellcheck="true">--最近一个月执行的SQL</span>
+<span class="token operator">and</span>  user_name <span class="token operator">&lt;></span> <span class="token string">'vastbase'</span>  <span class="token keyword">order</span> <span class="token keyword">by</span>  last_updated <span class="token keyword">desc</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-4-3-statement-history表监控"><a href="#3-4-3-statement-history表监控" class="headerlink" title="3.4.3 statement_history表监控"></a><strong>3.4.3</strong> <strong>statement_history</strong>表<strong>监控</strong></h3><p>该表可查询当前节点的<strong>历史执行语句</strong>信息，与dbe_perf.statement视图不同的是，该表<strong>不对SQL进行归并</strong>。且一般情况下，该表仅记录慢SQL。</p>
+<p>使用该表，需提前配置以下参数：</p>
+<p>(1)  log_duration=on 记录SQL执行耗时</p>
+<p>(2)  enable_stmt_track=on  控制是否启用Full/Slow SQL特性。</p>
+<p>(3)  track_stmt_stat_level=’off,L1’; 记录慢SQL及其执行计划。该参数分为两部分，形式为’full sql stat level, slow sql stat level’ 。 full sql stat level为全量SQL跟踪级别，取值范围为OFF、L0、L1、L2。 slow sql stat level为慢SQL的跟踪级别，取值范围为OFF、L0、L1、L2。</p>
+<p>(4)  log_min_duration_statement=1s  记录执行时间超过1秒的SQL。</p>
+<p>(5)  track_stmt_parameter=on  记录SQL语句的变量值，定位慢SQL时可<strong>临时开启</strong>，完成定位后<strong>建议关闭</strong>，避免statement_history表占用过多空间。</p>
+<p>(6)  track_activity_query_size=4096 最大能记录的SQL文本的字节数，为避免复杂SQL语句被截断，可适当调大该参数。但不建议设置过大，以免占用太多内存和硬盘资源。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">gs_guc reload -c <span class="token string">"log_duration=on"</span> -c <span class="token string">"track_stmt_stat_level='off,L1'"</span> -c <span class="token string">"enable_stmt_track=on"</span> -c <span class="token string">"log_min_duration_statement='1s'"</span> -c <span class="token string">"track_stmt_parameter=on"</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>获取历史执行的慢SQL（未归并的SQL）：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">\c postgres
+
+<span class="token keyword">select</span> unique_query_id ,db_name as <span class="token string">"库名"</span>,schema_name as <span class="token string">"模式"</span>,user_name as <span class="token string">"用户名称"</span>,query as <span class="token string">"SQL文本"</span>,query_plan as <span class="token string">"执行计划"</span>, start_time as <span class="token string">"开始时间"</span>,finish_time as  <span class="token string">"结束时间"</span>, execution_time/1000 as <span class="token string">"执行耗时ms"</span>,n_returned_rows as <span class="token string">"结果集行数"</span>,n_tuples_fetched as <span class="token string">"读取行数"</span>,n_tuples_inserted as <span class="token string">"写入行数"</span>,n_tuples_updated as <span class="token string">"更新行数"</span>,n_tuples_deleted as <span class="token string">"删除行数"</span>,n_blocks_fetched as <span class="token string">"读取块数"</span>,n_blocks_hit as <span class="token string">"缓存命中块数"</span>,data_io_time as <span class="token string">"硬盘IO时间"</span>, lock_wait_time as <span class="token string">"等锁时间"</span>, lwlock_wait_time as <span class="token string">"等轻量锁时间"</span>, statement_detail_decode<span class="token punctuation">(</span>details, <span class="token string">'plaintext'</span>, true<span class="token punctuation">)</span>  as <span class="token string">"等待事件详情"</span>
+
+from statement_history
+
+where user_name <span class="token operator">&lt;</span><span class="token operator">></span> <span class="token string">'vastbase'</span>
+
+order by execution_time desc limit 10<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="3-4-5-pg-stat-statements-插件监控"><a href="#3-4-5-pg-stat-statements-插件监控" class="headerlink" title="3.4.5 pg_stat_statements 插件监控"></a><strong>3.4.5</strong> <strong>pg_stat_statements 插件监控</strong></h3><p>pg_stat_statements 插件提供了同名视图用于追踪一个实例执行的所有 SQL 语句的统计信息，该视图内容不及dbe_perf.statement视图丰富，但提供了后者不具备的一项指标：SQL写入的<strong>临时文件信息</strong>。</p>
+<p>首先配置数据库参数，并且重启数据库：</p>
+<pre class="line-numbers language-properties"><code class="language-properties"><span class="token attr-name">shared_preload_libraries</span> <span class="token punctuation">=</span> <span class="token attr-value">'pg_stat_statements'</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后创建插件：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">create</span> extension  pg_stat_statements<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>为排除其他干扰，在监控开始之前建议先执行pg_stat_statements_reset()函数，清除之前的SQL信息。</p>
+<p>例如，查看实例平均执行时间Top 5的SQL可以执行下面的SQL：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> pg_get_userbyid<span class="token punctuation">(</span>userid<span class="token punctuation">)</span>  <span class="token keyword">as</span> <span class="token string">"用户名称"</span><span class="token punctuation">,</span>query <span class="token keyword">as</span> <span class="token string">"SQL文本"</span><span class="token punctuation">,</span>calls <span class="token keyword">as</span> 执行次数<span class="token punctuation">,</span>total_time<span class="token operator">/</span>calls <span class="token keyword">as</span> <span class="token string">"平均执行时间ms"</span><span class="token punctuation">,</span><span class="token keyword">rows</span> <span class="token keyword">as</span> <span class="token string">"结果集行数"</span><span class="token punctuation">,</span>blk_read_time<span class="token operator">/</span>calls <span class="token keyword">as</span> <span class="token string">"平均硬盘读时间ms"</span><span class="token punctuation">,</span>blk_write_time<span class="token operator">/</span>calls <span class="token keyword">as</span> <span class="token string">"平均硬盘写时间ms"</span>
+<span class="token keyword">from</span> pg_stat_statements <span class="token keyword">order</span> <span class="token keyword">by</span>  <span class="token number">4</span> <span class="token keyword">desc</span> <span class="token keyword">limit</span> <span class="token number">5</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>当一个数据库中慢sql较多，我们可以考虑先看这个视图，主要关注执行时间最多的查询包括一次执行时间短但是执行的次数非常多的情况。</p>
+<h3 id="3-4-6-pg-stat-activity-视图监控"><a href="#3-4-6-pg-stat-activity-视图监控" class="headerlink" title="3.4.6 pg_stat_activity 视图监控"></a><strong>3.4.6</strong> <strong>pg_stat_activity</strong> <strong>视图监控</strong></h3><p>PostgreSQL 提供了 pg_stat_activity 视图，用于查询当前实例的所有进程信息。</p>
+<p>上面提到的两种监控方式，都需要 SQL 执行完成才会被监控到。在某些场景下，SQL 执行了很长时间也不会结束，遇到这样的情况可以通过查看pg_stat_activity 视图，筛选出执行时间超过阈值，状态（state）为 active 的进程，得到执行 SQL 的信息。</p>
+<p>查看 SQL 执行时间超过 100s 还未结束的进程可以执行下面的SQL：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token punctuation">(</span><span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start<span class="token punctuation">)</span> <span class="token keyword">as</span> d_time<span class="token punctuation">,</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> pg_stat_activity <span class="token keyword">WHERE</span> <span class="token function">now</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> query_start <span class="token operator">></span> interval <span class="token string">'100'</span> <span class="token operator">and</span> state <span class="token operator">=</span> <span class="token string">'active'</span> <span class="token keyword">order</span> <span class="token keyword">by</span> d_time <span class="token keyword">DESC</span> <span class="token keyword">limit</span> <span class="token number">5</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h3 id="3-4-7-WDR报告"><a href="#3-4-7-WDR报告" class="headerlink" title="3.4.7 WDR报告"></a><strong>3.4.7</strong> <strong>WDR</strong>报告</h3><p>WDR(Workload Diagnosis Report)基于两次不同时间点系统的性能快照数据，生成这两个时间点之间的性能表现报表，用于诊断数据库内核的性能故障。</p>
+<p>WDR主要依赖两个组件：</p>
+<p>Snapshot：性能快照，数据库按一定时间间隔转储dbe_perf schema的视图数据到snapshot schema的表中。</p>
+<p>WDR Reporter：报表生成工具，基于两个快照分析系统总体性能表现，并能计算出更多项具体的性能指标在这两个时间段之间的变化量，生成SUMMARY 和DETAIL两个不同级别的性能数据。</p>
+<p> <img src="/medias/image/MTY4ODg1MjU3NDM3MTYxMw_241926_l0SgYewUT9KJ4S5H_1750227761.png" alt="img"></p>
+<p>(1) 查询已经生成的快照：</p>
+<p>\c postgres</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> <span class="token keyword">snapshot</span><span class="token punctuation">.</span><span class="token keyword">snapshot</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>也可在性能测试前后手动生成快照，便于截取指定时间段的数据库运行分析数据</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> create_wdr_snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>(2) 查询节点名称</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> pg_node_env<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>(3) 生成WDR报告文件</p>
+<pre class="line-numbers language-sql"><code class="language-sql">\<span class="token number">a</span> \t \o <span class="token operator">/</span>tmp<span class="token operator">/</span>wdr<span class="token punctuation">.</span>html
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>(4)  将查询到的信息写入WDR报告中（前两个参数为snapshot_id，第五个参数根据查询到的节点名称填写，其余参数无需修改）</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">select</span> generate_wdr_report<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'all'</span><span class="token punctuation">,</span> <span class="token string">'node'</span><span class="token punctuation">,</span> <span class="token string">'node1'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>(5) 关闭性能报告，下载wdr.html报告文件即可。</p>
+<pre class="line-numbers language-sql"><code class="language-sql">\o \<span class="token number">a</span> \t
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>WDR使用须知：</strong></p>
+<p>(1) 当数据库实例中有大量表或索引，或dbe_perf.statement视图存在大量记录，那么生成一次快照可能花费较长时间，snapshot也可能占用大量磁盘空间，若空间或IO资源不足，可以考虑降低snapshot频次，减少dbe_perf.statement视图记录粒度。</p>
+<p>(2) 手工清理snapshot相关表数据，可能不会立即释放相应的磁盘空间。需等待一段时间，或手工清理会话以释放句柄。</p>
+<p><strong>不支持生成WDR报告的情况：</strong></p>
+<p>(1) 两次Snapshot中间，数据库发生了重启</p>
+<p>(2) 两次Snapshot中间，发生了主备切换</p>
+<p>(3) 两次Snapshot中间，存在Drop database操作</p>
+<p>(4) 两次Snapshot中间，触发了SQL自动淘汰</p>
+<p>(5) 两次Snapshot中间，任意库执行了以下统计信息重置函数（需要系统管理员权限）</p>
+<p>a. pg_stat_reset()：为当前数据库重置统计计数器为0</p>
+<p>b. pg_stat_reset_shared(text)：重置shared cluster每个节点当前数据统计计数器为0</p>
+<p>c. pg_stat_reset_single_table_counters(oid)：为当前数据库中的一个表或索引重置统计为0</p>
+<p>d. pg_stat_reset_single_function_counters(oid)：为当前数据库中的一个函数重置统计为0</p>
+<p>e. reset_unique_sql(text, text, bigint)：重置系统执行语句（归一化SQL）信息</p>
+<p>出现这5种情况时，生成WDR快照将出现以下报错：</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \a \t \o /tmp/wdr.html</span>
+Output <span class="token function">format</span> is unaligned.
+Showing only tuples.
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select generate_wdr_report(1353, 1354, 'all', 'node', 'node1');</span>
+**ERROR:  Instance reset <span class="token function">time</span> is different**
+CONTEXT:  referenced column: generate_wdr_report
+
+postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># \o \a \t</span>
+Output <span class="token function">format</span> is aligned.
+Tuples only is off.
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>通过以下查询，可查看快照的snap_reset_time，若两个快照的snap_reset_time不一致，则基于这两个快照生成WDR报告将会出现以上报错。</p>
+<pre class="line-numbers language-bash"><code class="language-bash">postgres<span class="token operator">=</span><span class="token comment" spellcheck="true"># select distinct * from snapshot.snap_global_record_reset_time order by 1 desc;</span>
+
+ snapshot_id <span class="token operator">|</span> snap_node_name <span class="token operator">|</span>        snap_reset_time        
+
+-------------+----------------+-------------------------------
+
+        1355 <span class="token operator">|</span> node1          <span class="token operator">|</span> 2024-04-11 14:23:50.757918+08
+
+        1354 <span class="token operator">|</span> node1          <span class="token operator">|</span> 2024-04-11 14:23:50.757918+08
+
+        1353 <span class="token operator">|</span> node1          <span class="token operator">|</span> 2024-04-11 11:11:09.248341+08
+
+        1352 <span class="token operator">|</span> node1          <span class="token operator">|</span> 2024-04-11 11:11:09.248341+08
+
+        1351 <span class="token operator">|</span> node1          <span class="token operator">|</span> 2024-04-11 11:11:09.248341+08
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>通过以下函数，可查询近期发生重置的时间：</p>
+<p>(1) get_node_stat_reset_time(): 当前实例上次重置统计信息的时间</p>
+<p>(2) pg_stat_get_db_stat_reset_time(oid)：指定数据库上次重置统计信息的时间</p>
+<h3 id="3-4-8-操作系统级性能监控"><a href="#3-4-8-操作系统级性能监控" class="headerlink" title="3.4.8 操作系统级性能监控"></a>3.4.8 操作系统级性能监控</h3><p>数据库性能问题常与操作系统资源（CPU、内存、IO、网络）相关，需结合 OS 级命令定位底层瓶颈。更多参见第六章监控命令。</p>
+<h3 id="3-4-8-1-CPU-监控"><a href="#3-4-8-1-CPU-监控" class="headerlink" title="3.4.8.1 CPU 监控"></a>3.4.8.1 CPU 监控</h3><p><strong>（1）查看 PanWeiDB 进程 CPU 占用</strong></p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看PanWeiDB进程</span>
 <span class="token function">ps</span> -ef <span class="token operator">|</span> <span class="token function">grep</span> panweidb <span class="token operator">|</span> <span class="token function">grep</span> -v <span class="token function">grep</span>
 
@@ -734,7 +672,7 @@
 <span class="token comment" spellcheck="true"># 统计各进程CPU占比</span>
 pidstat -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span> 1 5  <span class="token comment" spellcheck="true"># 每1秒采样，共5次</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="3-4-5-2-IO-监控"><a href="#3-4-5-2-IO-监控" class="headerlink" title="3.4.5.2 IO 监控"></a>3.4.5.2 IO 监控</h4><p><strong>（1）监控数据库IO使用</strong></p>
+<h4 id="3-4-8-2-IO-监控"><a href="#3-4-8-2-IO-监控" class="headerlink" title="3.4.8.2 IO 监控"></a>3.4.8.2 IO 监控</h4><p><strong>（1）监控数据库IO使用</strong></p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 监控PanWeiDB进程的IO使用率</span>
 iotop -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span>
 
@@ -745,7 +683,7 @@ iostat -x 2
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看PanWeiDB数据目录下的文件读写情况</span>
 pidstat -d -p <span class="token variable"><span class="token variable">`</span>pidof panweidb<span class="token variable">`</span></span> 1 5
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h4 id="3-4-5-3-内存监控"><a href="#3-4-5-3-内存监控" class="headerlink" title="3.4.5.3 内存监控"></a>3.4.5.3 内存监控</h4><p><strong>（1）查看 PanWeiDB 进程内存占用</strong></p>
+<h4 id="3-4-8-3-内存监控"><a href="#3-4-8-3-内存监控" class="headerlink" title="3.4.8.3 内存监控"></a>3.4.8.3 内存监控</h4><p><strong>（1）查看 PanWeiDB 进程内存占用</strong></p>
 <pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看进程内存（RES为实际物理内存）</span>
 <span class="token function">ps</span> aux <span class="token operator">|</span> <span class="token function">grep</span> panweidb <span class="token operator">|</span> <span class="token function">grep</span> -v <span class="token function">grep</span> <span class="token operator">|</span> <span class="token function">awk</span> <span class="token string">'{print <span class="token variable">$2</span>, <span class="token variable">$4</span>, <span class="token variable">$6</span>, <span class="token variable">$11</span>}'</span>
 
@@ -756,19 +694,12 @@ pidstat -d -p <span class="token variable"><span class="token variable">`</span>
 <pre class="line-numbers language-bash"><code class="language-bash">swapon --show  <span class="token comment" spellcheck="true"># 查看swap分区</span>
 <span class="token function">vmstat</span> 1 5     <span class="token comment" spellcheck="true"># 查看si/so列（swap读/写），非0表示内存不足</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<h4 id="3-4-5-4-网络监控"><a href="#3-4-5-4-网络监控" class="headerlink" title="3.4.5.4 网络监控"></a>3.4.5.4 网络监控</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看网络连接（PanWeiDB默认端口5432）</span>
+<h4 id="3-4-8-4-网络监控"><a href="#3-4-8-4-网络监控" class="headerlink" title="3.4.8.4 网络监控"></a>3.4.8.4 网络监控</h4><pre class="line-numbers language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看网络连接（PanWeiDB默认端口5432）</span>
 <span class="token function">netstat</span> -anp <span class="token operator">|</span> <span class="token function">grep</span> 5432 <span class="token operator">|</span> <span class="token function">wc</span> -l  <span class="token comment" spellcheck="true"># 统计连接数</span>
 
 <span class="token comment" spellcheck="true"># 监控网络流量</span>
 iftop -i eth0  <span class="token comment" spellcheck="true"># 监控eth0网卡流量</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
-<li><strong>性能视图</strong>是 PanWeiDB 性能诊断的基础，可实时获取会话、SQL、锁等状态，适用于快速定位实时问题；</li>
-<li><strong>等待事件</strong>聚焦资源竞争，是区分锁阻塞、IO 瓶颈、CPU 争用的核心手段；</li>
-<li><strong>活跃会话</strong>分析实时劣质 SQL，<strong>会话历史（WDR / 慢 SQL）</strong> 回溯历史性能问题，两者结合可覆盖全场景 SQL 优化；</li>
-<li><strong>OS 级监控命令</strong>是定位底层资源瓶颈的关键，需结合数据库层面分析才能完整定位性能问题。</li>
-</ol>
-<p>通过以上诊断手段的组合使用，可系统化定位数据库的性能瓶颈，从 SQL 优化、索引调整、参数配置、硬件资源等维度实现性能提升。</p>
 <h2 id="3-5-统计信息"><a href="#3-5-统计信息" class="headerlink" title="3.5 统计信息"></a>3.5 统计信息</h2><p>查询优化器的核心能力高度依赖<strong>统计信息</strong>的准确性。本文将系统讲解 PanWeiDB 统计信息的核心概念、收集机制、配置要点，以及如何通过优化统计信息大幅提升查询性能。</p>
 <hr>
 <h3 id="3-5-1-统计信息核心概念"><a href="#3-5-1-统计信息核心概念" class="headerlink" title="3.5.1 统计信息核心概念"></a>3.5.1 统计信息核心概念</h3><p>统计信息是数据库优化器判断「如何执行查询」的关键依据 —— 它描述了表、列的数据分布特征，优化器基于这些数据估算执行成本，选择最优执行计划（如索引扫描 vs 全表扫描）。</p>
@@ -1120,11 +1051,11 @@ iftop -i eth0  <span class="token comment" spellcheck="true"># 监控eth0网卡�
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h3 id="3-7-3-仅索引扫描-Index-Only-Scan"><a href="#3-7-3-仅索引扫描-Index-Only-Scan" class="headerlink" title="3.7.3. 仅索引扫描(Index Only Scan)"></a>3.7.3. 仅索引扫描(Index Only Scan)</h3><p><strong>工作原理</strong></p>
 <p>当查询只需返回索引列数据时，可以完全避免访问表数据页：</p>
-<pre><code>-- 创建测试表
-CREATE TABLE test (id serial PRIMARY KEY, i int4);
-INSERT INTO test (i) SELECT random() * 1000000000 FROM generate_series(1,100000);
-VACUUM ANALYZE test;
-</code></pre>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token comment" spellcheck="true">-- 创建测试表</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> test <span class="token punctuation">(</span>id <span class="token keyword">serial</span> <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span><span class="token punctuation">,</span> i int4<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> test <span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token keyword">SELECT</span> random<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1000000000</span> <span class="token keyword">FROM</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">100000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+VACUUM <span class="token keyword">ANALYZE</span> test<span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 <pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span> <span class="token keyword">SELECT</span> id <span class="token keyword">FROM</span> test <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> id <span class="token keyword">ASC</span> <span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>
                                                              QUERY <span class="token keyword">PLAN</span>                                                             
 <span class="token comment" spellcheck="true">------------------------------------------------------------------------------------------------------------------------------------</span>
@@ -1291,7 +1222,12 @@ ops<span class="token operator">=</span><span class="token number">1</span><span
  <span class="token keyword">Hash</span> Anti <span class="token keyword">Join</span>  <span class="token punctuation">(</span>cost<span class="token operator">=</span><span class="token number">93.62</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">115.69</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">298</span> width<span class="token operator">=</span><span class="token number">226</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.642</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.851</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">303</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>反连接只返回在另一侧找不到匹配的行。</p>
-<h2 id="3-9-定制执行计划"><a href="#3-9-定制执行计划" class="headerlink" title="3.9 定制执行计划"></a>3.9 定制执行计划</h2>
+<h2 id="3-9-定制执行计划"><a href="#3-9-定制执行计划" class="headerlink" title="3.9 定制执行计划"></a>3.9 定制执行计划</h2><p>Hint是特殊SQL语法，可用于手工干预SQL执行计划的选择，在SQL中加入hint语法，可以明确指导SQL优化器选择特定的执行计划。</p>
+<p>Hint使用样例：</p>
+<pre class="line-numbers language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>   <span class="token comment" spellcheck="true">/*+ hashjoin(a  b)*/</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> test1 <span class="token number">a</span><span class="token punctuation">,</span> test2 <span class="token number">b</span> <span class="token keyword">WHERE</span> ……
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p> <img src="/medias/image/image-20260302165121140.png" alt="image-20260302165121140"></p>
+
                 
             </div>
             <hr/>

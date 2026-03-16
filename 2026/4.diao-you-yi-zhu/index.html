@@ -622,10 +622,109 @@
 </ol>
 <p>需定期通过pg_buffercache、pg_stat_bgwriter及OS缓存工具观测双缓存利用效率，识别热点数据与缓存瓶颈，及时调整配置，避免缓存资源浪费或热数据未被有效缓存。</p>
 <h4 id="4-2-1-4-总结"><a href="#4-2-1-4-总结" class="headerlink" title="4.2.1.4 总结"></a>4.2.1.4 总结</h4><p>磐维数据库双缓存的核心是“双层协同、平衡优化”：双缓存是架构天然特性，通过数据库共享缓存与操作系统缓存分工互补，降低物理I/O；最佳实践以shared_buffers基线配置为核心，结合场景精细化调整、工具观测优化；注意事项重点规避配置失衡、平台适配不当等风险，确保双缓存发挥最优性能，为数据库整体性能提升提供支撑。</p>
-<p>4.2.2 线程池最佳实践</p>
-<p>线程池介绍<br>最佳实践介绍<br>注意事项</p>
-<p>4.2.3 MOT内存表介绍</p>
-<p>磐维V2.0不支持？</p>
+<h4 id="4-2-2-线程池最佳实践"><a href="#4-2-2-线程池最佳实践" class="headerlink" title="4.2.2 线程池最佳实践"></a>4.2.2 线程池最佳实践</h4><p>panweidb线程池是为解决传统数据库<strong>one-thread-per-connection</strong>模式在高并发下资源抢占、CPU上下文频繁切换导致吞吐下降问题而设计的功能，通过资源预申请和动态调度，让数据库性能和吞吐维持在最优基线，仅缓解高并发资源竞争问题，不直接提升数据库性能。以下从功能介绍、最佳实践、注意事项三方面详细说明。</p>
+<p><strong>4.2.2.1 线程池核心介绍</strong></p>
+<ol>
+<li>核心作用</li>
+</ol>
+<p>针对高并发场景，限制同时运行的工作线程数，避免系统资源耗尽，减少线程调度开销，保证数据库高并发下的吞吐稳定性；低并发场景下会增加少量调度成本，属于高并发场景的性能优化方案。</p>
+<ol start="2">
+<li>核心配置参数</li>
+</ol>
+<p>所有参数分<strong>POSTMASTER类型</strong>（需重启数据库生效）和<strong>SIGHUP类型</strong>（动态生效），核心参数覆盖功能开关、属性配置、过载控制、扩容触发等，各参数联动实现线程池精细化管理，以下为关键参数说明：</p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>类型</th>
+<th>取值范围</th>
+<th>默认值</th>
+<th>核心作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enable_thread_pool</td>
+<td>POSTMASTER</td>
+<td>布尔型（on/off）</td>
+<td>off</td>
+<td>线程池功能总开关，on开启，off关闭</td>
+</tr>
+<tr>
+<td>thread_pool_attr</td>
+<td>POSTMASTER</td>
+<td>字符串（thread_num,group_num,cpubind_info）</td>
+<td>16, 2, (nobind)</td>
+<td>线程池核心属性，配置总线程数、分组数、CPU绑核规则</td>
+</tr>
+<tr>
+<td>resilience_threadpool_reject_cond</td>
+<td>SIGHUP</td>
+<td>字符串（recover,overload）</td>
+<td>0,0</td>
+<td>过载逃生控制，配置会话堆积占比阈值，触发kill会话/禁止新连接</td>
+</tr>
+<tr>
+<td>thread_pool_stream_attr</td>
+<td>POSTMASTER</td>
+<td>字符串（stream_thread_num,stream_proc_ratio,group_num,cpubind_info）</td>
+<td>16, 0.2, 2,(nobind)</td>
+<td>控制stream线程池属性，仅DN生效，sysadmin专属</td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li>关键参数补充说明</li>
+</ol>
+<p>（1）thread_pool_attr 三部分配置</p>
+<ul>
+<li><strong>thread_num</strong>：0为按CPU核数自适应，&gt;0则为固定值，推荐公式<code>CPU核数*3~5</code>，最大4096；</li>
+<li><strong>group_num</strong>：0为按NUMA组个数自适应，&gt;0则为固定值，最大64，绑核时需与NUMA节点数一致，否则绑核失效；</li>
+<li><strong>cpubind_info</strong>：支持(nobind)不绑核、(allbind)全CPU绑核、(nodebind:1,2)NUMA组绑核、(cpubind:0-30)指定CPU号绑核、(numabind:0-30)NUMA组内指定CPU绑核，不区分大小写。</li>
+</ul>
+<p>（2）resilience_threadpool_reject_cond 双阈值配置</p>
+<ul>
+<li><strong>recover_threadpool_percent</strong>：恢复阈值，会话数低于<code>初始线程数*该百分比</code>时，停止kill会话并放开新连接；</li>
+<li><strong>overload_threadpool_percent</strong>：过载阈值，会话数高于<code>初始线程数*该百分比</code>时，触发kill会话并禁止新连接；</li>
+<li>示例：<code>100,200</code>表示会话数超200%时过载逃生，降至100%以下时恢复，会话数通过<code>PG_STAT_ACTIVITY</code>视图过滤后台线程后统计。</li>
+</ul>
+<p><strong>4.2.2.2 线程池最佳实践</strong></p>
+<p>基础开启步骤</p>
+<ol>
+<li>确认数据库版本：关键特性（如thread_pool_load_factor）目前V2.0版本版本不支持；</li>
+<li>设置核心开关：<code>enable_thread_pool = on</code>（需重启数据库）；</li>
+<li>配置thread_pool_attr：根据硬件配置定制，推荐按CPU和NUMA规划，示例如下：<ul>
+<li>服务器为32核CPU、2个NUMA组，推荐配置：<code>thread_pool_attr = '96, 2, (nodebind: 0,1)'</code>（thread_num=32*3，group_num与NUMA组一致，绑核到对应NUMA）；</li>
+<li>无NUMA架构、无需绑核：<code>thread_pool_attr = '64, 4, (nobind)'</code>（16核CPU*4，分组4个）。</li>
+</ul>
+</li>
+</ol>
+<p>满足条件后设置：<code>enable_gazelle_performance_mode = on</code>（需线程池开启+thread_pool_attr配置cpubind绑核模式）。</p>
+<ol start="4">
+<li>状态监控</li>
+</ol>
+<p>通过系统视图查询线程池运行状态，实时调整配置：</p>
+<ul>
+<li>主状态视图：<code>dbe_perf.local_threadpool_status</code>，可查看各线程组的默认线程数、预期线程数、空闲线程数、pending线程数、会话总数等；</li>
+<li>会话堆积统计：<code>PG_STAT_ACTIVITY</code>，过滤后台线程后统计活跃会话数，判断是否触达过载阈值。</li>
+</ul>
+<ol start="5">
+<li>逻辑复制适配</li>
+</ol>
+<p>开启线程池后，逻辑复制订阅端需<strong>使用HA端口</strong>建链拉取XLOG，避免线程池worker被占用，影响正常业务。</p>
+<p><strong>三、线程池使用注意事项</strong></p>
+<ol>
+<li><code>thread_pool_attr</code>的group_num在绑核时，需与系统NUMA节点数一致，否则cpubind_info配置失效，线程不绑核；</li>
+<li><code>thread_pool_stream_attr</code>的group_num和cpubind_info需与<code>thread_pool_attr</code>保持一致，否则以主线程池配置为准；</li>
+<li>部署与运维注意事项<ul>
+<li><strong>绑核规划</strong>：开启cpubind绑核时，需提前规划CPU核分配，避免与其他进程（如操作系统进程、数据库后台线程）抢占CPU资源；</li>
+<li><strong>参数生效方式</strong>：POSTMASTER类型参数修改后需<strong>重启数据库</strong>，切勿直接在线上生产库修改后不重启，导致配置不生效；</li>
+<li><strong>低并发场景建议</strong>：若业务并发量低，不建议开启线程池，因会增加调度成本，反而影响性能；</li>
+<li><strong>扩缩容注意</strong>：线程池自动扩缩容以<strong>事务为粒度</strong>调度，若业务存在跨事务场景（如持有session级锁、2PC过程、子事务等），线程会与会话强制绑定，无法复用，需优化业务逻辑。</li>
+</ul>
+</li>
+<li>连接池与线程池区分</li>
+</ol>
+<p>线程池是<strong>数据库内部</strong>的线程调度机制，解决高并发下线程资源竞争问题；连接池是<strong>数据库外部</strong>进程，用于维系数据库连接、实现负载均衡/读写分离，二者并非同一维度功能，可配合使用，但需注意连接池的语句解析和临时表1:1绑定特性。</p>
+<h4 id="4-2-3-MOT内存表介绍"><a href="#4-2-3-MOT内存表介绍" class="headerlink" title="4.2.3 MOT内存表介绍"></a>4.2.3 MOT内存表介绍</h4><p>磐维V2.0不支持？</p>
 <h2 id="4-3-压缩术"><a href="#4-3-压缩术" class="headerlink" title="4.3 压缩术"></a>4.3 压缩术</h2><p>当前主流数据库通常都会采用数据压缩技术。数据类型不同，适用于它的压缩算法不同。对于相同类型的数据，其数据特征不同，采用不同的压缩算法达到的效果也不相同。自适用压缩正是从数据类型和数据特征出发，采用相应的压缩算法，实现了良好的压缩比、快速的入库性能以及良好的查询性能。</p>
 <p>数据入库和频繁的海量数据查询是用户的主要应用场景。 在数据入库场景中，自适应压缩可以大幅度地减少数据量，成倍提高IO操作效率，将数据簇集存储，从而获得快速的入库性能。当用户进行数据查询时，少量的IO操作和快速的数据解压可以加快数据获取的速率，从而在更短的时间内得到查询结果。</p>
 <p>目前，数据库已实现了RLE、DELTA、BYTEPACK/BITPACK、LZ4、ZLIB、LOCAL DICTIONARY等多种压缩算法。数据库支持的数据类型与压缩算法的映射关系如下表所示。</p>
